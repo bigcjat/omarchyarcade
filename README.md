@@ -84,21 +84,32 @@ All 19 games feature dedicated manuals and controls guides:
 
 ## Quick Start
 
-### Prerequisites
+### 1-Line Automated Install (Omarchy Linux)
 
-On Omarchy Linux:
+Run this single command on your Omarchy laptop:
+
 ```bash
-sudo pacman -S python python-pyside6 qt6-declarative
+curl -sSL https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/install.sh | bash
 ```
 
-### Running the Arcade Suite
+This automatically:
+* Installs dependencies (`python`, `python-pyside6`, `qt6-declarative`) via `pacman`.
+* Symlinks the `arcade` CLI command into `~/.local/bin/arcade`.
+* Registers the desktop entry so **Omarchy Arcade** appears in your application search (Rofi / Walker / Fuzzel).
+* Configures floating window rules and the **`Super + G`** shortcut in `~/.config/hypr/hyprland.conf`.
+
+---
+
+### Running from a Cloned Repository
+
+If you already have the repository cloned:
 
 ```bash
-# Launch the full interactive desktop launcher:
-./arcade
+# Run the automated installer locally:
+./install.sh
 
-# Launch directly without console startup intro:
-./arcade --no-splash
+# Or launch directly without installing:
+./arcade
 ```
 
 *(See [Launcher Documentation](launcher/README.md) for keyboard shortcuts, system theme hot-reloading, and Hyprland configuration).*

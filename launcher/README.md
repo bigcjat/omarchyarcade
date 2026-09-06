@@ -44,9 +44,17 @@ Built for power users and tiling window manager workflows:
 
 ## Quick Start
 
-### Running via Root Helper
+### 1-Line Automated Install
 ```bash
-# Run from repository root:
+curl -sSL https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/install.sh | bash
+```
+
+### Running Locally
+```bash
+# Run installer locally:
+./install.sh
+
+# Or launch directly from repository root:
 ./arcade
 
 # Skip startup console intro:
