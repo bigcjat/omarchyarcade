@@ -26,6 +26,7 @@ Window {
     property color themeSubtext: "#a6adc8"
     property color themeBorder: "#45475a"
     property color themeModalBg: "#1e1e2e"
+    property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
 
     // Tokens
     property color p1Color: "#f38ba8"
@@ -312,94 +313,198 @@ Window {
             }
         }
 
-        // TOP HEADER
+        // 2048 DESIGN STANDARD: ROW 1 (Header Item)
         Item {
-            id: header
+            id: headerItem
             anchors.top: parent.top
+            anchors.topMargin: 16
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.margins: 12
-            height: 38
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: Math.max(titleCol.height, scoreRow.height)
 
-            Row {
-                id: leftHeader
+            Column {
+                id: titleCol
                 anchors.left: parent.left
+                anchors.right: scoreRow.left
+                anchors.rightMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
+                spacing: 2
 
-                Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    Text {
-                        text: "DropFour"
-                        font.pixelSize: 15
-                        font.bold: true
-                        color: root.themeAccent
-                    }
-                    Text {
-                        text: "P1: " + p1Wins + " • " + (root.gameMode === "1p" ? "CPU: " : "P2: ") + p2Wins
-                        font.pixelSize: 10
-                        font.family: root.monoFontFamily
-                        color: root.themeSubtext
-                    }
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: "DropFour"
+                    font.pixelSize: Math.max(22, Math.min(36, headerItem.width * 0.07))
+                    font.bold: true
+                    color: root.themeAccent
+                    Behavior on color { ColorAnimation { duration: 250 } }
+                }
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: (root.gameState === "won" ? "Winner: " + root.winnerName + "!" : (root.gameState === "draw" ? "Draw Game!" : (root.cpuThinking ? "CPU Thinking..." : ("Turn: " + (root.currentPlayer === 1 ? "P1 (Red)" : (root.gameMode === "1p" ? "CPU (Yellow)" : "P2 (Yellow)"))))))
+                    font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
+                    color: root.themeSubtext
+                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
 
+            // Stat Cards on Right
             Row {
-                id: rightHeader
+                id: scoreRow
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 5
+                spacing: 8
 
-                // Turn / Winner Indicator Pill
+                // P1 WINS Card
                 Rectangle {
-                    width: 58
-                    height: 28
-                    radius: 6
+                    width: Math.max(64, Math.min(84, headerItem.width * 0.16))
+                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                    radius: 8
                     color: root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
+                    Behavior on color { ColorAnimation { duration: 250 } }
 
-                    Row {
+                    Column {
                         anchors.centerIn: parent
-                        spacing: 4
-                        Rectangle {
-                            width: 7
-                            height: 7
-                            radius: 3.5
-                            color: root.currentPlayer === 1 ? root.p1Color : root.p2Color
-                            anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "P1 WINS"
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.themeSubtext
                         }
                         Text {
-                            text: root.gameState === "won" ? "WIN!" : (root.gameState === "draw" ? "DRAW" : (root.cpuThinking ? "..." : (root.currentPlayer === 1 ? "P1" : (root.gameMode === "1p" ? "CPU" : "P2"))))
-                            font.pixelSize: 9
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.p1Wins.toString()
+                            font.pixelSize: 16
                             font.bold: true
-                            font.family: root.monoFontFamily
                             color: root.themeFg
-                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
                 }
 
-                // Mode Toggle (1P / 2P)
+                // P2 / CPU WINS Card
                 Rectangle {
-                    width: 32
-                    height: 28
-                    radius: 6
-                    color: modeArea.pressed ? root.themeCellGrid : root.themeCardBg
+                    width: Math.max(64, Math.min(84, headerItem.width * 0.16))
+                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                    radius: 8
+                    color: root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
+                    Behavior on color { ColorAnimation { duration: 250 } }
+
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.gameMode === "1p" ? "CPU WINS" : "P2 WINS"
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.p2Wins.toString()
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: root.p2Wins > 0 ? root.themeAccent : root.themeSubtext
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2048 DESIGN STANDARD: ROW 2 (Subheader Action Bar)
+        Item {
+            id: subheaderItem
+            anchors.top: headerItem.bottom
+            anchors.topMargin: 10
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: restartBtn.height
+
+            // Help button
+            Rectangle {
+                id: helpBtn
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                height: Math.max(28, Math.min(34, parent.width * 0.065))
+                width: Math.max(105, Math.min(130, parent.width * 0.28))
+                radius: Math.max(6, height * 0.24)
+                color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
+                border.width: 1
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
+                    Rectangle {
+                        width: 16
+                        height: 16
+                        radius: 8
+                        color: root.themeAccent
+                        anchors.verticalCenter: parent.verticalCenter
+                        Text {
+                            anchors.centerIn: parent
+                            text: "?"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeBtnFg
+                        }
+                    }
+                    Text {
+                        text: subheaderItem.width < 340 ? "Help" : "How to Play"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.themeFg
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                MouseArea {
+                    id: helpMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.showHelp = !root.showHelp
+                }
+            }
+
+            // Mode Toggle + Mute buttons in Center
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 6
+
+                Rectangle {
+                    id: modeBtn
+                    height: helpBtn.height
+                    width: Math.max(48, Math.min(68, subheaderItem.width * 0.14))
+                    radius: helpBtn.radius
+                    color: modeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
 
                     Text {
                         anchors.centerIn: parent
-                        text: root.gameMode === "1p" ? "1P" : "2P"
-                        font.pixelSize: 10
+                        text: root.gameMode === "1p" ? "1P vs CPU" : "2P Local"
+                        font.pixelSize: 11
                         font.bold: true
-                        font.family: root.monoFontFamily
                         color: root.themeAccent
                     }
 
                     MouseArea {
-                        id: modeArea
+                        id: modeMouse
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
@@ -412,58 +517,70 @@ Window {
                     }
                 }
 
-                // Restart button
                 Rectangle {
-                    width: 28
-                    height: 28
-                    radius: 6
-                    color: restartArea.pressed ? root.themeCellGrid : root.themeCardBg
-                    border.color: root.themeBorder
+                    id: muteBtn
+                    height: helpBtn.height
+                    width: Math.max(54, Math.min(84, subheaderItem.width * 0.18))
+                    radius: helpBtn.radius
+                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: root.isMuted ? root.themeBorder : root.themeAccent
                     border.width: 1
-                    Text { anchors.centerIn: parent; text: "↺"; font.bold: true; font.pixelSize: 13; color: root.themeFg }
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: root.isMuted ? "🔇" : "🔊"
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: root.isMuted ? "Muted" : "Sound"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.isMuted ? root.themeSubtext : root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: muteBtn.width >= 62
+                        }
+                    }
+
                     MouseArea {
-                        id: restartArea
+                        id: muteMouse
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: resetGame()
+                        onClicked: root.toggleMute()
                     }
                 }
+            }
 
-                // Mute
-                Rectangle {
-                    width: 28
-                    height: 28
-                    radius: 6
-                    color: muteArea.pressed ? root.themeCellGrid : root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Text { anchors.centerIn: parent; text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11 }
-                    MouseArea {
-                        id: muteArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: toggleMute()
-                    }
+            // Primary Action Button (New Game)
+            Rectangle {
+                id: restartBtn
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                height: helpBtn.height
+                width: Math.max(90, Math.min(130, parent.width * 0.28))
+                radius: helpBtn.radius
+                color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: subheaderItem.width < 340 ? "New (R)" : "New Game (R)"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeBtnFg
                 }
 
-                // Help
-                Rectangle {
-                    width: 28
-                    height: 28
-                    radius: 6
-                    color: helpArea.pressed ? root.themeCellGrid : root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Text { anchors.centerIn: parent; text: "?"; font.pixelSize: 12; font.bold: true; color: root.themePalette.color1 || "#f38ba8" }
-                    MouseArea {
-                        id: helpArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: showHelp = !showHelp
-                    }
+                MouseArea {
+                    id: restartMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.resetGame()
                 }
             }
         }
@@ -471,11 +588,14 @@ Window {
         // PLAYFIELD CONTAINER
         Item {
             id: playfieldContainer
-            anchors.top: header.bottom
+            anchors.top: subheaderItem.bottom
+            anchors.topMargin: 12
             anchors.bottom: parent.bottom
+            anchors.bottomMargin: 16
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.margins: 12
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
 
             Item {
                 id: boardContainer

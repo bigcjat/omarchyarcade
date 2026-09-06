@@ -152,6 +152,22 @@ def main():
         watcher.directoryChanged.connect(lambda: QTimer.singleShot(100, update_theme))
         watcher.fileChanged.connect(lambda: QTimer.singleShot(100, update_theme))
 
+    args = sys.argv[1:]
+    requested_screenshot = None
+    i = 0
+    while i < len(args):
+        if args[i] == "--screenshot" and i + 1 < len(args):
+            requested_screenshot = args[i + 1]
+            i += 2
+        else:
+            i += 1
+
+    if requested_screenshot:
+        def do_shot():
+            root.splashEnabled = False
+            root.captureScreenshot(requested_screenshot, True)
+        QTimer.singleShot(1250, do_shot)
+
     sys.exit(app.exec())
 
 if __name__ == "__main__":

@@ -19,10 +19,17 @@ Window {
     property color themeSubtext: "#a6adc8"
     property color themeAccent: "#a6e3a1" // Frog Green
     property color themeBorder: "#45475a"
+    property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
     property bool splashEnabled: true
     property bool isMuted: true
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
+
+    function colorLuminance(hex) {
+        if (!hex || typeof hex !== "string") return 0.2;
+        var c = Qt.color(hex);
+        return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+    }
 
     property string helpText: "• Hop Forward: ↑, W, Space, or Vim K\n• Steer Left/Right: ← / →, A / D, or H / L\n• Hop Back: ↓, S, or Vim J\n• Dodge traffic & high-speed bullet trains\n• Ride floating logs across rivers\n• Keep moving—don't let the eagle catch you!"
 
@@ -114,6 +121,25 @@ Window {
         gameCanvas.requestPaint();
     }
 
+    signal screenshotSaved(string path)
+
+    function captureScreenshot(filePath, shouldQuit) {
+        if (splashScreen) {
+            splashScreen.visible = false;
+            splashScreen.opacity = 0;
+        }
+        root.splashEnabled = false;
+        var targetItem = mainContainer;
+        targetItem.grabToImage(function(result) {
+            result.saveToFile(filePath);
+            console.log("Screenshot saved successfully to " + filePath);
+            root.screenshotSaved(filePath);
+            if (shouldQuit) {
+                Qt.quit();
+            }
+        });
+    }
+
     // MAIN CONTAINER
     Item {
         id: mainContainer
@@ -169,127 +195,238 @@ Window {
             }
         }
 
-        // TOP HEADER HUD
+        // 2048 DESIGN STANDARD: ROW 1 (Header Item)
         Item {
-            id: header
+            id: headerItem
             anchors.top: parent.top
+            anchors.topMargin: 16
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.margins: 12
-            height: 38
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: Math.max(titleCol.height, scoreRow.height)
 
-            Row {
-                id: leftHeader
+            Column {
+                id: titleCol
                 anchors.left: parent.left
+                anchors.right: scoreRow.left
+                anchors.rightMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
+                spacing: 2
 
-                Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    Text {
-                        text: "CyberHop"
-                        font.family: root.monoFontFamily
-                        font.pixelSize: 15
-                        font.bold: true
-                        color: root.themeAccent
-                    }
-                    Text {
-                        text: "Distance: " + root.score + " hops"
-                        font.pixelSize: 10
-                        font.family: root.monoFontFamily
-                        color: root.themeSubtext
-                    }
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: "CyberHop"
+                    font.pixelSize: Math.max(22, Math.min(36, headerItem.width * 0.07))
+                    font.bold: true
+                    color: root.themeAccent
+                    Behavior on color { ColorAnimation { duration: 250 } }
+                }
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: (root.gameState === "gameover" ? "Game Over • Press R to Restart" : (root.gameState === "ready" ? "Press Space to Hop Forward" : "Cross Traffic & Rivers!"))
+                    font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
+                    color: root.themeSubtext
+                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
 
+            // Stat Cards on Right
             Row {
-                id: rightHeader
+                id: scoreRow
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 5
+                spacing: 8
 
-                // Score pill
+                // SCORE Card
                 Rectangle {
-                    width: Math.max(48, scoreVal.implicitWidth + 14)
-                    height: 28
-                    radius: 6
+                    width: Math.max(64, Math.min(84, headerItem.width * 0.16))
+                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                    radius: 8
                     color: root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
+                    Behavior on color { ColorAnimation { duration: 250 } }
+
                     Column {
                         anchors.centerIn: parent
-                        Text { text: "SCORE"; font.pixelSize: 7; font.bold: true; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { id: scoreVal; text: root.score.toString(); font.pixelSize: 11; font.bold: true; color: root.themeFg; anchors.horizontalCenter: parent.horizontalCenter }
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "SCORE"
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.score.toString()
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: root.themeFg
+                        }
                     }
                 }
 
-                // Best pill
+                // BEST Card
                 Rectangle {
-                    width: Math.max(48, bestVal.implicitWidth + 14)
-                    height: 28
-                    radius: 6
+                    width: Math.max(64, Math.min(84, headerItem.width * 0.16))
+                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                    radius: 8
                     color: root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
+                    Behavior on color { ColorAnimation { duration: 250 } }
+
                     Column {
                         anchors.centerIn: parent
-                        Text { text: "BEST"; font.pixelSize: 7; font.bold: true; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { id: bestVal; text: root.highScore.toString(); font.pixelSize: 11; font.bold: true; color: root.themeAccent; anchors.horizontalCenter: parent.horizontalCenter }
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "BEST"
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.highScore.toString()
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: root.highScore > 0 ? root.themeAccent : root.themeSubtext
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2048 DESIGN STANDARD: ROW 2 (Subheader Action Bar)
+        Item {
+            id: subheaderItem
+            anchors.top: headerItem.bottom
+            anchors.topMargin: 10
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: restartBtn.height
+
+            // Help button
+            Rectangle {
+                id: helpBtn
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                height: Math.max(28, Math.min(34, parent.width * 0.065))
+                width: Math.max(105, Math.min(130, parent.width * 0.28))
+                radius: Math.max(6, height * 0.24)
+                color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
+                border.width: 1
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
+                    Rectangle {
+                        width: 16
+                        height: 16
+                        radius: 8
+                        color: root.themeAccent
+                        anchors.verticalCenter: parent.verticalCenter
+                        Text {
+                            anchors.centerIn: parent
+                            text: "?"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeBtnFg
+                        }
+                    }
+                    Text {
+                        text: subheaderItem.width < 340 ? "Help" : "How to Play"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.themeFg
+                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
 
-                // Restart button
-                Rectangle {
-                    width: 28
-                    height: 28
-                    radius: 6
-                    color: restartArea.pressed ? Qt.darker(root.themeCardBg, 1.2) : root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Text { anchors.centerIn: parent; text: "↺"; font.bold: true; font.pixelSize: 13; color: root.themeFg }
-                    MouseArea {
-                        id: restartArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.startNewGame()
+                MouseArea {
+                    id: helpMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.showHelp = !root.showHelp
+                }
+            }
+
+            // Mute button in Center
+            Rectangle {
+                id: muteBtn
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+                height: helpBtn.height
+                width: Math.max(56, Math.min(92, parent.width * 0.20))
+                radius: helpBtn.radius
+                color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                border.color: root.isMuted ? root.themeBorder : root.themeAccent
+                border.width: 1
+                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 4
+                    Text {
+                        text: root.isMuted ? "🔇" : "🔊"
+                        font.pixelSize: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        text: root.isMuted ? "Muted" : "Sound"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.isMuted ? root.themeSubtext : root.themeFg
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: muteBtn.width >= 62
                     }
                 }
 
-                // Mute button
-                Rectangle {
-                    width: 28
-                    height: 28
-                    radius: 6
-                    color: muteArea.pressed ? Qt.darker(root.themeCardBg, 1.2) : root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Text { anchors.centerIn: parent; text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11 }
-                    MouseArea {
-                        id: muteArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleMute()
-                    }
+                MouseArea {
+                    id: muteMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.toggleMute()
+                }
+            }
+
+            // Primary Action Button (Restart)
+            Rectangle {
+                id: restartBtn
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                height: helpBtn.height
+                width: Math.max(90, Math.min(130, parent.width * 0.28))
+                radius: helpBtn.radius
+                color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: subheaderItem.width < 340 ? "Restart (R)" : "Restart (R)"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeBtnFg
                 }
 
-                // Help button
-                Rectangle {
-                    width: 28
-                    height: 28
-                    radius: 6
-                    color: helpArea.pressed ? Qt.darker(root.themeCardBg, 1.2) : root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Text { anchors.centerIn: parent; text: "?"; font.bold: true; font.pixelSize: 12; color: root.themeAccent }
-                    MouseArea {
-                        id: helpArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.showHelp = !root.showHelp
-                    }
+                MouseArea {
+                    id: restartMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.startNewGame()
                 }
             }
         }
@@ -297,14 +434,14 @@ Window {
         // PLAYFIELD CONTAINER
         Item {
             id: playArea
-            anchors.top: header.bottom
-            anchors.topMargin: 8
+            anchors.top: subheaderItem.bottom
+            anchors.topMargin: 12
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 14
+            anchors.bottomMargin: 16
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 12
-            anchors.rightMargin: 12
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
 
             Rectangle {
                 id: boardContainer

@@ -237,105 +237,253 @@ Window {
         soundToast.show("🎨 " + themes[nextIdx].name);
     }
 
-    // Main Layout
-    Column {
-        anchors.fill: parent
-        anchors.margins: 14
-        spacing: 12
-
-        // Top Header HUD
+        // 2048 DESIGN STANDARD: ROW 1 (Header Item)
         Item {
-            width: parent.width
-            height: 38
+            id: headerItem
+            anchors.top: parent.top
+            anchors.topMargin: 16
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: Math.max(titleCol.height, scoreRow.height)
 
-            // Logo & Title
-            Row {
+            Column {
+                id: titleCol
                 anchors.left: parent.left
+                anchors.right: scoreRow.left
+                anchors.rightMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
-                Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    Text {
-                        text: "ByteSnake"
-                        font.family: root.monoFontFamily
-                        font.bold: true
-                        font.pixelSize: 15
-                        color: root.themeAccent
-                    }
-                    Text {
-                        text: root.wrapWalls ? "Wrap: ON" : "Solid Walls"
-                        font.family: root.monoFontFamily
-                        font.pixelSize: 10
-                        color: root.themeSubtext
-                    }
+                spacing: 2
+
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: "ByteSnake"
+                    font.pixelSize: Math.max(22, Math.min(36, headerItem.width * 0.07))
+                    font.bold: true
+                    color: root.themeAccent
+                    Behavior on color { ColorAnimation { duration: 250 } }
+                }
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: (root.wrapWalls ? "Wrap: ON" : "Solid Walls") + " • Speed: " + root.level
+                    font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
+                    color: root.themeSubtext
+                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
 
-            // Score Cards & Action Buttons
+            // Stat Cards on Right
             Row {
+                id: scoreRow
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 5
+                spacing: 8
 
-                // Score Card
+                // SCORE Card
                 Rectangle {
-                    width: Math.max(52, scoreText.implicitWidth + 14)
-                    height: 30
-                    radius: 6
+                    width: Math.max(64, Math.min(84, headerItem.width * 0.16))
+                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                    radius: 8
                     color: root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
+                    Behavior on color { ColorAnimation { duration: 250 } }
+
                     Column {
                         anchors.centerIn: parent
-                        Text { text: "SCORE"; font.pixelSize: 7; font.bold: true; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { id: scoreText; text: root.score.toString(); font.pixelSize: 12; font.bold: true; color: root.themeFg; anchors.horizontalCenter: parent.horizontalCenter }
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "SCORE"
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.score.toString()
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: root.themeFg
+                        }
                     }
                 }
 
-                // Best Card
+                // BEST Card
                 Rectangle {
-                    width: Math.max(52, bestText.implicitWidth + 14)
-                    height: 30
-                    radius: 6
+                    width: Math.max(64, Math.min(84, headerItem.width * 0.16))
+                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                    radius: 8
                     color: root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
+                    Behavior on color { ColorAnimation { duration: 250 } }
+
                     Column {
                         anchors.centerIn: parent
-                        Text { text: "BEST"; font.pixelSize: 7; font.bold: true; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { id: bestText; text: root.bestScore.toString(); font.pixelSize: 12; font.bold: true; color: root.themeAccent; anchors.horizontalCenter: parent.horizontalCenter }
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "BEST"
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.bestScore.toString()
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: root.bestScore > 0 ? root.themeAccent : root.themeSubtext
+                        }
                     }
-                }
-
-                // Quick Action Buttons
-                Rectangle {
-                    width: 28
-                    height: 28
-                    radius: 6
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Text { anchors.centerIn: parent; text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11 }
-                    MouseArea { anchors.fill: parent; onClicked: root.toggleMute() }
-                }
-
-                Rectangle {
-                    width: 28
-                    height: 28
-                    radius: 6
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Text { anchors.centerIn: parent; text: "?"; font.bold: true; color: root.themePalette.color1 || "#f38ba8"; font.pixelSize: 12 }
-                    MouseArea { anchors.fill: parent; onClicked: root.showHelp = !root.showHelp }
                 }
             }
         }
 
-        // Game Playfield Container
+        // 2048 DESIGN STANDARD: ROW 2 (Subheader Action Bar)
         Item {
-            width: parent.width
-            height: parent.height - y - 10
+            id: subheaderItem
+            anchors.top: headerItem.bottom
+            anchors.topMargin: 10
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: restartBtn.height
+
+            // Help button
+            Rectangle {
+                id: helpBtn
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                height: Math.max(28, Math.min(34, parent.width * 0.065))
+                width: Math.max(105, Math.min(130, parent.width * 0.28))
+                radius: Math.max(6, height * 0.24)
+                color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
+                border.width: 1
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
+                    Rectangle {
+                        width: 16
+                        height: 16
+                        radius: 8
+                        color: root.themeAccent
+                        anchors.verticalCenter: parent.verticalCenter
+                        Text {
+                            anchors.centerIn: parent
+                            text: "?"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeBtnFg
+                        }
+                    }
+                    Text {
+                        text: subheaderItem.width < 340 ? "Help" : "How to Play"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.themeFg
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                MouseArea {
+                    id: helpMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.showHelp = !root.showHelp
+                }
+            }
+
+            // Mute button
+            Rectangle {
+                id: muteBtn
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+                height: helpBtn.height
+                width: Math.max(56, Math.min(92, parent.width * 0.20))
+                radius: helpBtn.radius
+                color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                border.color: root.isMuted ? root.themeBorder : root.themeAccent
+                border.width: 1
+                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 4
+                    Text {
+                        text: root.isMuted ? "🔇" : "🔊"
+                        font.pixelSize: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        text: root.isMuted ? "Muted" : "Sound"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.isMuted ? root.themeSubtext : root.themeFg
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: muteBtn.width >= 62
+                    }
+                }
+
+                MouseArea {
+                    id: muteMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.toggleMute()
+                }
+            }
+
+            // Primary Action Button (Restart)
+            Rectangle {
+                id: restartBtn
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                height: helpBtn.height
+                width: Math.max(90, Math.min(130, parent.width * 0.28))
+                radius: helpBtn.radius
+                color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: subheaderItem.width < 340 ? "New (R)" : "New Game (R)"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeBtnFg
+                }
+
+                MouseArea {
+                    id: restartMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.startNewGame()
+                }
+            }
+        }
+
+        // PLAYFIELD CONTAINER
+        Item {
+            id: playArea
+            anchors.top: subheaderItem.bottom
+            anchors.topMargin: 12
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 16
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
 
             Rectangle {
                 id: boardContainer
@@ -535,7 +683,6 @@ Window {
                 }
             }
         }
-    }
 
     // Help Modal
     Rectangle {

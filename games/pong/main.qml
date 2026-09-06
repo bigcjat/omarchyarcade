@@ -21,6 +21,8 @@ Window {
     property color themeBall: "#ffffff"
     property color themeCardBg: "#313244"
     property color themeBorder: "#45475a"
+    property color themeBtnBg: themeAccent
+    property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
     property color themeModalBg: "#1e1e2e"
     property var themePalette: ({})
     property bool isCustomTheme: false
@@ -31,7 +33,6 @@ Window {
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
     color: themeBg
-    Behavior on color { ColorAnimation { duration: 250 } }
 
     function colorLuminance(hex) {
         if (!hex || typeof hex !== "string") return 0.2;
@@ -284,126 +285,291 @@ Window {
         startNewGame();
     }
 
-    // Main Layout
-    Column {
-        anchors.fill: parent
-        anchors.margins: 14
-        spacing: 12
-
-        // Header HUD
+        // 2048 DESIGN STANDARD: ROW 1 (Header Item)
         Item {
-            width: parent.width
-            height: 38
+            id: headerItem
+            anchors.top: parent.top
+            anchors.topMargin: 16
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: Math.max(titleCol.height, scoreRow.height)
 
-            // Logo & Title
-            Row {
+            Column {
+                id: titleCol
                 anchors.left: parent.left
+                anchors.right: scoreRow.left
+                anchors.rightMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
-                Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    Text {
-                        text: "VectorPong"
-                        font.family: root.monoFontFamily
-                        font.bold: true
-                        font.pixelSize: 15
-                        color: root.themeAccent
-                    }
-                    Text {
-                        text: root.gameMode === "1P" ? ("vs CPU • " + root.aiDifficulty) : "2-Player Local"
-                        font.family: root.monoFontFamily
-                        font.pixelSize: 10
-                        color: root.themeSubtext
-                    }
+                spacing: 2
+
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: "VectorPong"
+                    font.pixelSize: Math.max(22, Math.min(36, headerItem.width * 0.07))
+                    font.bold: true
+                    color: root.themeAccent
+                    Behavior on color { ColorAnimation { duration: 250 } }
+                }
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: (root.gameMode === "1P" ? ("vs CPU (" + root.aiDifficulty + ")") : "2-Player Local") + " • Rally: " + root.rallyCount
+                    font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
+                    color: root.themeSubtext
+                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
 
-            // Mode, Diff, Restart, Mute, Help
+            // Stat Cards on Right
             Row {
+                id: scoreRow
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 5
+                spacing: 8
 
-                // Mode Button
+                // P1 SCORE Card
                 Rectangle {
-                    width: 32
-                    height: 28
-                    radius: 6
+                    width: Math.max(64, Math.min(84, headerItem.width * 0.16))
+                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                    radius: 8
                     color: root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
-                    Text {
+                    Behavior on color { ColorAnimation { duration: 250 } }
+
+                    Column {
                         anchors.centerIn: parent
-                        text: root.gameMode
-                        font.pixelSize: 10
-                        font.bold: true
-                        font.family: root.monoFontFamily
-                        color: root.themeAccent
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "PLAYER 1"
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.score1.toString()
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: root.themeAccent
+                        }
                     }
-                    MouseArea { anchors.fill: parent; onClicked: root.cycleMode() }
                 }
 
-                // Difficulty Button (1P mode only)
+                // P2 / CPU Card
                 Rectangle {
-                    width: 38
-                    height: 28
-                    radius: 6
+                    width: Math.max(64, Math.min(84, headerItem.width * 0.16))
+                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                    radius: 8
                     color: root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
-                    visible: root.gameMode === "1P"
-                    Text {
+                    Behavior on color { ColorAnimation { duration: 250 } }
+
+                    Column {
                         anchors.centerIn: parent
-                        text: root.aiDifficulty.substring(0, 3).toUpperCase()
-                        font.pixelSize: 9
-                        font.bold: true
-                        font.family: root.monoFontFamily
-                        color: root.themePaddle2
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.gameMode === "1P" ? "CPU" : "PLAYER 2"
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.score2.toString()
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: root.themePaddle2
+                        }
                     }
-                    MouseArea { anchors.fill: parent; onClicked: root.cycleDifficulty() }
-                }
-
-                // Restart Button
-                Rectangle {
-                    width: 28
-                    height: 28
-                    radius: 6
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Text { anchors.centerIn: parent; text: "↺"; font.bold: true; font.pixelSize: 13; color: root.themeFg }
-                    MouseArea { anchors.fill: parent; onClicked: root.startNewGame() }
-                }
-
-                // Action Buttons
-                Rectangle {
-                    width: 28
-                    height: 28
-                    radius: 6
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Text { anchors.centerIn: parent; text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11 }
-                    MouseArea { anchors.fill: parent; onClicked: root.toggleMute() }
-                }
-
-                Rectangle {
-                    width: 28
-                    height: 28
-                    radius: 6
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Text { anchors.centerIn: parent; text: "?"; font.bold: true; color: root.themePalette.color1 || "#f38ba8"; font.pixelSize: 12 }
-                    MouseArea { anchors.fill: parent; onClicked: root.showHelp = !root.showHelp }
                 }
             }
         }
 
-        // Court Container
+        // 2048 DESIGN STANDARD: ROW 2 (Subheader Action Bar)
         Item {
-            width: parent.width
-            height: parent.height - y - 10
+            id: subheaderItem
+            anchors.top: headerItem.bottom
+            anchors.topMargin: 10
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: restartBtn.height
+
+            // Help button
+            Rectangle {
+                id: helpBtn
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                height: Math.max(28, Math.min(34, parent.width * 0.065))
+                width: Math.max(90, Math.min(120, parent.width * 0.22))
+                radius: Math.max(6, height * 0.24)
+                color: helpMouse.containsMouse ? root.themeCardBg : root.themeCourtBg
+                border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
+                border.width: 1
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
+                    Rectangle {
+                        width: 16
+                        height: 16
+                        radius: 8
+                        color: root.themeAccent
+                        anchors.verticalCenter: parent.verticalCenter
+                        Text {
+                            anchors.centerIn: parent
+                            text: "?"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeBtnFg
+                        }
+                    }
+                    Text {
+                        text: subheaderItem.width < 380 ? "Help" : "How to Play"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.themeFg
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                MouseArea {
+                    id: helpMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.showHelp = !root.showHelp
+                }
+            }
+
+            // Mode & Diff Pill
+            Rectangle {
+                id: modeBtn
+                anchors.left: helpBtn.right
+                anchors.leftMargin: 8
+                anchors.verticalCenter: parent.verticalCenter
+                height: helpBtn.height
+                width: Math.max(68, Math.min(100, parent.width * 0.20))
+                radius: helpBtn.radius
+                color: modeMouse.containsMouse ? root.themeCardBg : root.themeCourtBg
+                border.color: root.themeBorder
+                border.width: 1
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: root.gameMode === "1P" ? ("1P (" + root.aiDifficulty.substring(0, 3) + ")") : "2-Player"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeFg
+                }
+
+                MouseArea {
+                    id: modeMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (root.gameMode === "1P") {
+                            root.cycleDifficulty();
+                        } else {
+                            root.cycleMode();
+                        }
+                    }
+                }
+            }
+
+            // Mute button
+            Rectangle {
+                id: muteBtn
+                anchors.right: restartBtn.left
+                anchors.rightMargin: 8
+                anchors.verticalCenter: parent.verticalCenter
+                height: helpBtn.height
+                width: Math.max(54, Math.min(84, parent.width * 0.16))
+                radius: helpBtn.radius
+                color: muteMouse.containsMouse ? root.themeCardBg : root.themeCourtBg
+                border.color: root.isMuted ? root.themeBorder : root.themeAccent
+                border.width: 1
+                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 4
+                    Text {
+                        text: root.isMuted ? "🔇" : "🔊"
+                        font.pixelSize: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        text: root.isMuted ? "Muted" : "Sound"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.isMuted ? root.themeSubtext : root.themeFg
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: muteBtn.width >= 62
+                    }
+                }
+
+                MouseArea {
+                    id: muteMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.toggleMute()
+                }
+            }
+
+            // Primary Action Button (Restart)
+            Rectangle {
+                id: restartBtn
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                height: helpBtn.height
+                width: Math.max(86, Math.min(120, parent.width * 0.24))
+                radius: helpBtn.radius
+                color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: subheaderItem.width < 340 ? "New (R)" : "New Game (R)"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeBtnFg
+                }
+
+                MouseArea {
+                    id: restartMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.startNewGame()
+                }
+            }
+        }
+
+        // PLAYFIELD CONTAINER
+        Item {
+            id: playArea
+            anchors.top: subheaderItem.bottom
+            anchors.topMargin: 12
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 16
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
 
             Rectangle {
                 id: courtContainer
@@ -570,7 +736,6 @@ Window {
                 }
             }
         }
-    }
 
     // Help Modal
     Rectangle {
@@ -682,7 +847,12 @@ Window {
     }
 
     function captureScreenshot(filePath, shouldQuit) {
-        var targetItem = (splashScreen && splashScreen.visible && splashScreen.opacity > 0) ? splashScreen : root.contentItem;
+        if (splashScreen) {
+            splashScreen.visible = false;
+            splashScreen.opacity = 0;
+        }
+        root.splashEnabled = false;
+        var targetItem = root.contentItem;
         targetItem.grabToImage(function(result) {
             result.saveToFile(filePath);
             console.log("Screenshot saved successfully to " + filePath);
