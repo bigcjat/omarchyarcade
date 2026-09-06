@@ -39,15 +39,15 @@ Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)
 ### From the Arcade Root:
 
 ```bash
-./.venv/bin/python games/asteroids/main.py
+./.venv/bin/python games/vectordrift/main.py
 ```
 
 ### With a Specific Theme:
 
 ```bash
-./.venv/bin/python games/asteroids/main.py --theme tokyonight
-./.venv/bin/python games/asteroids/main.py --theme gruvbox
-./.venv/bin/python games/asteroids/main.py --theme catppuccin
+./.venv/bin/python games/vectordrift/main.py --theme tokyonight
+./.venv/bin/python games/vectordrift/main.py --theme gruvbox
+./.venv/bin/python games/vectordrift/main.py --theme catppuccin
 ```
 
 ---

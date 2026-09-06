@@ -32,7 +32,7 @@ Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)
 ## Running
 
 ```bash
-./.venv/bin/python games/runner/main.py
+./.venv/bin/python games/dinorunner/main.py
 ```
 
 ---

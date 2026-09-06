@@ -32,7 +32,7 @@ Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)
 ## Running
 
 ```bash
-./.venv/bin/python games/flappy/main.py
+./.venv/bin/python games/cyberflap/main.py
 ```
 
 ---

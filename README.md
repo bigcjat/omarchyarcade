@@ -4,34 +4,34 @@
   <img src="assets/splashscreen.png" alt="Omarchy Arcade Startup" width="480"/>
 </p>
 
-A curated suite of lightweight, native desktop arcade games built with **QML**, **QtQuick**, and **JavaScript** for macOS and Linux (Omarchy / Hyprland).
+A curated suite of 16 lightweight, native desktop arcade games built with **QML**, **QtQuick**, and **JavaScript** for macOS and Linux (Omarchy / Hyprland).
 
-Every game adheres to a unified **2048 Design Standard**, featuring live desktop theme synchronization, vintage console startup sequences, zero-overhead hardware-accelerated audio, and responsive tiling window manager geometry.
+Every game features the clean 2048-style arcade layout with top stat cards, subheader action controls, live desktop theme synchronization, vintage console startup sequences, zero-overhead hardware-accelerated audio, and responsive tiling window manager geometry.
 
 ---
 
 ## The Arcade Collection
 
-All 16 games feature dedicated documentation and controls guides:
+All 16 games feature dedicated manuals and controls guides:
 
 | Game | Description | Documentation |
 | :--- | :--- | :--- |
 | **2048** | Sleek tile-merging puzzle with pentatonic pitch-scaled harmonic chimes. | [Read Manual](games/2048/README.md) |
-| **VectorDrift (Asteroids)** | Vector wireframe space combat with Newtonian inertia & 3-2-1 safe respawns. | [Read Manual](games/asteroids/README.md) |
-| **BrickBreaker** | High-energy paddle breakout with segmented angle deflections & combo multipliers. | [Read Manual](games/brickbreaker/README.md) |
+| **BrickBash** | High-energy paddle breakout with segmented angle deflections & combo multipliers. | [Read Manual](games/brickbash/README.md) |
 | **ByteCity** | 2.5D dimetric isometric city builder powered by the genuine 1989 Micropolis C++ core. | [Read Manual](games/bytecity/README.md) |
-| **Connect 4** | Tactile vertical four-in-a-row strategy featuring an intelligent heuristic AI. | [Read Manual](games/connect4/README.md) |
-| **CyberDash (Runner)** | Chrome Dino-inspired endless runner with dynamic Day/Night cycles & pterodactyls. | [Read Manual](games/runner/README.md) |
-| **CyberFlap** | Reflex-demanding airborne runner with dynamic pitch aerodynamics & sub-ms response. | [Read Manual](games/flappy/README.md) |
-| **Frogger** | Traffic and river hazard navigation with grid-snapped leaps and home bays. | [Read Manual](games/frogger/README.md) |
-| **Galaga** | Insectoid alien dive formations, tractor beam ship capture, and dual fighters. | [Read Manual](games/galaga/README.md) |
-| **Minesweeper** | Deduction puzzle with guaranteed safe first click and recursive cascade reveals. | [Read Manual](games/minesweeper/README.md) |
-| **Pong** | The pioneer of video games rebuilt with ball spin slicing and adaptive AI paddle. | [Read Manual](games/pong/README.md) |
-| **Snake** | Fluid grid navigator with sub-frame input buffering and progressive speed scaling. | [Read Manual](games/snake/README.md) |
-| **CratePusher (Sokoban)** | Warehouse crate-pushing puzzle featuring 100% verified solvable levels & unlimited undo. | [Read Manual](games/sokoban/README.md) |
-| **Space Invaders** | Descending alien armadas, destructible bunkers, and mystery flying saucers. | [Read Manual](games/spaceinvaders/README.md) |
+| **ByteSnake** | Fluid grid navigator with sub-frame input buffering and progressive speed scaling. | [Read Manual](games/bytesnake/README.md) |
+| **CratePusher** | Warehouse crate-pushing puzzle featuring 100% verified solvable levels & unlimited undo. | [Read Manual](games/cratepusher/README.md) |
+| **CyberFlap** | Reflex-demanding airborne runner with dynamic pitch aerodynamics & sub-ms response. | [Read Manual](games/cyberflap/README.md) |
+| **CyberHop** | Traffic and river hazard navigation with grid-snapped leaps and home bays. | [Read Manual](games/cyberhop/README.md) |
+| **CyberSweeper** | Deduction puzzle with guaranteed safe first click and recursive cascade reveals. | [Read Manual](games/cybersweeper/README.md) |
+| **DinoRunner** | Prehistoric endless runner with dynamic Day/Night cycles & pterodactyls. | [Read Manual](games/dinorunner/README.md) |
+| **DropFour** | Tactile vertical four-in-a-row strategy featuring an intelligent heuristic AI. | [Read Manual](games/dropfour/README.md) |
+| **GalacticSwarm** | Insectoid alien dive formations, tractor beam ship capture, and dual fighters. | [Read Manual](games/galacticswarm/README.md) |
 | **TetraBlocks** | Guideline falling block arcade puzzle with SRS wall kicks, 7-bag, & ghost projection. | [Read Manual](games/tetrablocks/README.md) |
-| **Wordle** | 5-letter deduction word puzzle with 3D tile flips and offline dictionary verification. | [Read Manual](games/wordle/README.md) |
+| **VectorDrift** | Vector wireframe space combat with Newtonian inertia & 3-2-1 safe respawns. | [Read Manual](games/vectordrift/README.md) |
+| **VectorPong** | The pioneer of video games rebuilt with ball spin slicing and adaptive AI paddle. | [Read Manual](games/vectorpong/README.md) |
+| **VoidInvaders** | Descending alien armadas, destructible bunkers, and mystery flying saucers. | [Read Manual](games/voidinvaders/README.md) |
+| **WordGuess** | 5-letter deduction word puzzle with 3D tile flips and offline dictionary verification. | [Read Manual](games/wordguess/README.md) |
 
 ---
 
@@ -58,9 +58,9 @@ All 16 games feature dedicated documentation and controls guides:
 ```bash
 # Launch from the arcade root:
 ./.venv/bin/python games/2048/main.py
-./.venv/bin/python games/asteroids/main.py
+./.venv/bin/python games/vectordrift/main.py
 ./.venv/bin/python games/tetrablocks/main.py
-./.venv/bin/python games/galaga/main.py
+./.venv/bin/python games/galacticswarm/main.py
 ```
 
 ### Launching with a Specific Theme (macOS / Testing):
@@ -68,10 +68,10 @@ All 16 games feature dedicated documentation and controls guides:
 All games support launching with any of the 22 Omarchy color palettes:
 
 ```bash
-./.venv/bin/python games/runner/main.py --theme tokyonight
-./.venv/bin/python games/wordle/main.py --theme gruvbox
-./.venv/bin/python games/brickbreaker/main.py --theme catppuccin
-./.venv/bin/python games/sokoban/main.py --theme snow
+./.venv/bin/python games/dinorunner/main.py --theme tokyonight
+./.venv/bin/python games/wordguess/main.py --theme gruvbox
+./.venv/bin/python games/brickbash/main.py --theme catppuccin
+./.venv/bin/python games/cratepusher/main.py --theme snow
 ```
 
 ---

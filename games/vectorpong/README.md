@@ -34,7 +34,7 @@ Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)
 ## Running
 
 ```bash
-./.venv/bin/python games/pong/main.py
+./.venv/bin/python games/vectorpong/main.py
 ```
 
 ---

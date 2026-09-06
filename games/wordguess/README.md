@@ -33,7 +33,7 @@ Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)
 ## Running
 
 ```bash
-./.venv/bin/python games/wordle/main.py
+./.venv/bin/python games/wordguess/main.py
 ```
 
 ---

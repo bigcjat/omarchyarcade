@@ -34,7 +34,7 @@ Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)
 ## Running
 
 ```bash
-./.venv/bin/python games/brickbreaker/main.py
+./.venv/bin/python games/brickbash/main.py
 ```
 
 ---

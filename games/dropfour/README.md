@@ -35,7 +35,7 @@ Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)
 ## Running
 
 ```bash
-./.venv/bin/python games/connect4/main.py
+./.venv/bin/python games/dropfour/main.py
 ```
 
 ---

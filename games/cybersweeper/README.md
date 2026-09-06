@@ -34,7 +34,7 @@ Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)
 ## Running
 
 ```bash
-./.venv/bin/python games/minesweeper/main.py
+./.venv/bin/python games/cybersweeper/main.py
 ```
 
 ---
