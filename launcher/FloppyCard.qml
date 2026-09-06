@@ -232,7 +232,7 @@ Item {
                     mipmap: true
                     sourceSize.width: 360
                     sourceSize.height: 270
-                    source: (gameData && gameData.id) ? ("../assets/covers/" + gameData.id + ".png") : ""
+                    source: (typeof arcadeBackend !== "undefined" && gameData && gameData.id) ? arcadeBackend.getCoverUrl(gameData.id) : ((gameData && gameData.id) ? ("../assets/covers/" + gameData.id + ".png") : "")
                     visible: status === Image.Ready
                 }
             }

@@ -71,13 +71,43 @@ class ArcadeBackend(QObject):
 
     @Slot(result=str)
     def getCatalogJson(self) -> str:
-        """Returns the raw JSON content of catalog.json directly to QML."""
+        """Fetches the game catalog dynamically from GitHub (with local fallback/cache)."""
+        import urllib.request
+        remote_url = "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/catalog.json"
+        try:
+            req = urllib.request.Request(remote_url, headers={"User-Agent": "OmarchyArcade/1.0"})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = resp.read().decode("utf-8")
+                if len(data) > 2:
+                    # Cache catalog locally
+                    try:
+                        CATALOG_PATH.write_text(data, encoding="utf-8")
+                    except Exception:
+                        pass
+                    return data
+        except Exception as e:
+            print(f"[Arcade] Note: Could not reach remote catalog ({e}), trying local cache...")
+
         if CATALOG_PATH.exists():
             try:
                 return CATALOG_PATH.read_text(encoding="utf-8")
             except Exception as e:
-                print(f"[Arcade] Error reading catalog: {e}")
+                print(f"[Arcade] Error reading local catalog: {e}")
         return "{}"
+
+    @Slot(str, result=str)
+    def getCoverUrl(self, game_id: str) -> str:
+        """Returns the cover image URL, checking local cache first, then GitHub raw."""
+        if not game_id:
+            return ""
+        # 1. Local path check
+        local_path = BASE_DIR / "assets" / "covers" / f"{game_id}.png"
+        if not local_path.exists():
+            local_path = Path.home() / ".local" / "share" / "omarchy-arcade" / "assets" / "covers" / f"{game_id}.png"
+        if local_path.exists():
+            return QUrl.fromLocalFile(str(local_path)).toString()
+        # 2. Remote GitHub raw URL
+        return f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/assets/covers/{game_id}.png"
 
     @Slot(str, result=bool)
     def isGameInstalled(self, game_id: str) -> bool:
