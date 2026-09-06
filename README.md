@@ -91,10 +91,22 @@ On Omarchy Linux:
 sudo pacman -S python python-pyside6 qt6-declarative
 ```
 
-### Launching Any Game
+### Running the Arcade Suite
 
 ```bash
-# Launch from the arcade root:
+# Launch the full interactive desktop launcher:
+./arcade
+
+# Launch directly without console startup intro:
+./arcade --no-splash
+```
+
+*(See [Launcher Documentation](launcher/README.md) for keyboard shortcuts, system theme hot-reloading, and Hyprland configuration).*
+
+### Launching Individual Games Directly
+
+```bash
+# Launch any game standalone from the arcade root:
 python games/2048/main.py
 python games/vectordrift/main.py
 python games/tetrablocks/main.py
