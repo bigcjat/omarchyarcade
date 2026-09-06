@@ -73,9 +73,17 @@ class ArcadeBackend(QObject):
     def getCatalogJson(self) -> str:
         """Fetches the game catalog dynamically from GitHub (with local fallback/cache)."""
         import urllib.request
-        remote_url = "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/catalog.json"
+        import time
+        remote_url = f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/catalog.json?_={int(time.time())}"
         try:
-            req = urllib.request.Request(remote_url, headers={"User-Agent": "OmarchyArcade/1.0"})
+            req = urllib.request.Request(
+                remote_url,
+                headers={
+                    "User-Agent": "OmarchyArcade/1.0",
+                    "Cache-Control": "no-cache",
+                    "Pragma": "no-cache"
+                }
+            )
             with urllib.request.urlopen(req, timeout=5) as resp:
                 data = resp.read().decode("utf-8")
                 if len(data) > 2:
