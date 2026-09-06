@@ -1,125 +1,149 @@
-# Omarchy Arcade Launcher
-
 <p align="center">
-  <img src="omarchy_arcade_logo.svg" alt="Omarchy Arcade Logo" width="360"/>
+  <img src="omarchy_arcade_logo.svg" alt="Omarchy Arcade" width="460"/>
 </p>
 
-A sleek, keyboard-primary native desktop arcade launcher designed specifically for **Omarchy Linux** (Hyprland). Built with **Qt6 Quick / QML** and **PySide6**, the launcher presents your offline arcade catalog as tactile retro 3.5" floppy disks that synchronize in real time with your active system desktop theme.
+<p align="center">
+  <strong>The Native Offline Desktop Game Suite & Retro Arcade Launcher for Omarchy Linux.</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Offline-Forever-00f0ff?style=flat-square" alt="Offline Forever"/>
+  <img src="https://img.shields.io/badge/Telemetry-Zero-10b981?style=flat-square" alt="Zero Telemetry"/>
+  <img src="https://img.shields.io/badge/Ads-Zero-f59e0b?style=flat-square" alt="Zero Ads"/>
+  <img src="https://img.shields.io/badge/Games-19%20Included-ec4899?style=flat-square" alt="19 Games"/>
+  <img src="https://img.shields.io/badge/Interface-Keyboard--Primary-8b5cf6?style=flat-square" alt="Keyboard-Primary"/>
+  <img src="https://img.shields.io/badge/Platform-Omarchy%20Linux%20(Hyprland)-38bdf8?style=flat-square" alt="Omarchy Linux"/>
+</p>
 
 ---
 
-## Key Features
+<p align="center">
+  <img src="../assets/splashscreen.png" alt="Omarchy Arcade Presentation" width="680"/>
+</p>
 
-### 1. Retro 3.5" Floppy Disk Aesthetic
-* **Physical Disk Details:** Authentic 3.5" floppy body styling complete with top-right write-protect beveled notch, metal shutter slider, drive alignment arrows, and Sega Master System procedural grid headers.
-* **Illustrated Painted Box Art:** Displays rich, high-resolution illustrated box art capturing the spirit of each arcade classic, with instant procedural vector badge fallbacks.
-* **Selection Halo:** Highlighted disks elevate with a neon cyan selection ring and subtle scaling so the active game is immediately obvious across all display scales and themes.
+## Meet Omarchy Arcade
 
-### 2. Keyboard-Primary Navigation
-Built for power users and tiling window manager workflows:
-* **Grid Navigation:** Arrow keys (`←`, `↑`, `→`, `↓`) or Vim keys (`H`, `J`, `K`, `L`).
-* **Instant Category Jumps:** Numbers `1` through `9` switch categories immediately.
-* **Category Cycling:** Bracket keys (`[` / `]`) or `Tab` / `Shift+Tab`.
-* **Search & Filter:** Press `/` or `Ctrl+F` to type-filter games instantly. Press `Escape` to dismiss search and return directly to grid browsing. Press `Enter` or `↓` to jump straight to the filtered games.
-* **Launch / Modal:** Press `Enter` or `Space` on any disk to inspect the detail sheet, and press `Enter` again to play.
-* **Dismiss / Back:** `Escape`, `Q`, or `Backspace` closes any open modal.
+**Omarchy Arcade** is a dedicated, distraction-free desktop game launcher and catalog of 19 full-featured offline arcade games built specifically for **Omarchy Linux** and tiling window managers (Hyprland).
 
-### 3. Live Omarchy System Theme Synchronization
-* Automatically reads `~/.config/omarchy/current/theme/colors.toml` via `QFileSystemWatcher`.
-* When you switch desktop themes (`Super + Space`), the launcher updates its background, surfaces, borders, text, and accent colors on the fly without restarting.
+Modern casual gaming has been bogged down by online logins, tracking SDKs, ad networks, and multi-gigabyte bloat. Omarchy Arcade delivers instant, tactile, distraction-free retro arcade gaming right from your desktop—running with native **Qt6 / QML** hardware acceleration.
 
-### 4. Hide-on-Launch Process Management
-* When a game launches, the launcher hides itself immediately to keep your Hyprland workspace uncluttered.
-* A non-blocking thread monitors the running game process. The moment the game exits, the launcher automatically restores itself to view and reclaims active keyboard focus.
+### Why You'll Love It
 
-### 5. Steam-Style Presentation Modal
-* **Gameplay Previews:** Displays high-resolution screenshots of actual gameplay.
-* **Install Size Badges:** Shows verified local file footprints (`💾 438 KB Install`) alongside category and reference tags.
-* **Instructions & Controls:** Displays complete how-to-play guidance and keyboard mappings with natural scrolling that never clips buttons off-screen.
-
-### 6. Vintage Console Startup Sequence
-* Snappy startup animation featuring CRT scanlines, retro horizontal color stripes, diagonal glint sheen, and an authentic console prompt (skips instantly on any key or click).
+* 🔌 **Always Offline:** Zero accounts, zero tracking, zero ads, zero internet dependencies. Plays anywhere, anytime—on trains, planes, or off-grid.
+* ⚡ **Built for Keyboards & Tiling:** Instant Vim (`HJKL`) and arrow navigation, numbers `1`–`9` for category jumps, and `/` search. No mouse required.
+* 🎨 **Live System Theme Syncing:** Connects directly with your Omarchy desktop theme (`colors.toml`). Switch themes on your desktop and the arcade hot-reloads its colors on the fly.
+* 🪟 **Tiling-Native Flow:** Launch a game and the launcher automatically hides to keep your workspace clear. Exit the game and the launcher instantly reappears and re-focuses.
+* 🎮 **19 Built-In Games:** Blocks, puzzles, retro vector space combat, brick breakers, city simulation, and classic action arcade games—ready to launch in milliseconds.
 
 ---
 
-## Quick Start
+## The Future of Lean Software: 438 KB vs 231 MB
 
-### 1-Line Automated Install
+Why should simple casual games require 200+ MB of ad mediation libraries and tracking telemetry? Omarchy Arcade strips away the monetization machinery and delivers pure, joyful software:
+
+| Feature / Metric | Typical Mobile App Store Release | Omarchy Arcade |
+| :--- | :--- | :--- |
+| **Download / Install Size** | **231.3 MB** | **438 KB** (~0.4 MB) |
+| **Ad Networks & SDKs** | AppLovin, AdMob, Mintegral, Unity Ads | **Zero** |
+| **Telemetry & Trackers** | Attribution SDKs, crash logging, user tracking | **Zero** |
+| **Network Traffic** | Constant ad auctions & video buffering | **Zero network sockets** (Offline forever) |
+
+---
+
+## How to Install
+
+Install Omarchy Arcade however you prefer—as a fast one-command setup, an official native package, a portable executable, or a flatpak container.
+
+### 1. One-Line Automated Installer (Fastest for Omarchy)
+
+Run this single command in your terminal:
+
 ```bash
 curl -sSL https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/install.sh | bash
 ```
 
-### Running Locally
+**What this sets up automatically:**
+- Installs Qt6 dependencies (`python-pyside6`, `qt6-declarative`) via `pacman`.
+- Symlinks the `arcade` CLI command into `~/.local/bin/arcade`.
+- Adds the application icon to your system menu (Rofi / Walker / Fuzzel).
+- Configures Hyprland floating rules and binds **`Super + G`** for quick launcher access.
+
+---
+
+### 2. Native Arch / Omarchy Package (`makepkg` / `pacman`)
+
+Build and install a native package managed directly by your system package manager:
+
 ```bash
-# Run installer locally:
-./install.sh
-
-# Or launch directly from repository root:
-./arcade
-
-# Skip startup console intro:
-./arcade --no-splash
+git clone https://github.com/bigcjat/omarchyarcade.git
+cd omarchyarcade
+makepkg -si
 ```
 
-### Running with Python Directly
-```bash
-python launcher/main.py
+*Uninstall cleanly at any time with `sudo pacman -R omarchy-arcade`.*
 
-# Launch directly into a specific Omarchy theme palette:
-python launcher/main.py --theme tokyonight
-python launcher/main.py --theme catppuccin
-python launcher/main.py --theme gruvbox
+---
+
+### 3. Portable AppImage (Zero-Install Executable)
+
+Download the standalone `Omarchy_Arcade-x86_64.AppImage` from [GitHub Releases](https://github.com/bigcjat/omarchyarcade/releases), make it executable, and run:
+
+```bash
+chmod +x Omarchy_Arcade-x86_64.AppImage
+./Omarchy_Arcade-x86_64.AppImage
+```
+
+*(You can also build the AppImage locally anytime with `./packaging/appimage/build_appimage.sh`).*
+
+---
+
+### 4. Flatpak (Sandboxed KDE Qt6 Runtime)
+
+Build and install locally using Flatpak:
+
+```bash
+cd packaging/flatpak
+flatpak-builder --user --install --force-clean build-dir org.omarchy.Arcade.yml
+flatpak run org.omarchy.Arcade
 ```
 
 ---
 
-## Architecture & Components
+## Keyboard Controls Cheatsheet
 
-```
-launcher/
-├── main.py                  # PySide6 runtime, theme file watcher, and game process monitor
-├── main.qml                 # Main window, header bar, category selector, grid, and shortcuts
-├── FloppyCard.qml           # 3.5" floppy disk component, art loader, and focus glow
-├── GameDetailSheet.qml      # Full presentation sheet with gameplay preview and size badge
-├── SplashScreen.qml         # Vintage console startup sequence
-├── omarchy_arcade_logo.svg  # Transparent retro 5-stripe brand emblem
-└── omarchy_arcade_text.svg  # Vector lettering source path
-```
-
-* **`ArcadeBackend` ([main.py](main.py)):** Exposes Qt slots to QML for reading `catalog.json`, resolving screenshot URLs, tracking child process lifetimes via thread-safe Qt signals, and live-watching the active theme file.
-* **`ApplicationWindow` ([main.qml](main.qml)):** Manages keyboard focus routing (`keyboardController`), responsive toolbar emoji collapsing, and search filtering.
+| Key | Action |
+| :--- | :--- |
+| **`←` `↑` `→` `↓`** / **`H` `J` `K` `L`** | Navigate through games across the grid |
+| **`1` – `9`** | Jump directly to category tab |
+| **`[` / `]`** or **`Tab` / `Shift+Tab`** | Cycle through categories |
+| **`/`** or **`Ctrl+F`** | Instant search filter (*type to find any title or tag*) |
+| **`Escape`** | Close search / close game detail modal / back to grid |
+| **`Enter` / `Space`** | Open game presentation sheet (*press Enter again to play*) |
+| **`?` / `F1`** | Open About & Credits dialog |
+| **`M`** | Toggle audio mute across all games |
 
 ---
 
-## Desktop Environment Integration
+## Running Standalone Games
 
-### Application Menu Entry (Rofi / Walker / Fuzzel)
+Every game can also be run independently from the command line:
 
-Create `~/.local/share/applications/omarchy-arcade.desktop`:
-
-```ini
-[Desktop Entry]
-Name=Omarchy Arcade
-Comment=Master Game Suite & Offline Arcade
-Exec=/home/%USER%/omarchyarcade/arcade
-Icon=/home/%USER%/omarchyarcade/assets/omarchy_arcade_logo.svg
-Terminal=false
-Type=Application
-Categories=Game;Arcade;
-StartupNotify=true
+```bash
+python games/2048/main.py
+python games/vectordrift/main.py
+python games/bytecity/main.py
 ```
-*(Replace `%USER%` with your username).*
 
-### Hyprland Window Rules
+You can also preview games directly in any of Omarchy's 22 color themes:
 
-Add to `~/.config/hypr/hyprland.conf`:
-
-```ini
-# Optional floating window rule for the launcher
-windowrulev2 = float, title:^(Omarchy Arcade)$
-windowrulev2 = size 1080 740, title:^(Omarchy Arcade)$
-windowrulev2 = center, title:^(Omarchy Arcade)$
-
-# Quick launch keybinding (Super + G)
-bind = $mainMod, G, exec, ~/omarchyarcade/arcade
+```bash
+python games/dinorunner/main.py --theme tokyonight
+python games/wordguess/main.py --theme gruvbox
 ```
+
+---
+
+## Contributing & License
+
+* **Adding New Games:** Check out the starter template in [`template/`](../template/).
+* **License:** Released under the **MIT License**.
