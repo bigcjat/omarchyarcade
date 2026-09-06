@@ -457,21 +457,23 @@ ApplicationWindow {
             Item {
                 id: subheaderItem
                 width: parent.width
-                height: restartBtn.height
+                height: 34
+                readonly property bool isCrowded: subheaderItem.width < 450
 
                 Rectangle {
                     id: helpBtn
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
-                    height: Math.max(28, Math.min(34, parent.width * 0.095))
-                    width: Math.max(96, Math.min(130, parent.width * 0.34))
-                    radius: Math.max(6, height * 0.24)
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
+                    radius: 8
                     color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
                     border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
                     border.width: 1
                     Behavior on color { ColorAnimation { duration: 150 } }
 
                     Row {
+                        id: helpRow
                         anchors.centerIn: parent
                         spacing: 6
                         Rectangle {
@@ -490,10 +492,11 @@ ApplicationWindow {
                         }
                         Text {
                             text: "How to Play"
-                            font.pixelSize: Math.max(10, Math.min(12, helpBtn.height * 0.38))
+                            font.pixelSize: 11
                             font.bold: true
                             color: root.themeFg
                             anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
                         }
                     }
 
@@ -510,9 +513,9 @@ ApplicationWindow {
                     id: muteBtn
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.verticalCenter: parent.verticalCenter
-                    height: helpBtn.height
-                    width: Math.max(34, Math.min(88, parent.width * 0.24))
-                    radius: helpBtn.radius
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
+                    radius: 8
                     color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
                     border.color: root.isMuted ? root.themeBorder : root.themeAccent
                     border.width: 1
@@ -520,20 +523,21 @@ ApplicationWindow {
                     Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     Row {
+                        id: muteRow
                         anchors.centerIn: parent
                         spacing: 4
                         Text {
                             text: root.isMuted ? "🔇" : "🔊"
-                            font.pixelSize: 11
+                            font.pixelSize: 12
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
                             text: root.isMuted ? "Muted" : "Sound"
-                            font.pixelSize: Math.max(9, Math.min(11, muteBtn.height * 0.38))
+                            font.pixelSize: 11
                             font.bold: true
                             color: root.isMuted ? root.themeSubtext : root.themeFg
                             anchors.verticalCenter: parent.verticalCenter
-                            visible: muteBtn.width >= 62
+                            visible: !subheaderItem.isCrowded
                         }
                     }
 
@@ -550,18 +554,30 @@ ApplicationWindow {
                     id: restartBtn
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    width: Math.max(96, Math.min(130, parent.width * 0.34))
-                    height: Math.max(28, Math.min(34, parent.width * 0.095))
-                    radius: Math.max(6, height * 0.24)
+                    width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
+                    height: 32
+                    radius: 8
                     color: restartMouse.containsMouse ? Qt.lighter(root.themeBtnBg, 1.15) : root.themeBtnBg
                     Behavior on color { ColorAnimation { duration: 150 } }
 
-                    Text {
+                    Row {
+                        id: restartRow
                         anchors.centerIn: parent
-                        text: parent.width < 110 ? "New (R)" : "New Game (R)"
-                        font.pixelSize: Math.max(10, Math.min(12, restartBtn.height * 0.38))
-                        font.bold: true
-                        color: root.themeBtnFg
+                        spacing: 4
+                        Text {
+                            text: "🔄"
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: subheaderItem.isCrowded
+                        }
+                        Text {
+                            text: "New Game (R)"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeBtnFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
                     }
 
                     MouseArea {
@@ -1291,7 +1307,8 @@ ApplicationWindow {
                     // Credits / Attribution Footnote
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "Based on 2048 by Gabriele Cirulli • MIT License"
+                        text: "Created by Chris Thompson (@bigcjat) with Gemini\nBased on 2048 by Gabriele Cirulli • MIT License"
+                        horizontalAlignment: Text.AlignHCenter
                         font.pixelSize: modalCard.isVeryTiny ? 8 : (modalCard.isCompact ? 9 : 10)
                         color: Qt.alpha(root.themeSubtext, 0.75)
                     }

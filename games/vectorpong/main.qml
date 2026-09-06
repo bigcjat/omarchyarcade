@@ -401,22 +401,24 @@ Window {
             anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
-            height: restartBtn.height
+            height: 34
+            readonly property bool isCrowded: subheaderItem.width < 460
 
             // Help button
             Rectangle {
                 id: helpBtn
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                height: Math.max(28, Math.min(34, parent.width * 0.065))
-                width: Math.max(90, Math.min(120, parent.width * 0.22))
-                radius: Math.max(6, height * 0.24)
+                height: 32
+                width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
+                radius: 8
                 color: helpMouse.containsMouse ? root.themeCardBg : root.themeCourtBg
                 border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
                 border.width: 1
                 Behavior on color { ColorAnimation { duration: 150 } }
 
                 Row {
+                    id: helpRow
                     anchors.centerIn: parent
                     spacing: 6
                     Rectangle {
@@ -434,11 +436,12 @@ Window {
                         }
                     }
                     Text {
-                        text: subheaderItem.width < 380 ? "Help" : "How to Play"
+                        text: "How to Play"
                         font.pixelSize: 11
                         font.bold: true
                         color: root.themeFg
                         anchors.verticalCenter: parent.verticalCenter
+                        visible: !subheaderItem.isCrowded
                     }
                 }
 
@@ -455,11 +458,11 @@ Window {
             Rectangle {
                 id: modeBtn
                 anchors.left: helpBtn.right
-                anchors.leftMargin: 8
+                anchors.leftMargin: subheaderItem.isCrowded ? 6 : 8
                 anchors.verticalCenter: parent.verticalCenter
-                height: helpBtn.height
-                width: Math.max(68, Math.min(100, parent.width * 0.20))
-                radius: helpBtn.radius
+                height: 32
+                width: subheaderItem.isCrowded ? 42 : Math.max(68, Math.min(100, parent.width * 0.20))
+                radius: 8
                 color: modeMouse.containsMouse ? root.themeCardBg : root.themeCourtBg
                 border.color: root.themeBorder
                 border.width: 1
@@ -467,7 +470,7 @@ Window {
 
                 Text {
                     anchors.centerIn: parent
-                    text: root.gameMode === "1P" ? ("1P (" + root.aiDifficulty.substring(0, 3) + ")") : "2-Player"
+                    text: subheaderItem.isCrowded ? (root.gameMode === "1P" ? root.aiDifficulty.substring(0, 3) : "2P") : (root.gameMode === "1P" ? ("1P (" + root.aiDifficulty.substring(0, 3) + ")") : "2-Player")
                     font.pixelSize: 11
                     font.bold: true
                     color: root.themeFg
@@ -492,11 +495,11 @@ Window {
             Rectangle {
                 id: muteBtn
                 anchors.right: restartBtn.left
-                anchors.rightMargin: 8
+                anchors.rightMargin: subheaderItem.isCrowded ? 6 : 8
                 anchors.verticalCenter: parent.verticalCenter
-                height: helpBtn.height
-                width: Math.max(54, Math.min(84, parent.width * 0.16))
-                radius: helpBtn.radius
+                height: 32
+                width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
+                radius: 8
                 color: muteMouse.containsMouse ? root.themeCardBg : root.themeCourtBg
                 border.color: root.isMuted ? root.themeBorder : root.themeAccent
                 border.width: 1
@@ -504,6 +507,7 @@ Window {
                 Behavior on border.color { ColorAnimation { duration: 150 } }
 
                 Row {
+                    id: muteRow
                     anchors.centerIn: parent
                     spacing: 4
                     Text {
@@ -517,7 +521,7 @@ Window {
                         font.bold: true
                         color: root.isMuted ? root.themeSubtext : root.themeFg
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: muteBtn.width >= 62
+                        visible: !subheaderItem.isCrowded
                     }
                 }
 
@@ -535,18 +539,30 @@ Window {
                 id: restartBtn
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                height: helpBtn.height
-                width: Math.max(86, Math.min(120, parent.width * 0.24))
-                radius: helpBtn.radius
+                height: 32
+                width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
+                radius: 8
                 color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
                 Behavior on color { ColorAnimation { duration: 150 } }
 
-                Text {
+                Row {
+                    id: restartRow
                     anchors.centerIn: parent
-                    text: subheaderItem.width < 340 ? "New (R)" : "New Game (R)"
-                    font.pixelSize: 11
-                    font.bold: true
-                    color: root.themeBtnFg
+                    spacing: 4
+                    Text {
+                        text: "🔄"
+                        font.pixelSize: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: subheaderItem.isCrowded
+                    }
+                    Text {
+                        text: "New Game (R)"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.themeBtnFg
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: !subheaderItem.isCrowded
+                    }
                 }
 
                 MouseArea {
@@ -749,7 +765,7 @@ Window {
 
         Rectangle {
             width: Math.min(parent.width * 0.9, 400)
-            height: 360
+            height: 380
             radius: 12
             color: root.themeModalBg
             border.color: root.themeBorder
@@ -759,7 +775,7 @@ Window {
             Column {
                 anchors.fill: parent
                 anchors.margins: 20
-                spacing: 14
+                spacing: 12
 
                 Item {
                     width: parent.width
@@ -774,10 +790,10 @@ Window {
                     columns: 2
                     rowSpacing: 10
                     columnSpacing: 16
-                    Text { text: "Player 1 Move:"; font.bold: true; color: root.themeSubtext; font.pixelSize: 12 }
-                    Text { text: "W / S (or Up / Down in 1P mode)"; color: root.themeFg; font.pixelSize: 12 }
-                    Text { text: "Player 2 Move (2P):"; font.bold: true; color: root.themeSubtext; font.pixelSize: 12 }
-                    Text { text: "Up / Down Arrow Keys"; color: root.themeFg; font.pixelSize: 12 }
+                    Text { text: "Player 1 (Left):"; font.bold: true; color: root.themeSubtext; font.pixelSize: 12 }
+                    Text { text: "W / S or Arrow Up / Down"; color: root.themeFg; font.pixelSize: 12 }
+                    Text { text: "Player 2 (Right):"; font.bold: true; color: root.themeSubtext; font.pixelSize: 12 }
+                    Text { text: "Arrow Up / Down (in 2P mode)"; color: root.themeFg; font.pixelSize: 12 }
                     Text { text: "Pause / Resume:"; font.bold: true; color: root.themeSubtext; font.pixelSize: 12 }
                     Text { text: "Space or P"; color: root.themeFg; font.pixelSize: 12 }
                     Text { text: "Restart:"; font.bold: true; color: root.themeSubtext; font.pixelSize: 12 }
@@ -796,6 +812,14 @@ Window {
                     width: parent.width
                     font.pixelSize: 12
                     color: root.themeSubtext
+                }
+                
+                Text {
+                    text: "Created by Chris Thompson (@bigcjat) with Gemini"
+                    font.pixelSize: 10
+                    color: root.themeSubtext
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    opacity: 0.75
                 }
             }
         }

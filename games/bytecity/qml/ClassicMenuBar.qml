@@ -292,13 +292,13 @@ Rectangle {
         }
     }
 
-    // Right-aligned City Title
+    // Right-aligned City Title & Credit
     Text {
         anchors.right: parent.right
         anchors.rightMargin: 12
         anchors.verticalCenter: parent.verticalCenter
-        text: (menuBarRoot.engine ? menuBarRoot.engine.cityName : "ByteCity") + " • SimCity Classic Core"
-        font.pixelSize: 11
+        text: (menuBarRoot.engine ? menuBarRoot.engine.cityName : "ByteCity") + " • Created by Chris Thompson (@bigcjat) with Gemini"
+        font.pixelSize: 10
         font.bold: true
         color: "#6c7086"
     }

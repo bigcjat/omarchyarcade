@@ -4,35 +4,37 @@
   <img src="assets/splashscreen.png" alt="Omarchy Arcade Startup" width="480"/>
 </p>
 
-A curated suite of 16 lightweight, native desktop arcade games built with **QML**, **QtQuick**, and **JavaScript** for **Omarchy Linux** (Hyprland).
+A curated suite of 19 lightweight, native desktop arcade games built with **QML**, **QtQuick**, and **JavaScript** for **Omarchy Linux** (Hyprland).
 
 ---
 
 ## The Mission
 
-Growing up across the golden eras of personal computing—from the Tandy 1000 and DeskMate, through DOS, Windows 3.11, and classic Mac System 7—some of the fondest memories were the games discovered along the way. In modern operating systems, built-in games devolved into ad-riddled, login-gated, telemetry-heavy bloatware.
+Growing up across the golden eras of personal computing—from the Tandy 1000 and DeskMate, through DOS, Windows 3.11, and classic Mac System 7—some of the fondest memories were the games discovered along the way. In modern operating systems and smartphones, gaming has been ruined: we can't even play simple games on our phones anymore without an active internet connection, mandatory account signups, telemetry, and unskippable ads. When you lose cell signal on a flight, on a train, or during an outage, modern games refuse to even launch.
 
 At the same time, traditional Linux desktop games—especially older GNOME and KDE packages, alongside the ubiquitous "Tux" games—always suffered from an awful aesthetic: goofy mascot clipart, dated 90s textures, clunky stock GTK widgets, giant menu bars, and garish color schemes that violently clashed with custom desktop themes.
 
 **Omarchy Arcade** was built to revive that lost magic with a clean, cohesive design philosophy:
+* **100% True Offline Play:** These games do not require, query, or use the internet at all. Zero network sockets, zero cloud dependencies, zero telemetry, and zero DRM. You can play completely offline forever—on an airplane, off-grid, during an outage, or whenever you just want to disconnect.
 * **Zero Bloat & Zero Ads:** No telemetry, no advertisements, no tracking, and no monetization.
 * **No Signups or Logins:** Instant play with zero accounts or internet requirements.
 * **Pure Decompression:** Quick, low-friction games to unwind for 2 minutes between compiles or terminal sessions.
 * **Clean, Consistent Template:** Every game shares a unified, distraction-free layout—clean stat cards, tactile quick-action buttons, and an unobstructed playfield. No clunky menus, no stock GTK chrome.
 * **Theme-Driven Visuals:** Visuals are built with clean mathematical vectors and procedural geometries that step aside and let the game mechanics and your active Omarchy system theme (`~/.config/omarchy/current/theme/colors.toml`) take care of the styling.
-* **Tiling-Native:** Designed specifically for the tiling spirit of Omarchy (Hyprland), scaling smoothly from full screen down to compact window splits without clipping.
+* **Tiling-Native & Responsive Emoji Collapse:** Designed specifically for the tiling spirit of Omarchy (Hyprland). When windows are narrow or toolbars crowded, action buttons collapse into clean icon/emoji buttons (`💡`, `?`, `🔇`, `🔄`) so controls never push off-screen or smash together.
 
 ---
 
 ## The Arcade Collection
 
-All 16 games feature dedicated manuals and controls guides:
+All 19 games feature dedicated manuals and controls guides:
 
 | Game | Description | Documentation |
 | :--- | :--- | :--- |
 | **2048** | Sleek tile-merging puzzle with pentatonic pitch-scaled harmonic chimes. | [Read Manual](games/2048/README.md) |
 | **BrickBash** | High-energy paddle breakout with segmented angle deflections & combo multipliers. | [Read Manual](games/brickbash/README.md) |
 | **ByteCity** | 2.5D dimetric isometric city builder powered by the genuine 1989 Micropolis C++ core. | [Read Manual](games/bytecity/README.md) |
+| **ByteMan** | Classic 28×31 labyrinth with 4 pursuit ghost algorithms, energizers & combo points. | [Read Manual](games/byteman/README.md) |
 | **ByteSnake** | Fluid grid navigator with sub-frame input buffering and progressive speed scaling. | [Read Manual](games/bytesnake/README.md) |
 | **CratePusher** | Warehouse crate-pushing puzzle featuring 100% verified solvable levels & unlimited undo. | [Read Manual](games/cratepusher/README.md) |
 | **CyberFlap** | Reflex-demanding airborne runner with dynamic pitch aerodynamics & sub-ms response. | [Read Manual](games/cyberflap/README.md) |
@@ -41,6 +43,8 @@ All 16 games feature dedicated manuals and controls guides:
 | **DinoRunner** | Prehistoric endless runner with dynamic Day/Night cycles & pterodactyls. | [Read Manual](games/dinorunner/README.md) |
 | **DropFour** | Tactile vertical four-in-a-row strategy featuring an intelligent heuristic AI. | [Read Manual](games/dropfour/README.md) |
 | **GalacticSwarm** | Insectoid alien dive formations, tractor beam ship capture, and dual fighters. | [Read Manual](games/galacticswarm/README.md) |
+| **GemSwap** | Match-3 puzzle with cascading gravity combos, Flame, Star, and Hyper power gems. | [Read Manual](games/gemswap/README.md) |
+| **OrbPop** | Hexagonal bubble shooter with wall ricochet laser guide, orphan drops & descending ceiling. | [Read Manual](games/orbpop/README.md) |
 | **TetraBlocks** | Guideline falling block arcade puzzle with SRS wall kicks, 7-bag, & ghost projection. | [Read Manual](games/tetrablocks/README.md) |
 | **VectorDrift** | Vector wireframe space combat with Newtonian inertia & 3-2-1 safe respawns. | [Read Manual](games/vectordrift/README.md) |
 | **VectorPong** | The pioneer of video games rebuilt with ball spin slicing and adaptive AI paddle. | [Read Manual](games/vectorpong/README.md) |
@@ -102,6 +106,16 @@ cp template/README_TEMPLATE.md games/mygame/README.md
 ```
 
 Refer to [`template/README.md`](template/README.md) and [`REQUIREMENTS.md`](REQUIREMENTS.md) for full layout standards and guidelines.
+
+---
+
+## Author & Credits
+
+Created by **Chris Thompson**:
+* **GitHub:** [@bigcjat](https://github.com/bigcjat) • [Repository](https://github.com/bigcjat/omarchyarcade)
+* **Twitter / X:** [@bigcjat](https://x.com/bigcjat)
+
+Built with pair-programming assistance from **Gemini** (Google DeepMind).
 
 ---
 

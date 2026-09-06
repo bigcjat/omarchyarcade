@@ -4,8 +4,9 @@ Welcome to the **Omarchy Arcade Game Template**! This template provides a comple
 
 ## What This Template Provides
 
+- ✈️ **100% True Offline Play:** Zero network sockets, zero cloud accounts, zero telemetry, and zero ads. Games are completely self-contained and play 100% offline forever.
 - 🎨 **Desktop Theme Synchronization:** Automatic live hot-reloading from Omarchy's `~/.config/omarchy/current/theme/colors.toml`.
-- 🕹️ **Arcade Header Layout:** Two stat cards (Score, Best/High Score), "How to Play" modal trigger, Mute/Unmute audio toggle, and Restart button.
+- 🕹️ **Arcade Header Layout:** Two stat cards (Score, Best/High Score), "How to Play" modal trigger, Mute/Unmute audio toggle, and Restart button with responsive emoji collapse on narrow splits.
 - 📺 **Retro Console Startup Screen:** ~1.0-second retro arcade boot sequence with CRT scanlines, vector badge, animated color stripes, and glint sheen (skips instantly on any key or click).
 - 🔊 **Zero-Latency Audio Engine:** Low-latency hardware audio via PipeWire (`pw-play`), PulseAudio (`paplay`), or ALSA (`aplay`), defaulted to muted with 0% CPU overhead when silent.
 - 💾 **Persistent Settings:** Local high-score and preference tracking powered by `QSettings`.
@@ -161,7 +162,8 @@ Never invent custom header layouts or squash controls into cramped single-strip 
 ```
 
 ### Responsive Narrow-Window Rules
-- On narrow tiling splits (`width < 340px`), buttons automatically collapse extra labels (`"How to Play"` → `"Help"`).
+- **Toolbar Crowding / Emoji Collapse**: When the action bar / subheader is crowded (`width < 500px`), control buttons must collapse their text labels and display **only emojis / icons** (e.g., `💡 Hint (H)` → `💡`, `? How to Play` → `?`, `🔇 Muted` → `🔇`, `Restart (R)` → `🔄`). This guarantees controls never overflow window margins or smash together.
+- On narrow tiling splits (`width < 340px`), buttons automatically collapse extra labels (`"How to Play"` → `"Help"` or `?`).
 - If your game includes a bottom navigation bar, **always use proportional width partitioning** (`28%`, `32%`, `20%`, `20%`) inside `anchors.fill: parent; anchors.margins: 4`. Never use fixed-width child items inside an centered `Row`, as this causes horizontal overflow on compact screens.
 
 ---

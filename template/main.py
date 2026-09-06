@@ -108,6 +108,10 @@ class SoundManager(QObject):
             self.player_cmd = shutil.which("pw-play") or shutil.which("paplay") or shutil.which("aplay")
 
     @Slot(str)
+    def play(self, name):
+        self.playSound(name)
+
+    @Slot(str)
     def playSound(self, name):
         if self.is_mac and name in self.sounds:
             self.AudioServicesPlaySystemSound(self.sounds[name])

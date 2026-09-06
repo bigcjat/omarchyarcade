@@ -323,22 +323,24 @@ Window {
             anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
-            height: restartBtn.height
+            height: 34
+            readonly property bool isCrowded: subheaderItem.width < 450
 
             // Help button
             Rectangle {
                 id: helpBtn
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                height: Math.max(28, Math.min(34, parent.width * 0.065))
-                width: Math.max(105, Math.min(130, parent.width * 0.28))
-                radius: Math.max(6, height * 0.24)
+                height: 32
+                width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
+                radius: 8
                 color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
                 border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
                 border.width: 1
                 Behavior on color { ColorAnimation { duration: 150 } }
 
                 Row {
+                    id: helpRow
                     anchors.centerIn: parent
                     spacing: 6
                     Rectangle {
@@ -356,11 +358,12 @@ Window {
                         }
                     }
                     Text {
-                        text: subheaderItem.width < 340 ? "Help" : "How to Play"
+                        text: "How to Play"
                         font.pixelSize: 11
                         font.bold: true
                         color: root.themeFg
                         anchors.verticalCenter: parent.verticalCenter
+                        visible: !subheaderItem.isCrowded
                     }
                 }
 
@@ -378,9 +381,9 @@ Window {
                 id: muteBtn
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                height: helpBtn.height
-                width: Math.max(56, Math.min(92, parent.width * 0.20))
-                radius: helpBtn.radius
+                height: 32
+                width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
+                radius: 8
                 color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
                 border.color: root.isMuted ? root.themeBorder : root.themeAccent
                 border.width: 1
@@ -388,6 +391,7 @@ Window {
                 Behavior on border.color { ColorAnimation { duration: 150 } }
 
                 Row {
+                    id: muteRow
                     anchors.centerIn: parent
                     spacing: 4
                     Text {
@@ -401,7 +405,7 @@ Window {
                         font.bold: true
                         color: root.isMuted ? root.themeSubtext : root.themeFg
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: muteBtn.width >= 62
+                        visible: !subheaderItem.isCrowded
                     }
                 }
 
@@ -419,18 +423,30 @@ Window {
                 id: restartBtn
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                height: helpBtn.height
-                width: Math.max(90, Math.min(130, parent.width * 0.28))
-                radius: helpBtn.radius
+                height: 32
+                width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
+                radius: 8
                 color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
                 Behavior on color { ColorAnimation { duration: 150 } }
 
-                Text {
+                Row {
+                    id: restartRow
                     anchors.centerIn: parent
-                    text: subheaderItem.width < 340 ? "Restart (R)" : "Restart (R)"
-                    font.pixelSize: 11
-                    font.bold: true
-                    color: root.themeBtnFg
+                    spacing: 4
+                    Text {
+                        text: "🔄"
+                        font.pixelSize: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: subheaderItem.isCrowded
+                    }
+                    Text {
+                        text: "Restart (R)"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.themeBtnFg
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: !subheaderItem.isCrowded
+                    }
                 }
 
                 MouseArea {
@@ -890,6 +906,15 @@ Window {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.showHelp = false
                     }
+                }
+
+                Text {
+                    text: "Created by Chris Thompson (@bigcjat) with Gemini"
+                    font.family: root.monoFontFamily
+                    font.pixelSize: 9
+                    color: root.themeSubtext
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    opacity: 0.75
                 }
             }
         }

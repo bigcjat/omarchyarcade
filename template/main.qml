@@ -321,122 +321,140 @@ Window {
             anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
-            height: restartBtn.height
+            height: 34
 
-            // Help Pill Button
-            Rectangle {
-                id: helpBtn
+            readonly property bool isCrowded: subheaderItem.width < 450
+
+            // Left cluster (e.g. Help pill button or stats)
+            Row {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                height: Math.max(28, Math.min(34, parent.width * 0.065))
-                width: Math.max(90, Math.min(130, parent.width * 0.28))
-                radius: Math.max(6, height * 0.24)
-                color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
-                border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
+                spacing: subheaderItem.isCrowded ? 6 : 8
 
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 6
-                    Rectangle {
-                        width: 16
-                        height: 16
-                        radius: 8
-                        color: root.themeAccent
-                        anchors.verticalCenter: parent.verticalCenter
+                // Help Button
+                Rectangle {
+                    id: helpBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
+                    radius: 8
+                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        id: helpRow
+                        anchors.centerIn: parent
+                        spacing: 5
                         Text {
-                            anchors.centerIn: parent
                             text: "?"
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: root.themeAccent
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "How to Play"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: helpMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showHelp = !root.showHelp
+                    }
+                }
+            }
+
+            // Right cluster (Actions: Mute, Restart)
+            Row {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: subheaderItem.isCrowded ? 6 : 8
+
+                // Mute Button
+                Rectangle {
+                    id: muteBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
+                    radius: 8
+                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: root.isMuted ? root.themeBorder : root.themeAccent
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        id: muteRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: root.isMuted ? "🔇" : "🔊"
+                            font.pixelSize: 13
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: root.isMuted ? "Muted" : "Sound"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.isMuted ? root.themeSubtext : root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: muteMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
+                }
+
+                // Primary Action Button (Restart / New Game)
+                Rectangle {
+                    id: restartBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
+                    radius: 8
+                    color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        id: restartRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "🔄"
+                            font.pixelSize: 13
+                            visible: subheaderItem.isCrowded
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "New Game (R)"
                             font.pixelSize: 11
                             font.bold: true
                             color: root.themeBtnFg
+                            visible: !subheaderItem.isCrowded
+                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
-                    Text {
-                        text: subheaderItem.width < 340 ? "Help" : "How to Play"
-                        font.pixelSize: 11
-                        font.bold: true
-                        color: root.themeFg
-                        anchors.verticalCenter: parent.verticalCenter
+
+                    MouseArea {
+                        id: restartMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.restartGame()
                     }
-                }
-
-                MouseArea {
-                    id: helpMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.showHelp = !root.showHelp
-                }
-            }
-
-            // Mute Pill Button
-            Rectangle {
-                id: muteBtn
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
-                height: helpBtn.height
-                width: Math.max(56, Math.min(92, parent.width * 0.20))
-                radius: helpBtn.radius
-                color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                border.color: root.isMuted ? root.themeBorder : root.themeAccent
-                border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
-                Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 4
-                    Text {
-                        text: root.isMuted ? "🔇" : "🔊"
-                        font.pixelSize: 12
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: root.isMuted ? "Muted" : "Sound"
-                        font.pixelSize: 11
-                        font.bold: true
-                        color: root.isMuted ? root.themeSubtext : root.themeFg
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: muteBtn.width >= 62
-                    }
-                }
-
-                MouseArea {
-                    id: muteMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.toggleMute()
-                }
-            }
-
-            // Primary Action Button (Restart / New Game)
-            Rectangle {
-                id: restartBtn
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                height: Math.max(28, Math.min(34, parent.width * 0.065))
-                width: Math.max(90, Math.min(130, parent.width * 0.28))
-                radius: Math.max(6, height * 0.24)
-                color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-                Behavior on color { ColorAnimation { duration: 150 } }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: subheaderItem.width < 340 ? "New (R)" : "New Game (R)"
-                    font.pixelSize: 11
-                    font.bold: true
-                    color: root.themeBtnFg
-                }
-
-                MouseArea {
-                    id: restartMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.restartGame()
                 }
             }
         }
@@ -554,6 +572,14 @@ Window {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.showHelp = false
                         }
+                    }
+
+                    Text {
+                        text: "Created by Chris Thompson (@bigcjat) with Gemini"
+                        font.pixelSize: 9
+                        color: root.themeSubtext
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        opacity: 0.75
                     }
                 }
             }

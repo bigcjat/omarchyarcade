@@ -10,8 +10,10 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 
 ## Features
 
+* **100% True Offline Play:** Zero internet required or used. No network sockets, zero cloud dependencies, zero telemetry, and zero ads. Plays completely offline forever.
 * **Dynamic Omarchy Theming:** Automatically synchronizes with all 22 Omarchy system themes by reading `~/.config/omarchy/current/theme/colors.toml`. Live hot-reloads when changing themes via `Super + Space`!
 * **Standardized 2048 Arcade Layout:** Top title & stats header, subheader with sound toggle and quick action buttons, and responsive play matrix.
+* **Responsive Toolbar Emoji Collapse:** When windows are narrow or toolbars crowded, control buttons automatically collapse into compact icon/emoji buttons (`💡`, `?`, `🔇`, `🔄`) so controls never push off-screen or smash together.
 * **Retro Console Startup Screen:** ~1.0-second arcade startup sequence with CRT scanlines, retro stripes, and vector glint sheen (skips instantly on any key/click).
 * **Keyboard-First Controls:** Arrow keys, WASD, and Vim (`H`, `J`, `K`, `L`) navigation supported across all interactions.
 * **Zero-Overhead Audio:** Zero-overhead native audio (PipeWire / ALSA), defaulted to muted (`M` to toggle) with 0% CPU consumption when silent.
@@ -48,6 +50,12 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 ./.venv/bin/python games/<gamename>/main.py --theme catppuccin
 ./.venv/bin/python games/<gamename>/main.py --theme snow
 ```
+
+---
+
+## Author & Credits
+
+Created by **Chris Thompson** ([@bigcjat](https://github.com/bigcjat) • [@bigcjat](https://x.com/bigcjat)) with assistance from **Gemini**.
 
 ---
 

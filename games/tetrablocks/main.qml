@@ -528,9 +528,10 @@ Window {
             id: subheaderRow
             width: Math.min(parent.width, arena.arenaTotalWidth)
             anchors.horizontalCenter: parent.horizontalCenter
-            height: Math.max(26, Math.min(32, container.height * 0.05))
+            height: 32
             anchors.top: headerRow.bottom
             anchors.topMargin: 8
+            readonly property bool isCrowded: subheaderRow.width < 450
 
             Row {
                 anchors.fill: parent
@@ -550,13 +551,14 @@ Window {
                     Row {
                         anchors.centerIn: parent
                         spacing: 4
-                        Text { text: "❓"; font.pixelSize: 10; anchors.verticalCenter: parent.verticalCenter }
+                        Text { text: "❓"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
                         Text {
-                            text: parent.parent.width < 90 ? "Help" : "How to Play"
+                            text: "How to Play"
                             font.pixelSize: 11
                             font.bold: true
                             color: root.themeFg
                             anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderRow.isCrowded
                         }
                     }
 
@@ -584,13 +586,14 @@ Window {
                     Row {
                         anchors.centerIn: parent
                         spacing: 4
-                        Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 10; anchors.verticalCenter: parent.verticalCenter }
+                        Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
                         Text {
                             text: root.isMuted ? "Muted" : "Sound"
                             font.pixelSize: 11
                             font.bold: true
                             color: root.isMuted ? root.themeSubtext : root.themeFg
                             anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderRow.isCrowded
                         }
                     }
 
@@ -612,12 +615,23 @@ Window {
                     color: restartMouse.containsMouse ? Qt.lighter(root.themeBtnBg, 1.15) : root.themeBtnBg
                     Behavior on color { ColorAnimation { duration: 150 } }
 
-                    Text {
+                    Row {
                         anchors.centerIn: parent
-                        text: parent.width < 96 ? "New (R)" : "New Game (R)"
-                        font.pixelSize: 11
-                        font.bold: true
-                        color: root.themeBtnFg
+                        spacing: 4
+                        Text {
+                            text: "🔄"
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: subheaderRow.isCrowded
+                        }
+                        Text {
+                            text: "New Game (R)"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeBtnFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderRow.isCrowded
+                        }
                     }
 
                     MouseArea {
@@ -1268,7 +1282,8 @@ Window {
                 // Legal / Attribution Footnote
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: "TetraBlocks • Public Domain Rules • MIT License"
+                    text: "Created by Chris Thompson (@bigcjat) with Gemini\nTetraBlocks • Public Domain Rules • MIT License"
+                    horizontalAlignment: Text.AlignHCenter
                     font.pixelSize: 9
                     color: Qt.alpha(root.themeSubtext, 0.7)
                 }
