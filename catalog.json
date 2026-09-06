@@ -1,0 +1,540 @@
+{
+  "version": 1,
+  "app_name": "Omarchy Arcade",
+  "updated_at": "2026-09-06T23:10:00Z",
+  "games": [
+    {
+      "id": "2048",
+      "title": "2048",
+      "ref": "OA-001",
+      "category": "Blocks & Merging",
+      "floppy_color": "#EA580C",
+      "grid_color": "#1E3A8A",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Classic 4\u00d74 Sliding Number Tile Merge Puzzle",
+      "description": "Slide numbered tiles across a 4\u00d74 grid using arrow keys or Vim. When two tiles with the same number touch, they merge into one with double the value! Can you reach the elusive 2048 tile?",
+      "instructions": [
+        "Use Arrow keys, WASD, or Vim keys (H/J/K/L) to shift all tiles across the grid.",
+        "Tiles with matching numbers merge into their sum when they collide (2+2=4, 4+4=8...).",
+        "A new tile (2 or 4) randomly spawns after each valid move.",
+        "The game is won when you create a 2048 tile. The game ends when no moves remain."
+      ],
+      "controls": {
+        "keyboard": "Arrows / WASD / Vim (H/J/K/L) to slide tiles",
+        "shortcuts": "R to restart, M to mute, Esc to back"
+      },
+      "folder": "games/2048",
+      "entrypoint": "games/2048/main.qml",
+      "cover_image": "assets/covers/2048.png",
+      "size": "438 KB",
+      "size_bytes": 448847,
+      "download_size": "438 KB"
+    },
+    {
+      "id": "tetrablocks",
+      "title": "TetraBlocks",
+      "ref": "OA-002",
+      "category": "Blocks & Merging",
+      "floppy_color": "#EA580C",
+      "grid_color": "#06B6D4",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Competitive Guideline Falling Blocks Puzzle",
+      "description": "The quintessential falling block game featuring standard Super Rotation System (SRS) wall kicks, 7-bag randomizer, hold slot, hard drop, soft drop, and ghost piece projections.",
+      "instructions": [
+        "Guide the falling tetromino blocks to fill complete horizontal rows.",
+        "Filled horizontal rows are cleared immediately, collapsing blocks above.",
+        "Clear multiple rows simultaneously for massive score bonuses (Tetris = 4 lines).",
+        "Use the Hold slot (C) to save tricky pieces for the opportune moment."
+      ],
+      "controls": {
+        "keyboard": "Left/Right to move, Up/X to rotate clockwise, Z to rotate counter-clockwise, Space to Hard Drop, Down to Soft Drop, C to Hold",
+        "shortcuts": "R to restart, M to mute, Esc to back"
+      },
+      "folder": "games/tetrablocks",
+      "entrypoint": "games/tetrablocks/main.qml",
+      "cover_image": "assets/covers/tetrablocks.png",
+      "size": "272 KB",
+      "size_bytes": 278125,
+      "download_size": "272 KB"
+    },
+    {
+      "id": "bytesnake",
+      "title": "ByteSnake",
+      "ref": "OA-003",
+      "category": "Puzzles & Grid Logic",
+      "floppy_color": "#059669",
+      "grid_color": "#1E293B",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Neon Trail Classic Continuous-Growth Snake",
+      "description": "Guide the glowing neon snake through an obstacle-free arena, collecting power fruit to grow your body. Avoid biting your own tail as your speed accelerates!",
+      "instructions": [
+        "Direct the snake towards fruit to earn points and lengthen your body.",
+        "Special bonus fruit spawns on a countdown timer for bonus multipliers.",
+        "Crashing into your own body triggers instant game over.",
+        "Supports Vim navigation, arrows, and responsive mouse gestures."
+      ],
+      "controls": {
+        "keyboard": "Arrows / WASD / Vim (H/J/K/L) for 4-way movement",
+        "shortcuts": "Space to pause, R to restart, M to mute"
+      },
+      "folder": "games/bytesnake",
+      "entrypoint": "games/bytesnake/main.qml",
+      "cover_image": "assets/covers/bytesnake.png",
+      "size": "188 KB",
+      "size_bytes": 192621,
+      "download_size": "188 KB"
+    },
+    {
+      "id": "vectorpong",
+      "title": "VectorPong",
+      "ref": "OA-004",
+      "category": "Board & Tabletop",
+      "floppy_color": "#E6DFD3",
+      "grid_color": "#14532D",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "High-Framerate Vector Table Tennis Classic",
+      "description": "Fast-paced retro tennis with rally speed acceleration, spin control, and segmented paddle deflection physics. Includes 1-Player vs AI (Novice, Pro, Master) and 2-Player local split-keyboard.",
+      "instructions": [
+        "Deflect the vector ball past your opponent's paddle to score a point.",
+        "Hitting the ball with paddle edges creates sharp return angles.",
+        "Each consecutive volley increases the ball speed, intensifying rallies.",
+        "First player to reach the match score wins."
+      ],
+      "controls": {
+        "keyboard": "1P: W/S or Up/Down arrows. 2P: W/S (Left Paddle) and Up/Down (Right Paddle)",
+        "shortcuts": "R to restart, M to mute, Esc to back"
+      },
+      "folder": "games/vectorpong",
+      "entrypoint": "games/vectorpong/main.qml",
+      "cover_image": "assets/covers/vectorpong.png",
+      "size": "195 KB",
+      "size_bytes": 199433,
+      "download_size": "195 KB"
+    },
+    {
+      "id": "cybersweeper",
+      "title": "CyberSweeper",
+      "ref": "OA-005",
+      "category": "Puzzles & Grid Logic",
+      "floppy_color": "#059669",
+      "grid_color": "#475569",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Tactile Logic Grid Deduction Minesweeper",
+      "description": "The quintessential desktop deduction puzzle with guaranteed first-click safety, recursive flood fill, chord clicking, digital counters, and authentic beveled cell styling.",
+      "instructions": [
+        "Left-click any cell to reveal what lies beneath. Numbers reveal adjacent hazard counts.",
+        "Right-click unrevealed cells to flag suspected mines.",
+        "Click a satisfied numbered tile to chord-reveal all unflagged neighbors.",
+        "Clear all non-mine tiles across Beginner, Intermediate, or Expert tiers to win."
+      ],
+      "controls": {
+        "mouse": "Left-click reveal, Right-click flag, Middle-click or Chord to clear neighbors",
+        "keyboard": "Arrows/Vim to navigate cursor, Space to reveal, F to flag"
+      },
+      "folder": "games/cybersweeper",
+      "entrypoint": "games/cybersweeper/main.qml",
+      "cover_image": "assets/covers/cybersweeper.png",
+      "size": "236 KB",
+      "size_bytes": 241450,
+      "download_size": "236 KB"
+    },
+    {
+      "id": "dropfour",
+      "title": "DropFour",
+      "ref": "OA-006",
+      "category": "Board & Tabletop",
+      "floppy_color": "#E6DFD3",
+      "grid_color": "#1E3A8A",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Vertical 7\u00d76 Drop Checker Cabinet with Minimax AI",
+      "description": "Drop colored checkers into a vertical acrylic cabinet to connect 4 in a row horizontally, vertically, or diagonally. Features smooth gravity drop physics and intelligent Minimax AI.",
+      "instructions": [
+        "Take turns dropping one colored checker into any of the 7 vertical columns.",
+        "Checkers stack from the bottom up due to gravity.",
+        "Form an unbroken line of 4 checkers in any direction to claim victory.",
+        "Play against a friend locally or challenge the tactical CPU opponent."
+      ],
+      "controls": {
+        "mouse": "Hover over columns and click to drop",
+        "keyboard": "Number keys 1\u20137 to drop checker into column, Left/Right + Space"
+      },
+      "folder": "games/dropfour",
+      "entrypoint": "games/dropfour/main.qml",
+      "cover_image": "assets/covers/dropfour.png",
+      "size": "206 KB",
+      "size_bytes": 210467,
+      "download_size": "206 KB"
+    },
+    {
+      "id": "brickbash",
+      "title": "BrickBash",
+      "ref": "OA-007",
+      "category": "Action Arcade",
+      "floppy_color": "#232328",
+      "grid_color": "#06B6D4",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Arkanoid / Breakout Action with Multi-Ball & Lasers",
+      "description": "High-energy ball-and-paddle block-breaker with precision angle deflections, shattering particle sparks, and collectible power-up capsules including Multi-Ball, Lasers, and Expanded Paddles.",
+      "instructions": [
+        "Deflect the energy sphere with your paddle to shatter colored brick layers.",
+        "Collect falling capsule power-ups: Multi-Ball (M), Laser Blasters (L), Wide Paddle (W).",
+        "Control bounce angles by hitting the sphere with paddle edges.",
+        "Do not let balls drop past the bottom barrier."
+      ],
+      "controls": {
+        "keyboard": "Left/Right arrows or A/D to move paddle, Space to fire lasers / launch ball",
+        "mouse": "Move mouse horizontally to steer paddle, Left-click to launch"
+      },
+      "folder": "games/brickbash",
+      "entrypoint": "games/brickbash/main.qml",
+      "cover_image": "assets/covers/brickbash.png",
+      "size": "223 KB",
+      "size_bytes": 227911,
+      "download_size": "223 KB"
+    },
+    {
+      "id": "voidinvaders",
+      "title": "VoidInvaders",
+      "ref": "OA-008",
+      "category": "Action Arcade",
+      "floppy_color": "#232328",
+      "grid_color": "#22C55E",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Classic 1978 Space Defense with 55 Marching Aliens",
+      "description": "Defend the lower perimeter against 5 marching rows of alien invaders. As their numbers dwindle, their march accelerates! Features destructible bunker defenses and mystery red UFOs.",
+      "instructions": [
+        "Slide your defense cannon horizontally along the bottom baseline.",
+        "Fire upwards to eliminate descending alien invaders before they reach your level.",
+        "Take cover beneath 4 defensive bunkers, which erode from incoming weapons fire.",
+        "Shoot down the high-speed mystery UFO at the top of the screen for bonus points."
+      ],
+      "controls": {
+        "keyboard": "Left/Right arrows or A/D to move, Space to fire cannon",
+        "shortcuts": "R to restart, M to mute, Esc to back"
+      },
+      "folder": "games/voidinvaders",
+      "entrypoint": "games/voidinvaders/main.qml",
+      "cover_image": "assets/covers/voidinvaders.png",
+      "size": "289 KB",
+      "size_bytes": 295592,
+      "download_size": "289 KB"
+    },
+    {
+      "id": "vectordrift",
+      "title": "VectorDrift",
+      "ref": "OA-009",
+      "category": "Action Arcade",
+      "floppy_color": "#232328",
+      "grid_color": "#38BDF8",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "360\u00b0 Newtonian Inertia Drift Space Shooter",
+      "description": "Pilot a wireframe spacecraft in deep void space with authentic momentum physics, wraparound boundaries, and multi-stage asteroid fragmentation.",
+      "instructions": [
+        "Rotate your ship and fire thrusters to drift through zero-gravity space.",
+        "Shoot large asteroids to split them into medium, and then small fragments.",
+        "Watch your momentum\u2014objects wrap around the screen edges seamlessly.",
+        "Clear all asteroids in each sector to advance."
+      ],
+      "controls": {
+        "keyboard": "Left/Right arrows or A/D to rotate, Up/W for thruster, Space to fire lasers, Down/S for hyperspace jump",
+        "shortcuts": "R to restart, M to mute, Esc to back"
+      },
+      "folder": "games/vectordrift",
+      "entrypoint": "games/vectordrift/main.qml",
+      "cover_image": "assets/covers/vectordrift.png",
+      "size": "464 KB",
+      "size_bytes": 474886,
+      "download_size": "464 KB"
+    },
+    {
+      "id": "cyberflap",
+      "title": "CyberFlap",
+      "ref": "OA-010",
+      "category": "Action Arcade",
+      "floppy_color": "#232328",
+      "grid_color": "#06B6D4",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "One-Button Retro Gravity Hopper Through Neon Laser Gates",
+      "description": "A high-stakes, single-button reflex hopper navigating through procedural neon laser gate pillars. Features precise gravity physics and dynamic theme synchronization.",
+      "instructions": [
+        "Tap Space or click to flap upwards with an impulse velocity boost.",
+        "Navigate cleanly through gaps between top and bottom laser pillars.",
+        "Colliding with any barrier or the floor ends the run immediately.",
+        "Pace your taps to maintain steady mid-altitude flight."
+      ],
+      "controls": {
+        "keyboard": "Spacebar or Up Arrow to flap",
+        "mouse": "Left-click anywhere to flap"
+      },
+      "folder": "games/cyberflap",
+      "entrypoint": "games/cyberflap/main.qml",
+      "cover_image": "assets/covers/cyberflap.png",
+      "size": "229 KB",
+      "size_bytes": 234384,
+      "download_size": "229 KB"
+    },
+    {
+      "id": "cyberhop",
+      "title": "CyberHop",
+      "ref": "OA-011",
+      "category": "Action Arcade",
+      "floppy_color": "#232328",
+      "grid_color": "#84CC16",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Multi-Lane Highway Traffic & Floating River Traversal",
+      "description": "Cross hazardous multi-lane vehicle freeways, traverse floating river logs, and dodge diving turtles to guide your hopper safely home into all 5 destination bays.",
+      "instructions": [
+        "Hop forward, backward, left, or right one grid tile at a time.",
+        "Time your hops across highway lanes to avoid speeding vehicles.",
+        "Ride floating logs and turtle shells to cross the deadly river.",
+        "Fill all 5 home lily bays at the top of the screen to complete the stage."
+      ],
+      "controls": {
+        "keyboard": "Arrow keys, WASD, or Vim (H/J/K/L) to hop in 4 directions",
+        "shortcuts": "R to restart, M to mute, Esc to back"
+      },
+      "folder": "games/cyberhop",
+      "entrypoint": "games/cyberhop/main.qml",
+      "cover_image": "assets/covers/cyberhop.png",
+      "size": "399 KB",
+      "size_bytes": 408736,
+      "download_size": "399 KB"
+    },
+    {
+      "id": "cratepusher",
+      "title": "CratePusher",
+      "ref": "OA-012",
+      "category": "Puzzles & Grid Logic",
+      "floppy_color": "#059669",
+      "grid_color": "#B45309",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Sokoban Spatial Warehouse Puzzle with 50 Stages",
+      "description": "Authentic Japanese warehouse crate-pushing puzzle featuring 50 canonical progressive stages, subpixel push easing, dust particle effects, and infinite undo/redo.",
+      "instructions": [
+        "Push crates onto designated goal diamonds.",
+        "You can only push crates forward\u2014you cannot pull them!",
+        "Avoid pushing crates against dead corners or walls where they get stuck.",
+        "Press U or Ctrl+Z to undo mistakes anytime."
+      ],
+      "controls": {
+        "keyboard": "Arrow keys, WASD, or Vim (H/J/K/L) to move worker",
+        "shortcuts": "U / Ctrl+Z to undo, R to restart level, Esc to back"
+      },
+      "folder": "games/cratepusher",
+      "entrypoint": "games/cratepusher/main.qml",
+      "cover_image": "assets/covers/cratepusher.png",
+      "size": "369 KB",
+      "size_bytes": 377642,
+      "download_size": "369 KB"
+    },
+    {
+      "id": "dinorunner",
+      "title": "DinoRunner",
+      "ref": "OA-013",
+      "category": "Action Arcade",
+      "floppy_color": "#232328",
+      "grid_color": "#64748B",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Authentic Chromium T-Rex Runner with Ducking & Jumping",
+      "description": "Sprint endlessly across prehistoric desert dunes, leaping over cacti and ducking under soaring Pterodactyls. Features day/night theme inversions and speed acceleration.",
+      "instructions": [
+        "Jump over small and large desert cacti.",
+        "Duck beneath low and mid-altitude flying Pterodactyls.",
+        "Survive as the game accelerates and cycles between daylight and night.",
+        "Aim for a new high score milestone on every run."
+      ],
+      "controls": {
+        "keyboard": "Space or Up Arrow to jump, Down Arrow to duck",
+        "mouse": "Click to jump"
+      },
+      "folder": "games/dinorunner",
+      "entrypoint": "games/dinorunner/main.qml",
+      "cover_image": "assets/covers/dinorunner.png",
+      "size": "382 KB",
+      "size_bytes": 391122,
+      "download_size": "382 KB"
+    },
+    {
+      "id": "wordguess",
+      "title": "WordGuess",
+      "ref": "OA-014",
+      "category": "Word & Trivia",
+      "floppy_color": "#F0F0F2",
+      "grid_color": "#65A30D",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "5-Letter Word Deduction Puzzle with Flip Reveals",
+      "description": "Deduce the secret 5-letter word in 6 guesses. Features animated tile reveals, color-coded virtual keyboard, and a comprehensive 12,000+ word offline dictionary.",
+      "instructions": [
+        "Type any valid 5-letter word and press Enter.",
+        "Green tile: The letter is in the word and in the correct spot.",
+        "Yellow tile: The letter is in the word but in the wrong spot.",
+        "Gray tile: The letter is not in the word.",
+        "Solve the puzzle in 6 attempts or fewer."
+      ],
+      "controls": {
+        "keyboard": "Direct keyboard typing A\u2013Z, Backspace to delete, Enter to submit",
+        "mouse": "Click on-screen virtual keyboard tiles"
+      },
+      "folder": "games/wordguess",
+      "entrypoint": "games/wordguess/main.qml",
+      "cover_image": "assets/covers/wordguess.png",
+      "size": "295 KB",
+      "size_bytes": 301771,
+      "download_size": "295 KB"
+    },
+    {
+      "id": "bytecity",
+      "title": "ByteCity",
+      "ref": "OA-015",
+      "category": "Simulation & City",
+      "floppy_color": "#0891B2",
+      "grid_color": "#06B6D4",
+      "version": "0.9.0",
+      "status": "unreleased",
+      "tagline": "Classic 1989 Micropolis City Simulation Homage",
+      "description": "Authentic 1989 Will Wright Micropolis C++ simulation engine with isometric 2.5D vector visuals. Manage RCI zoning, power grids, city budget, traffic, and municipal safety.",
+      "instructions": [
+        "COMING SOON: Currently in preview engineering.",
+        "Zone Residential (Green), Commercial (Blue), and Industrial (Yellow) plots.",
+        "Connect infrastructure with power plants, power lines, and roads.",
+        "Balance annual city budget tax rates against municipal services."
+      ],
+      "controls": {
+        "mouse": "Click tools in palette, click/drag on map to build",
+        "keyboard": "1\u20139 to select tools, WASD/Arrows to pan map, +/- to zoom"
+      },
+      "folder": "games/bytecity",
+      "entrypoint": "games/bytecity/main.qml",
+      "cover_image": "assets/covers/bytecity.png",
+      "size": "5.1 MB",
+      "size_bytes": 5361268,
+      "download_size": "5.1 MB"
+    },
+    {
+      "id": "galacticswarm",
+      "title": "GalacticSwarm",
+      "ref": "OA-016",
+      "category": "Action Arcade",
+      "floppy_color": "#232328",
+      "grid_color": "#DC2626",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Authentic 1981 Space Shooter with Boss Tractor Beam",
+      "description": "Fixed vertical space shooter with swooping insectoid formations, Challenging Stages, and Boss tractor beam capture enabling rescue and dual-fighter firepower.",
+      "instructions": [
+        "Maneuver along the baseline and blast diving insectoid flight waves.",
+        "Allow a Boss Galaga to capture your ship with its tractor beam, then destroy the Boss on a subsequent dive to rescue your ship and unlock Dual Fighters.",
+        "Complete Challenging Stages with perfect accuracy for massive bonus tallies."
+      ],
+      "controls": {
+        "keyboard": "Left/Right arrows or A/D to steer, Space to fire twin cannons",
+        "shortcuts": "R to restart, M to mute, Esc to back"
+      },
+      "folder": "games/galacticswarm",
+      "entrypoint": "games/galacticswarm/main.qml",
+      "cover_image": "assets/covers/galacticswarm.png",
+      "size": "1.3 MB",
+      "size_bytes": 1315530,
+      "download_size": "1.3 MB"
+    },
+    {
+      "id": "byteman",
+      "title": "ByteMan",
+      "ref": "OA-017",
+      "category": "Action Arcade",
+      "floppy_color": "#232328",
+      "grid_color": "#2563EB",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Authentic 28\u00d731 Labyrinth with 4 Ghost AI Routines",
+      "description": "Navigate a classic 28\u00d731 maze pursued by Blinky, Pinky, Inky, and Clyde. Eat dots, grab Power Pellets to turn the tables, and trigger combo multipliers!",
+      "instructions": [
+        "Guide ByteMan through the maze, consuming all dots to advance.",
+        "Each ghost has a unique pursuit personality: Blinky chases, Pinky ambushes, Inky flanks, Clyde wanders.",
+        "Chomp corner Power Pellets to turn ghosts blue and edible for bonus points.",
+        "Use the side escape tunnels to wrap around the board."
+      ],
+      "controls": {
+        "keyboard": "Arrow keys, WASD, or Vim (H/J/K/L) to turn at junctions",
+        "shortcuts": "P to pause, R to restart, M to mute"
+      },
+      "folder": "games/byteman",
+      "entrypoint": "games/byteman/main.qml",
+      "cover_image": "assets/covers/byteman.png",
+      "size": "501 KB",
+      "size_bytes": 512679,
+      "download_size": "501 KB"
+    },
+    {
+      "id": "gemswap",
+      "title": "GemSwap",
+      "ref": "OA-018",
+      "category": "Puzzles & Grid Logic",
+      "floppy_color": "#059669",
+      "grid_color": "#9333EA",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Tactile 8\u00d78 Match-3 Cascading Gem Puzzle",
+      "description": "Swap colorful vector gemstones to forge lines of 3 or more. Create 4-in-a-row for explosive Flame Gems, L/T shapes for Star Gems, and 5-in-a-row for sparkling Hypercubes.",
+      "instructions": [
+        "Click and drag two adjacent gems to swap them.",
+        "Form horizontal or vertical lines of 3 or more matching gems to clear them.",
+        "Clearing gems causes upper gems to cascade downwards with combo multipliers.",
+        "Match 4 for Flame Gems (radius blast) or 5 for Hypercubes (clears all of one color)."
+      ],
+      "controls": {
+        "mouse": "Click and drag to swap adjacent gems",
+        "keyboard": "Arrow keys / Vim to move cursor, Space + Arrow to swap"
+      },
+      "folder": "games/gemswap",
+      "entrypoint": "games/gemswap/main.qml",
+      "cover_image": "assets/covers/gemswap.png",
+      "size": "721 KB",
+      "size_bytes": 737908,
+      "download_size": "721 KB"
+    },
+    {
+      "id": "orbpop",
+      "title": "OrbPop",
+      "ref": "OA-019",
+      "category": "Casual Aim & Physics",
+      "floppy_color": "#7C3AED",
+      "grid_color": "#38BDF8",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Hexagonal Bubble Shooter with Ricochet Wall Bounce",
+      "description": "Aim and fire colored orbs upwards to match clusters of 3 or more. Features angled wall-bounce trajectories, orphan drop physics, and a descending ceiling.",
+      "instructions": [
+        "Aim your launcher towards the bubble canopy at the top.",
+        "Bounce shots off the side walls to reach tricky clusters.",
+        "Connecting 3 or more matching colors pops the cluster.",
+        "Any bubbles disconnected from the ceiling drop as orphan bonuses!",
+        "Clear all bubbles before the ceiling drops to the baseline."
+      ],
+      "controls": {
+        "mouse": "Move mouse to aim, Left-click to fire",
+        "keyboard": "Left/Right arrows to aim, Space to fire"
+      },
+      "folder": "games/orbpop",
+      "entrypoint": "games/orbpop/main.qml",
+      "cover_image": "assets/covers/orbpop.png",
+      "size": "533 KB",
+      "size_bytes": 545756,
+      "download_size": "533 KB"
+    }
+  ]
+}

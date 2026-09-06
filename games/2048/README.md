@@ -23,10 +23,10 @@ Built natively with hardware acceleration for **Omarchy Linux**.
   * Subtle tactile arcade tick on slide moves and retro sweep on game over.
   * **Defaulted to Muted** (`🔇 Muted`) on startup with **zero CPU/audio overhead** when muted.
   * Toggle audio anytime via the subheader button or by pressing **`M`**.
-  * Ultra-efficient memory-resident playback using native CoreAudio system sound IDs on macOS and native pipewire/alsa on Linux.
+  * Ultra-efficient memory-resident playback using native system sound APIs and pipewire/alsa on Linux.
 * **Touch & Trackpad Gestures:** Two-finger trackpad swipes and 1-finger click/drag with single-move debouncing.
 * **Tiling-Ready:** Adapts to any window geometry down to tiny 260×320 Hyprland splits without clipping.
-* **Ultra Lightweight:** Sits at ~30–45 MB RAM with 0% idle CPU.
+* **Ultra Lightweight:** Sits at ~30–45 MB RAM with 0% idle CPU and a 438 KB install footprint.
 
 ---
 

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Omarchy Arcade • Desktop Game Suite Launcher
+# Usage: ./arcade [--no-splash]
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [ -f "$SCRIPT_DIR/.venv/bin/python3" ]; then
+    exec "$SCRIPT_DIR/.venv/bin/python3" "$SCRIPT_DIR/launcher/main.py" "$@"
+elif command -v python3 >/dev/null 2>&1; then
+    exec python3 "$SCRIPT_DIR/launcher/main.py" "$@"
+else
+    echo "Error: python3 not found. Please install Python 3 and PySide6." >&2
+    exit 1
+fi

@@ -15,13 +15,31 @@ Growing up across the golden eras of personal computing—from the Tandy 1000 an
 At the same time, traditional Linux desktop games—especially older GNOME and KDE packages, alongside the ubiquitous "Tux" games—always suffered from an awful aesthetic: goofy mascot clipart, dated 90s textures, clunky stock GTK widgets, giant menu bars, and garish color schemes that violently clashed with custom desktop themes.
 
 **Omarchy Arcade** was built to revive that lost magic with a clean, cohesive design philosophy:
-* **100% True Offline Play:** These games do not require, query, or use the internet at all. Zero network sockets, zero cloud dependencies, zero telemetry, and zero DRM. You can play completely offline forever—on an airplane, off-grid, during an outage, or whenever you just want to disconnect.
+* **True Offline Play:** These games do not require, query, or use the internet at all. Zero network sockets, zero cloud dependencies, zero telemetry, and zero DRM. You can play completely offline forever—on an airplane, off-grid, during an outage, or whenever you just want to disconnect.
 * **Zero Bloat & Zero Ads:** No telemetry, no advertisements, no tracking, and no monetization.
 * **No Signups or Logins:** Instant play with zero accounts or internet requirements.
 * **Pure Decompression:** Quick, low-friction games to unwind for 2 minutes between compiles or terminal sessions.
 * **Clean, Consistent Template:** Every game shares a unified, distraction-free layout—clean stat cards, tactile quick-action buttons, and an unobstructed playfield. No clunky menus, no stock GTK chrome.
 * **Theme-Driven Visuals:** Visuals are built with clean mathematical vectors and procedural geometries that step aside and let the game mechanics and your active Omarchy system theme (`~/.config/omarchy/current/theme/colors.toml`) take care of the styling.
 * **Tiling-Native & Responsive Emoji Collapse:** Designed specifically for the tiling spirit of Omarchy (Hyprland). When windows are narrow or toolbars crowded, action buttons collapse into clean icon/emoji buttons (`💡`, `?`, `🔇`, `🔄`) so controls never push off-screen or smash together.
+
+### The Future of Lean Software: 438 KB vs 231 MB
+
+When you download a casual game like 2048 on modern mobile app stores (such as Ketchapp's popular edition), the download footprint exceeds **231 MB**. By contrast, Omarchy Arcade's 2048 is **438 KB**—roughly 1/500th the size:
+
+| Metric | Ketchapp 2048 (Mobile App Store) | Omarchy Arcade 2048 |
+| :--- | :--- | :--- |
+| **Download / Install Size** | **231.3 MB** | **438 KB** (~0.4 MB) |
+| **Footprint Ratio** | ~500× larger | ~1/500th the size |
+| **Third-Party Ad SDKs** | AppLovin, AdMob, Mintegral, Unity Ads, ironSource | **Zero** |
+| **Analytics & Trackers** | Attribution SDKs, telemetry, crash reporting, cross-promo | **Zero** |
+| **Network Sockets** | Constant ad auctions & video cache streaming | **Zero network sockets** (Offline forever) |
+
+> [!NOTE]
+> **A Note on Ketchapp's App & The Shift Ahead:**  
+> We love Ketchapp's app and play it ourselves—this comparison is not picking on them or any mobile developer. In the mobile storefront era, ad mediation networks, video caching engines, attribution tracking SDKs, and telemetry were the only economic mechanisms developers had to sustain their studios and make a living. The bloat was an inevitable byproduct of the monetization model, not a lack of engineering skill.
+>
+> Omarchy Arcade is a glimpse of what software looks like in the future. As intelligent tools make software creation nearly effortless, games and everyday applications will no longer need to exist primarily as vehicles for monetization. When software no longer needs to harvest attention or serve video ads to survive, we no longer need to put up with the bloat—returning gaming to lean, fast, joyful craft that respects the user and their hardware.
 
 ---
 
@@ -36,7 +54,7 @@ All 19 games feature dedicated manuals and controls guides:
 | **ByteCity** | 2.5D dimetric isometric city builder powered by the genuine 1989 Micropolis C++ core. | [Read Manual](games/bytecity/README.md) |
 | **ByteMan** | Classic 28×31 labyrinth with 4 pursuit ghost algorithms, energizers & combo points. | [Read Manual](games/byteman/README.md) |
 | **ByteSnake** | Fluid grid navigator with sub-frame input buffering and progressive speed scaling. | [Read Manual](games/bytesnake/README.md) |
-| **CratePusher** | Warehouse crate-pushing puzzle featuring 100% verified solvable levels & unlimited undo. | [Read Manual](games/cratepusher/README.md) |
+| **CratePusher** | Warehouse crate-pushing puzzle featuring fully verified solvable levels & unlimited undo. | [Read Manual](games/cratepusher/README.md) |
 | **CyberFlap** | Reflex-demanding airborne runner with dynamic pitch aerodynamics & sub-ms response. | [Read Manual](games/cyberflap/README.md) |
 | **CyberHop** | Traffic and river hazard navigation with grid-snapped leaps and home bays. | [Read Manual](games/cyberhop/README.md) |
 | **CyberSweeper** | Deduction puzzle with guaranteed safe first click and recursive cascade reveals. | [Read Manual](games/cybersweeper/README.md) |
