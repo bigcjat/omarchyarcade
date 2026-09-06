@@ -2,7 +2,7 @@
 
 An authentic, legally safe, uncompromised city builder for the Omarchy Linux desktop arcade suite, powered by Will Wright's open-source 1989 **Micropolis (GPLv3)** C++ simulation core paired with a modern **2.5D dimetric isometric vector renderer** (PySide6 / QML).
 
-![ByteCity Gameplay](file:///Users/christhompson/.gemini/antigravity-ide/brain/ccb4e9bb-b02b-4f28-9fb5-a62ea177113b/bytecity_live_gameplay.png)
+![ByteCity Gameplay](screenshot.png)
 
 ---
 

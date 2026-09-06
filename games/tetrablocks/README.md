@@ -1,5 +1,7 @@
 # TetraBlocks (QML / QtQuick)
 
+![TetraBlocks Gameplay](screenshot.png)
+
 A minimalist, high-performance **falling block arcade puzzle** written in **QML** and **JavaScript**, styled to match Omarchy / Hyprland desktops.
 
 Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.

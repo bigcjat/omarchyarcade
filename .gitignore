@@ -3,3 +3,14 @@ __pycache__/
 *.pyc
 .DS_Store
 references/
+
+# Temporary test scripts, scratch work, and junk images
+scratch/
+tests/
+test_*.py
+test_*.png
+*.tmp
+
+# User-requested exclusions
+WISHLIST.md
+wishlist*

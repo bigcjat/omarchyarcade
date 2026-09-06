@@ -1,5 +1,7 @@
 # 2048 (QML / QtQuick)
 
+![2048 Gameplay](screenshot.png)
+
 A minimalist, high-performance **2048** implementation written in **QML** and **JavaScript**, styled with a sleek dark palette.
 
 Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
