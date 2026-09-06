@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.omarchy.Arcade</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Omarchy Arcade</name>
+  <summary>Curated master game suite and offline retro desktop arcade</summary>
+  
+  <description>
+    <p>
+      Omarchy Arcade is a curated suite of lightweight, native desktop arcade games built with Qt6, QML, and Python.
+      Designed for offline personal computing, it features zero telemetry, zero advertisements, and zero network requirements.
+    </p>
+    <p>
+      Features tactile retro 3.5" floppy disk navigation, real-time desktop theme synchronization with Omarchy system palettes, and keyboard-first controls.
+    </p>
+  </description>
+  
+  <launchable type="desktop-id">org.omarchy.Arcade.desktop</launchable>
+  <url type="homepage">https://github.com/bigcjat/omarchyarcade</url>
+  <url type="bugtracker">https://github.com/bigcjat/omarchyarcade/issues</url>
+  
+  <provides>
+    <binary>arcade</binary>
+  </provides>
+  
+  <content_rating type="oars-1.1" />
+  
+  <releases>
+    <release version="1.0.0" date="2026-09-06">
+      <description>
+        <p>Initial release with 19 arcade games and interactive retro floppy launcher.</p>
+      </description>
+    </release>
+  </releases>
+</component>

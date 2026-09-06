@@ -1,0 +1,47 @@
+app-id: org.omarchy.Arcade
+runtime: org.kde.Platform
+runtime-version: '6.7'
+sdk: org.kde.Sdk
+command: arcade
+
+finish-args:
+  # Wayland and X11 display sockets
+  - --socket=wayland
+  - --socket=fallback-x11
+  # Hardware-accelerated graphics rendering
+  - --device=dri
+  # Native sound output via PipeWire / PulseAudio
+  - --socket=pulseaudio
+  # Read-only access to host Omarchy theme configuration
+  - --filesystem=~/.config/omarchy:ro
+
+modules:
+  - name: python3-pyside6
+    buildsystem: simple
+    build-commands:
+      - pip3 install --prefix=/app PySide6
+    sources: []
+
+  - name: omarchy-arcade
+    buildsystem: simple
+    build-commands:
+      # Install main application assets and games
+      - install -dm755 /app/share/omarchy-arcade
+      - cp -r assets catalog.json games launcher /app/share/omarchy-arcade/
+      
+      # Install arcade CLI wrapper
+      - install -dm755 /app/bin
+      - |
+        cat << 'EOF' > /app/bin/arcade
+        #!/usr/bin/env bash
+        exec python3 /app/share/omarchy-arcade/launcher/main.py "$@"
+        EOF
+      - chmod 755 /app/bin/arcade
+      
+      # Install desktop entry, icon, and metainfo
+      - install -Dm644 packaging/flatpak/org.omarchy.Arcade.desktop /app/share/applications/org.omarchy.Arcade.desktop
+      - install -Dm644 assets/omarchy_arcade_logo.svg /app/share/icons/hicolor/scalable/apps/org.omarchy.Arcade.svg
+      - install -Dm644 packaging/flatpak/org.omarchy.Arcade.metainfo.xml /app/share/metainfo/org.omarchy.Arcade.metainfo.xml
+    sources:
+      - type: dir
+        path: ../..

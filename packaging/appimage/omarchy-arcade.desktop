@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Omarchy Arcade
+Comment=Master Game Suite & Offline Arcade
+Exec=AppRun
+Icon=omarchy-arcade
+Terminal=false
+Type=Application
+Categories=Game;Arcade;
+StartupNotify=true

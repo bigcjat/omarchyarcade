@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# AppRun entrypoint for Omarchy Arcade AppImage
+set -e
+
+HERE="$(dirname "$(readlink -f "${0}")")"
+export APPDIR="${HERE}"
+
+export PATH="${APPDIR}/usr/bin:${PATH}"
+export LD_LIBRARY_PATH="${APPDIR}/usr/lib:${APPDIR}/usr/lib64:${LD_LIBRARY_PATH}"
+export XDG_DATA_DIRS="${APPDIR}/usr/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+
+# QT & PySide environment
+export QT_PLUGIN_PATH="${APPDIR}/usr/plugins:${QT_PLUGIN_PATH}"
+export QML2_IMPORT_PATH="${APPDIR}/usr/qml:${QML2_IMPORT_PATH}"
+export QML_IMPORT_PATH="${APPDIR}/usr/qml:${QML_IMPORT_PATH}"
+
+# Check for Python in AppDir or fall back to system python3
+if [ -f "${APPDIR}/usr/bin/python3" ]; then
+    PYTHON_EXEC="${APPDIR}/usr/bin/python3"
+else
+    PYTHON_EXEC="python3"
+fi
+
+exec "${PYTHON_EXEC}" "${APPDIR}/usr/share/omarchy-arcade/launcher/main.py" "$@"
