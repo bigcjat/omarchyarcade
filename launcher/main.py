@@ -26,14 +26,27 @@ os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 LAUNCHER_DIR = Path(__file__).resolve().parent
-GAMES_DIR = BASE_DIR / "games"
-CATALOG_PATH = BASE_DIR / "catalog.json"
+
+# If in source repository, use repository paths. Otherwise use ~/.local/share/omarchy-arcade
+if (BASE_DIR / "games").is_dir():
+    GAMES_DIR = BASE_DIR / "games"
+    CATALOG_PATH = BASE_DIR / "catalog.json"
+    ASSETS_DIR = BASE_DIR / "assets"
+else:
+    DATA_DIR = Path.home() / ".local" / "share" / "omarchy-arcade"
+    GAMES_DIR = DATA_DIR / "games"
+    CATALOG_PATH = DATA_DIR / "catalog.json"
+    ASSETS_DIR = DATA_DIR / "assets"
+
+GAMES_DIR.mkdir(parents=True, exist_ok=True)
 
 class ArcadeBackend(QObject):
     """Backend services bridging the QML Launcher to local desktop execution."""
     gameLaunched = Signal(str)
     gameLaunchFailed = Signal(str, str)
     gameFinished = Signal(str)
+    gameInstalled = Signal(str)
+    gameInstallFailed = Signal(str, str)
     _processExited = Signal(str)
     themeChanged = Signal("QVariantMap")
 
@@ -66,27 +79,79 @@ class ArcadeBackend(QObject):
                 print(f"[Arcade] Error reading catalog: {e}")
         return "{}"
 
+    @Slot(str, result=bool)
+    def isGameInstalled(self, game_id: str) -> bool:
+        """Checks if a game's executable files exist locally on disk."""
+        if not game_id:
+            return False
+        game_dir = GAMES_DIR / game_id
+        return (game_dir / "main.py").exists() or (game_dir / "main.qml").exists()
+
     @Slot(str, result=str)
     def getScreenshotUrl(self, folder: str) -> str:
-        """Returns the absolute file URL for a game's screenshot."""
+        """Returns the file URL for a game's screenshot, with fallback to remote URL."""
         if not folder:
             return ""
-        screenshot_path = BASE_DIR / folder / "screenshot.png"
-        if screenshot_path.exists():
-            return QUrl.fromLocalFile(str(screenshot_path)).toString()
-        return ""
+        local_path = BASE_DIR / folder / "screenshot.png"
+        if not local_path.exists():
+            local_path = Path.home() / ".local" / "share" / "omarchy-arcade" / folder / "screenshot.png"
+        if local_path.exists():
+            return QUrl.fromLocalFile(str(local_path)).toString()
+        return f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/{folder}/screenshot.png"
+
+    @Slot(str)
+    def installGame(self, game_id: str):
+        """Downloads and installs only the requested game from GitHub in the background."""
+        def worker():
+            import urllib.request
+            import tarfile
+            import io
+            try:
+                print(f"[Arcade] Downloading game: {game_id}...")
+                url = "https://codeload.github.com/bigcjat/omarchyarcade/tar.gz/main"
+                req = urllib.request.Request(url, headers={"User-Agent": "OmarchyArcade/1.0"})
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    tar_data = resp.read()
+
+                with tarfile.open(fileobj=io.BytesIO(tar_data), mode="r:gz") as tar:
+                    prefix = f"omarchyarcade-main/games/{game_id}/"
+                    dest = GAMES_DIR / game_id
+                    dest.mkdir(parents=True, exist_ok=True)
+                    count = 0
+                    for member in tar.getmembers():
+                        if member.name.startswith(prefix) and member.name != prefix:
+                            rel_path = member.name[len(prefix):]
+                            target_file = dest / rel_path
+                            if member.isdir():
+                                target_file.mkdir(parents=True, exist_ok=True)
+                            else:
+                                target_file.parent.mkdir(parents=True, exist_ok=True)
+                                extracted = tar.extractfile(member)
+                                if extracted:
+                                    with open(target_file, "wb") as f:
+                                        f.write(extracted.read())
+                                    count += 1
+
+                print(f"[Arcade] Installed game: {game_id} ({count} files)")
+                self.gameInstalled.emit(game_id)
+            except Exception as e:
+                print(f"[Arcade] Install failed for {game_id}: {e}")
+                self.gameInstallFailed.emit(game_id, str(e))
+
+        t = threading.Thread(target=worker, daemon=True)
+        t.start()
 
     @Slot(str)
     def launchGame(self, game_id: str):
-        """Spawns the requested game as an independent child process and hides the launcher."""
+        """Spawns the requested game. If not yet installed, triggers download first."""
         game_dir = GAMES_DIR / game_id
-        if not game_dir.exists():
-            print(f"[Arcade] Error: Game directory not found: {game_dir}")
-            self.gameLaunchFailed.emit(game_id, "Game directory not found.")
-            return
-
         main_py = game_dir / "main.py"
         main_qml = game_dir / "main.qml"
+
+        if not main_py.exists() and not main_qml.exists():
+            print(f"[Arcade] Game not installed: {game_id}. Triggering on-demand download...")
+            self.installGame(game_id)
+            return
 
         cmd = []
         if main_py.exists():
@@ -94,7 +159,7 @@ class ArcadeBackend(QObject):
         elif main_qml.exists():
             cmd = ["qml6", str(main_qml)]
         else:
-            print(f"[Arcade] Error: No main.py or main.qml found in {game_dir}")
+            print(f"[Arcade] Error: No entrypoint in {game_dir}")
             self.gameLaunchFailed.emit(game_id, "Executable entrypoint not found.")
             return
 

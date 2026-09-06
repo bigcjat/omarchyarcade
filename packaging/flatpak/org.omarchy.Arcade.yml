@@ -14,6 +14,10 @@ finish-args:
   - --socket=pulseaudio
   # Read-only access to host Omarchy theme configuration
   - --filesystem=~/.config/omarchy:ro
+  # Games storage directory
+  - --filesystem=~/.local/share/omarchy-arcade:create
+  # Network access for on-demand game downloading
+  - --share=network
 
 modules:
   - name: python3-pyside6
@@ -25,9 +29,9 @@ modules:
   - name: omarchy-arcade
     buildsystem: simple
     build-commands:
-      # Install main application assets and games
+      # Install main launcher application assets
       - install -dm755 /app/share/omarchy-arcade
-      - cp -r assets catalog.json games launcher /app/share/omarchy-arcade/
+      - cp -r assets catalog.json launcher /app/share/omarchy-arcade/
       
       # Install arcade CLI wrapper
       - install -dm755 /app/bin

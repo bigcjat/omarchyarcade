@@ -59,58 +59,55 @@ When you download a casual title like 2048 on modern mobile app stores (such as 
 
 Install Omarchy Arcade however you prefer—as an automated single command, a native system package, a portable executable, or a sandboxed container.
 
-### Option 1: One-Line Installer (Fastest on Omarchy)
+### Option 1: Standalone AppImage (Zero-Install Executable)
 
-Run this single command in your terminal:
-
-```bash
-curl -sSL https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/install.sh | bash
-```
-
-**What this does automatically:**
-- Installs Qt6 dependencies via `pacman`.
-- Symlinks `arcade` into `~/.local/bin/arcade` so you can type `arcade` in any terminal.
-- Registers `omarchy-arcade.desktop` with the retro vector logo in your app launcher (Rofi / Walker / Fuzzel).
-- Adds floating window rules and binds **`Super + G`** in `~/.config/hypr/hyprland.conf`.
-
----
-
-### Option 2: Native Arch / Omarchy Package (`makepkg` / `pacman`)
-
-Build and install as an official system package managed directly by `pacman`:
-
-```bash
-git clone https://github.com/bigcjat/omarchyarcade.git
-cd omarchyarcade
-makepkg -si
-```
-
-*Cleanly uninstall anytime with `sudo pacman -R omarchy-arcade`.*
-
----
-
-### Option 3: Portable AppImage (Zero-Install Executable)
-
-Download the standalone `Omarchy_Arcade-x86_64.AppImage` from [GitHub Releases](https://github.com/bigcjat/omarchyarcade/releases), make it executable, and run:
+Download the single `Omarchy_Arcade-x86_64.AppImage` executable from [GitHub Releases](https://github.com/bigcjat/omarchyarcade/releases), make it executable, and run—zero git cloning and zero system changes:
 
 ```bash
 chmod +x Omarchy_Arcade-x86_64.AppImage
 ./Omarchy_Arcade-x86_64.AppImage
 ```
 
-*(Or build it locally anytime with `./packaging/appimage/build_appimage.sh`).*
+---
+
+### Option 2: One-Line Installer (Fastest for Omarchy)
+
+Run this single command in your terminal. It installs **only the launcher application** (no git repository, no developer clone):
+
+```bash
+curl -sSL https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/install.sh | bash
+```
+
+**What this sets up automatically:**
+- Places the standalone launcher executable in `~/.local/bin/arcade`.
+- Installs the retro vector icon in `~/.local/share/icons/`.
+- Registers `omarchy-arcade.desktop` in your application launcher (Rofi / Walker / Fuzzel).
+- Adds floating window rules and binds **`Super + G`** in `~/.config/hypr/hyprland.conf`.
 
 ---
 
-### Option 4: Flatpak (KDE Qt6 Runtime)
+### Option 3: Flatpak (KDE Qt6 Runtime)
 
-Build and install locally using Flatpak:
+Run the sandboxed Flatpak package:
 
 ```bash
 cd packaging/flatpak
 flatpak-builder --user --install --force-clean build-dir org.omarchy.Arcade.yml
 flatpak run org.omarchy.Arcade
 ```
+
+---
+
+### Option 4: Native Arch / Omarchy Package (`pacman`)
+
+Install directly via `pacman`:
+
+```bash
+curl -sSLO https://github.com/bigcjat/omarchyarcade/releases/latest/download/omarchy-arcade-1.0.0-1-any.pkg.tar.zst
+sudo pacman -U omarchy-arcade-1.0.0-1-any.pkg.tar.zst
+```
+
+*Cleanly uninstall anytime with `sudo pacman -R omarchy-arcade`.*
 
 ---
 

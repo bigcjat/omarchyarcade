@@ -61,6 +61,22 @@ ApplicationWindow {
             detailSheet.close();
             root.hide();
         }
+        function onGameInstalled(gameId) {
+            if (detailSheet.gameData && detailSheet.gameData.id === gameId) {
+                detailSheet.isDownloading = false;
+                detailSheet.isInstalled = true;
+            }
+            root.launchGame(gameId);
+        }
+        function onGameInstallFailed(gameId, errorMsg) {
+            if (detailSheet.gameData && detailSheet.gameData.id === gameId) {
+                detailSheet.isDownloading = false;
+            }
+            root.show();
+            root.raise();
+            root.requestActivate();
+            keyboardController.forceActiveFocus();
+        }
         function onGameFinished(gameId) {
             root.show();
             root.raise();
@@ -68,6 +84,9 @@ ApplicationWindow {
             keyboardController.forceActiveFocus();
         }
         function onGameLaunchFailed(gameId, errorMsg) {
+            if (detailSheet.gameData && detailSheet.gameData.id === gameId) {
+                detailSheet.isDownloading = false;
+            }
             root.show();
             root.raise();
             root.requestActivate();

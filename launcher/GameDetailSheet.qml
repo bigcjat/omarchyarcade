@@ -12,6 +12,8 @@ Rectangle {
 
     property var gameData: null
     readonly property bool isUnreleased: gameData && gameData.status === "unreleased"
+    property bool isInstalled: true
+    property bool isDownloading: false
 
     signal playRequested(string gameId)
     signal closeRequested()
@@ -20,6 +22,12 @@ Rectangle {
 
     function open(data) {
         gameData = data;
+        isDownloading = false;
+        if (typeof arcadeBackend !== "undefined" && data) {
+            isInstalled = arcadeBackend.isGameInstalled(data.id);
+        } else {
+            isInstalled = true;
+        }
         opacity = 1;
         modalScroll.ScrollBar.vertical.position = 0;
         contentBox.forceActiveFocus();
@@ -226,14 +234,14 @@ Rectangle {
                 // Primary Action Button (Play Now / Coming Soon)
                 Rectangle {
                     id: primaryActionBtn
-                    Layout.preferredWidth: detailSheet.isUnreleased ? 200 : 150
+                    Layout.preferredWidth: detailSheet.isUnreleased ? 200 : (detailSheet.isDownloading ? 180 : (detailSheet.isInstalled ? 150 : 210))
                     Layout.preferredHeight: 38
                     radius: 6
                     clip: true
 
-                    readonly property color accentCol: detailSheet.isUnreleased ? "#d97706" : (gameData ? gameData.grid_color : "#10b981")
-                    readonly property bool isHovered: actionMouse.containsMouse && !detailSheet.isUnreleased
-                    readonly property bool isPressed: actionMouse.pressed && !detailSheet.isUnreleased
+                    readonly property color accentCol: detailSheet.isUnreleased ? "#d97706" : (detailSheet.isDownloading ? "#0284c7" : (detailSheet.isInstalled ? (gameData ? gameData.grid_color : "#10b981") : "#3b82f6"))
+                    readonly property bool isHovered: actionMouse.containsMouse && !detailSheet.isUnreleased && !detailSheet.isDownloading
+                    readonly property bool isPressed: actionMouse.pressed && !detailSheet.isUnreleased && !detailSheet.isDownloading
 
                     color: detailSheet.isUnreleased ? "#1c1917" : (isPressed ? Qt.darker(accentCol, 1.4) : (isHovered ? Qt.darker(accentCol, 1.1) : Qt.darker(accentCol, 1.25)))
                     border.color: detailSheet.isUnreleased ? "#78350f" : (isHovered ? "#FFFFFF" : accentCol)
@@ -253,14 +261,14 @@ Rectangle {
                         spacing: 7
 
                         Text {
-                            text: detailSheet.isUnreleased ? "🔒" : "▶"
+                            text: detailSheet.isUnreleased ? "🔒" : (detailSheet.isDownloading ? "⏳" : (detailSheet.isInstalled ? "▶" : "⬇"))
                             font.pixelSize: 11
                             color: detailSheet.isUnreleased ? "#f59e0b" : "#FFFFFF"
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
                         Text {
-                            text: detailSheet.isUnreleased ? "COMING SOON" : "PLAY NOW"
+                            text: detailSheet.isUnreleased ? "COMING SOON" : (detailSheet.isDownloading ? "DOWNLOADING..." : (detailSheet.isInstalled ? "PLAY NOW" : ("GET (" + (gameData ? gameData.size : "") + ")")))
                             font.family: "monospace"
                             font.pixelSize: 12
                             font.bold: true
@@ -273,10 +281,13 @@ Rectangle {
                     MouseArea {
                         id: actionMouse
                         anchors.fill: parent
-                        hoverEnabled: !detailSheet.isUnreleased
-                        cursorShape: detailSheet.isUnreleased ? Qt.ArrowCursor : Qt.PointingHandCursor
+                        hoverEnabled: !detailSheet.isUnreleased && !detailSheet.isDownloading
+                        cursorShape: (detailSheet.isUnreleased || detailSheet.isDownloading) ? Qt.ArrowCursor : Qt.PointingHandCursor
                         onClicked: {
-                            if (!detailSheet.isUnreleased && gameData) {
+                            if (!detailSheet.isUnreleased && !detailSheet.isDownloading && gameData) {
+                                if (!detailSheet.isInstalled) {
+                                    detailSheet.isDownloading = true;
+                                }
                                 detailSheet.playRequested(gameData.id);
                             }
                         }

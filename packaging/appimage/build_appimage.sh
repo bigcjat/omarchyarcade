@@ -17,9 +17,9 @@ mkdir -p "$APPDIR/usr/share/omarchy-arcade"
 mkdir -p "$APPDIR/usr/share/applications"
 mkdir -p "$APPDIR/usr/share/icons/hicolor/scalable/apps"
 
-# 1. Copy Application payload
+# 1. Copy Application payload (Launcher, assets, catalog - games downloaded on-demand)
 echo "==> Copying application payload..."
-cp -r "$ROOT_DIR/assets" "$ROOT_DIR/catalog.json" "$ROOT_DIR/games" "$ROOT_DIR/launcher" "$APPDIR/usr/share/omarchy-arcade/"
+cp -r "$ROOT_DIR/assets" "$ROOT_DIR/catalog.json" "$ROOT_DIR/launcher" "$APPDIR/usr/share/omarchy-arcade/"
 
 # 2. Copy AppRun, Desktop entry, and Icons
 cp "$SCRIPT_DIR/AppRun" "$APPDIR/AppRun"

@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Omarchy Arcade • One-Command Automated Installer for Omarchy Linux (Hyprland)
+# Omarchy Arcade • One-Command App Installer for Omarchy Linux (Hyprland)
+# Installs only the application launcher and its assets. Zero git repository cloning.
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/install.sh | bash
-#   - OR -
-#   ./install.sh
 # ==============================================================================
 
 set -e
@@ -16,27 +15,55 @@ PINK="\033[38;2;206;73;124m"
 RESET="\033[0m"
 
 echo -e "${PINK}╔════════════════════════════════════════════════════════════╗${RESET}"
-echo -e "${PINK}║${RESET}  ${BOLD}${ORANGE}OMARCHY ARCADE${RESET} • Automated Linux Installer               ${PINK}║${RESET}"
+echo -e "${PINK}║${RESET}  ${BOLD}${ORANGE}OMARCHY ARCADE${RESET} • Application Installer                    ${PINK}║${RESET}"
 echo -e "${PINK}╚════════════════════════════════════════════════════════════╝${RESET}"
 
-# 1. Determine Repository Directory
-if [ -d "$PWD/launcher" ] && [ -f "$PWD/catalog.json" ]; then
-    INSTALL_DIR="$PWD"
-    echo -e "${GREEN}==>${RESET} Installing from current directory: ${BOLD}$INSTALL_DIR${RESET}"
+BIN_DIR="$HOME/.local/bin"
+APPS_DIR="$HOME/.local/share/applications"
+ICONS_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
+mkdir -p "$BIN_DIR" "$APPS_DIR" "$ICONS_DIR"
+
+# 1. Install Launcher Binary (Zero Git Cloning)
+if [ -d "$PWD/launcher" ] && [ -f "$PWD/arcade" ]; then
+    # Local installation from existing directory
+    echo -e "${GREEN}==>${RESET} Installing launcher from local directory: ${BOLD}$PWD${RESET}"
+    ln -sf "$PWD/arcade" "$BIN_DIR/arcade"
+    chmod +x "$BIN_DIR/arcade"
+    cp "$PWD/assets/omarchy_arcade_logo.svg" "$ICONS_DIR/omarchy-arcade.svg"
 else
-    INSTALL_DIR="$HOME/.local/share/omarchyarcade"
-    echo -e "${GREEN}==>${RESET} Setting up arcade at: ${BOLD}$INSTALL_DIR${RESET}"
-    if [ -d "$INSTALL_DIR/.git" ]; then
-        echo -e "${GREEN}==>${RESET} Updating existing repository..."
-        git -C "$INSTALL_DIR" pull --ff-only
+    # Remote installation: Fetch standalone launcher without cloning git repository
+    echo -e "${GREEN}==>${RESET} Downloading Omarchy Arcade launcher..."
+    RELEASE_URL="https://github.com/bigcjat/omarchyarcade/releases/latest/download/Omarchy_Arcade-x86_64.AppImage"
+    
+    # Try downloading prebuilt standalone AppImage
+    if curl -sSL -f -o "$BIN_DIR/arcade" "$RELEASE_URL" 2>/dev/null; then
+        chmod +x "$BIN_DIR/arcade"
+        echo -e "${GREEN}==>${RESET} Standalone launcher binary installed to ${BOLD}$BIN_DIR/arcade${RESET}"
     else
-        echo -e "${GREEN}==>${RESET} Cloning repository..."
-        mkdir -p "$(dirname "$INSTALL_DIR")"
-        git clone https://github.com/bigcjat/omarchyarcade.git "$INSTALL_DIR"
+        # Fallback: Download and extract pure application payload (NO git clone)
+        echo -e "${ORANGE}==>${RESET} Downloading application bundle..."
+        APP_DIR="$HOME/.local/share/omarchy-arcade"
+        mkdir -p "$APP_DIR"
+        
+        TEMP_TAR=$(mktemp)
+        curl -sSL -o "$TEMP_TAR" "https://github.com/bigcjat/omarchyarcade/archive/refs/heads/main.tar.gz"
+        tar -xz --strip-components=1 -C "$APP_DIR" -f "$TEMP_TAR"
+        rm -f "$TEMP_TAR"
+        
+        # Clean up any non-app repository files
+        rm -rf "$APP_DIR/.git" "$APP_DIR/.github" "$APP_DIR/scratch" "$APP_DIR/template" "$APP_DIR/tests"
+        
+        ln -sf "$APP_DIR/arcade" "$BIN_DIR/arcade"
+        chmod +x "$APP_DIR/arcade"
+        echo -e "${GREEN}==>${RESET} Launcher installed to ${BOLD}$APP_DIR${RESET}"
     fi
+
+    # Install Application Icon
+    curl -sSL -f -o "$ICONS_DIR/omarchy-arcade.svg" \
+        "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/assets/omarchy_arcade_logo.svg" 2>/dev/null || true
 fi
 
-# 2. Ensure Dependencies via Pacman
+# 2. Check System Runtime Dependencies via Pacman
 if command -v pacman >/dev/null 2>&1; then
     echo -e "${GREEN}==>${RESET} Checking system dependencies (python, python-pyside6, qt6-declarative)..."
     MISSING_PKGS=()
@@ -50,26 +77,17 @@ if command -v pacman >/dev/null 2>&1; then
         echo -e "${ORANGE}==>${RESET} Installing missing dependencies: ${MISSING_PKGS[*]}"
         sudo pacman -S --needed --noconfirm "${MISSING_PKGS[@]}"
     else
-        echo -e "${GREEN}==>${RESET} All system packages are installed."
+        echo -e "${GREEN}==>${RESET} System packages verified."
     fi
 fi
 
-# 3. Install CLI Binary into ~/.local/bin/arcade
-BIN_DIR="$HOME/.local/bin"
-mkdir -p "$BIN_DIR"
-ln -sf "$INSTALL_DIR/arcade" "$BIN_DIR/arcade"
-chmod +x "$INSTALL_DIR/arcade"
-echo -e "${GREEN}==>${RESET} Symlinked command: ${BOLD}$BIN_DIR/arcade${RESET}"
-
-# 4. Install Desktop Application Entry (Rofi / Walker / Fuzzel)
-APPS_DIR="$HOME/.local/share/applications"
-mkdir -p "$APPS_DIR"
+# 3. Register Desktop Menu Entry (Rofi / Walker / Fuzzel)
 cat << EOF > "$APPS_DIR/omarchy-arcade.desktop"
 [Desktop Entry]
 Name=Omarchy Arcade
 Comment=Master Game Suite & Offline Arcade
 Exec=$BIN_DIR/arcade
-Icon=$INSTALL_DIR/assets/omarchy_arcade_logo.svg
+Icon=omarchy-arcade
 Terminal=false
 Type=Application
 Categories=Game;Arcade;
@@ -83,7 +101,7 @@ if command -v update-desktop-database >/dev/null 2>&1; then
 fi
 echo -e "${GREEN}==>${RESET} Desktop application entry registered."
 
-# 5. Configure Hyprland Shortcut (Super + G) & Window Rules
+# 4. Configure Hyprland Window Rules & Shortcut (Super + G)
 HYPR_CONF="$HOME/.config/hypr/hyprland.conf"
 if [ -f "$HYPR_CONF" ]; then
     if ! grep -q "omarchy-arcade" "$HYPR_CONF" && ! grep -q "exec, arcade" "$HYPR_CONF"; then
@@ -97,17 +115,15 @@ windowrulev2 = center, title:^(Omarchy Arcade)$
 bind = $mainMod, G, exec, arcade
 EOF
         echo -e "${GREEN}==>${RESET} Hyprland configuration updated."
-    else
-        echo -e "${GREEN}==>${RESET} Hyprland configuration already has arcade rules."
     fi
 fi
 
 echo ""
 echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${RESET}"
-echo -e "${GREEN}║${RESET}  ${BOLD}INSTALLATION COMPLETE!${RESET}                                    ${GREEN}║${RESET}"
+echo -e "${GREEN}║${RESET}  ${BOLD}LAUNCHER INSTALLED SUCCESSFULLY!${RESET}                          ${GREEN}║${RESET}"
 echo -e "${GREEN}║${RESET}                                                            ${GREEN}║${RESET}"
-echo -e "${GREEN}║${RESET}  🎮 From Application Menu: Open ${BOLD}Omarchy Arcade${RESET}              ${GREEN}║${RESET}"
-echo -e "${GREEN}║${RESET}  ⌨️ From Terminal:         Type ${BOLD}arcade${RESET}                      ${GREEN}║${RESET}"
-echo -e "${GREEN}║${RESET}  ⚡ In Hyprland:           Press ${BOLD}Super + G${RESET}                   ${GREEN}║${RESET}"
+echo -e "${GREEN}║${RESET}  🎮 App Launcher:  Open ${BOLD}Omarchy Arcade${RESET} in menu             ${GREEN}║${RESET}"
+echo -e "${GREEN}║${RESET}  ⌨️ Terminal:      Type ${BOLD}arcade${RESET}                              ${GREEN}║${RESET}"
+echo -e "${GREEN}║${RESET}  ⚡ In Hyprland:   Press ${BOLD}Super + G${RESET}                           ${GREEN}║${RESET}"
 echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${RESET}"
 echo ""

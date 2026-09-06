@@ -7,16 +7,19 @@ arch=('any')
 url="https://github.com/bigcjat/omarchyarcade"
 license=('MIT')
 depends=('python' 'python-pyside6' 'qt6-declarative' 'qt6-svg' 'qt6-multimedia')
-makedepends=('git')
-source=("git+https://github.com/bigcjat/omarchyarcade.git#branch=main")
+makedepends=()
+source=("$pkgname-$pkgver.tar.gz::https://github.com/bigcjat/omarchyarcade/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('SKIP')
 
 package() {
-    local src="$srcdir/omarchyarcade"
+    local src="$srcdir/omarchyarcade-$pkgver"
+    if [ ! -d "$src" ]; then
+        src="$srcdir"
+    fi
     local dest="$pkgdir/usr/share/omarchy-arcade"
 
     install -dm755 "$dest"
-    cp -r "$src/assets" "$src/catalog.json" "$src/games" "$src/launcher" "$dest/"
+    cp -r "$src/assets" "$src/catalog.json" "$src/launcher" "$dest/"
 
     # System binary /usr/bin/arcade
     install -dm755 "$pkgdir/usr/bin"
