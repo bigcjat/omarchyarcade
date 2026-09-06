@@ -4,7 +4,7 @@
 
 A pixel-faithful recreation of the arcade grandfather that launched an era. Defend Earth against descending alien formations, blast mystery flying saucers, and take cover behind disintegrating defensive bunkers.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 

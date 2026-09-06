@@ -4,7 +4,7 @@
 
 A modern, fluid rendition of the beloved arcade classic. Features rounded segmented snake rendering, queued directional inputs, glowing apple orbs, and responsive grid movement.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 

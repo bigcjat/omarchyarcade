@@ -4,7 +4,7 @@
 
 An elegant, snappy desktop implementation of the daily five-letter deduction word puzzle with fluid 3D tile flip animations, on-screen keyboard status tracking, and offline dictionary verification.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 

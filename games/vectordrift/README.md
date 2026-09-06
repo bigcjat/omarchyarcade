@@ -4,7 +4,7 @@
 
 A high-performance, authentic vector wireframe arcade space shooter inspired by the 1979 classic. Features authentic Newtonian physics, procedural polygonal asteroid fracturing, intelligent enemy saucers, and vibrant vector glowing visuals tailored to your desktop theme.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 

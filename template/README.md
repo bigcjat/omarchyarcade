@@ -1,13 +1,13 @@
 # Omarchy Arcade • Master Game Template
 
-Welcome to the **Omarchy Arcade Game Template**! This template provides a complete, production-ready foundation for creating games that seamlessly integrate into Omarchy Linux and cross-platform desktop environments (macOS, Linux, Windows).
+Welcome to the **Omarchy Arcade Game Template**! This template provides a complete, production-ready foundation for creating games that seamlessly integrate into **Omarchy Linux** (Hyprland).
 
-Every game built with this template inherits:
-- 🎨 **OS & Desktop Theme Synchronization:** Automatic live hot-reloading from Omarchy's `~/.config/omarchy/current/theme/colors.toml` as well as native macOS/Windows system Dark/Light mode detection.
-- 📐 **The 2048 Design Standard:** A clean, spacious, two-tier header, responsive pill action buttons, and rounded playfield container that look stunning in any window manager.
-- ⚡ **Tiling Window Manager Compliance:** Reactively scales to any window geometry without manual resizing (critical for Hyprland and tiling WMs).
-- 🕹️ **Canonical Arcade Splash Screen:** Authentic CRT-glow launch sequence with instant single-click skip.
-- 🔊 **Zero-Latency Audio Engine:** Native CoreAudio AudioServices on macOS (0ms delay preloaded memory sound IDs) with automatic fallback to PipeWire (`pw-play`), PulseAudio (`paplay`), or ALSA (`aplay`) on Linux.
+## What This Template Provides
+
+- 🎨 **Desktop Theme Synchronization:** Automatic live hot-reloading from Omarchy's `~/.config/omarchy/current/theme/colors.toml`.
+- 🕹️ **Arcade Header Layout:** Two stat cards (Score, Best/High Score), "How to Play" modal trigger, Mute/Unmute audio toggle, and Restart button.
+- 📺 **Retro Console Startup Screen:** ~1.0-second retro arcade boot sequence with CRT scanlines, vector badge, animated color stripes, and glint sheen (skips instantly on any key or click).
+- 🔊 **Zero-Latency Audio Engine:** Low-latency hardware audio via PipeWire (`pw-play`), PulseAudio (`paplay`), or ALSA (`aplay`), defaulted to muted with 0% CPU overhead when silent.
 - 💾 **Persistent Settings:** Local high-score and preference tracking powered by `QSettings`.
 - ⌨️ **Universal Accessibility Controls:** Built-in support for Arrows, WASD, and Vim (`HJKL`) navigation.
 
@@ -109,7 +109,7 @@ onPaint: {
 Games automatically detect their theme in this order:
 1. **CLI Flag Override:** `python main.py --theme <name>`
 2. **Omarchy Desktop Theme:** If running on Omarchy Linux, reads `~/.config/omarchy/current/theme/colors.toml` and establishes a live `QFileSystemWatcher` to hot-reload themes on the fly.
-3. **macOS / General OS Appearance:** Detects system Dark Mode vs Light Mode via Qt's `QStyleHints` and automatically maps to **Catppuccin Mocha** (Dark) or **Catppuccin Latte** (Light), with live reactivity when the OS theme changes.
+3. **System Fallback Theme:** Detects system appearance and maps to **Catppuccin Mocha** (Dark) or **Catppuccin Latte** (Light) if no active desktop configuration is specified.
 
 ### 2. Available QML Color Tokens
 All components should reference these reactive color properties on `root`:

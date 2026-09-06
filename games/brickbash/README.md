@@ -4,7 +4,7 @@
 
 A sleek, modern arcade brick-busting game engineered with buttery smooth ball physics, segmented paddle deflection dynamics, and satisfying shattering particle effects.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 

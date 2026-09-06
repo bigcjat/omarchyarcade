@@ -4,7 +4,7 @@
 
 A high-framerate, reflex-testing airborne arcade runner. Maneuver through procedurally generated obstacle gates with snappy physics, dynamic pitch rotation, and instant input response.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 

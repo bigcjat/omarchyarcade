@@ -4,7 +4,7 @@
 
 A modern, tactile implementation of the quintessential deduction puzzle. Features recursive zero-flood uncovering, chord double-click reveals, customizable difficulty tiers, and a guaranteed safe first click.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 

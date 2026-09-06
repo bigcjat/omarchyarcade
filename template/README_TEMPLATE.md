@@ -4,7 +4,7 @@
 
 A brief, engaging 1-2 sentence description of the game, its mechanics, and its modern arcade styling.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 
@@ -14,7 +14,7 @@ Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)
 * **Standardized 2048 Arcade Layout:** Top title & stats header, subheader with sound toggle and quick action buttons, and responsive play matrix.
 * **Retro Console Startup Screen:** ~1.0-second arcade startup sequence with CRT scanlines, retro stripes, and vector glint sheen (skips instantly on any key/click).
 * **Keyboard-First Controls:** Arrow keys, WASD, and Vim (`H`, `J`, `K`, `L`) navigation supported across all interactions.
-* **Zero-Overhead Audio:** Hardware-accelerated native audio (CoreAudio on macOS, PipeWire/ALSA on Linux), defaulted to muted (`M` to toggle) with 0% CPU consumption when silent.
+* **Zero-Overhead Audio:** Zero-overhead native audio (PipeWire / ALSA), defaulted to muted (`M` to toggle) with 0% CPU consumption when silent.
 * **Responsive Tiling:** Smoothly adapts to any window geometry down to narrow tiling window manager splits without clipping.
 * **Persistent High Scores:** Saves best scores and stats across sessions via `QSettings`.
 

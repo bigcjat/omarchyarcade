@@ -4,7 +4,7 @@
 
 A polished, tactile implementation of the classic vertical four-in-a-row connection strategy game with satisfying gravity drop animations and an intelligent AI opponent.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 

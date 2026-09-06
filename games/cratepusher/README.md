@@ -4,7 +4,7 @@
 
 A warehouse crate-pushing deduction puzzle featuring 100% verified solvable levels, infinite undo history, and an intuitive level progression system.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 

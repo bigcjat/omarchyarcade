@@ -4,7 +4,7 @@
 
 A faithful, high-octane recreation of the legendary space combat arcade shooter. Features swooping insectoid alien flight formations, tractor beam ship-capture mechanics, dual-fighter firepower, and a deep parallax starfield.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 

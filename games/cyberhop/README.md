@@ -4,7 +4,7 @@
 
 A retro arcade classic reimagined with modern design aesthetics. Guide your frog across frantic multi-lane highways and dangerous rushing rivers filled with floating logs and diving turtles to reach safety.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 

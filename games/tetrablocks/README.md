@@ -4,7 +4,7 @@
 
 A minimalist, high-performance **falling block arcade puzzle** written in **QML** and **JavaScript**, styled to match Omarchy / Hyprland desktops.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 
@@ -19,7 +19,7 @@ Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)
 * **Line Clear Animations:** Brilliant white flashes, horizontal beam sweeps, and floating score/combo banners.
 * **Pause & Resume:** Click the matrix directly or press `P` / `Esc` to safely pause and resume.
 * **Dynamic Omarchy Theming:** Automatically synchronizes with all 22 Omarchy system themes by reading `~/.config/omarchy/current/theme/colors.toml`.
-* **Zero-Overhead Audio:** In-memory CoreAudio on macOS and PipeWire/ALSA on Linux, defaulted to muted (`M` to toggle).
+* **Zero-Overhead Audio:** Zero-overhead native audio (PipeWire / ALSA), defaulted to muted (`M` to toggle).
 * **Persistent High Scores:** Saves best score across sessions via `QSettings`.
 
 ---

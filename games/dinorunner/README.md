@@ -4,7 +4,7 @@
 
 A high-speed endless runner featuring dynamic Day/Night atmospheric cycles, low-altitude jumping, ducking under incoming pterodactyls, and runtime desktop theme recoloring.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 

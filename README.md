@@ -4,9 +4,20 @@
   <img src="assets/splashscreen.png" alt="Omarchy Arcade Startup" width="480"/>
 </p>
 
-A curated suite of 16 lightweight, native desktop arcade games built with **QML**, **QtQuick**, and **JavaScript** for macOS and Linux (Omarchy / Hyprland).
+A curated suite of 16 lightweight, native desktop arcade games built with **QML**, **QtQuick**, and **JavaScript** for **Omarchy Linux** (Hyprland).
 
-Every game features the clean 2048-style arcade layout with top stat cards, subheader action controls, live desktop theme synchronization, vintage console startup sequences, zero-overhead hardware-accelerated audio, and responsive tiling window manager geometry.
+---
+
+## The Mission
+
+Growing up across the golden eras of personal computing—from the Tandy 1000 and DeskMate, through DOS, Windows 3.11, and classic Mac System 7—some of the fondest memories were the games discovered along the way. In modern operating systems, built-in games devolved into ad-riddled, login-gated, telemetry-heavy bloatware.
+
+**Omarchy Arcade** was built to revive that lost magic:
+* **Zero Bloat & Zero Ads:** No telemetry, no advertisements, no tracking, and no monetization.
+* **No Signups or Logins:** Instant play with zero accounts or internet requirements.
+* **Pure Decompression:** Quick, low-friction games to unwind for 2 minutes between compiles or terminal sessions.
+* **Theme-Aware:** Every game automatically synchronizes with your active Omarchy system theme (`~/.config/omarchy/current/theme/colors.toml`).
+* **Tiling-Native:** Designed specifically for the tiling spirit of Omarchy (Hyprland), smoothly scaling from full screen down to compact window splits.
 
 ---
 
@@ -40,7 +51,7 @@ All 16 games feature dedicated manuals and controls guides:
 * **Dynamic Omarchy Theming:** Real-time auto-synchronization with all 22 Omarchy system themes by reading `~/.config/omarchy/current/theme/colors.toml`. Live hot-reloads on theme changes (`Super + Space`).
 * **Retro Console Startup Screen:** ~1.0-second vintage console startup sequence featuring the Omarchy Arcade vector emblem, CRT scanlines, and animated glint sheen (skips instantly on any key or click).
 * **Keyboard-First & Vim Navigation:** Arrow keys, WASD, and Vim (`H`, `J`, `K`, `L`) navigation are supported across every game.
-* **Zero-Overhead Audio:** Native, hardware-accelerated sound (CoreAudio on macOS, PipeWire/ALSA on Linux), defaulted to muted (`M` to toggle) with 0% CPU consumption when silent.
+* **Zero-Overhead Audio:** Native, hardware-accelerated sound via PipeWire and ALSA, defaulted to muted (`M` to toggle) with 0% CPU consumption when silent.
 * **Tiling Window Manager Ready:** Flexible responsive layouts that adapt smoothly to narrow splits without clipping.
 * **Game Template Available:** Standardized starter template in [`template/`](template/) with a documentation template in [`template/README_TEMPLATE.md`](template/README_TEMPLATE.md) for easily creating and contributing new games.
 
@@ -50,28 +61,30 @@ All 16 games feature dedicated manuals and controls guides:
 
 ### Prerequisites
 
-* Python 3.10+
-* PySide6 (`pip install -r requirements.txt` or system package `python-pyside6`)
+On Omarchy Linux:
+```bash
+sudo pacman -S python python-pyside6 qt6-declarative
+```
 
 ### Launching Any Game
 
 ```bash
 # Launch from the arcade root:
-./.venv/bin/python games/2048/main.py
-./.venv/bin/python games/vectordrift/main.py
-./.venv/bin/python games/tetrablocks/main.py
-./.venv/bin/python games/galacticswarm/main.py
+python games/2048/main.py
+python games/vectordrift/main.py
+python games/tetrablocks/main.py
+python games/galacticswarm/main.py
 ```
 
-### Launching with a Specific Theme (macOS / Testing):
+### Previewing Specific Omarchy Themes:
 
-All games support launching with any of the 22 Omarchy color palettes:
+All games support launching directly with any of the 22 Omarchy color palettes:
 
 ```bash
-./.venv/bin/python games/dinorunner/main.py --theme tokyonight
-./.venv/bin/python games/wordguess/main.py --theme gruvbox
-./.venv/bin/python games/brickbash/main.py --theme catppuccin
-./.venv/bin/python games/cratepusher/main.py --theme snow
+python games/dinorunner/main.py --theme tokyonight
+python games/wordguess/main.py --theme gruvbox
+python games/brickbash/main.py --theme catppuccin
+python games/cratepusher/main.py --theme snow
 ```
 
 ---

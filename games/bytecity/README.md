@@ -9,7 +9,7 @@ An authentic, legally safe, uncompromised city builder for the Omarchy Linux des
 ## Key Features
 
 1. **Authentic 1989 Simulation Engine:**
-   - 100% genuine C++ simulation logic (Micropolis GPLv3) compiled natively (`libmicropolis.dylib` on macOS / `libmicropolis.so` on Linux).
+   - 100% genuine C++ simulation logic (Micropolis GPLv3) compiled natively (`libmicropolis.so` on Omarchy Linux).
    - Full cellular automaton zoning rules, power grid propagation, traffic pathfinding, pollution dissipation, land value gradients, and crime rates.
    - Dynamic RCI (Residential, Commercial, Industrial) economic demand valves driven by market simulation.
    - Live city treasury, tax policy slider (0%–20%), municipal maintenance funding, and public approval polling.

@@ -4,7 +4,7 @@
 
 A minimalist, high-performance **2048** implementation written in **QML** and **JavaScript**, styled with a sleek dark palette.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 
@@ -30,41 +30,24 @@ Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)
 
 ---
 
-## Running on macOS
+## Running
 
-### Option 1: From the arcade root
+### From the arcade root:
 ```bash
 ./.venv/bin/python games/2048/main.py
 ```
 
-### Option 2: From the game directory
+### Launch directly in a specific theme:
 ```bash
-cd games/2048
-../../.venv/bin/python main.py
+./.venv/bin/python games/2048/main.py --theme snow
+./.venv/bin/python games/2048/main.py --theme gruvbox
+./.venv/bin/python games/2048/main.py --theme tokyonight
+./.venv/bin/python games/2048/main.py --theme catppuccin
 ```
-
-### Testing Themes on macOS:
-The game automatically synchronizes with Omarchy desktop themes (`~/.config/omarchy/current/theme/colors.toml`). On macOS, you can preview or launch in any of the 22 Omarchy themes:
-* **List all themes:**
-  ```bash
-  ../../.venv/bin/python main.py --list-themes
-  ```
-* **Launch directly in a specific theme:**
-  ```bash
-  ../../.venv/bin/python main.py --theme snow
-  ../../.venv/bin/python main.py --theme gruvbox
-  ../../.venv/bin/python main.py --theme tokyonight
-  ../../.venv/bin/python main.py --theme catppuccin
-  ```
-* **Batch test & generate screenshots for all 22 themes:**
-  ```bash
-  ../../.venv/bin/python main.py --test-all-themes
-  # Generated previews are saved to games/2048/theme_previews/
-  ```
 
 ---
 
-## Running on Omarchy (Arch Linux)
+## Running on Omarchy Linux
 
 On Omarchy, Qt6 and QML run out of the box with zero setup.
 

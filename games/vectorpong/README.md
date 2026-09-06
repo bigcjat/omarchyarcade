@@ -4,7 +4,7 @@
 
 The pioneer of video games rebuilt with modern responsive styling, razor-sharp collision physics, ball spin mechanics, and an adaptive AI sparring partner.
 
-Runs natively with hardware acceleration on both **macOS** and **Linux (Omarchy)**.
+Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 
