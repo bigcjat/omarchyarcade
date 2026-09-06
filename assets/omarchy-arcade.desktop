@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Omarchy Arcade
+Comment=Master Game Suite & Offline Arcade
+Exec=/usr/bin/arcade
+Icon=omarchy-arcade
+Terminal=false
+Type=Application
+Categories=Game;Arcade;
+Keywords=arcade;game;omarchy;retro;floppy;
+StartupNotify=true
