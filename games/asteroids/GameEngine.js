@@ -11,6 +11,7 @@ var saucer = null;
 var saucerTimer = 900; // ~15 seconds initial delay
 var respawnPending = false;
 var respawnTimer = 0;
+var respawnCountdown = 0;
 var lives = 3;
 var score = 0;
 var nextBonusScore = 10000;
@@ -42,6 +43,7 @@ function resetGame() {
     saucerTimer = 800 + Math.floor(Math.random() * 600);
     respawnPending = false;
     respawnTimer = 0;
+    respawnCountdown = 0;
     resetShip();
     spawnAsteroids();
 }
@@ -209,7 +211,8 @@ function destroyShip(callbacks) {
         if (callbacks && callbacks.onSound) callbacks.onSound("game_over");
     } else {
         respawnPending = true;
-        respawnTimer = 40; // minimum 40 frame pause before safe center check
+        respawnTimer = 135; // ~2.25s at 60fps (45 frames per step: 3, 2, 1)
+        respawnCountdown = 3;
         if (callbacks && callbacks.onSound) callbacks.onSound("explode_large");
     }
 }
@@ -219,28 +222,36 @@ function update(callbacks) {
 
     if (invulnerableTimer > 0) invulnerableTimer--;
 
-    // Safe-Center Respawn logic
+    // Safe-Center Respawn logic with 3, 2, 1 countdown
     if (respawnPending) {
         if (respawnTimer > 0) {
+            var prevCount = Math.max(1, Math.ceil(respawnTimer / 45));
             respawnTimer--;
-        } else {
-            // Check if center is clear of asteroids and saucer
+            var newCount = Math.max(1, Math.ceil(respawnTimer / 45));
+            respawnCountdown = newCount;
+            if (newCount !== prevCount && newCount > 0) {
+                if (callbacks && callbacks.onSound) callbacks.onSound("beat1");
+            }
+        }
+        if (respawnTimer <= 0) {
+            // Push any overlapping asteroids gently away from center so spawn is completely clear
             var centerX = width / 2;
             var centerY = height / 2;
-            var centerClear = true;
             for (var ci = 0; ci < asteroids.length; ci++) {
-                if (Math.hypot(asteroids[ci].x - centerX, asteroids[ci].y - centerY) < 110) {
-                    centerClear = false;
-                    break;
+                var dist = Math.hypot(asteroids[ci].x - centerX, asteroids[ci].y - centerY);
+                if (dist < 110) {
+                    var pushAngle = dist > 0.01 ? Math.atan2(asteroids[ci].y - centerY, asteroids[ci].x - centerX) : Math.random() * Math.PI * 2;
+                    asteroids[ci].x = centerX + Math.cos(pushAngle) * 125;
+                    asteroids[ci].y = centerY + Math.sin(pushAngle) * 125;
                 }
             }
             if (saucer && Math.hypot(saucer.x - centerX, saucer.y - centerY) < 110) {
-                centerClear = false;
+                saucer.y = (saucer.y < centerY) ? 60 : height - 60;
             }
-            if (centerClear) {
-                resetShip();
-                respawnPending = false;
-            }
+            resetShip();
+            respawnPending = false;
+            respawnCountdown = 0;
+            if (callbacks && callbacks.onSound) callbacks.onSound("beat2");
         }
     }
 

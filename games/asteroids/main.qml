@@ -48,6 +48,8 @@ Window {
     property int highScore: 0
     property int lives: 3
     property int level: 1
+    property bool respawnPending: false
+    property int respawnCountdown: 0
 
     function applyTheme(data, name) {
         if (!data || typeof data !== "object") return;
@@ -101,6 +103,14 @@ Window {
         root.level = Engine.level;
         gameCanvas.requestPaint();
         soundToast.show("Battle Stations");
+    }
+
+    function destroyShipForTest() {
+        Engine.destroyShip({
+            onLivesChanged: function(l) { root.lives = l; },
+            onGameOver: function(s) { root.gameState = "gameover"; },
+            onSound: function(snd) { root.playSound(snd); }
+        });
     }
 
     signal screenshotSaved(string path)
@@ -547,13 +557,23 @@ Window {
                         if (Engine.respawnPending) {
                             var cx = width / 2;
                             var cy = height / 2;
-                            ctx.strokeStyle = Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.4);
-                            ctx.lineWidth = 1.0;
+                            var pulse = 0.5 + 0.5 * Math.sin(Engine.respawnTimer * 0.14);
+                            ctx.save();
+                            ctx.strokeStyle = Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.35 + 0.35 * pulse);
+                            ctx.lineWidth = 1.5;
                             ctx.beginPath();
-                            ctx.arc(cx, cy, 26, 0, Math.PI * 2);
-                            ctx.moveTo(cx - 36, cy); ctx.lineTo(cx + 36, cy);
-                            ctx.moveTo(cx, cy - 36); ctx.lineTo(cx, cy + 36);
+                            ctx.arc(cx, cy, 38 + 6 * pulse, 0, Math.PI * 2);
                             ctx.stroke();
+
+                            ctx.strokeStyle = Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.5);
+                            ctx.lineWidth = 1.2;
+                            ctx.beginPath();
+                            ctx.moveTo(cx - 56, cy); ctx.lineTo(cx - 24, cy);
+                            ctx.moveTo(cx + 24, cy); ctx.lineTo(cx + 56, cy);
+                            ctx.moveTo(cx, cy - 56); ctx.lineTo(cx, cy - 24);
+                            ctx.moveTo(cx, cy + 24); ctx.lineTo(cx, cy + 56);
+                            ctx.stroke();
+                            ctx.restore();
                         }
 
                         // Draw ship (vector wireframe with invulnerability strobe)
@@ -631,6 +651,8 @@ Window {
                         root.gameState = Engine.gameState;
                         root.score = Engine.score;
                         root.lives = Engine.lives;
+                        root.respawnPending = Engine.respawnPending;
+                        root.respawnCountdown = Engine.respawnCountdown;
                         gameCanvas.requestPaint();
                     }
                 }
@@ -643,6 +665,48 @@ Window {
                 onHeightChanged: {
                     if (width > 50 && height > 50) {
                         Engine.resize(width, height);
+                    }
+                }
+            }
+
+            // RESPAWN COUNTDOWN OVERLAY
+            Item {
+                id: respawnCountdownOverlay
+                anchors.centerIn: boardContainer
+                visible: root.respawnPending && root.gameState === "playing"
+                z: 25
+
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 8
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: root.respawnCountdown > 0 ? root.respawnCountdown.toString() : "3"
+                        font.family: root.monoFontFamily
+                        font.pixelSize: 46
+                        font.bold: true
+                        color: root.themeAccent
+                    }
+
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: respawnLabel.implicitWidth + 20
+                        height: 24
+                        radius: 12
+                        color: Qt.rgba(0, 0, 0, 0.6)
+                        border.color: Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.4)
+                        border.width: 1
+
+                        Text {
+                            id: respawnLabel
+                            anchors.centerIn: parent
+                            text: "RESPAWN IN " + (root.respawnCountdown > 0 ? root.respawnCountdown : "3")
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeFg
+                        }
                     }
                 }
             }
