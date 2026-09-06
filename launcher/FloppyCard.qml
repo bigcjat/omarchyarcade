@@ -324,6 +324,7 @@ Item {
             case "byteman": return compPacman;
             case "gemswap": return compGems;
             case "orbpop": return compOrbPop;
+            case "keiracer": return compKeiRacer;
             default: return compDefault;
         }
     }
@@ -1234,6 +1235,66 @@ Item {
                 ctx.stroke();
 
                 drawBubble(cx, cy, 6, "#ef4444", "#fca5a5");
+            }
+        }
+    }
+
+    // 20. KeiRacer Badge
+    Component {
+        id: compKeiRacer
+        Canvas {
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                // Synthwave Sky & Sun
+                var skyGrad = ctx.createLinearGradient(0, 0, 0, 42);
+                skyGrad.addColorStop(0, "#090d16");
+                skyGrad.addColorStop(1, "#2e1065");
+                ctx.fillStyle = skyGrad;
+                ctx.fillRect(0, 0, width, 42);
+
+                // Neon Sun
+                ctx.fillStyle = "#f59e0b";
+                ctx.beginPath();
+                ctx.arc(width / 2, 38, 22, Math.PI, 0, false);
+                ctx.fill();
+
+                // Road
+                ctx.fillStyle = "#0f172a";
+                ctx.beginPath();
+                ctx.moveTo(width * 0.40, 42);
+                ctx.lineTo(width * 0.60, 42);
+                ctx.lineTo(width, height);
+                ctx.lineTo(0, height);
+                ctx.closePath();
+                ctx.fill();
+
+                // Road Center Lines
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(width / 2, 42);
+                ctx.lineTo(width / 2, height);
+                ctx.stroke();
+
+                // Mini Kei Truck
+                var cx = width / 2;
+                var cy = height - 12;
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(cx - 14, cy - 18, 28, 18);
+                // Cab window
+                ctx.fillStyle = "#1e293b";
+                ctx.fillRect(cx - 10, cy - 16, 20, 8);
+                // Wheels
+                ctx.fillStyle = "#020617";
+                ctx.fillRect(cx - 15, cy - 2, 6, 6);
+                ctx.fillRect(cx + 9, cy - 2, 6, 6);
+                // Taillights
+                ctx.fillStyle = "#ef4444";
+                ctx.fillRect(cx - 12, cy - 6, 4, 3);
+                ctx.fillRect(cx + 8, cy - 6, 4, 3);
             }
         }
     }

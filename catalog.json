@@ -535,6 +535,36 @@
       "size": "533 KB",
       "size_bytes": 545756,
       "download_size": "533 KB"
+    },
+    {
+      "id": "keiracer",
+      "title": "KeiRacer",
+      "ref": "OA-020",
+      "category": "Action Arcade",
+      "floppy_color": "#232328",
+      "grid_color": "#00F0FF",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Slow Car Racing League • OutRun-Style Pseudo-3D Arcade",
+      "description": "OutRun-style pseudo-3D scanline highway racer starring the beloved Slow Car Racing League: Suzuki Carry Kei Truck, Smart Fortwo, Fiat Panda 4x4, Suzuki Sidekick, Jeep Wrangler YJ, and Volkswagen Type 2 Bus. Featuring authentic transmissions, realistic 0-60 gearing physics, and distinct procedural acoustic sound synthesis.",
+      "instructions": [
+        "Accelerate with Up / W through authentic multi-speed gear ratios.",
+        "Steer through highway corners and tap Spacebar to drift your slow machine.",
+        "Pick your ride in the Showroom Garage: Kei Truck, Smart Fortwo, Fiat Panda, Suzuki Sidekick, Wrangler YJ, or VW Bus.",
+        "Reach sector checkpoint arch gantries before the timer runs out for +30s.",
+        "Weave through slow highway traffic to build high-score multipliers.",
+        "Press C anytime to switch vehicles in the garage."
+      ],
+      "controls": {
+        "keyboard": "Up/W to accelerate, Down/S to brake, Left/Right (A/D) to steer, Space to drift",
+        "shortcuts": "C to change car, R to restart, M to mute, Esc or ? for help"
+      },
+      "folder": "games/keiracer",
+      "entrypoint": "games/keiracer/main.qml",
+      "cover_image": "assets/covers/keiracer.png",
+      "size": "1.2 MB",
+      "size_bytes": 1282755,
+      "download_size": "1.2 MB"
     }
   ]
 }
