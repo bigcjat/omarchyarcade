@@ -12,7 +12,7 @@ A curated suite of 16 lightweight, native desktop arcade games built with **QML*
 
 Growing up across the golden eras of personal computing—from the Tandy 1000 and DeskMate, through DOS, Windows 3.11, and classic Mac System 7—some of the fondest memories were the games discovered along the way. In modern operating systems, built-in games devolved into ad-riddled, login-gated, telemetry-heavy bloatware.
 
-At the same time, traditional Linux desktop games—especially older GNOME and KDE games—always suffered from a jarring aesthetic: dated 90s clip-art textures, clunky stock GTK widgets, giant menu bars, and rigid windows that violently clashed with custom desktop themes.
+At the same time, traditional Linux desktop games—especially older GNOME and KDE packages, alongside the ubiquitous "Tux" games—always suffered from an awful aesthetic: goofy mascot clipart, dated 90s textures, clunky stock GTK widgets, giant menu bars, and garish color schemes that violently clashed with custom desktop themes.
 
 **Omarchy Arcade** was built to revive that lost magic with a clean, cohesive design philosophy:
 * **Zero Bloat & Zero Ads:** No telemetry, no advertisements, no tracking, and no monetization.
