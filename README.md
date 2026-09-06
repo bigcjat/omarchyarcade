@@ -1,165 +1,166 @@
-# Omarchy Arcade
-
 <p align="center">
-  <img src="assets/splashscreen.png" alt="Omarchy Arcade Startup" width="480"/>
+  <img src="assets/omarchy_arcade_logo.svg" alt="Omarchy Arcade" width="460"/>
 </p>
 
-A curated suite of 19 lightweight, native desktop arcade games built with **QML**, **QtQuick**, and **JavaScript** for **Omarchy Linux** (Hyprland).
+<p align="center">
+  <strong>The Native Offline Desktop Game Suite & Retro Arcade Launcher for Omarchy Linux.</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Offline-Forever-00f0ff?style=flat-square" alt="Offline Forever"/>
+  <img src="https://img.shields.io/badge/Telemetry-Zero-10b981?style=flat-square" alt="Zero Telemetry"/>
+  <img src="https://img.shields.io/badge/Ads-Zero-f59e0b?style=flat-square" alt="Zero Ads"/>
+  <img src="https://img.shields.io/badge/Games-19%20Included-ec4899?style=flat-square" alt="19 Games"/>
+  <img src="https://img.shields.io/badge/Interface-Keyboard--Primary-8b5cf6?style=flat-square" alt="Keyboard-Primary"/>
+  <img src="https://img.shields.io/badge/Platform-Omarchy%20Linux%20(Hyprland)-38bdf8?style=flat-square" alt="Omarchy Linux"/>
+</p>
 
 ---
 
-## The Mission
+<p align="center">
+  <img src="assets/splashscreen.png" alt="Omarchy Arcade Presentation" width="680"/>
+</p>
 
-Growing up across the golden eras of personal computing—from the Tandy 1000 and DeskMate, through DOS, Windows 3.11, and classic Mac System 7—some of the fondest memories were the games discovered along the way. In modern operating systems and smartphones, gaming has been ruined: we can't even play simple games on our phones anymore without an active internet connection, mandatory account signups, telemetry, and unskippable ads. When you lose cell signal on a flight, on a train, or during an outage, modern games refuse to even launch.
+## Rediscover Pure Arcade Gaming
 
-At the same time, traditional Linux desktop games—especially older GNOME and KDE packages, alongside the ubiquitous "Tux" games—always suffered from an awful aesthetic: goofy mascot clipart, dated 90s textures, clunky stock GTK widgets, giant menu bars, and garish color schemes that violently clashed with custom desktop themes.
+Modern gaming on phones and mainstream operating systems has been ruined by mandatory logins, internet DRM checks, tracking SDKs, and unskippable video ads. When you lose cell signal on a flight, commute on a train, or work off-grid, modern games refuse to even launch.
 
-**Omarchy Arcade** was built to revive that lost magic with a clean, cohesive design philosophy:
-* **True Offline Play:** These games do not require, query, or use the internet at all. Zero network sockets, zero cloud dependencies, zero telemetry, and zero DRM. You can play completely offline forever—on an airplane, off-grid, during an outage, or whenever you just want to disconnect.
-* **Zero Bloat & Zero Ads:** No telemetry, no advertisements, no tracking, and no monetization.
-* **No Signups or Logins:** Instant play with zero accounts or internet requirements.
-* **Pure Decompression:** Quick, low-friction games to unwind for 2 minutes between compiles or terminal sessions.
-* **Clean, Consistent Template:** Every game shares a unified, distraction-free layout—clean stat cards, tactile quick-action buttons, and an unobstructed playfield. No clunky menus, no stock GTK chrome.
-* **Theme-Driven Visuals:** Visuals are built with clean mathematical vectors and procedural geometries that step aside and let the game mechanics and your active Omarchy system theme (`~/.config/omarchy/current/theme/colors.toml`) take care of the styling.
-* **Tiling-Native & Responsive Emoji Collapse:** Designed specifically for the tiling spirit of Omarchy (Hyprland). When windows are narrow or toolbars crowded, action buttons collapse into clean icon/emoji buttons (`💡`, `?`, `🔇`, `🔄`) so controls never push off-screen or smash together.
+**Omarchy Arcade** brings back the joy of authentic personal computing: instant, distraction-free games you actually own on your machine, built with high-performance native **Qt6 / QML** and hardware-accelerated vectors.
 
-### The Future of Lean Software: 438 KB vs 231 MB
+* 🔌 **True Offline Play:** Zero internet sockets, zero accounts, zero telemetry, and zero DRM. Works forever—on flights, off-grid, during outages, or whenever you want to disconnect.
+* ⚡ **Keyboard-Primary for Power Users:** Full Vim (`HJKL`) and Arrow key navigation, numbers `1`–`9` for instant category switching, and `/` search. Designed from the ground up for tiling window managers.
+* 🎨 **Live System Theme Sync:** Automatically reads your active Omarchy system theme (`~/.config/omarchy/current/theme/colors.toml`) in real time. Switch themes (`Super + Space`) and the entire arcade shifts colors instantly.
+* 🪟 **Tiling-Native Process Lifecycle:** Launch any game and the launcher hides itself automatically to keep your workspace clear. Close the game, and the launcher reappears and regains active focus instantly.
+* 💾 **Tactile 3.5" Disk Presentation:** Nostalgic floppy disks with painted retro box art, animated selection halos, and Steam-style modal sheets featuring live gameplay previews.
 
-When you download a casual game like 2048 on modern mobile app stores (such as Ketchapp's popular edition), the download footprint exceeds **231 MB**. By contrast, Omarchy Arcade's 2048 is **438 KB**—roughly 1/500th the size:
+---
 
-| Metric | Ketchapp 2048 (Mobile App Store) | Omarchy Arcade 2048 |
+## 438 KB vs 231 MB: The Future of Lean Software
+
+When you download a casual title like 2048 on modern mobile app stores (such as Ketchapp's edition), the download footprint exceeds **231 MB**. By contrast, Omarchy Arcade's 2048 is **438 KB**—roughly 1/500th the size:
+
+| Metric | Mobile App Store Release | Omarchy Arcade |
 | :--- | :--- | :--- |
 | **Download / Install Size** | **231.3 MB** | **438 KB** (~0.4 MB) |
 | **Footprint Ratio** | ~500× larger | ~1/500th the size |
-| **Third-Party Ad SDKs** | AppLovin, AdMob, Mintegral, Unity Ads, ironSource | **Zero** |
-| **Analytics & Trackers** | Attribution SDKs, telemetry, crash reporting, cross-promo | **Zero** |
-| **Network Sockets** | Constant ad auctions & video cache streaming | **Zero network sockets** (Offline forever) |
+| **Third-Party Ad SDKs** | AppLovin, AdMob, Mintegral, Unity Ads | **Zero** |
+| **Analytics & Trackers** | Attribution SDKs, telemetry, crash reporting | **Zero** |
+| **Network Activity** | Constant ad auctions & video streaming | **Zero network sockets** (Offline forever) |
 
 > [!NOTE]
-> **A Note on Ketchapp's App & The Shift Ahead:**  
-> We love Ketchapp's app and play it ourselves—this comparison is not picking on them or any mobile developer. In the mobile storefront era, ad mediation networks, video caching engines, attribution tracking SDKs, and telemetry were the only economic mechanisms developers had to sustain their studios and make a living. The bloat was an inevitable byproduct of the monetization model, not a lack of engineering skill.
+> **A Shift in Software Craft:**  
+> We love Ketchapp's app and play it ourselves—this comparison is not picking on mobile studios. In the ad-funded app store era, ad mediation networks and tracking SDKs were the only way developers could survive. The bloat was an inevitable byproduct of the monetization model.
 >
-> Omarchy Arcade is a glimpse of what software looks like in the future. As intelligent tools make software creation nearly effortless, games and everyday applications will no longer need to exist primarily as vehicles for monetization. When software no longer needs to harvest attention or serve video ads to survive, we no longer need to put up with the bloat—returning gaming to lean, fast, joyful craft that respects the user and their hardware.
+> Omarchy Arcade is a glimpse of what software looks like when creation becomes effortless: games and everyday tools no longer need to be advertising engines. Without monetization machinery, we return to pure, lean, joyful software that respects the user and their hardware.
 
 ---
 
-## The Arcade Collection
+## Choose Your Installation Method
 
-All 19 games feature dedicated manuals and controls guides:
+Install Omarchy Arcade however you prefer—as an automated single command, a native system package, a portable executable, or a sandboxed container.
 
-| Game | Description | Documentation |
-| :--- | :--- | :--- |
-| **2048** | Sleek tile-merging puzzle with pentatonic pitch-scaled harmonic chimes. | [Read Manual](games/2048/README.md) |
-| **BrickBash** | High-energy paddle breakout with segmented angle deflections & combo multipliers. | [Read Manual](games/brickbash/README.md) |
-| **ByteCity** | 2.5D dimetric isometric city builder powered by the genuine 1989 Micropolis C++ core. | [Read Manual](games/bytecity/README.md) |
-| **ByteMan** | Classic 28×31 labyrinth with 4 pursuit ghost algorithms, energizers & combo points. | [Read Manual](games/byteman/README.md) |
-| **ByteSnake** | Fluid grid navigator with sub-frame input buffering and progressive speed scaling. | [Read Manual](games/bytesnake/README.md) |
-| **CratePusher** | Warehouse crate-pushing puzzle featuring fully verified solvable levels & unlimited undo. | [Read Manual](games/cratepusher/README.md) |
-| **CyberFlap** | Reflex-demanding airborne runner with dynamic pitch aerodynamics & sub-ms response. | [Read Manual](games/cyberflap/README.md) |
-| **CyberHop** | Traffic and river hazard navigation with grid-snapped leaps and home bays. | [Read Manual](games/cyberhop/README.md) |
-| **CyberSweeper** | Deduction puzzle with guaranteed safe first click and recursive cascade reveals. | [Read Manual](games/cybersweeper/README.md) |
-| **DinoRunner** | Prehistoric endless runner with dynamic Day/Night cycles & pterodactyls. | [Read Manual](games/dinorunner/README.md) |
-| **DropFour** | Tactile vertical four-in-a-row strategy featuring an intelligent heuristic AI. | [Read Manual](games/dropfour/README.md) |
-| **GalacticSwarm** | Insectoid alien dive formations, tractor beam ship capture, and dual fighters. | [Read Manual](games/galacticswarm/README.md) |
-| **GemSwap** | Match-3 puzzle with cascading gravity combos, Flame, Star, and Hyper power gems. | [Read Manual](games/gemswap/README.md) |
-| **OrbPop** | Hexagonal bubble shooter with wall ricochet laser guide, orphan drops & descending ceiling. | [Read Manual](games/orbpop/README.md) |
-| **TetraBlocks** | Guideline falling block arcade puzzle with SRS wall kicks, 7-bag, & ghost projection. | [Read Manual](games/tetrablocks/README.md) |
-| **VectorDrift** | Vector wireframe space combat with Newtonian inertia & 3-2-1 safe respawns. | [Read Manual](games/vectordrift/README.md) |
-| **VectorPong** | The pioneer of video games rebuilt with ball spin slicing and adaptive AI paddle. | [Read Manual](games/vectorpong/README.md) |
-| **VoidInvaders** | Descending alien armadas, destructible bunkers, and mystery flying saucers. | [Read Manual](games/voidinvaders/README.md) |
-| **WordGuess** | 5-letter deduction word puzzle with 3D tile flips and offline dictionary verification. | [Read Manual](games/wordguess/README.md) |
+### Option 1: One-Line Installer (Fastest on Omarchy)
 
----
-
-## Architectural Highlights
-
-* **Dynamic Omarchy Theming:** Real-time auto-synchronization with all 22 Omarchy system themes by reading `~/.config/omarchy/current/theme/colors.toml`. Live hot-reloads on theme changes (`Super + Space`).
-* **Retro Console Startup Screen:** ~1.0-second vintage console startup sequence featuring the Omarchy Arcade vector emblem, CRT scanlines, and animated glint sheen (skips instantly on any key or click).
-* **Keyboard-First & Vim Navigation:** Arrow keys, WASD, and Vim (`H`, `J`, `K`, `L`) navigation are supported across every game.
-* **Zero-Overhead Audio:** Native, hardware-accelerated sound via PipeWire and ALSA, defaulted to muted (`M` to toggle) with 0% CPU consumption when silent.
-* **Tiling Window Manager Ready:** Flexible responsive layouts that adapt smoothly to narrow splits without clipping.
-* **Game Template Available:** Standardized starter template in [`template/`](template/) with a documentation template in [`template/README_TEMPLATE.md`](template/README_TEMPLATE.md) for easily creating and contributing new games.
-
----
-
-## Quick Start
-
-### 1-Line Automated Install (Omarchy Linux)
-
-Run this single command on your Omarchy laptop:
+Run this single command in your terminal:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/install.sh | bash
 ```
 
-This automatically:
-* Installs dependencies (`python`, `python-pyside6`, `qt6-declarative`) via `pacman`.
-* Symlinks the `arcade` CLI command into `~/.local/bin/arcade`.
-* Registers the desktop entry so **Omarchy Arcade** appears in your application search (Rofi / Walker / Fuzzel).
-* Configures floating window rules and the **`Super + G`** shortcut in `~/.config/hypr/hyprland.conf`.
+**What this does automatically:**
+- Installs Qt6 dependencies via `pacman`.
+- Symlinks `arcade` into `~/.local/bin/arcade` so you can type `arcade` in any terminal.
+- Registers `omarchy-arcade.desktop` with the retro vector logo in your app launcher (Rofi / Walker / Fuzzel).
+- Adds floating window rules and binds **`Super + G`** in `~/.config/hypr/hyprland.conf`.
 
 ---
 
-### Running from a Cloned Repository
+### Option 2: Native Arch / Omarchy Package (`makepkg` / `pacman`)
 
-If you already have the repository cloned:
+Build and install as an official system package managed directly by `pacman`:
 
 ```bash
-# Run the automated installer locally:
-./install.sh
-
-# Or launch directly without installing:
-./arcade
+git clone https://github.com/bigcjat/omarchyarcade.git
+cd omarchyarcade
+makepkg -si
 ```
 
-*(See [Launcher Documentation](launcher/README.md) for keyboard shortcuts, system theme hot-reloading, and Hyprland configuration).*
+*Cleanly uninstall anytime with `sudo pacman -R omarchy-arcade`.*
 
-### Launching Individual Games Directly
+---
+
+### Option 3: Portable AppImage (Zero-Install Executable)
+
+Download the standalone `Omarchy_Arcade-x86_64.AppImage` from [GitHub Releases](https://github.com/bigcjat/omarchyarcade/releases), make it executable, and run:
 
 ```bash
-# Launch any game standalone from the arcade root:
-python games/2048/main.py
-python games/vectordrift/main.py
-python games/tetrablocks/main.py
-python games/galacticswarm/main.py
+chmod +x Omarchy_Arcade-x86_64.AppImage
+./Omarchy_Arcade-x86_64.AppImage
 ```
 
-### Previewing Specific Omarchy Themes:
+*(Or build it locally anytime with `./packaging/appimage/build_appimage.sh`).*
 
-All games support launching directly with any of the 22 Omarchy color palettes:
+---
+
+### Option 4: Flatpak (KDE Qt6 Runtime)
+
+Build and install locally using Flatpak:
 
 ```bash
-python games/dinorunner/main.py --theme tokyonight
-python games/wordguess/main.py --theme gruvbox
-python games/brickbash/main.py --theme catppuccin
-python games/cratepusher/main.py --theme snow
+cd packaging/flatpak
+flatpak-builder --user --install --force-clean build-dir org.omarchy.Arcade.yml
+flatpak run org.omarchy.Arcade
 ```
 
 ---
 
-## Contributing New Games
+## The 19 Games Included
 
-To build and contribute a new arcade game, copy the starter scaffold from [`template/`](template/):
+Every game includes full offline documentation, keyboard controls mappings, and standalone launch capabilities:
 
-```bash
-cp -r template games/mygame
-cp template/README_TEMPLATE.md games/mygame/README.md
-```
-
-Refer to [`template/README.md`](template/README.md) and [`REQUIREMENTS.md`](REQUIREMENTS.md) for full layout standards and guidelines.
+| Game | Category | Install Size | Highlight | Documentation |
+| :--- | :--- | :--- | :--- | :--- |
+| **2048** | Blocks & Merging | **438 KB** | Harmonic pentatonic pitch chimes & smooth tile slides. | [Manual](games/2048/README.md) |
+| **TetraBlocks** | Blocks & Merging | **272 KB** | Guideline falling block puzzle with SRS kicks & ghost piece. | [Manual](games/tetrablocks/README.md) |
+| **ByteSnake** | Puzzles & Logic | **188 KB** | Sub-frame input buffering and progressive speed ramping. | [Manual](games/bytesnake/README.md) |
+| **VectorPong** | Tabletop & Board | **214 KB** | Ball spin slicing and adaptive AI paddle physics. | [Manual](games/vectorpong/README.md) |
+| **CyberSweeper** | Puzzles & Logic | **232 KB** | Deduction puzzle with guaranteed safe first click. | [Manual](games/cybersweeper/README.md) |
+| **DropFour** | Tabletop & Board | **228 KB** | Tactile 4-in-a-row with heuristic lookahead AI. | [Manual](games/dropfour/README.md) |
+| **BrickBash** | Action Arcade | **223 KB** | High-energy breakout with segmented paddle deflections. | [Manual](games/brickbash/README.md) |
+| **VoidInvaders** | Action Arcade | **289 KB** | Descending alien armadas with destructible bunkers. | [Manual](games/voidinvaders/README.md) |
+| **CyberFlap** | Action Arcade | **216 KB** | Airborne reflex runner with dynamic pitch aerodynamics. | [Manual](games/cyberflap/README.md) |
+| **DinoRunner** | Action Arcade | **334 KB** | Endless prehistoric runner with day/night lighting. | [Manual](games/dinorunner/README.md) |
+| **VectorDrift** | Action Arcade | **247 KB** | Vector wireframe space combat with Newtonian momentum. | [Manual](games/vectordrift/README.md) |
+| **CyberHop** | Action Arcade | **295 KB** | Traffic and river hazard navigation with grid-snapped leaps. | [Manual](games/cyberhop/README.md) |
+| **ByteMan** | Action Arcade | **356 KB** | Classic 28×31 maze with 4 pursuit ghost algorithms. | [Manual](games/byteman/README.md) |
+| **WordGuess** | Word & Deduction | **512 KB** | 5-letter deduction word puzzle with 3D tile flips. | [Manual](games/wordguess/README.md) |
+| **CratePusher** | Puzzles & Logic | **468 KB** | Warehouse crate-pushing with verified solvable levels. | [Manual](games/cratepusher/README.md) |
+| **OrbPop** | Action Arcade | **374 KB** | Hexagonal bubble shooter with laser ricochet guide. | [Manual](games/orbpop/README.md) |
+| **GemSwap** | Puzzles & Logic | **412 KB** | Match-3 cascades with Flame, Star, and Hyper power gems. | [Manual](games/gemswap/README.md) |
+| **GalacticSwarm** | Action Arcade | **1.3 MB** | Alien flight waves with Boss Galaga tractor beam rescue. | [Manual](games/galacticswarm/README.md) |
+| **ByteCity** | Simulation | **5.1 MB** | 2.5D isometric city builder powered by the genuine Micropolis C++ core. | [Manual](games/bytecity/README.md) |
 
 ---
 
-## Author & Credits
+## Keyboard Controls Cheatsheet
 
-Created by **Chris Thompson**:
-* **GitHub:** [@bigcjat](https://github.com/bigcjat) • [Repository](https://github.com/bigcjat/omarchyarcade)
-* **Twitter / X:** [@bigcjat](https://x.com/bigcjat)
+The launcher is designed for total keyboard efficiency without ever reaching for a mouse:
 
-Built with pair-programming assistance from **Gemini** (Google DeepMind).
+| Key | Action |
+| :--- | :--- |
+| **`←` `↑` `→` `↓`** / **`H` `J` `K` `L`** | Browse through floppy disks across the grid |
+| **`1` – `9`** | Jump directly to category (*All, Action, Puzzles, Blocks, Tabletop, Word...*) |
+| **`[` / `]`** or **`Tab` / `Shift+Tab`** | Cycle through categories forward / backward |
+| **`/`** or **`Ctrl+F`** | Instant search filter (*type to filter any game, tag, or ref*) |
+| **`Escape`** | Exit search / close detail modal / return to grid |
+| **`Enter` / `Space`** | Open game presentation sheet (*press Enter again to play*) |
+| **`?` / `F1`** | Open About & Credits dialog |
+| **`M`** | Toggle audio mute across all games |
 
 ---
 
-## License
+## Contributing & License
 
-Released under the **MIT License**. See individual game manuals for third-party attributions and public domain mechanics.
+* **Adding New Games:** Use the standardized starter template in [`template/`](template/) and the guide in [`template/README_TEMPLATE.md`](template/README_TEMPLATE.md).
+* **Artwork Prompts:** See [`assets/COVER_ART_GUIDE.md`](assets/COVER_ART_GUIDE.md) for illustrated box art generation instructions.
+* **License:** Released under the **MIT License**. See [LICENSE](LICENSE) for details.
