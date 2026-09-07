@@ -266,17 +266,23 @@ Window {
         }
         if (winIdx !== -1) {
             var rowH = 13; // 12px row height + 1px spacing
-            var rowTop = winIdx * rowH;
-            var rowBottom = rowTop + 12;
-            var viewTop = paytableFlickable.contentY;
-            var viewBottom = viewTop + paytableFlickable.height;
+            var targetY = Math.max(0, (winIdx * rowH) - Math.floor((paytableFlickable.height - 12) / 2));
             var maxScroll = Math.max(0, paytableFlickable.contentHeight - paytableFlickable.height);
+            paytableFlickable.contentY = Math.min(maxScroll, targetY);
+        }
+    }
 
-            if (rowTop < viewTop) {
-                paytableFlickable.contentY = Math.max(0, rowTop - 2);
-            } else if (rowBottom > viewBottom) {
-                paytableFlickable.contentY = Math.min(maxScroll, rowBottom - paytableFlickable.height + 4);
-            }
+    function ensureMenuVisible() {
+        if (typeof menuFlickable === "undefined" || !menuFlickable) return;
+        var row = Math.floor(menuSelectedIndex / 3);
+        var rowH = 46 + 6; // card height + spacing
+        var targetTop = row * rowH;
+        var targetBottom = targetTop + 46;
+        if (targetTop < menuFlickable.contentY) {
+            menuFlickable.contentY = Math.max(0, targetTop - 4);
+        } else if (targetBottom > menuFlickable.contentY + menuFlickable.height) {
+            var maxScroll = Math.max(0, menuFlickable.contentHeight - menuFlickable.height);
+            menuFlickable.contentY = Math.min(maxScroll, targetBottom - menuFlickable.height + 4);
         }
     }
 
@@ -336,6 +342,15 @@ Window {
         handCopy[index].held = !handCopy[index].held;
         playerHand = handCopy;
         playSound("click");
+
+        var liveEval = evaluateHand(playerHand);
+        if (liveEval && liveEval.winCoins > 0) {
+            winningEvaluation = liveEval;
+            scrollToWinningRow();
+        } else {
+            winningEvaluation = null;
+            resetPaytableScroll();
+        }
     }
 
     function handlePrimaryAction() {
@@ -897,26 +912,34 @@ Window {
                     return;
                 }
                 if (event.key === Qt.Key_Up) {
-                    if (menuSelectedIndex >= 2) menuSelectedIndex -= 2;
+                    if (menuSelectedIndex >= 3) menuSelectedIndex -= 3;
                     playSound("select");
+                    ensureMenuVisible();
                     event.accepted = true;
                     return;
                 }
                 if (event.key === Qt.Key_Down) {
-                    if (menuSelectedIndex + 2 < gameList.length) menuSelectedIndex += 2;
+                    if (menuSelectedIndex + 3 < gameList.length) {
+                        menuSelectedIndex += 3;
+                    } else if (menuSelectedIndex < 6 && (gameList.length - 1) >= 6) {
+                        menuSelectedIndex = gameList.length - 1;
+                    }
                     playSound("select");
+                    ensureMenuVisible();
                     event.accepted = true;
                     return;
                 }
                 if (event.key === Qt.Key_Left) {
-                    if (menuSelectedIndex % 2 === 1) menuSelectedIndex -= 1;
+                    if (menuSelectedIndex > 0) menuSelectedIndex -= 1;
                     playSound("select");
+                    ensureMenuVisible();
                     event.accepted = true;
                     return;
                 }
                 if (event.key === Qt.Key_Right) {
-                    if (menuSelectedIndex % 2 === 0 && menuSelectedIndex + 1 < gameList.length) menuSelectedIndex += 1;
+                    if (menuSelectedIndex + 1 < gameList.length) menuSelectedIndex += 1;
                     playSound("select");
+                    ensureMenuVisible();
                     event.accepted = true;
                     return;
                 }
@@ -1394,8 +1417,11 @@ Window {
 
                     // 1. Paytable Matrix / Game Table HUD
                     Rectangle {
+                        id: paytableRect
                         width: parent.width
-                        height: Math.max(88, Math.min(130, boardContainer.height * 0.28))
+                        // Dynamically give way to the card playfield:
+                        // Keeps at least playArea.cardH + statusBannerRect.height + margins for the cards!
+                        height: Math.max(34, Math.min(135, boardContainer.height - playArea.cardH - 22 - 32))
                         radius: isCyberMode ? 5 : 4
                         color: isCyberMode ? "#0A0F1ECC" : "#0000AA"
                         border.color: isCyberMode ? "#00F0FF33" : "#FEF08A"
@@ -1448,7 +1474,7 @@ Window {
                             Flickable {
                                 id: paytableFlickable
                                 width: parent.width
-                                height: parent.parent.height - 24
+                                height: Math.max(13, paytableRect.height - 21)
                                 contentHeight: payRowsCol.implicitHeight
                                 clip: true
                                 boundsBehavior: Flickable.StopAtBounds
@@ -1523,12 +1549,12 @@ Window {
                         // Table Game HUDs (Red Dog, Blackjack, War)
                         Item {
                             anchors.fill: parent
-                            anchors.margins: 6
+                            anchors.margins: (paytableRect.height <= 44) ? 2 : 6
                             visible: !root.isPokerGame
 
                             Column {
                                 anchors.centerIn: parent
-                                spacing: 4
+                                spacing: (paytableRect.height <= 44) ? 1 : 4
                                 width: parent.width
 
                                 Text {
@@ -1539,7 +1565,7 @@ Window {
                                         return "CASINO WAR (HIGH CARD WINS 1:1)";
                                     }
                                     font.family: root.monoFontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: (paytableRect.height <= 44) ? 9 : 10
                                     font.bold: true
                                     color: isCyberMode ? root.neonCyan : "#FEF08A"
                                 }
@@ -1548,7 +1574,7 @@ Window {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     width: parent.width - 10
                                     horizontalAlignment: Text.AlignHCenter
-                                    wrapMode: Text.WordWrap
+                                    elide: Text.ElideRight
                                     text: {
                                         if (activeGameId === "red_dog") {
                                             return "Spread 1: 5:1 • Spread 2: 4:1 • Spread 3: 2:1 • Spread 4-11: 1:1 • Pair: 11:1";
@@ -1558,7 +1584,7 @@ Window {
                                         }
                                         return "Aces high • Tie: Go to War (double bet, win 1:1) or Surrender (lose 50%)";
                                     }
-                                    font.pixelSize: 9
+                                    font.pixelSize: (paytableRect.height <= 44) ? 8 : 9
                                     color: isCyberMode ? "#94A3B8" : "#E2E8F0"
                                 }
                             }
@@ -1567,6 +1593,7 @@ Window {
 
                     // 2. Status Message Banner
                     Rectangle {
+                        id: statusBannerRect
                         width: parent.width
                         height: 22
                         radius: 3
@@ -1586,8 +1613,9 @@ Window {
 
                     // 3. Main Center Card Playfield
                     Item {
+                        id: cardPlayfield
                         width: parent.width
-                        height: parent.height - 180
+                        height: Math.max(playArea.cardH + 8, parent.height - paytableRect.height - statusBannerRect.height - (parent.spacing * 2))
 
                         // POKER VIEW (5 CARDS)
                         Row {
@@ -2458,8 +2486,9 @@ Window {
                     }
                 }
 
-                // 3D Beveled Touch Buttons Grid (IGT Game King Style)
+                // 3D Beveled Touch Buttons Grid (IGT Game King Style - 3 Columns, Zero Scroll)
                 Flickable {
+                    id: menuFlickable
                     width: parent.width
                     height: Math.max(100, parent.height - 62)
                     contentHeight: gameGrid.implicitHeight
@@ -2468,15 +2497,15 @@ Window {
                     Grid {
                         id: gameGrid
                         width: parent.width
-                        columns: 2
-                        spacing: 8
+                        columns: 3
+                        spacing: 6
 
                         Repeater {
                             model: gameList
                             Rectangle {
                                 id: gameCardItem
-                                width: Math.floor((gameGrid.width - 8) / 2)
-                                height: 54
+                                width: Math.floor((gameGrid.width - (gameGrid.spacing * 2)) / 3)
+                                height: Math.max(38, Math.min(46, Math.floor((menuFlickable.height - 18) / 3)))
                                 radius: 4
                                 readonly property bool isSel: (menuSelectedIndex === index)
                                 readonly property bool isCurActive: (activeGameId === modelData.id)
@@ -2488,14 +2517,14 @@ Window {
                                 // Outer Beveled Rim
                                 Rectangle {
                                     anchors.fill: parent
-                                    anchors.margins: isSel ? 3 : 2
+                                    anchors.margins: isSel ? 2.5 : 1.5
                                     radius: 3
                                     color: isCyberMode ? (isSel ? "#00F0FF33" : "#0F172A") : (isSel ? "#FEF08A" : "#F59E0B")
 
                                     // Inner Button Face
                                     Rectangle {
                                         anchors.fill: parent
-                                        anchors.margins: isCyberMode ? 1 : 2.5
+                                        anchors.margins: isCyberMode ? 1 : 2
                                         radius: 2
                                         gradient: Gradient {
                                             GradientStop {
@@ -2510,8 +2539,8 @@ Window {
 
                                         Column {
                                             anchors.centerIn: parent
-                                            spacing: 2
-                                            width: parent.width - 8
+                                            spacing: 1
+                                            width: parent.width - 6
 
                                             Text {
                                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -2528,7 +2557,7 @@ Window {
                                                 horizontalAlignment: Text.AlignHCenter
                                                 text: modelData.name
                                                 font.family: root.monoFontFamily
-                                                font.pixelSize: Math.max(8, Math.min(10, gameCardItem.width * 0.052))
+                                                font.pixelSize: Math.max(8, Math.min(10, Math.round(gameCardItem.width * 0.046)))
                                                 font.bold: true
                                                 color: "#FFFFFF"
                                                 elide: Text.ElideRight
