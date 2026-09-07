@@ -220,3 +220,11 @@ Clean line art, flat vector icon aesthetic, solid vibrant colors, sticker graphi
 * **Illustration:** Two cloaked tacticians playing with glowing neon discs across an 8x8 checkerboard overlooking a cosmic fantasy fortress.
 * **Bottom Text:** `BOARD STRATEGY • OA-023`
 
+### 24. `Solitaire` (Ref: `OA-024`)
+* **Category:** Cards & Casino
+* **Floppy Color:** Ruby Red (`#DC2626`) with flat silver shutter
+* **Grid Color:** Electric Cyan (`#00F0FF`)
+* **Illustration:** Cascading columns of illuminated cards with glowing Aces hovering in golden foundation pedestals, observed by a cloaked grandmaster in a grand cathedral arcade hall under a cosmic night sky.
+* **Bottom Text:** `CARDS & CASINO • OA-024`
+
+

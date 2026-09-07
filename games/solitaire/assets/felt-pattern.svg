@@ -1,0 +1,22 @@
+<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <g id="logo">
+      <path fill="#FFFFFF" fill-rule="evenodd" clip-rule="evenodd" d="m1200 1200h-480v-80h400v-1040h-479.996v160h-400v720h720v-720h-80v-80h159.996v880h-400v160h-640v-1200h1200zm-1120-80h480v-80h-400l.004-400h-80.004zm0-560h80.004v-400h400v-80h-480.004z"/>
+    </g>
+  </defs>
+
+  <!-- Elegant casino damask diamond grid lines -->
+  <path d="M0,40 L40,0 L80,40 L40,80 Z" fill="none" stroke="#FFFFFF" stroke-width="0.6" stroke-dasharray="2,4" opacity="0.6"/>
+  <path d="M0,0 L80,80 M80,0 L0,80" fill="none" stroke="#FFFFFF" stroke-width="0.3" stroke-dasharray="1,5" opacity="0.3"/>
+
+  <!-- Center Omarchy square maze emblem (20x20) -->
+  <g transform="translate(30, 30) scale(0.016667)">
+    <use href="#logo"/>
+  </g>
+
+  <!-- 4 Corner offset emblems for seamless diagonal repeat -->
+  <g transform="translate(-10, -10) scale(0.016667)"><use href="#logo"/></g>
+  <g transform="translate(70, -10) scale(0.016667)"><use href="#logo"/></g>
+  <g transform="translate(-10, 70) scale(0.016667)"><use href="#logo"/></g>
+  <g transform="translate(70, 70) scale(0.016667)"><use href="#logo"/></g>
+</svg>

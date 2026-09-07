@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 188 272" width="188" height="272">
+  <defs>
+    <radialGradient id="crimsonBg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#991B1B"/>
+      <stop offset="60%" stop-color="#7F1D1D"/>
+      <stop offset="100%" stop-color="#450A0A"/>
+    </radialGradient>
+    <linearGradient id="goldFiligree" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="50%" stop-color="#EAB308"/>
+      <stop offset="100%" stop-color="#CA8A04"/>
+    </linearGradient>
+    <pattern id="diamondGrid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M 8 0 L 16 8 L 8 16 L 0 8 Z" fill="none" stroke="#FDE047" stroke-width="0.7" opacity="0.22"/>
+      <circle cx="8" cy="8" r="1.2" fill="#FDE047" opacity="0.35"/>
+    </pattern>
+  </defs>
+
+  <!-- Card Base -->
+  <rect x="1" y="1" width="186" height="270" rx="14" fill="url(#crimsonBg)" stroke="#FDE047" stroke-width="2"/>
+
+  <!-- Ornate Double Gold Border -->
+  <rect x="7" y="7" width="174" height="258" rx="10" fill="none" stroke="#FDE047" stroke-width="1.2" opacity="0.9"/>
+  <rect x="10" y="10" width="168" height="252" rx="8" fill="none" stroke="#FDE047" stroke-width="0.6" opacity="0.6"/>
+
+  <!-- Diamond Lattice Field -->
+  <rect x="11" y="11" width="166" height="250" rx="7" fill="url(#diamondGrid)"/>
+
+  <!-- Ornate Victorian Corner Scroll Accents -->
+  <g stroke="url(#goldFiligree)" stroke-width="1.2" fill="none">
+    <path d="M 16 32 C 16 20 20 16 32 16 M 16 26 C 22 26 26 22 26 16"/>
+    <path d="M 172 32 C 172 20 168 16 156 16 M 172 26 C 166 26 162 22 162 16"/>
+    <path d="M 16 240 C 16 252 20 256 32 256 M 16 246 C 22 246 26 250 26 256"/>
+    <path d="M 172 240 C 172 252 168 256 156 256 M 172 246 C 166 246 162 250 162 256"/>
+  </g>
+
+  <!-- Center Gold Medallion -->
+  <g transform="translate(94, 136)">
+    <!-- Outer Sunburst Rays -->
+    <circle cx="0" cy="0" r="42" fill="#450A0A" stroke="#FDE047" stroke-width="2"/>
+    <circle cx="0" cy="0" r="37" fill="#7F1D1D" stroke="#FDE047" stroke-width="1" stroke-dasharray="2,2"/>
+    <circle cx="0" cy="0" r="32" fill="#18181B" stroke="#FDE047" stroke-width="1.5"/>
+
+    <!-- Concentric Omarchy Squares in Royal Gold -->
+    <rect x="-18" y="-18" width="36" height="36" rx="3" fill="none" stroke="#FDE047" stroke-width="2.5"/>
+    <rect x="-11" y="-11" width="22" height="22" rx="2" fill="none" stroke="#FDE047" stroke-width="1.8"/>
+    <rect x="-5" y="-5" width="10" height="10" rx="1" fill="#FDE047"/>
+
+    <!-- Medallion Accent Pearls -->
+    <circle cx="0" cy="-25" r="1.8" fill="#FDE047"/>
+    <circle cx="0" cy="25" r="1.8" fill="#FDE047"/>
+    <circle cx="-25" cy="0" r="1.8" fill="#FDE047"/>
+    <circle cx="25" cy="0" r="1.8" fill="#FDE047"/>
+  </g>
+
+  <!-- Title Accents -->
+  <text x="94" y="28" text-anchor="middle" font-family="'Georgia', serif" font-weight="bold" font-size="10" letter-spacing="3" fill="#FDE047">OMARCHY</text>
+  <text x="94" y="254" text-anchor="middle" font-family="'Georgia', serif" font-weight="bold" font-size="8.5" letter-spacing="3" fill="#FDE047" opacity="0.9">CASINO ROYALE</text>
+</svg>

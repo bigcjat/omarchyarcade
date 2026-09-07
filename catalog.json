@@ -651,6 +651,35 @@
       "size": "754 KB",
       "size_bytes": 773053,
       "download_size": "754 KB"
+    },
+    {
+      "id": "solitaire",
+      "title": "Solitaire",
+      "ref": "OA-024",
+      "category": "Cards & Casino",
+      "floppy_color": "#DC2626",
+      "grid_color": "#00F0FF",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Klondike Solitaire • 3D Cards & Vector Decks",
+      "description": "Classic Klondike Solitaire featuring 3D flip card animations, customizable vector deck backs, Draw-1 and Draw-3 modes, auto-foundation completion, and smart move hints.",
+      "instructions": [
+        "Build the 4 Foundations up by suit from Ace to King.",
+        "Build Tableau columns down in alternating colors (red on black, black on red).",
+        "Click the Stock to flip cards to the Waste pile. Only Kings can fill empty tableau columns.",
+        "Single-click cards for smart auto-move, or double-click to send directly to Foundation.",
+        "Toggle between Draw 1 and Draw 3 modes anytime, or cycle vector deck styles."
+      ],
+      "controls": {
+        "keyboard": "Click cards to auto-move, Space for Stock, U to Undo, H for Hint",
+        "shortcuts": "D for Draw 1/3, K for Deck Style, N for New Game, ? for Help, Esc to back"
+      },
+      "folder": "games/solitaire",
+      "entrypoint": "games/solitaire/main.qml",
+      "cover_image": "assets/covers/solitaire.png",
+      "size": "562 KB",
+      "size_bytes": 575434,
+      "download_size": "562 KB"
     }
   ]
 }
