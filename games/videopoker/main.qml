@@ -1069,11 +1069,51 @@ Window {
 
             readonly property bool isCrowded: subheaderItem.width < 440
 
-            // Left cluster: Rules / Help
+            // Left cluster: Games & Rules
             Row {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
+                spacing: subheaderItem.isCrowded ? 4 : 6
+
+                // Game Selector Menu Button
+                Rectangle {
+                    height: 28
+                    width: subheaderItem.isCrowded ? 28 : (gameBtnRow.implicitWidth + 14)
+                    radius: 6
+                    color: gameMenuMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: gameMenuMouse.containsMouse ? (isCyberMode ? root.neonCyan : "#38BDF8") : root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: gameBtnRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "🎮"
+                            font.pixelSize: 11
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "Games (G)"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+                    MouseArea {
+                        id: gameMenuMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            gameMenuOpen = !gameMenuOpen;
+                            root.playSound("select");
+                        }
+                    }
+                }
 
                 // Help Button
                 Rectangle {
@@ -1948,346 +1988,320 @@ Window {
         }
 
         // =====================================================================
-        // DOUBLE-UP GAMBLE OVERLAY MODAL
+        // DOUBLE-UP GAMBLE OVERLAY (Contained within Game Playing Area Screen)
         // =====================================================================
         Rectangle {
             id: doubleUpModal
-            anchors.fill: parent
-            color: "#F0000000"
+            anchors.fill: playArea
+            radius: isCyberMode ? 8 : 10
+            clip: true
+            color: isCyberMode ? "#090D1C" : "#000066"
+            border.color: isCyberMode ? root.neonCyan : "#FEF08A"
+            border.width: 3
             visible: doubleUpActive
             z: 800
 
-            Rectangle {
-                width: Math.min(parent.width * 0.96, 480)
-                height: Math.min(parent.height * 0.92, 470)
-                anchors.centerIn: parent
-                radius: 8
-                color: isCyberMode ? "#090D1C" : "#000066"
-                border.color: isCyberMode ? root.neonCyan : "#FEF08A"
-                border.width: 3
+            Column {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 8
 
-                Column {
-                    anchors.fill: parent
-                    anchors.margins: 14
-                    spacing: 10
+                // 1. Header Bar
+                Item {
+                    width: parent.width
+                    height: 28
 
-                    // 1. Header Bar
-                    Item {
-                        width: parent.width
-                        height: 28
-
-                        Text {
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "★ DOUBLE-OR-NOTHING BONUS ★"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 12
-                            font.bold: true
-                            color: isCyberMode ? root.neonCyan : "#FEF08A"
-                        }
-
-                        // Collect Button (Docked right, no overlap!)
-                        Rectangle {
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: 108
-                            height: 26
-                            radius: 4
-                            color: isCyberMode ? (collectMouse.containsMouse ? "#00F0FF44" : "#1E1B4B") : (collectMouse.containsMouse ? "#FEF08A" : "#D97706")
-                            border.color: isCyberMode ? root.neonCyan : "#FEF08A"
-                            border.width: 1.5
-
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.margins: 1.5
-                                radius: 2.5
-                                color: isCyberMode ? "#0A0F1D" : "#7F1D1D"
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "COLLECT [C]"
-                                    font.family: root.monoFontFamily
-                                    font.pixelSize: 9
-                                    font.bold: true
-                                    color: isCyberMode ? root.neonCyan : "#FEF08A"
-                                }
-                            }
-
-                            MouseArea {
-                                id: collectMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: collectDoubleUp()
-                            }
-                        }
+                    Text {
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "★ DOUBLE-OR-NOTHING BONUS ★"
+                        font.family: root.monoFontFamily
+                        font.pixelSize: 12
+                        font.bold: true
+                        color: isCyberMode ? root.neonCyan : "#FEF08A"
                     }
 
-                    // 2. Pot & Target Marquee
+                    // Collect Button (Docked right, no overlap!)
                     Rectangle {
-                        width: parent.width
-                        height: 36
-                        radius: 6
-                        color: isCyberMode ? "#060A14" : "#000044"
-                        border.color: isCyberMode ? "#00F0FF33" : "#FEF08A44"
-                        border.width: 1
-
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 12
-
-                            Rectangle {
-                                height: 24
-                                width: 130
-                                radius: 3
-                                color: isCyberMode ? "#111827" : "#000033"
-                                border.color: isCyberMode ? "#38BDF8" : "#93C5FD"
-                                border.width: 1
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "POT: " + doubleUpCurrentPot
-                                    font.family: root.monoFontFamily
-                                    font.pixelSize: 10
-                                    font.bold: true
-                                    color: isCyberMode ? "#38BDF8" : "#FEF08A"
-                                }
-                            }
-
-                            Text {
-                                text: "➔"
-                                font.pixelSize: 14
-                                font.bold: true
-                                color: isCyberMode ? root.neonMagenta : "#FEF08A"
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-
-                            Rectangle {
-                                height: 24
-                                width: 140
-                                radius: 3
-                                color: isCyberMode ? "#1E1035" : "#7F1D1D"
-                                border.color: isCyberMode ? root.neonMagenta : "#F87171"
-                                border.width: 1
-
-                                SequentialAnimation on opacity {
-                                    loops: Animation.Infinite
-                                    NumberAnimation { from: 0.8; to: 1.0; duration: 300 }
-                                    NumberAnimation { from: 1.0; to: 0.8; duration: 300 }
-                                }
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "DOUBLE: " + (doubleUpCurrentPot * 2)
-                                    font.family: root.monoFontFamily
-                                    font.pixelSize: 10
-                                    font.bold: true
-                                    color: isCyberMode ? root.neonMagenta : "#FEF08A"
-                                }
-                            }
-                        }
-                    }
-
-                    // 3. Status Announcement Marquee
-                    Rectangle {
-                        width: parent.width
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 96
                         height: 24
-                        radius: 4
-                        color: {
-                            if (doubleUpOutcome === "WIN") return (isCyberMode ? root.neonMagenta : "#16A34A");
-                            if (doubleUpOutcome === "LOSE") return (isCyberMode ? "#7F1D1D" : "#991B1B");
-                            if (doubleUpOutcome === "TIE") return (isCyberMode ? "#0369A1" : "#0284C7");
-                            return (isCyberMode ? "#0B1329" : "#000055");
-                        }
-                        border.color: doubleUpOutcome !== "" ? "#FEF08A" : (isCyberMode ? "#00F0FF33" : "#FEF08A33")
+                        radius: 3
+                        color: collectMouse.containsMouse ? "#EF4444" : "#DC2626"
+                        border.color: "#FFFFFF"
                         border.width: 1
 
                         Text {
                             anchors.centerIn: parent
-                            text: doubleUpMessage
+                            text: "COLLECT [C]"
                             font.family: root.monoFontFamily
                             font.pixelSize: 9
                             font.bold: true
                             color: "#FFFFFF"
                         }
+                        MouseArea {
+                            id: collectMouse
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: collectDoubleUp()
+                        }
                     }
+                }
 
-                    // 4. Main Arena (Dealer Card vs 4 Player Cards)
+                // 2. Stakes HUD Marquee
+                Rectangle {
+                    width: parent.width
+                    height: 26
+                    radius: 3
+                    color: isCyberMode ? "#111827" : "#000033"
+                    border.color: isCyberMode ? root.neonPurple : "#38BDF8"
+                    border.width: 1
+
                     Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 10
+                        anchors.centerIn: parent
+                        spacing: 12
 
-                        // DEALER PEDESTAL
+                        Text {
+                            text: "CURRENT POT: " + doubleUpCurrentPot
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: isCyberMode ? "#C084FC" : "#FBBF24"
+                        }
+                        Text {
+                            text: "➔"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: isCyberMode ? root.neonCyan : "#FEF08A"
+                        }
+                        Text {
+                            text: "DOUBLE: " + (doubleUpCurrentPot * 2)
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: isCyberMode ? root.neonCyan : "#FEF08A"
+                        }
+                    }
+                }
+
+                // 3. Status Announcement Banner
+                Rectangle {
+                    width: parent.width
+                    height: 28
+                    radius: 3
+                    color: {
+                        if (!doubleUpResolved) return isCyberMode ? "#1E1B4B" : "#1E3A8A";
+                        if (doubleUpOutcome === "WIN") return "#14532D";
+                        if (doubleUpOutcome === "TIE") return "#0C4A6E";
+                        return "#7F1D1D";
+                    }
+                    border.color: {
+                        if (!doubleUpResolved) return isCyberMode ? root.neonCyan : "#60A5FA";
+                        if (doubleUpOutcome === "WIN") return "#22C55E";
+                        if (doubleUpOutcome === "TIE") return "#38BDF8";
+                        return "#EF4444";
+                    }
+                    border.width: 1
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: doubleUpMessage
+                        font.family: root.monoFontFamily
+                        font.pixelSize: 10
+                        font.bold: true
+                        color: {
+                            if (!doubleUpResolved) return isCyberMode ? "#E0E7FF" : "#FEF08A";
+                            if (doubleUpOutcome === "WIN") return "#86EFAC";
+                            if (doubleUpOutcome === "TIE") return "#BAE6FD";
+                            return "#FCA5A5";
+                        }
+                    }
+                }
+
+                // 4. Card Arena (Dealer Pedestal vs 4 Player Picks)
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 14
+
+                    // DEALER PEDESTAL
+                    Column {
+                        spacing: 3
+
+                        Text {
+                            text: "DEALER"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: isCyberMode ? root.neonCyan : "#FEF08A"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
                         Rectangle {
-                            width: 78
-                            height: 136
-                            radius: 6
-                            color: isCyberMode ? "#060A14" : "#000044"
-                            border.color: (doubleUpResolved && doubleUpOutcome === "LOSE") ? (isCyberMode ? root.neonCyan : "#FEF08A") : (isCyberMode ? "#00F0FF33" : "#FEF08A44")
+                            width: 66
+                            height: 94
+                            radius: 4
+                            color: isCyberMode ? "#0F172A" : "#000044"
+                            border.color: isCyberMode ? root.neonCyan : "#FEF08A"
                             border.width: 1.5
 
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 4
-
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "DEALER"
-                                    font.family: root.monoFontFamily
-                                    font.pixelSize: 8
-                                    font.bold: true
-                                    color: isCyberMode ? root.neonCyan : "#FEF08A"
-                                }
-
-                                PlayingCard {
-                                    width: 66
-                                    height: 94
-                                    cardData: doubleUpDealerCard
-                                    visualMode: root.visualMode
-                                    isWinning: doubleUpResolved && (doubleUpOutcome === "LOSE")
-                                }
-
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "TO BEAT"
-                                    font.family: root.monoFontFamily
-                                    font.pixelSize: 7
-                                    font.bold: true
-                                    color: isCyberMode ? "#94A3B8" : "#93C5FD"
-                                }
+                            PlayingCard {
+                                anchors.fill: parent
+                                cardData: doubleUpDealerCard
+                                visualMode: root.visualMode
                             }
                         }
 
-                        // Divider Line
                         Rectangle {
-                            width: 1
-                            height: 136
-                            color: isCyberMode ? "#00F0FF44" : "#FEF08A44"
-                        }
-
-                        // 4 PLAYER PICK CARDS
-                        Column {
-                            spacing: 4
+                            width: 66
+                            height: 16
+                            radius: 2
+                            color: isCyberMode ? "#1E293B" : "#000044"
+                            border.color: isCyberMode ? root.neonCyan : "#FEF08A"
+                            border.width: 1
 
                             Text {
-                                text: doubleUpResolved ? "REVEALED CARDS" : "CHOOSE 1 CARD (KEYS 1-4 OR CLICK):"
+                                anchors.centerIn: parent
+                                text: "TO BEAT"
                                 font.family: root.monoFontFamily
                                 font.pixelSize: 8
                                 font.bold: true
-                                color: isCyberMode ? root.neonMagenta : "#FEF08A"
+                                color: isCyberMode ? root.neonCyan : "#FEF08A"
                             }
+                        }
+                    }
 
-                            Row {
-                                spacing: 6
+                    // Divider
+                    Rectangle {
+                        width: 1
+                        height: 114
+                        color: isCyberMode ? "#334155" : "#1E3A8A"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
 
-                                Repeater {
-                                    model: doubleUpPlayerCards
-                                    Column {
-                                        spacing: 3
+                    // 4 PLAYER PICK CARDS
+                    Column {
+                        spacing: 3
 
-                                        Rectangle {
-                                            id: pickCardBox
-                                            width: 66
-                                            height: 94
-                                            radius: 4
-                                            color: "transparent"
-                                            border.color: {
-                                                if (doubleUpResolved && index === doubleUpChosenIndex) {
-                                                    return (doubleUpOutcome === "WIN") ? "#22C55E" : (doubleUpOutcome === "TIE" ? "#38BDF8" : "#EF4444");
-                                                }
-                                                return pickCardArea.containsMouse && !doubleUpResolved ? (isCyberMode ? root.neonCyan : "#FEF08A") : "transparent";
+                        Text {
+                            text: doubleUpResolved ? "REVEALED CARDS" : "CHOOSE 1 CARD (KEYS 1-4 OR CLICK):"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: isCyberMode ? root.neonMagenta : "#FEF08A"
+                        }
+
+                        Row {
+                            spacing: 6
+
+                            Repeater {
+                                model: doubleUpPlayerCards
+                                Column {
+                                    spacing: 3
+
+                                    Rectangle {
+                                        id: pickCardBox
+                                        width: 66
+                                        height: 94
+                                        radius: 4
+                                        color: "transparent"
+                                        border.color: {
+                                            if (doubleUpResolved && index === doubleUpChosenIndex) {
+                                                return (doubleUpOutcome === "WIN") ? "#22C55E" : (doubleUpOutcome === "TIE" ? "#38BDF8" : "#EF4444");
                                             }
-                                            border.width: (doubleUpResolved && index === doubleUpChosenIndex) ? 2.5 : (pickCardArea.containsMouse ? 1.5 : 0)
+                                            return pickCardArea.containsMouse && !doubleUpResolved ? (isCyberMode ? root.neonCyan : "#FEF08A") : "transparent";
+                                        }
+                                        border.width: (doubleUpResolved && index === doubleUpChosenIndex) ? 2.5 : (pickCardArea.containsMouse ? 1.5 : 0)
 
-                                            PlayingCard {
-                                                anchors.fill: parent
-                                                cardData: modelData
-                                                visualMode: root.visualMode
-                                                isWinning: doubleUpResolved && (index === doubleUpChosenIndex) && (doubleUpOutcome === "WIN")
-                                            }
-
-                                            MouseArea {
-                                                id: pickCardArea
-                                                anchors.fill: parent
-                                                hoverEnabled: true
-                                                cursorShape: (!doubleUpResolved) ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                                onClicked: pickDoubleUpCard(index)
-                                            }
+                                        PlayingCard {
+                                            anchors.fill: parent
+                                            cardData: modelData
+                                            visualMode: root.visualMode
+                                            isWinning: doubleUpResolved && (index === doubleUpChosenIndex) && (doubleUpOutcome === "WIN")
                                         }
 
-                                        // Badge / Key Indicator
-                                        Rectangle {
-                                            width: 66
-                                            height: 16
-                                            radius: 2
-                                            color: (doubleUpResolved && index === doubleUpChosenIndex) ? (doubleUpOutcome === "WIN" ? "#16A34A" : "#991B1B") : (isCyberMode ? "#111827" : "#000044")
-                                            border.color: isCyberMode ? root.neonCyan : "#FEF08A"
-                                            border.width: 1
+                                        MouseArea {
+                                            id: pickCardArea
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: (!doubleUpResolved) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                            onClicked: pickDoubleUpCard(index)
+                                        }
+                                    }
 
-                                            Text {
-                                                anchors.centerIn: parent
-                                                text: (doubleUpResolved && index === doubleUpChosenIndex) ? "YOUR PICK" : ("[ " + (index + 1) + " ]")
-                                                font.family: root.monoFontFamily
-                                                font.pixelSize: 8
-                                                font.bold: true
-                                                color: "#FFFFFF"
-                                            }
+                                    // Badge / Key Indicator
+                                    Rectangle {
+                                        width: 66
+                                        height: 16
+                                        radius: 2
+                                        color: (doubleUpResolved && index === doubleUpChosenIndex) ? (doubleUpOutcome === "WIN" ? "#16A34A" : "#991B1B") : (isCyberMode ? "#111827" : "#000044")
+                                        border.color: isCyberMode ? root.neonCyan : "#FEF08A"
+                                        border.width: 1
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: (doubleUpResolved && index === doubleUpChosenIndex) ? "YOUR PICK" : ("[ " + (index + 1) + " ]")
+                                            font.family: root.monoFontFamily
+                                            font.pixelSize: 8
+                                            font.bold: true
+                                            color: "#FFFFFF"
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                }
 
-                    // 5. Bottom Action Controls
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 8
-                        visible: doubleUpResolved && (doubleUpOutcome === "WIN" || doubleUpOutcome === "TIE")
+                // 5. Bottom Action Controls
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 8
+                    visible: doubleUpResolved && (doubleUpOutcome === "WIN" || doubleUpOutcome === "TIE")
 
-                        Rectangle {
-                            width: 150
-                            height: 32
-                            radius: 4
-                            color: isCyberMode ? root.neonMagenta : "#16A34A"
-                            border.color: "#FFFFFF"
-                            border.width: 1.5
+                    Rectangle {
+                        width: 150
+                        height: 30
+                        radius: 4
+                        color: isCyberMode ? root.neonMagenta : "#16A34A"
+                        border.color: "#FFFFFF"
+                        border.width: 1.5
 
-                            Text {
-                                anchors.centerIn: parent
-                                text: "DOUBLE AGAIN [D]"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 9
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: startDoubleUp()
-                            }
+                        Text {
+                            anchors.centerIn: parent
+                            text: "DOUBLE AGAIN [D]"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 9
+                            font.bold: true
+                            color: "#FFFFFF"
                         }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: startDoubleUp()
+                        }
+                    }
 
-                        Rectangle {
-                            width: 150
-                            height: 32
-                            radius: 4
-                            color: isCyberMode ? "#1E1035" : "#D97706"
-                            border.color: isCyberMode ? root.neonPurple : "#FEF08A"
-                            border.width: 1.5
+                    Rectangle {
+                        width: 150
+                        height: 30
+                        radius: 4
+                        color: isCyberMode ? "#1E1035" : "#D97706"
+                        border.color: isCyberMode ? root.neonPurple : "#FEF08A"
+                        border.width: 1.5
 
-                            Text {
-                                anchors.centerIn: parent
-                                text: "COLLECT [C]"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 9
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: collectDoubleUp()
-                            }
+                        Text {
+                            anchors.centerIn: parent
+                            text: "COLLECT [C]"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 9
+                            font.bold: true
+                            color: "#FFFFFF"
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: collectDoubleUp()
                         }
                     }
                 }
@@ -2295,178 +2309,172 @@ Window {
         }
 
         // =====================================================================
-        // GAMES SELECTOR MODAL (8 Games)
+        // GAMES SELECTOR (Contained within Game Playing Area Screen)
         // =====================================================================
         Rectangle {
             id: gameSelectModal
-            anchors.fill: parent
-            color: "#CC000000"
+            anchors.fill: playArea
+            radius: isCyberMode ? 8 : 10
+            clip: true
+            color: isCyberMode ? "#0A0F1E" : "#000088"
+            border.color: isCyberMode ? root.neonCyan : "#FEF08A"
+            border.width: isCyberMode ? 2 : 3
             visible: gameMenuOpen
             z: 850
 
-            Rectangle {
-                width: Math.min(parent.width * 0.94, 460)
-                height: Math.min(parent.height * 0.92, 530)
-                anchors.centerIn: parent
-                radius: 6
-                color: isCyberMode ? "#0A0F1E" : "#000066"
-                border.color: isCyberMode ? root.neonCyan : "#FEF08A"
-                border.width: isCyberMode ? 2 : 3
+            Column {
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 8
 
-                Column {
-                    anchors.fill: parent
-                    anchors.margins: 14
-                    spacing: 10
+                // Modal Header
+                Item {
+                    width: parent.width
+                    height: 26
 
-                    // Modal Header
-                    Item {
-                        width: parent.width
-                        height: 26
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "SELECT A GAME"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 13
-                            font.bold: true
-                            color: isCyberMode ? root.neonCyan : "#FEF08A"
-                        }
-
-                        Rectangle {
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: 72
-                            height: 24
-                            radius: 3
-                            color: isCyberMode ? (closeGameMenuArea.containsMouse ? root.neonCyan : "#1E293B") : (closeGameMenuArea.containsMouse ? "#FEF08A" : "#D97706")
-                            border.color: isCyberMode ? root.neonCyan : "#FEF08A"
-                            border.width: 1
-
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.margins: 1.5
-                                radius: 2
-                                color: isCyberMode ? "#0A0F1D" : "#7F1D1D"
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "EXIT [ESC]"
-                                    font.family: root.monoFontFamily
-                                    font.pixelSize: 8
-                                    font.bold: true
-                                    color: isCyberMode ? root.neonCyan : "#FEF08A"
-                                }
-                            }
-
-                            MouseArea {
-                                id: closeGameMenuArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: gameMenuOpen = false
-                            }
-                        }
-                    }
-
-                    // 3D Beveled Touch Buttons Grid (IGT Game King Style)
-                    Flickable {
-                        width: parent.width
-                        height: parent.height - 70
-                        contentHeight: gameGrid.implicitHeight
-                        clip: true
-
-                        Grid {
-                            id: gameGrid
-                            width: parent.width
-                            columns: 2
-                            spacing: 8
-
-                            Repeater {
-                                model: gameList
-                                Rectangle {
-                                    id: gameCardItem
-                                    width: Math.floor((gameGrid.width - 8) / 2)
-                                    height: 54
-                                    radius: 4
-                                    readonly property bool isSel: (activeGameId === modelData.id)
-                                    readonly property bool isHov: btnMouseArea.containsMouse
-
-                                    // Green selection highlight border (exact IGT machine style)
-                                    color: isSel ? "#22C55E" : (isCyberMode ? (isHov ? root.neonCyan : "#1E293B") : (isHov ? "#FEF08A" : "#D97706"))
-
-                                    // Outer Beveled Rim
-                                    Rectangle {
-                                        anchors.fill: parent
-                                        anchors.margins: isSel ? 3 : 2
-                                        radius: 3
-                                        color: isCyberMode ? (isSel ? "#00F0FF33" : "#0F172A") : (isSel ? "#FEF08A" : "#F59E0B")
-
-                                        // Inner Button Face
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            anchors.margins: isCyberMode ? 1 : 2.5
-                                            radius: 2
-                                            gradient: Gradient {
-                                                GradientStop {
-                                                    position: 0.0
-                                                    color: isCyberMode ? (gameCardItem.isSel ? "#1E293B" : "#0A0F1D") : (gameCardItem.isSel ? "#DC2626" : (gameCardItem.isHov ? "#B91C1C" : "#991B1B"))
-                                                }
-                                                GradientStop {
-                                                    position: 1.0
-                                                    color: isCyberMode ? (gameCardItem.isSel ? "#0F172A" : "#030712") : (gameCardItem.isSel ? "#991B1B" : (gameCardItem.isHov ? "#881337" : "#7F1D1D"))
-                                                }
-                                            }
-
-                                            Column {
-                                                anchors.centerIn: parent
-                                                spacing: 2
-                                                width: parent.width - 8
-
-                                                Text {
-                                                    anchors.horizontalCenter: parent.horizontalCenter
-                                                    text: modelData.type === "poker" ? "VIDEO POKER" : "TABLE GAME"
-                                                    font.family: root.monoFontFamily
-                                                    font.pixelSize: 8
-                                                    font.bold: true
-                                                    color: isCyberMode ? root.neonCyan : "#FEF08A"
-                                                }
-
-                                                Text {
-                                                    anchors.horizontalCenter: parent.horizontalCenter
-                                                    width: parent.width
-                                                    horizontalAlignment: Text.AlignHCenter
-                                                    text: modelData.name
-                                                    font.family: root.monoFontFamily
-                                                    font.pixelSize: Math.max(8, Math.min(10, gameCardItem.width * 0.052))
-                                                    font.bold: true
-                                                    color: "#FFFFFF"
-                                                    elide: Text.ElideRight
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: btnMouseArea
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: switchGame(modelData.id)
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Bottom Arcade Prompt (Exact IGT Casino Legend)
                     Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: "TO START PLAY, SELECT A GAME"
+                        anchors.centerIn: parent
+                        text: "SELECT A GAME"
                         font.family: root.monoFontFamily
-                        font.pixelSize: 9
+                        font.pixelSize: 13
                         font.bold: true
                         color: isCyberMode ? root.neonCyan : "#FEF08A"
                     }
+
+                    Rectangle {
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 72
+                        height: 24
+                        radius: 3
+                        color: isCyberMode ? (closeGameMenuArea.containsMouse ? root.neonCyan : "#1E293B") : (closeGameMenuArea.containsMouse ? "#FEF08A" : "#D97706")
+                        border.color: isCyberMode ? root.neonCyan : "#FEF08A"
+                        border.width: 1
+
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: 1.5
+                            radius: 2
+                            color: isCyberMode ? "#0A0F1D" : "#7F1D1D"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "EXIT [ESC]"
+                                font.family: root.monoFontFamily
+                                font.pixelSize: 8
+                                font.bold: true
+                                color: isCyberMode ? root.neonCyan : "#FEF08A"
+                            }
+                        }
+
+                        MouseArea {
+                            id: closeGameMenuArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: gameMenuOpen = false
+                        }
+                    }
+                }
+
+                // 3D Beveled Touch Buttons Grid (IGT Game King Style)
+                Flickable {
+                    width: parent.width
+                    height: Math.max(100, parent.height - 62)
+                    contentHeight: gameGrid.implicitHeight
+                    clip: true
+
+                    Grid {
+                        id: gameGrid
+                        width: parent.width
+                        columns: 2
+                        spacing: 8
+
+                        Repeater {
+                            model: gameList
+                            Rectangle {
+                                id: gameCardItem
+                                width: Math.floor((gameGrid.width - 8) / 2)
+                                height: 54
+                                radius: 4
+                                readonly property bool isSel: (activeGameId === modelData.id)
+                                readonly property bool isHov: btnMouseArea.containsMouse
+
+                                // Green selection highlight border (exact IGT machine style)
+                                color: isSel ? "#22C55E" : (isCyberMode ? (isHov ? root.neonCyan : "#1E293B") : (isHov ? "#FEF08A" : "#D97706"))
+
+                                // Outer Beveled Rim
+                                Rectangle {
+                                    anchors.fill: parent
+                                    anchors.margins: isSel ? 3 : 2
+                                    radius: 3
+                                    color: isCyberMode ? (isSel ? "#00F0FF33" : "#0F172A") : (isSel ? "#FEF08A" : "#F59E0B")
+
+                                    // Inner Button Face
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        anchors.margins: isCyberMode ? 1 : 2.5
+                                        radius: 2
+                                        gradient: Gradient {
+                                            GradientStop {
+                                                position: 0.0
+                                                color: isCyberMode ? (gameCardItem.isSel ? "#1E293B" : "#0A0F1D") : (gameCardItem.isSel ? "#DC2626" : (gameCardItem.isHov ? "#B91C1C" : "#991B1B"))
+                                            }
+                                            GradientStop {
+                                                position: 1.0
+                                                color: isCyberMode ? (gameCardItem.isSel ? "#0F172A" : "#030712") : (gameCardItem.isSel ? "#991B1B" : (gameCardItem.isHov ? "#881337" : "#7F1D1D"))
+                                            }
+                                        }
+
+                                        Column {
+                                            anchors.centerIn: parent
+                                            spacing: 2
+                                            width: parent.width - 8
+
+                                            Text {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                text: modelData.type === "poker" ? "VIDEO POKER" : "TABLE GAME"
+                                                font.family: root.monoFontFamily
+                                                font.pixelSize: 8
+                                                font.bold: true
+                                                color: isCyberMode ? root.neonCyan : "#FEF08A"
+                                            }
+
+                                            Text {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                width: parent.width
+                                                horizontalAlignment: Text.AlignHCenter
+                                                text: modelData.name
+                                                font.family: root.monoFontFamily
+                                                font.pixelSize: Math.max(8, Math.min(10, gameCardItem.width * 0.052))
+                                                font.bold: true
+                                                color: "#FFFFFF"
+                                                elide: Text.ElideRight
+                                            }
+                                        }
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: btnMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: switchGame(modelData.id)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Bottom Arcade Prompt (Exact IGT Casino Legend)
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "TO START PLAY, SELECT A GAME"
+                    font.family: root.monoFontFamily
+                    font.pixelSize: 9
+                    font.bold: true
+                    color: isCyberMode ? root.neonCyan : "#FEF08A"
                 }
             }
         }
