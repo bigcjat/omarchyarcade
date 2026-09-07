@@ -33,6 +33,9 @@ if [ -d "$PWD/launcher" ] && [ -f "$PWD/catalog.json" ]; then
     cp -r "$PWD/launcher/"* "$APP_DIR/launcher/"
     cp "$PWD/assets/omarchy_arcade_logo.svg" "$ICONS_DIR/omarchy-arcade.svg"
     cp "$PWD/assets/omarchy_arcade_logo.svg" "$APP_DIR/assets/omarchy_arcade_logo.svg"
+    if [ -d "$PWD/assets/covers" ]; then
+        cp -r "$PWD/assets/covers" "$APP_DIR/assets/"
+    fi
 else
     echo -e "${GREEN}==>${RESET} Downloading Omarchy Arcade launcher payload..."
     mkdir -p "$APP_DIR/launcher" "$APP_DIR/assets"

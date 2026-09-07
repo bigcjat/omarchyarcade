@@ -232,7 +232,7 @@ Item {
                     mipmap: true
                     sourceSize.width: 360
                     sourceSize.height: 270
-                    source: (typeof arcadeBackend !== "undefined" && gameData && gameData.id) ? arcadeBackend.getCoverUrl(gameData.id) : ((gameData && gameData.id) ? ("../assets/covers/" + gameData.id + ".png") : "")
+                    source: (typeof arcadeBackend !== "undefined" && arcadeBackend && gameData && gameData.id) ? arcadeBackend.getCoverUrl(gameData.id) : ((gameData && gameData.id) ? ("../assets/covers/" + gameData.id + ".png") : "")
                     visible: status === Image.Ready
                 }
             }
@@ -275,7 +275,7 @@ Item {
             border.color: "#38bdf8"
             border.width: 1
             z: 45
-            visible: !isUnreleased && (typeof arcadeBackend !== "undefined") && gameData && arcadeBackend.hasGameUpdate(gameData.id, gameData.version || "")
+            visible: !isUnreleased && (typeof arcadeBackend !== "undefined" && arcadeBackend) && gameData && arcadeBackend.hasGameUpdate(gameData.id, gameData.version || "")
 
             Row {
                 anchors.centerIn: parent
