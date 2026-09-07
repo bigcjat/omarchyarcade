@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <g stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Base Pedestal -->
+    <path d="M 24 86 L 76 86 C 78 86 80 84 80 82 L 80 77 L 20 77 L 20 82 C 20 84 22 86 24 86 Z" stroke="#00F0FF" stroke-width="3" fill="#00F0FF" fill-opacity="0.15"/>
+    <line x1="26" y1="81" x2="74" y2="81" stroke="#E0F2FE" stroke-width="1.8" opacity="0.8"/>
+
+    <!-- Stem & Flared Waist -->
+    <path d="M 32 77 C 36 58 40 48 42 44 L 58 44 C 60 48 64 58 68 77 Z" stroke="#00F0FF" stroke-width="3" fill="#00F0FF" fill-opacity="0.08"/>
+    <path d="M 41 73 C 44 58 46 51 47 46 L 53 46 C 54 51 56 58 59 73" stroke="#E0F2FE" stroke-width="1.8" fill="none" opacity="0.85"/>
+
+    <!-- Neck Collar -->
+    <path d="M 35 44 L 65 44 L 62 40 L 38 40 Z" stroke="#00F0FF" stroke-width="2.5" fill="#00F0FF" fill-opacity="0.3"/>
+
+    <!-- Head Orb -->
+    <circle cx="50" cy="25" r="14" stroke="#00F0FF" stroke-width="3.2" fill="#00F0FF" fill-opacity="0.12"/>
+    <circle cx="50" cy="25" r="8" stroke="#E0F2FE" stroke-width="1.8" fill="none" opacity="0.85"/>
+    <circle cx="50" cy="25" r="3" stroke="#00F0FF" stroke-width="1.5" fill="#00F0FF"/>
+
+  </g>
+</svg>

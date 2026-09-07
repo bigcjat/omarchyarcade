@@ -593,6 +593,35 @@
       "size": "153 KB",
       "size_bytes": 156592,
       "download_size": "153 KB"
+    },
+    {
+      "id": "chess",
+      "title": "Chess",
+      "ref": "OA-022",
+      "category": "Board Strategy & Chess",
+      "floppy_color": "#1E293B",
+      "grid_color": "#00F0FF",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Grandmaster AI • Dual-Contour Vector Pieces",
+      "description": "Sleek vector chess featuring pure geometric pieces in Electric Cyan and Neon Coral, calibrated multi-tier AI (Novice to Expert), instant legal move reticles, and full standard FIDE rules.",
+      "instructions": [
+        "Move pieces by clicking a piece and destination, or dragging and dropping.",
+        "Glowing cyan dots show legal moves; neon coral rings show legal captures.",
+        "Kings in check are highlighted with a pulsing red warning halo.",
+        "Cycle AI difficulty anytime (D) across Novice, Casual, Club, and Expert.",
+        "Flip board perspective (F) to play as White or Black, and undo moves (U)."
+      ],
+      "controls": {
+        "keyboard": "Click / Drag & Drop to move, U to Undo, F to Flip, D for Difficulty",
+        "shortcuts": "R to restart, M to mute, ? for Help, Esc to back"
+      },
+      "folder": "games/chess",
+      "entrypoint": "games/chess/main.qml",
+      "cover_image": "assets/covers/chess.png",
+      "size": "821 KB",
+      "size_bytes": 840707,
+      "download_size": "821 KB"
     }
   ]
 }
