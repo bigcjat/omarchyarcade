@@ -49,6 +49,30 @@ Window {
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
 
+    readonly property string helpText:
+        "★ GOAL & RULES\n" +
+        "Bet coins (1 to 5) and deal a 5-card poker hand. Choose which cards to HOLD, then DRAW to replace unheld cards. Payoffs increase with higher rank hands. At 5 coins, Royal Flush pays the maximum 4000 jackpot!\n\n" +
+        "★ 8 CASINO ENGINES\n" +
+        "1. Jacks or Better: Pair of Jacks or better pays.\n" +
+        "2. Deuces Wild: All four 2s are Wild. Four Deuces pays 200x.\n" +
+        "3. Joker Poker: 53-card deck with 1 Joker. Kings or better min.\n" +
+        "4. Double Double Bonus: 4 Aces with kicker pays up to 400x!\n" +
+        "5. Bonus Poker Deluxe: Flat 80:1 on any Four of a Kind.\n" +
+        "6. Red Dog: Card spread betting. In-between card pays up to 5:1.\n" +
+        "7. Blackjack: 3:2 Natural Blackjack. Dealer stands on 17.\n" +
+        "8. Casino War: Direct high-card duel against dealer.\n\n" +
+        "★ KEYBOARD CONTROLS\n" +
+        "• [SPACE] / [ENTER]: Deal / Draw / Table Action\n" +
+        "• [1] - [5]: Toggle Hold on cards 1 through 5\n" +
+        "• [B]: Increase coin bet (1 to 5)\n" +
+        "• [M]: Bet Max (5 coins) and deal\n" +
+        "• [G]: Open Game Selection menu (navigate with Arrows)\n" +
+        "• [D]: Double-Up High-Card Gamble after any win\n" +
+        "• [C]: Collect Double-Up pot / Cash out free credits\n" +
+        "• [V]: Toggle Classic 1984 CRT ↔ Cyber Neon\n" +
+        "• [? / H]: Toggle this Help & About window\n" +
+        "• [ESC]: Close open windows"
+
     // Machine Credits & Bets
     property int credits: 1000
     property int betCoins: 1 // 1..5
@@ -90,6 +114,18 @@ Window {
 
     // Modals
     property bool gameMenuOpen: true
+    property int menuSelectedIndex: 0
+
+    onGameMenuOpenChanged: {
+        if (gameMenuOpen) {
+            for (var i = 0; i < gameList.length; i++) {
+                if (gameList[i].id === activeGameId) {
+                    menuSelectedIndex = i;
+                    break;
+                }
+            }
+        }
+    }
 
     Timer {
         id: doubleUpCloseTimer
@@ -845,11 +881,13 @@ Window {
             }
 
             if (root.showHelp) {
-                if (event.key === Qt.Key_Escape || event.key === Qt.Key_Question || event.key === Qt.Key_Slash || event.key === Qt.Key_H) {
+                if (event.key === Qt.Key_Escape || event.key === Qt.Key_Question || event.key === Qt.Key_Slash || event.key === Qt.Key_H || event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
                     root.showHelp = false;
                     event.accepted = true;
                     return;
                 }
+                event.accepted = true;
+                return;
             }
 
             if (gameMenuOpen) {
@@ -858,6 +896,49 @@ Window {
                     event.accepted = true;
                     return;
                 }
+                if (event.key === Qt.Key_Up) {
+                    if (menuSelectedIndex >= 2) menuSelectedIndex -= 2;
+                    playSound("select");
+                    event.accepted = true;
+                    return;
+                }
+                if (event.key === Qt.Key_Down) {
+                    if (menuSelectedIndex + 2 < gameList.length) menuSelectedIndex += 2;
+                    playSound("select");
+                    event.accepted = true;
+                    return;
+                }
+                if (event.key === Qt.Key_Left) {
+                    if (menuSelectedIndex % 2 === 1) menuSelectedIndex -= 1;
+                    playSound("select");
+                    event.accepted = true;
+                    return;
+                }
+                if (event.key === Qt.Key_Right) {
+                    if (menuSelectedIndex % 2 === 0 && menuSelectedIndex + 1 < gameList.length) menuSelectedIndex += 1;
+                    playSound("select");
+                    event.accepted = true;
+                    return;
+                }
+                if (event.key >= Qt.Key_1 && event.key <= Qt.Key_8) {
+                    var numIdx = event.key - Qt.Key_1;
+                    if (numIdx < gameList.length) {
+                        menuSelectedIndex = numIdx;
+                        switchGame(gameList[menuSelectedIndex].id);
+                    }
+                    event.accepted = true;
+                    return;
+                }
+                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                    if (menuSelectedIndex >= 0 && menuSelectedIndex < gameList.length) {
+                        switchGame(gameList[menuSelectedIndex].id);
+                    }
+                    event.accepted = true;
+                    return;
+                }
+                // Intercept all other keys while game selection menu is open
+                event.accepted = true;
+                return;
             }
 
             if (doubleUpActive) {
@@ -2397,11 +2478,12 @@ Window {
                                 width: Math.floor((gameGrid.width - 8) / 2)
                                 height: 54
                                 radius: 4
-                                readonly property bool isSel: (activeGameId === modelData.id)
+                                readonly property bool isSel: (menuSelectedIndex === index)
+                                readonly property bool isCurActive: (activeGameId === modelData.id)
                                 readonly property bool isHov: btnMouseArea.containsMouse
 
                                 // Green selection highlight border (exact IGT machine style)
-                                color: isSel ? "#22C55E" : (isCyberMode ? (isHov ? root.neonCyan : "#1E293B") : (isHov ? "#FEF08A" : "#D97706"))
+                                color: isSel ? "#22C55E" : (isCurActive ? (isCyberMode ? root.neonCyan : "#FEF08A") : (isCyberMode ? (isHov ? root.neonCyan : "#1E293B") : (isHov ? "#FEF08A" : "#D97706")))
 
                                 // Outer Beveled Rim
                                 Rectangle {
@@ -2433,11 +2515,11 @@ Window {
 
                                             Text {
                                                 anchors.horizontalCenter: parent.horizontalCenter
-                                                text: modelData.type === "poker" ? "VIDEO POKER" : "TABLE GAME"
+                                                text: (modelData.type === "poker" ? "VIDEO POKER" : "TABLE GAME") + (gameCardItem.isCurActive ? " ★" : "")
                                                 font.family: root.monoFontFamily
                                                 font.pixelSize: 8
                                                 font.bold: true
-                                                color: isCyberMode ? root.neonCyan : "#FEF08A"
+                                                color: gameCardItem.isSel ? "#86EFAC" : (isCyberMode ? root.neonCyan : "#FEF08A")
                                             }
 
                                             Text {
@@ -2460,7 +2542,11 @@ Window {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: switchGame(modelData.id)
+                                    onEntered: menuSelectedIndex = index
+                                    onClicked: {
+                                        menuSelectedIndex = index;
+                                        switchGame(modelData.id);
+                                    }
                                 }
                             }
                         }
@@ -2470,7 +2556,7 @@ Window {
                 // Bottom Arcade Prompt (Exact IGT Casino Legend)
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: "TO START PLAY, SELECT A GAME"
+                    text: "ARROWS: NAVIGATE  •  [ENTER]: SELECT GAME  •  [ESC]: CLOSE"
                     font.family: root.monoFontFamily
                     font.pixelSize: 9
                     font.bold: true
@@ -2480,7 +2566,7 @@ Window {
         }
 
         // =====================================================================
-        // HOW TO PLAY / RULES MODAL (Template Standard)
+        // MODALS & OVERLAYS: HELP & ABOUT (Template Standard)
         // =====================================================================
         Rectangle {
             id: helpModal
@@ -2496,21 +2582,53 @@ Window {
 
             Rectangle {
                 width: Math.min(parent.width * 0.90, 420)
-                height: Math.min(parent.height * 0.88, 480)
+                height: Math.min(parent.height * 0.90, 480)
                 anchors.centerIn: parent
                 color: root.themeCardBg
                 border.color: root.themeBorder
                 border.width: 1
-                radius: 10
+                radius: 12
 
-                Column {
+                MouseArea {
                     anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 10
+                }
+
+                // Close Button in top-right corner
+                Rectangle {
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 10
+                    width: 28
+                    height: 28
+                    radius: 4
+                    color: closeHelpMouse.containsMouse ? root.themeBorder : "transparent"
+                    z: 10
 
                     Text {
-                        text: "HOW TO PLAY & SHORTCUTS"
-                        font.pixelSize: 13
+                        anchors.centerIn: parent
+                        text: "✕"
+                        font.pixelSize: 14
+                        font.bold: true
+                        color: root.themeSubtext
+                    }
+                    MouseArea {
+                        id: closeHelpMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showHelp = false
+                    }
+                }
+
+                Column {
+                    id: helpCol
+                    anchors.fill: parent
+                    anchors.margins: 18
+                    spacing: 12
+
+                    Text {
+                        text: "HOW TO PLAY"
+                        font.pixelSize: 16
                         font.bold: true
                         color: root.themeAccent
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -2518,56 +2636,52 @@ Window {
 
                     Flickable {
                         width: parent.width
-                        height: parent.height - 40
-                        contentHeight: helpBody.implicitHeight
+                        height: parent.height - 110
+                        contentHeight: helpContentCol.implicitHeight
                         clip: true
 
                         Column {
-                            id: helpBody
+                            id: helpContentCol
                             width: parent.width
                             spacing: 8
 
                             Text {
                                 width: parent.width
-                                wrapMode: Text.WordWrap
-                                text: "• [SPACE] or [ENTER]: Deal cards or Draw unheld cards\n" +
-                                      "• [1] - [5]: Toggle Hold on cards 1 through 5 (or Table action)\n" +
-                                      "• [B]: Increase coin bet (1 to 5)\n" +
-                                      "• [M]: Bet Max (5 coins) and immediately deal\n" +
-                                      "• [V]: Toggle terminal visual mode (Classic 1984 Vegas CRT ↔ Cyber Neon)\n" +
-                                      "• [G]: Open Game Selection terminal menu\n" +
-                                      "• [D]: Double-Up High-Card Gamble after any win\n" +
-                                      "• [C]: Collect / Cash Out, or insert 100 free credits\n" +
-                                      "• [? / H]: Toggle this help modal\n" +
-                                      "• [ESC]: Close modals"
-                                font.pixelSize: 10
-                                color: root.themeFg
-                                lineHeight: 1.3
-                            }
-
-                            Text {
-                                text: "THE 8 CASINO ENGINES"
+                                text: root.helpText
                                 font.pixelSize: 11
-                                font.bold: true
-                                color: root.themeAccent
-                            }
-
-                            Text {
-                                width: parent.width
+                                color: root.themeFg
+                                lineHeight: 1.35
                                 wrapMode: Text.WordWrap
-                                text: "1. Jacks or Better: Pair of Jacks or better pays, 4000 jackpot.\n" +
-                                      "2. Deuces Wild: Four 2s are wildcards, Four Deuces pays 200x.\n" +
-                                      "3. Joker Poker: 53-card deck with 1 Joker, Kings or better min.\n" +
-                                      "4. Double Double Bonus: 4 Aces with 2-4 kicker pays 400x!\n" +
-                                      "5. Bonus Poker Deluxe: Flat 80:1 on any Four of a Kind.\n" +
-                                      "6. Red Dog: Spread betting on 3rd card in-between.\n" +
-                                      "7. Blackjack: 3:2 Natural Blackjack, Dealer stands on 17.\n" +
-                                      "8. Casino War: High card showdown against dealer."
-                                font.pixelSize: 10
-                                color: root.themeSubtext
-                                lineHeight: 1.3
                             }
                         }
+                    }
+
+                    Rectangle {
+                        width: 120
+                        height: 32
+                        radius: 6
+                        color: root.themeAccent
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        Text {
+                            anchors.centerIn: parent
+                            text: "GOT IT"
+                            font.bold: true
+                            font.pixelSize: 11
+                            color: root.themeBtnFg
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.showHelp = false
+                        }
+                    }
+
+                    Text {
+                        text: "Created by Chris Thompson (@bigcjat) with Gemini"
+                        font.pixelSize: 9
+                        color: root.themeSubtext
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        opacity: 0.75
                     }
                 }
             }

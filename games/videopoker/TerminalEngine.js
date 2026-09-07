@@ -924,3 +924,9 @@ function resolveDoubleUp(dealerCard, pickedCard) {
         return "loss";
     }
 }
+
+function evaluateWarDuel(pRank, dRank) {
+    if (pRank > dRank) return { winner: "player" };
+    if (pRank < dRank) return { winner: "dealer" };
+    return { winner: "tie" };
+}
