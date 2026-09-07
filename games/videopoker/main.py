@@ -152,10 +152,17 @@ class SoundManager(QObject):
 
     @Slot(str)
     def playSound(self, name):
-        if self.is_mac and name in self.sounds:
-            self.AudioServicesPlaySystemSound(self.sounds[name])
+        sound_map = {
+            "deal": "card_slide",
+            "draw": "card_flip",
+            "lose": "bust",
+            "jackpot": "win",
+        }
+        mapped_name = sound_map.get(name, name)
+        if self.is_mac and mapped_name in self.sounds:
+            self.AudioServicesPlaySystemSound(self.sounds[mapped_name])
         elif hasattr(self, "player_cmd") and self.player_cmd:
-            wav_file = self.sounds_dir / f"{name}.wav"
+            wav_file = self.sounds_dir / f"{mapped_name}.wav"
             if wav_file.is_file():
                 try:
                     subprocess.Popen([self.player_cmd, str(wav_file)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

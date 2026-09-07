@@ -44,7 +44,7 @@ Window {
     // =========================================================================
     // AUDIO & APPLICATION PROPERTIES
     // =========================================================================
-    property bool isMuted: false
+    property bool isMuted: true
     property bool splashEnabled: true
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
@@ -68,6 +68,7 @@ Window {
     property var dealerHand: []
     property var winningEvaluation: null
     property bool isWinningRound: false
+    property var winningCardIndices: (isWinningRound && winningEvaluation && root.isPokerGame) ? Engine.getWinningCardIndices(activeGameId, winningEvaluation.key, playerHand) : []
 
     // Table Game States
     property int redDogSpread: 0
@@ -199,6 +200,41 @@ Window {
     // =========================================================================
     // GAME ENGINE & DISPATCH CONTROLLERS
     // =========================================================================
+    function resetPaytableScroll() {
+        if (typeof paytableFlickable !== "undefined" && paytableFlickable) {
+            paytableFlickable.contentY = 0;
+        }
+    }
+
+    function scrollToWinningRow() {
+        if (typeof paytableFlickable === "undefined" || !paytableFlickable) return;
+        if (!winningEvaluation || !root.isPokerGame) return;
+        var table = Engine.PAYTABLES[activeGameId];
+        if (!table) return;
+
+        var winIdx = -1;
+        for (var i = 0; i < table.length; i++) {
+            if (table[i].key === winningEvaluation.key) {
+                winIdx = i;
+                break;
+            }
+        }
+        if (winIdx !== -1) {
+            var rowH = 13; // 12px row height + 1px spacing
+            var rowTop = winIdx * rowH;
+            var rowBottom = rowTop + 12;
+            var viewTop = paytableFlickable.contentY;
+            var viewBottom = viewTop + paytableFlickable.height;
+            var maxScroll = Math.max(0, paytableFlickable.contentHeight - paytableFlickable.height);
+
+            if (rowTop < viewTop) {
+                paytableFlickable.contentY = Math.max(0, rowTop - 2);
+            } else if (rowBottom > viewBottom) {
+                paytableFlickable.contentY = Math.min(maxScroll, rowBottom - paytableFlickable.height + 4);
+            }
+        }
+    }
+
     function setupGame(gameId) {
         machineState = "IDLE";
         winningEvaluation = null;
@@ -209,6 +245,7 @@ Window {
         dealerTotal = 0;
         redDogSpread = 0;
         warState = "";
+        resetPaytableScroll();
 
         if (gameId === "joker_poker") {
             activeDeck = Engine.createJokerDeck();
@@ -293,6 +330,7 @@ Window {
         winningEvaluation = null;
         isWinningRound = false;
         lastWinAmount = 0;
+        resetPaytableScroll();
 
         // Fresh deck shuffle
         activeDeck = (activeGameId === "joker_poker") ? Engine.createJokerDeck() : Engine.createStandardDeck();
@@ -309,8 +347,16 @@ Window {
         playSound("deal");
 
         var preEval = evaluateHand(playerHand);
-        if (preEval && preEval.winMultiplier > 0) {
-            statusMessage = preEval.name + " - SELECT CARDS TO HOLD & PRESS DRAW";
+        if (preEval && preEval.winCoins > 0) {
+            winningEvaluation = preEval;
+            statusMessage = preEval.name + " DEALT - HOLD CARDS (1-5) & DRAW";
+            scrollToWinningRow();
+            var winCardIndices = Engine.getWinningCardIndices(activeGameId, preEval.key, playerHand);
+            for (var h = 0; h < winCardIndices.length; h++) {
+                var idx = winCardIndices[h];
+                playerHand[idx].held = true;
+            }
+            playerHand = playerHand.slice();
         } else {
             statusMessage = "HOLD (1-5) OR PRESS DRAW";
         }
@@ -335,19 +381,20 @@ Window {
         var result = evaluateHand(playerHand);
         winningEvaluation = result;
 
-        if (result && result.winMultiplier > 0) {
-            var winCoins = result.pays[betCoins - 1];
+        if (result && result.winCoins > 0) {
+            var winCoins = result.winCoins;
             credits += winCoins;
             lastWinAmount = winCoins;
             if (credits > bestScore) bestScore = credits;
             isWinningRound = true;
 
             statusMessage = result.name + " WINS " + winCoins + " CREDITS! [D] TO DOUBLE";
-            if (result.key === "ROYAL_FLUSH" || result.key === "NATURAL_ROYAL") {
+            if (result.key === "royal_flush" || result.key === "natural_royal") {
                 playSound("jackpot");
             } else {
                 playSound("win");
             }
+            scrollToWinningRow();
         } else {
             isWinningRound = false;
             lastWinAmount = 0;
@@ -358,12 +405,7 @@ Window {
     }
 
     function evaluateHand(hand) {
-        if (activeGameId === "jacks_or_better") return Engine.evaluateJacksOrBetter(hand);
-        if (activeGameId === "deuces_wild") return Engine.evaluateDeucesWild(hand);
-        if (activeGameId === "joker_poker") return Engine.evaluateJokerPoker(hand);
-        if (activeGameId === "double_double_bonus") return Engine.evaluateDoubleDoubleBonus(hand);
-        if (activeGameId === "bonus_poker_deluxe") return Engine.evaluateBonusPokerDeluxe(hand);
-        return null;
+        return Engine.evaluateHand(activeGameId, hand, betCoins);
     }
 
     // --- RED DOG DISPATCH ---
@@ -1299,10 +1341,16 @@ Window {
 
                             // Paytable Rows (Scrollable Flickable)
                             Flickable {
+                                id: paytableFlickable
                                 width: parent.width
                                 height: parent.parent.height - 24
                                 contentHeight: payRowsCol.implicitHeight
                                 clip: true
+                                boundsBehavior: Flickable.StopAtBounds
+
+                                Behavior on contentY {
+                                    NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                                }
 
                                 Column {
                                     id: payRowsCol
@@ -1310,13 +1358,24 @@ Window {
                                     spacing: 1
 
                                     Repeater {
+                                        id: payRowsRepeater
                                         model: Engine.PAYTABLES[activeGameId] ? Engine.PAYTABLES[activeGameId] : []
                                         Rectangle {
+                                            id: payRowRect
                                             width: parent.width
                                             height: 12
-                                            readonly property bool isWinningRow: winningEvaluation && (winningEvaluation.key === modelData.key)
-                                            color: isWinningRow ? (isCyberMode ? root.neonMagenta : "#DC2626") : "transparent"
+                                            readonly property bool isWinningRow: winningEvaluation && (winningEvaluation.key === modelData.key) && (isWinningRound || machineState === "DEALT")
+                                            color: isWinningRow ? (isCyberMode ? root.neonMagenta : "#E11D48") : "transparent"
+                                            border.color: isWinningRow ? (isCyberMode ? "#FFFFFF" : "#FEF08A") : "transparent"
+                                            border.width: isWinningRow ? 1 : 0
                                             radius: 2
+
+                                            SequentialAnimation on opacity {
+                                                running: payRowRect.isWinningRow
+                                                loops: Animation.Infinite
+                                                NumberAnimation { from: 0.65; to: 1.0; duration: 220; easing.type: Easing.InOutQuad }
+                                                NumberAnimation { from: 1.0; to: 0.65; duration: 220; easing.type: Easing.InOutQuad }
+                                            }
 
                                             Row {
                                                 anchors.fill: parent
@@ -1345,7 +1404,7 @@ Window {
                                                             font.family: root.monoFontFamily
                                                             font.pixelSize: Math.max(6, Math.min(9, boardContainer.width * 0.019))
                                                             font.bold: (root.betCoins === index + 1) || parent.parent.parent.isWinningRow
-                                                            color: (root.betCoins === index + 1) ? (isCyberMode ? root.neonCyan : "#FEF08A") : (isCyberMode ? "#64748B" : "#CBD5E1")
+                                                            color: parent.parent.parent.isWinningRow ? "#FFFFFF" : ((root.betCoins === index + 1) ? (isCyberMode ? root.neonCyan : "#FEF08A") : (isCyberMode ? "#64748B" : "#CBD5E1"))
                                                         }
                                                     }
                                                 }
@@ -1441,7 +1500,7 @@ Window {
                                         anchors.fill: parent
                                         cardData: modelData
                                         visualMode: root.visualMode
-                                        isWinning: root.isWinningRound
+                                        isWinning: root.isWinningRound && (root.winningCardIndices.indexOf(index) !== -1)
                                     }
 
                                     MouseArea {

@@ -570,20 +570,125 @@ function evaluateBonusPokerDeluxe(cards) {
 /**
  * Master hand evaluator by game type.
  */
-function evaluateHand(gameType, cards) {
+function evaluateHand(gameType, cards, betCoins) {
+    var coins = (typeof betCoins === "number" && betCoins >= 1 && betCoins <= 5) ? betCoins : 1;
+    var res = null;
     switch (gameType) {
         case "deuces_wild":
-            return evaluateDeucesWild(cards);
+            res = evaluateDeucesWild(cards);
+            break;
         case "joker_poker":
-            return evaluateJokerPoker(cards);
+            res = evaluateJokerPoker(cards);
+            break;
         case "double_double_bonus":
-            return evaluateDoubleDoubleBonus(cards);
+            res = evaluateDoubleDoubleBonus(cards);
+            break;
         case "bonus_poker_deluxe":
-            return evaluateBonusPokerDeluxe(cards);
+            res = evaluateBonusPokerDeluxe(cards);
+            break;
         case "jacks_or_better":
         default:
-            return evaluateJacksOrBetter(cards);
+            res = evaluateJacksOrBetter(cards);
+            break;
     }
+
+    if (!res) return null;
+
+    var table = PAYTABLES[gameType];
+    if (table) {
+        for (var i = 0; i < table.length; i++) {
+            if (table[i].key === res.key) {
+                res.pays = table[i].pays;
+                res.winCoins = table[i].pays[coins - 1];
+                res.winMultiplier = table[i].pays[0];
+                res.name = table[i].name;
+                break;
+            }
+        }
+    }
+    return res;
+}
+
+/**
+ * Returns the card indices in the 5-card hand that form the winning hand.
+ */
+function getWinningCardIndices(gameType, handKey, cards) {
+    if (!cards || cards.length !== 5 || !handKey) return [];
+
+    // All 5 cards contribute to 5-card rank hands
+    if (handKey === "royal_flush" || handKey === "natural_royal" ||
+        handKey === "straight_flush" || handKey === "five_of_a_kind" ||
+        handKey === "flush" || handKey === "straight" || handKey === "full_house" ||
+        handKey === "four_deuces" || handKey === "wild_royal") {
+        return [0, 1, 2, 3, 4];
+    }
+
+    var counts = {};
+    for (var i = 0; i < cards.length; i++) {
+        var r = cards[i].rank;
+        counts[r] = (counts[r] || 0) + 1;
+    }
+
+    // 4 of a Kind variants
+    if (handKey.indexOf("four_") === 0) {
+        var quadRank = 0;
+        for (var qr in counts) {
+            if (counts[qr] === 4) quadRank = parseInt(qr, 10);
+        }
+        var quadIndices = [];
+        for (var qi = 0; qi < cards.length; qi++) {
+            if (cards[qi].rank === quadRank || cards[qi].isWild) quadIndices.push(qi);
+        }
+        // In kicker-bonus hands (e.g. 4 Aces w/ 2-4), all 5 cards contribute
+        if (handKey === "four_aces_low_kicker" || handKey === "four_low_with_kicker") {
+            return [0, 1, 2, 3, 4];
+        }
+        return quadIndices;
+    }
+
+    // 3 of a Kind
+    if (handKey === "three_of_a_kind") {
+        var tripRank = 0;
+        for (var tr in counts) {
+            if (counts[tr] >= 3) tripRank = parseInt(tr, 10);
+        }
+        var tripIndices = [];
+        for (var ti = 0; ti < cards.length; ti++) {
+            if (cards[ti].rank === tripRank || cards[ti].isWild) tripIndices.push(ti);
+        }
+        return tripIndices;
+    }
+
+    // Two Pair
+    if (handKey === "two_pair") {
+        var pairRanks = [];
+        for (var pr in counts) {
+            if (counts[pr] === 2) pairRanks.push(parseInt(pr, 10));
+        }
+        var pairIndices = [];
+        for (var pi = 0; pi < cards.length; pi++) {
+            if (pairRanks.indexOf(cards[pi].rank) !== -1 || cards[pi].isWild) pairIndices.push(pi);
+        }
+        return pairIndices;
+    }
+
+    // Jacks or Better / Kings or Better
+    if (handKey === "jacks_or_better" || handKey === "kings_or_better") {
+        var minRank = (handKey === "kings_or_better") ? 13 : 11;
+        var highPairRank = 0;
+        for (var hr in counts) {
+            if (counts[hr] === 2 && parseInt(hr, 10) >= minRank) {
+                highPairRank = parseInt(hr, 10);
+            }
+        }
+        var highPairIndices = [];
+        for (var hi = 0; hi < cards.length; hi++) {
+            if (cards[hi].rank === highPairRank || cards[hi].isWild) highPairIndices.push(hi);
+        }
+        return highPairIndices;
+    }
+
+    return [];
 }
 
 /**
