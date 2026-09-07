@@ -15,7 +15,7 @@ import subprocess
 import tomllib
 import ctypes
 from pathlib import Path
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtGui import QIcon, QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QFileSystemWatcher, QTimer, QObject, Slot, QSettings
 
@@ -154,6 +154,18 @@ def load_system_theme():
 
 def main():
     app = QGuiApplication(sys.argv)
+    # Set application icon to game floppy disk
+    script_dir = Path(__file__).resolve().parent
+    disk_candidates = [
+        script_dir / "assets" / "disk_icon.png",
+        script_dir.parent.parent / "assets" / "covers" / "dropfour_disk.png",
+        Path.home() / ".local" / "share" / "omarchy-arcade" / "assets" / "covers" / "dropfour_disk.png",
+    ]
+    for cp in disk_candidates:
+        if cp.exists():
+            app.setWindowIcon(QIcon(str(cp)))
+            break
+
     engine = QQmlApplicationEngine()
 
     settings_mgr = SettingsManager()

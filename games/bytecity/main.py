@@ -22,6 +22,18 @@ def main():
     app = QGuiApplication(sys.argv)
     app.setApplicationName("ByteCity")
     app.setOrganizationName("Omarchy")
+    # Set application icon to game floppy disk
+    script_dir = Path(__file__).resolve().parent
+    disk_candidates = [
+        script_dir / "assets" / "disk_icon.png",
+        script_dir.parent.parent / "assets" / "covers" / "bytecity_disk.png",
+        Path.home() / ".local" / "share" / "omarchy-arcade" / "assets" / "covers" / "bytecity_disk.png",
+    ]
+    for cp in disk_candidates:
+        if cp.exists():
+            app.setWindowIcon(QIcon(str(cp)))
+            break
+
 
     # Register custom 2.5D isometric viewport
     qmlRegisterType(CityViewport, "ByteCity", 1, 0, "CityViewport")

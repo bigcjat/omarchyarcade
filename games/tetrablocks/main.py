@@ -15,7 +15,7 @@ import subprocess
 import tomllib
 import ctypes
 from pathlib import Path
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtGui import QIcon, QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QFileSystemWatcher, QTimer, QObject, Slot, QSettings
 
@@ -172,6 +172,18 @@ def main():
     app = QGuiApplication(sys.argv)
     app.setApplicationName("TetraBlocks")
     app.setOrganizationName("Arcade")
+    # Set application icon to game floppy disk
+    script_dir = Path(__file__).resolve().parent
+    disk_candidates = [
+        script_dir / "assets" / "disk_icon.png",
+        script_dir.parent.parent / "assets" / "covers" / "tetrablocks_disk.png",
+        Path.home() / ".local" / "share" / "omarchy-arcade" / "assets" / "covers" / "tetrablocks_disk.png",
+    ]
+    for cp in disk_candidates:
+        if cp.exists():
+            app.setWindowIcon(QIcon(str(cp)))
+            break
+
 
     engine = QQmlApplicationEngine()
 

@@ -24,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Basic"
 
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtGui import QIcon, QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QFileSystemWatcher, QTimer, QObject, Slot, QSettings, Qt
 
@@ -215,6 +215,18 @@ def main():
     app = QGuiApplication(sys.argv)
     app.setApplicationName("KeiRacer")
     app.setOrganizationName("Arcade")
+    # Set application icon to game floppy disk
+    script_dir = Path(__file__).resolve().parent
+    disk_candidates = [
+        script_dir / "assets" / "disk_icon.png",
+        script_dir.parent.parent / "assets" / "covers" / "keiracer_disk.png",
+        Path.home() / ".local" / "share" / "omarchy-arcade" / "assets" / "covers" / "keiracer_disk.png",
+    ]
+    for cp in disk_candidates:
+        if cp.exists():
+            app.setWindowIcon(QIcon(str(cp)))
+            break
+
 
     engine = QQmlApplicationEngine()
 

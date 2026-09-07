@@ -12,7 +12,7 @@ import os
 import tomllib
 from pathlib import Path
 from PySide6.QtCore import QObject, Slot, QUrl, QFileSystemWatcher, QTimer
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtGui import QIcon, QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
 try:
@@ -93,6 +93,18 @@ def main():
     app = QGuiApplication(sys.argv)
     app.setApplicationName("WordGuess")
     app.setOrganizationName("Omarchy")
+    # Set application icon to game floppy disk
+    script_dir = Path(__file__).resolve().parent
+    disk_candidates = [
+        script_dir / "assets" / "disk_icon.png",
+        script_dir.parent.parent / "assets" / "covers" / "wordguess_disk.png",
+        Path.home() / ".local" / "share" / "omarchy-arcade" / "assets" / "covers" / "wordguess_disk.png",
+    ]
+    for cp in disk_candidates:
+        if cp.exists():
+            app.setWindowIcon(QIcon(str(cp)))
+            break
+
 
     base_dir = Path(__file__).resolve().parent
     sounds_dir = base_dir / "sounds"

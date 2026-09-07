@@ -148,6 +148,18 @@ def main():
     app = QGuiApplication(sys.argv)
     app.setApplicationName("Asteroids")
     app.setOrganizationName("Omarchy")
+    # Set application icon to game floppy disk
+    script_dir = Path(__file__).resolve().parent
+    disk_candidates = [
+        script_dir / "assets" / "disk_icon.png",
+        script_dir.parent.parent / "assets" / "covers" / "vectordrift_disk.png",
+        Path.home() / ".local" / "share" / "omarchy-arcade" / "assets" / "covers" / "vectordrift_disk.png",
+    ]
+    for cp in disk_candidates:
+        if cp.exists():
+            app.setWindowIcon(QIcon(str(cp)))
+            break
+
 
     base_dir = Path(__file__).resolve().parent
     sounds_dir = base_dir / "sounds"
