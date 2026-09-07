@@ -806,6 +806,10 @@ function calculateBlackjackTotal(cards) {
     return total;
 }
 
+function calculateBlackjackScore(cards) {
+    return calculateBlackjackTotal(cards);
+}
+
 function initBlackjackDeal(deck) {
     if (!deck || deck.length < 10) deck = shuffle(createStandardDeck());
     var pCard1 = deck.pop();
