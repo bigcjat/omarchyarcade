@@ -743,6 +743,26 @@ function initRedDogDeal(deck) {
     };
 }
 
+function initRedDogRound(card1, card2) {
+    var r1 = card1.rank;
+    var r2 = card2.rank;
+    var low = Math.min(r1, r2);
+    var high = Math.max(r1, r2);
+    var spread = (high > low) ? (high - low - 1) : 0;
+    var status = "spread";
+    if (r1 === r2) {
+        status = "pair";
+    } else if (spread === 0) {
+        status = "consecutive";
+    }
+    return {
+        card1: card1,
+        card2: card2,
+        spread: spread,
+        status: status
+    };
+}
+
 /**
  * Resolves Red Dog 3rd card deal.
  */

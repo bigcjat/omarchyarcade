@@ -115,6 +115,7 @@ Window {
     // Modals
     property bool gameMenuOpen: true
     property int menuSelectedIndex: 0
+    readonly property int menuCols: (typeof menuFlickable !== "undefined" && menuFlickable && menuFlickable.height > 0 && menuFlickable.height < 230) ? 3 : 2
 
     onGameMenuOpenChanged: {
         if (gameMenuOpen) {
@@ -274,10 +275,15 @@ Window {
 
     function ensureMenuVisible() {
         if (typeof menuFlickable === "undefined" || !menuFlickable) return;
-        var row = Math.floor(menuSelectedIndex / 3);
-        var rowH = 46 + 6; // card height + spacing
+        var cols = root.menuCols;
+        var row = Math.floor(menuSelectedIndex / cols);
+        var spacing = (cols === 3) ? 6 : 8;
+        var cardH = (cols === 3)
+            ? Math.max(36, Math.min(46, Math.floor((menuFlickable.height - (spacing * 2)) / 3)))
+            : Math.max(44, Math.min(54, Math.floor((menuFlickable.height - (spacing * 3)) / 4)));
+        var rowH = cardH + spacing;
         var targetTop = row * rowH;
-        var targetBottom = targetTop + 46;
+        var targetBottom = targetTop + cardH;
         if (targetTop < menuFlickable.contentY) {
             menuFlickable.contentY = Math.max(0, targetTop - 4);
         } else if (targetBottom > menuFlickable.contentY + menuFlickable.height) {
@@ -912,17 +918,23 @@ Window {
                     return;
                 }
                 if (event.key === Qt.Key_Up) {
-                    if (menuSelectedIndex >= 3) menuSelectedIndex -= 3;
+                    var upCols = root.menuCols;
+                    if (menuSelectedIndex >= upCols) menuSelectedIndex -= upCols;
                     playSound("select");
                     ensureMenuVisible();
                     event.accepted = true;
                     return;
                 }
                 if (event.key === Qt.Key_Down) {
-                    if (menuSelectedIndex + 3 < gameList.length) {
-                        menuSelectedIndex += 3;
-                    } else if (menuSelectedIndex < 6 && (gameList.length - 1) >= 6) {
-                        menuSelectedIndex = gameList.length - 1;
+                    var downCols = root.menuCols;
+                    if (menuSelectedIndex + downCols < gameList.length) {
+                        menuSelectedIndex += downCols;
+                    } else {
+                        var curRow = Math.floor(menuSelectedIndex / downCols);
+                        var maxRow = Math.floor((gameList.length - 1) / downCols);
+                        if (curRow < maxRow) {
+                            menuSelectedIndex = gameList.length - 1;
+                        }
                     }
                     playSound("select");
                     ensureMenuVisible();
@@ -2497,15 +2509,17 @@ Window {
                     Grid {
                         id: gameGrid
                         width: parent.width
-                        columns: 3
-                        spacing: 6
+                        columns: root.menuCols
+                        spacing: root.menuCols === 3 ? 6 : 8
 
                         Repeater {
                             model: gameList
                             Rectangle {
                                 id: gameCardItem
-                                width: Math.floor((gameGrid.width - (gameGrid.spacing * 2)) / 3)
-                                height: Math.max(38, Math.min(46, Math.floor((menuFlickable.height - 18) / 3)))
+                                width: Math.floor((gameGrid.width - (gameGrid.spacing * (root.menuCols - 1))) / root.menuCols)
+                                height: root.menuCols === 3
+                                    ? Math.max(36, Math.min(46, Math.floor((menuFlickable.height - (gameGrid.spacing * 2)) / 3)))
+                                    : Math.max(44, Math.min(54, Math.floor((menuFlickable.height - (gameGrid.spacing * 3)) / 4)))
                                 radius: 4
                                 readonly property bool isSel: (menuSelectedIndex === index)
                                 readonly property bool isCurActive: (activeGameId === modelData.id)
@@ -2557,7 +2571,7 @@ Window {
                                                 horizontalAlignment: Text.AlignHCenter
                                                 text: modelData.name
                                                 font.family: root.monoFontFamily
-                                                font.pixelSize: Math.max(8, Math.min(10, Math.round(gameCardItem.width * 0.046)))
+                                                font.pixelSize: root.menuCols === 3 ? Math.max(8, Math.min(10, Math.round(gameCardItem.width * 0.046))) : Math.max(9, Math.min(12, Math.round(gameCardItem.width * 0.052)))
                                                 font.bold: true
                                                 color: "#FFFFFF"
                                                 elide: Text.ElideRight
