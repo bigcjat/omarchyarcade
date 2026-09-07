@@ -191,3 +191,17 @@ Clean line art, flat vector icon aesthetic, solid vibrant colors, sticker graphi
 * **Grid Color:** Light Blue
 * **Illustration:** Angled arrow launcher aiming a colored bubble towards hanging clusters of vibrant pastel bubbles on a descending ceiling.
 * **Bottom Text:** `CASUAL PHYSICS • OA-019`
+
+### 20. `KeiRacer` (Ref: `OA-020`)
+* **Category:** Action Arcade
+* **Floppy Color:** Matte Black (`#232328`) with flat silver shutter
+* **Grid Color:** Neon Magenta
+* **Illustration:** White Kei truck and vintage camper bus drifting side-by-side on an 80s coastal highway beneath a glowing retro sun.
+* **Bottom Text:** `ACTION ARCADE • OA-020`
+
+### 21. `Blackjack 21` (Ref: `OA-021`)
+* **Category:** Cards & Casino
+* **Floppy Color:** Ruby Red (`#DC2626`) with flat silver shutter
+* **Grid Color:** Casino Emerald Green (`#064E3B`)
+* **Illustration:** Mystical cloaked cardmaster in ornate retro-fantasy robes dealing radiant glowing Ace of Spades with electric filigree alongside court cards and crystalline poker chips in an arched gothic hall.
+* **Bottom Text:** `CARDS & CASINO • OA-021`

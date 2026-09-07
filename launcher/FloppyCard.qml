@@ -359,6 +359,7 @@ Item {
             case "gemswap": return compGems;
             case "orbpop": return compOrbPop;
             case "keiracer": return compKeiRacer;
+            case "blackjack": return compBlackjack;
             default: return compDefault;
         }
     }
@@ -1329,6 +1330,105 @@ Item {
                 ctx.fillStyle = "#ef4444";
                 ctx.fillRect(cx - 12, cy - 6, 4, 3);
                 ctx.fillRect(cx + 8, cy - 6, 4, 3);
+            }
+        }
+    }
+
+    // 21. Blackjack 21 Badge
+    Component {
+        id: compBlackjack
+        Canvas {
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                // Deep Casino Felt Background
+                var feltGrad = ctx.createRadialGradient(width / 2, height / 2, 10, width / 2, height / 2, width * 0.7);
+                feltGrad.addColorStop(0, "#163E2A");
+                feltGrad.addColorStop(1, "#0A1D14");
+                ctx.fillStyle = feltGrad;
+                ctx.fillRect(0, 0, width, height);
+
+                // Table felt arched betting ring
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(width / 2, height + 10, width * 0.55, Math.PI * 1.15, Math.PI * 1.85, false);
+                ctx.stroke();
+
+                var cw = 32;
+                var ch = 46;
+                var cx = width / 2;
+                var cy = height / 2 - 4;
+
+                function drawCard(x, y, angle, rank, suit, suitColor) {
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(angle * Math.PI / 180);
+
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+                    ctx.fillRect(-cw/2 + 2, -ch/2 + 2, cw, ch);
+
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.strokeStyle = "#CBD5E1";
+                    ctx.lineWidth = 1;
+                    ctx.fillRect(-cw/2, -ch/2, cw, ch);
+                    ctx.strokeRect(-cw/2, -ch/2, cw, ch);
+
+                    ctx.fillStyle = suitColor;
+                    ctx.font = "bold 9px monospace";
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "top";
+                    ctx.fillText(rank, -cw/2 + 3, -ch/2 + 3);
+
+                    ctx.font = "14px sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(suit, 0, 2);
+
+                    ctx.restore();
+                }
+
+                drawCard(cx - 14, cy, -8, "A", "♠", "#0F172A");
+                drawCard(cx + 12, cy + 2, 12, "J", "♦", "#DC2626");
+
+                function drawChip(x, y, radius, mainColor, rimColor, val) {
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+                    ctx.beginPath();
+                    ctx.arc(x + 1, y + 2, radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = mainColor;
+                    ctx.strokeStyle = rimColor;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.font = "bold 7px monospace";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(val, x, y);
+                }
+
+                drawChip(cx - 36, height - 14, 9, "#DC2626", "#FFFFFF", "5");
+                drawChip(cx - 24, height - 12, 10, "#2563EB", "#FFFFFF", "25");
+                drawChip(cx - 10, height - 14, 11, "#1E293B", "#F59E0B", "100");
+
+                ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+                ctx.fillRect(width - 32, 6, 26, 16);
+                ctx.strokeStyle = "#F59E0B";
+                ctx.lineWidth = 1;
+                ctx.strokeRect(width - 32, 6, 26, 16);
+
+                ctx.fillStyle = "#FBBF24";
+                ctx.font = "bold 10px monospace";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("21", width - 19, 14);
             }
         }
     }
