@@ -44,13 +44,15 @@ Window {
     // Selected or Dragging state
     property var selectedCard: null              // { type: "tableau"|"waste"|"foundation", col: 0, index: 0, card: obj }
     property var hintMove: null
+    property bool isDragging: false
+    property var dragState: null                 // { sourceType: "tableau"|"waste"|"foundation", col: 0, index: 0, cards: [], offsetX: 0, offsetY: 0, currentX: 0, currentY: 0 }
 
     // UI & System State
     property bool splashEnabled: true
     property bool isMuted: false
     property bool showHelp: false
 
-    property string helpText: "• Klondike Solitaire Rules:\n  - Build 4 Foundations from Ace up to King by suit (♠ ♥ ♦ ♣)\n  - Build 7 Tableau columns downward in alternating colors (Red / Black)\n  - Empty tableau spaces can only be filled by Kings\n• Controls:\n  - Click card to auto-move to best legal spot (Foundation / Tableau)\n  - Drag & Drop cards or stacks onto valid columns\n  - Click Stock to draw cards (1 or 3)\n  - T to toggle Draw-1 / Draw-3\n  - D to cycle Deck Style\n  - H for Hint\n  - U to Undo\n  - R for New Deal\n  - M to Mute, ? for Help"
+    property string helpText: "• Klondike Solitaire Rules:\n  - Build 4 Foundations from Ace up to King by suit (♠ ♥ ♦ ♣)\n  - Build 7 Tableau columns downward in alternating colors (Red / Black)\n  - Empty tableau spaces can only be filled by Kings\n• Controls:\n  - Click card(s) to select, then click destination column or foundation\n  - Drag & Drop card(s) directly to any valid column or foundation\n  - Double-click a card to send it straight to Foundation\n  - Click Stock (or Space) to draw cards (1 or 3)\n  - D to toggle Draw-1 / Draw-3\n  - K to cycle Deck Style\n  - H for Hint\n  - U to Undo\n  - N for New Game\n  - M to Mute, ? for Help"
 
     signal screenshotSaved(string filePath)
 
@@ -198,50 +200,196 @@ Window {
         refreshUI();
     }
 
-    function handleWasteClicked() {
-        if (root.gameStatus !== "playing" || root.gameStateData.waste.length === 0) return;
+    // =========================================================================
+    // DRAG AND DROP ENGINE
+    // =========================================================================
+    function startDragging(sourceType, colIndex, cardIndex, tablePos, localPressX, localPressY) {
+        if (root.gameStatus !== "playing" || !root.gameStateData) return;
 
-        // Try single-click auto-move first
-        var move = Engine.findBestAutoMove("waste", 0, root.gameStateData.waste.length - 1, root.gameStateData);
-        if (move) {
-            pushHistory();
-            var card = root.gameStateData.waste.pop();
-            if (move.targetType === "foundation") {
-                root.gameStateData.foundations[move.targetIndex].push(card);
-                playSound("dock");
-            } else if (move.targetType === "tableau") {
-                root.gameStateData.tableau[move.targetIndex].push(card);
-                playSound("move");
+        var draggedCards = [];
+        if (sourceType === "tableau") {
+            var col = root.gameStateData.tableau[colIndex];
+            if (!col || cardIndex >= col.length) return;
+            if (!col[cardIndex].faceUp) return;
+            if (!Engine.isValidSubstack(col, cardIndex)) return;
+
+            for (var i = cardIndex; i < col.length; i++) {
+                draggedCards.push(col[i]);
             }
-            root.score = Math.max(0, root.score + move.scoreDelta);
-            root.moves++;
-            checkEndConditions();
-            refreshUI();
-            return;
+        } else if (sourceType === "waste") {
+            if (root.gameStateData.waste.length === 0) return;
+            draggedCards.push(root.gameStateData.waste[root.gameStateData.waste.length - 1]);
+        } else if (sourceType === "foundation") {
+            var fPile = root.gameStateData.foundations[colIndex];
+            if (!fPile || fPile.length === 0) return;
+            draggedCards.push(fPile[fPile.length - 1]);
         }
 
-        // Otherwise toggle selection
+        if (draggedCards.length === 0) return;
+
+        root.dragState = {
+            sourceType: sourceType,
+            col: colIndex,
+            index: cardIndex,
+            cards: draggedCards,
+            offsetX: localPressX,
+            offsetY: localPressY,
+            currentX: tablePos.x - localPressX,
+            currentY: tablePos.y - localPressY
+        };
+        root.isDragging = true;
+        root.selectedCard = null; // Clear static selection while dragging
+    }
+
+    function updateDragPosition(tableX, tableY) {
+        if (!root.isDragging || !root.dragState) return;
+        root.dragState.currentX = tableX - root.dragState.offsetX;
+        root.dragState.currentY = tableY - root.dragState.offsetY;
+        // Re-assign to trigger QML property bindings
+        root.dragState = root.dragState;
+    }
+
+    function endDragging(tableX, tableY) {
+        if (!root.isDragging || !root.dragState) return;
+        var ds = root.dragState;
+        root.isDragging = false;
+        root.dragState = null;
+
+        var dropX = tableX;
+        var dropY = tableY;
+
+        // 1. Check if dropped onto Foundation area (upper row, columns 3..6)
+        if (dropY <= upperRow.height + 40) {
+            for (var f = 0; f < 4; f++) {
+                var fx = tableFelt.getColX(3 + f);
+                if (dropX >= fx - 15 && dropX <= fx + tableFelt.cardWidth + 15) {
+                    // Only 1 card can go to a Foundation
+                    if (ds.cards.length === 1) {
+                        var movingCard = ds.cards[0];
+                        if (Engine.canMoveToFoundation(movingCard, root.gameStateData.foundations[f])) {
+                            pushHistory();
+                            if (ds.sourceType === "tableau") {
+                                var sCol = root.gameStateData.tableau[ds.col];
+                                sCol.pop();
+                                var fl = Engine.checkFlipTableauTop(sCol);
+                                root.score += 10 + (fl ? 5 : 0);
+                            } else if (ds.sourceType === "waste") {
+                                root.gameStateData.waste.pop();
+                                root.score += 10;
+                            } else if (ds.sourceType === "foundation") {
+                                root.gameStateData.foundations[ds.col].pop();
+                            }
+                            root.gameStateData.foundations[f].push(movingCard);
+                            root.moves++;
+                            playSound("dock");
+                            checkEndConditions();
+                            refreshUI();
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Check if dropped onto Tableau columns (0..6)
+        if (dropY >= upperRow.height - 30) {
+            for (var c = 0; c < 7; c++) {
+                var cx = tableFelt.getColX(c);
+                var colLeft = cx - tableFelt.colSpacing / 2;
+                var colRight = cx + tableFelt.cardWidth + tableFelt.colSpacing / 2;
+
+                if (dropX >= colLeft && dropX <= colRight) {
+                    // Ignore dropping onto the exact same source column
+                    if (ds.sourceType === "tableau" && ds.col === c) {
+                        break;
+                    }
+
+                    var targetCol = root.gameStateData.tableau[c];
+                    var baseCard = ds.cards[0];
+
+                    if (Engine.canMoveToTableau(baseCard, targetCol)) {
+                        pushHistory();
+                        if (ds.sourceType === "tableau") {
+                            var srcCol = root.gameStateData.tableau[ds.col];
+                            var spliced = srcCol.splice(ds.index);
+                            for (var si = 0; si < spliced.length; si++) {
+                                targetCol.push(spliced[si]);
+                            }
+                            var flipped = Engine.checkFlipTableauTop(srcCol);
+                            if (flipped) root.score += 5;
+                        } else if (ds.sourceType === "waste") {
+                            root.gameStateData.waste.pop();
+                            targetCol.push(baseCard);
+                            root.score += 5;
+                        } else if (ds.sourceType === "foundation") {
+                            root.gameStateData.foundations[ds.col].pop();
+                            targetCol.push(baseCard);
+                            root.score = Math.max(0, root.score - 15);
+                        }
+                        root.moves++;
+                        playSound("move");
+                        checkEndConditions();
+                        refreshUI();
+                        return;
+                    }
+                }
+            }
+        }
+
+        // Snap back if invalid drop
+        playSound("click");
+        refreshUI();
+    }
+
+    // =========================================================================
+    // MANUAL CLICK-TO-SELECT & DESTINATION MOVES
+    // =========================================================================
+    function handleWasteClicked() {
+        if (root.gameStatus !== "playing" || root.gameStateData.waste.length === 0) return;
+        var topWaste = root.gameStateData.waste[root.gameStateData.waste.length - 1];
+
         if (root.selectedCard && root.selectedCard.type === "waste") {
+            // Clicking same waste card deselects it
             root.selectedCard = null;
+            playSound("click");
         } else {
+            // Select waste card
             root.selectedCard = {
                 type: "waste",
-                card: root.gameStateData.waste[root.gameStateData.waste.length - 1]
+                card: topWaste
             };
             playSound("select");
         }
         refreshUI();
     }
 
+    function handleWasteDoubleClicked() {
+        if (root.gameStatus !== "playing" || root.gameStateData.waste.length === 0) return;
+        var topWaste = root.gameStateData.waste[root.gameStateData.waste.length - 1];
+        var fIndex = Engine.findTargetFoundation(topWaste, root.gameStateData.foundations);
+        if (fIndex !== -1) {
+            pushHistory();
+            root.gameStateData.waste.pop();
+            root.gameStateData.foundations[fIndex].push(topWaste);
+            root.score += 10;
+            root.moves++;
+            root.selectedCard = null;
+            playSound("dock");
+            checkEndConditions();
+            refreshUI();
+        }
+    }
+
     function handleFoundationClicked(fIndex) {
         if (root.gameStatus !== "playing") return;
 
-        // If a card is selected, try moving to this foundation
+        // If a card is selected, try moving it to this foundation
         if (root.selectedCard) {
             var card = root.selectedCard.card;
-            if (Engine.canMoveToFoundation(card, root.gameStateData.foundations[fIndex])) {
+            var isSingleCard = (root.selectedCard.type !== "tableau") || (root.selectedCard.index === root.gameStateData.tableau[root.selectedCard.col].length - 1);
+
+            if (isSingleCard && Engine.canMoveToFoundation(card, root.gameStateData.foundations[fIndex])) {
                 pushHistory();
-                // Remove from source
                 if (root.selectedCard.type === "waste") {
                     root.gameStateData.waste.pop();
                     root.score += 10;
@@ -258,10 +406,24 @@ Window {
                 checkEndConditions();
                 refreshUI();
                 return;
+            } else {
+                root.selectedCard = null;
+                refreshUI();
+                return;
             }
         }
-        root.selectedCard = null;
-        refreshUI();
+
+        // If no card is selected, allow selecting top card of foundation
+        var fPile = root.gameStateData.foundations[fIndex];
+        if (fPile.length > 0) {
+            root.selectedCard = {
+                type: "foundation",
+                col: fIndex,
+                card: fPile[fPile.length - 1]
+            };
+            playSound("select");
+            refreshUI();
+        }
     }
 
     function handleTableauClicked(colIndex, cardIndex) {
@@ -269,7 +431,7 @@ Window {
         var col = root.gameStateData.tableau[colIndex];
         if (!col) return;
 
-        // Clicking on an empty tableau column
+        // 1. Click on EMPTY column
         if (col.length === 0) {
             if (root.selectedCard) {
                 var movingCard = root.selectedCard.card;
@@ -296,21 +458,25 @@ Window {
                     checkEndConditions();
                     refreshUI();
                     return;
+                } else {
+                    soundToast.show("Only Kings can fill empty columns");
+                    root.selectedCard = null;
+                    refreshUI();
+                    return;
                 }
             }
-            root.selectedCard = null;
-            refreshUI();
             return;
         }
 
         var clickedCard = col[cardIndex];
         if (!clickedCard) return;
 
-        // If clicking a face-down card at the top, flip it
+        // 2. Click on face-down card at top of column -> flip it!
         if (!clickedCard.faceUp && cardIndex === col.length - 1) {
             pushHistory();
             clickedCard.faceUp = true;
             root.score += 5;
+            root.selectedCard = null;
             playSound("move");
             refreshUI();
             return;
@@ -318,75 +484,109 @@ Window {
 
         if (!clickedCard.faceUp) return;
 
-        // If another card was already selected, try moving it onto this column
-        if (root.selectedCard && (root.selectedCard.type !== "tableau" || root.selectedCard.col !== colIndex)) {
-            var sc = root.selectedCard.card;
-            if (Engine.canMoveToTableau(sc, col)) {
-                pushHistory();
-                if (root.selectedCard.type === "waste") {
-                    root.gameStateData.waste.pop();
-                    col.push(sc);
-                    root.score += 5;
-                } else if (root.selectedCard.type === "foundation") {
-                    root.gameStateData.foundations[root.selectedCard.col].pop();
-                    col.push(sc);
-                    root.score = Math.max(0, root.score - 15);
-                } else if (root.selectedCard.type === "tableau") {
-                    var sCol = root.gameStateData.tableau[root.selectedCard.col];
-                    var mStack = sCol.splice(root.selectedCard.index);
-                    for (var ms = 0; ms < mStack.length; ms++) col.push(mStack[ms]);
-                    var fl = Engine.checkFlipTableauTop(sCol);
-                    if (fl) root.score += 5;
+        // 3. A card was ALREADY selected
+        if (root.selectedCard) {
+            // Clicked in the SAME column
+            if (root.selectedCard.type === "tableau" && root.selectedCard.col === colIndex) {
+                if (root.selectedCard.index === cardIndex) {
+                    // Clicked same card -> deselect
+                    root.selectedCard = null;
+                    playSound("click");
+                    refreshUI();
+                    return;
+                } else if (Engine.isValidSubstack(col, cardIndex)) {
+                    // Clicked another card in same column -> switch selection
+                    root.selectedCard = {
+                        type: "tableau",
+                        col: colIndex,
+                        index: cardIndex,
+                        card: clickedCard
+                    };
+                    playSound("select");
+                    refreshUI();
+                    return;
                 }
-                root.moves++;
-                root.selectedCard = null;
-                playSound("move");
-                checkEndConditions();
-                refreshUI();
-                return;
-            }
-        }
-
-        // Try single-click auto-move to Foundation or other Tableau
-        if (cardIndex === col.length - 1) {
-            var auto = Engine.findBestAutoMove("tableau", colIndex, cardIndex, root.gameStateData);
-            if (auto) {
-                pushHistory();
-                var moved = col.pop();
-                if (auto.targetType === "foundation") {
-                    root.gameStateData.foundations[auto.targetIndex].push(moved);
-                    playSound("dock");
-                } else if (auto.targetType === "tableau") {
-                    root.gameStateData.tableau[auto.targetIndex].push(moved);
-                    playSound("move");
-                }
-                var fl2 = Engine.checkFlipTableauTop(col);
-                root.score = Math.max(0, root.score + auto.scoreDelta + (fl2 ? 5 : 0));
-                root.moves++;
-                root.selectedCard = null;
-                checkEndConditions();
-                refreshUI();
-                return;
-            }
-        }
-
-        // Otherwise select this card (or substack)
-        if (Engine.isValidSubstack(col, cardIndex)) {
-            if (root.selectedCard && root.selectedCard.type === "tableau" && root.selectedCard.col === colIndex && root.selectedCard.index === cardIndex) {
-                root.selectedCard = null;
             } else {
-                root.selectedCard = {
-                    type: "tableau",
-                    col: colIndex,
-                    index: cardIndex,
-                    card: clickedCard
-                };
-                playSound("select");
+                // Selected card is from another column / waste / foundation
+                // Check if moving to this column is legal!
+                var sc = root.selectedCard.card;
+                if (Engine.canMoveToTableau(sc, col)) {
+                    pushHistory();
+                    if (root.selectedCard.type === "waste") {
+                        root.gameStateData.waste.pop();
+                        col.push(sc);
+                        root.score += 5;
+                    } else if (root.selectedCard.type === "foundation") {
+                        root.gameStateData.foundations[root.selectedCard.col].pop();
+                        col.push(sc);
+                        root.score = Math.max(0, root.score - 15);
+                    } else if (root.selectedCard.type === "tableau") {
+                        var sCol = root.gameStateData.tableau[root.selectedCard.col];
+                        var mStack = sCol.splice(root.selectedCard.index);
+                        for (var ms = 0; ms < mStack.length; ms++) col.push(mStack[ms]);
+                        var fl = Engine.checkFlipTableauTop(sCol);
+                        if (fl) root.score += 5;
+                    }
+                    root.moves++;
+                    root.selectedCard = null;
+                    playSound("move");
+                    checkEndConditions();
+                    refreshUI();
+                    return;
+                } else {
+                    // Illegal move: if clicked card is selectable, switch selection to it
+                    if (Engine.isValidSubstack(col, cardIndex)) {
+                        root.selectedCard = {
+                            type: "tableau",
+                            col: colIndex,
+                            index: cardIndex,
+                            card: clickedCard
+                        };
+                        playSound("select");
+                        refreshUI();
+                        return;
+                    } else {
+                        root.selectedCard = null;
+                        refreshUI();
+                        return;
+                    }
+                }
             }
-        } else {
-            root.selectedCard = null;
         }
-        refreshUI();
+
+        // 4. NO card was selected -> select this card (and substack)
+        if (Engine.isValidSubstack(col, cardIndex)) {
+            root.selectedCard = {
+                type: "tableau",
+                col: colIndex,
+                index: cardIndex,
+                card: clickedCard
+            };
+            playSound("select");
+            refreshUI();
+        }
+    }
+
+    function handleTableauDoubleClicked(colIndex, cardIndex) {
+        if (root.gameStatus !== "playing") return;
+        var col = root.gameStateData.tableau[colIndex];
+        if (!col || cardIndex !== col.length - 1) return; // Only top-most card can auto-foundation
+        var card = col[cardIndex];
+        if (!card.faceUp) return;
+
+        var fIndex = Engine.findTargetFoundation(card, root.gameStateData.foundations);
+        if (fIndex !== -1) {
+            pushHistory();
+            col.pop();
+            root.gameStateData.foundations[fIndex].push(card);
+            var flipped = Engine.checkFlipTableauTop(col);
+            root.score += 10 + (flipped ? 5 : 0);
+            root.moves++;
+            root.selectedCard = null;
+            playSound("dock");
+            checkEndConditions();
+            refreshUI();
+        }
     }
 
     function triggerHint() {
@@ -946,6 +1146,7 @@ Window {
                         model: root.gameStateData ? root.gameStateData.waste.length : 0
 
                         PlayingCard {
+                            id: wasteCardItem
                             readonly property var cData: (root.gameStateData && root.gameStateData.waste.length > index) ? root.gameStateData.waste[index] : null
                             cardData: cData
                             deckStyle: root.deckStyle
@@ -954,12 +1155,49 @@ Window {
                             height: tableFelt.cardHeight
                             isSelected: root.selectedCard && root.selectedCard.type === "waste" && (index === root.gameStateData.waste.length - 1)
                             visible: index === (root.gameStateData.waste.length - 1)
+                            opacity: (root.isDragging && root.dragState && root.dragState.sourceType === "waste") ? 0.25 : 1.0
                             z: index
 
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: root.handleWasteClicked()
+                                property real pressX: 0
+                                property real pressY: 0
+                                property bool isPressed: false
+
+                                onPressed: (mouse) => {
+                                    pressX = mouse.x
+                                    pressY = mouse.y
+                                    isPressed = true
+                                }
+                                onPositionChanged: (mouse) => {
+                                    if (isPressed && (mouse.buttons & Qt.LeftButton)) {
+                                        var dx = mouse.x - pressX
+                                        var dy = mouse.y - pressY
+                                        if (!root.isDragging && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
+                                            var pt = mapToItem(tableFelt, mouse.x, mouse.y)
+                                            root.startDragging("waste", 0, index, pt, pressX, pressY)
+                                        }
+                                        if (root.isDragging) {
+                                            var pt2 = mapToItem(tableFelt, mouse.x, mouse.y)
+                                            root.updateDragPosition(pt2.x, pt2.y)
+                                        }
+                                    }
+                                }
+                                onReleased: (mouse) => {
+                                    if (isPressed) {
+                                        isPressed = false
+                                        if (root.isDragging) {
+                                            var pt3 = mapToItem(tableFelt, mouse.x, mouse.y)
+                                            root.endDragging(pt3.x, pt3.y)
+                                        } else {
+                                            root.handleWasteClicked()
+                                        }
+                                    }
+                                }
+                                onDoubleClicked: {
+                                    root.handleWasteDoubleClicked()
+                                }
                             }
                         }
                     }
@@ -1073,6 +1311,7 @@ Window {
                                 width: tableFelt.cardWidth
                                 height: tableFelt.cardHeight
                                 isSelected: root.selectedCard && root.selectedCard.type === "tableau" && root.selectedCard.col === colIdx && root.selectedCard.index <= index
+                                opacity: (root.isDragging && root.dragState && root.dragState.sourceType === "tableau" && root.dragState.col === colIdx && index >= root.dragState.index) ? 0.25 : 1.0
 
                                 y: {
                                     var offset = 0;
@@ -1085,12 +1324,91 @@ Window {
                                 z: index
 
                                 MouseArea {
+                                    id: cardMouse
                                     anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: root.handleTableauClicked(colIdx, index)
+                                    cursorShape: (cData && cData.faceUp) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                    property real pressX: 0
+                                    property real pressY: 0
+                                    property bool isPressed: false
+
+                                    onPressed: (mouse) => {
+                                        pressX = mouse.x
+                                        pressY = mouse.y
+                                        isPressed = true
+                                    }
+
+                                    onPositionChanged: (mouse) => {
+                                        if (isPressed && (mouse.buttons & Qt.LeftButton) && cData && cData.faceUp) {
+                                            var dx = mouse.x - pressX
+                                            var dy = mouse.y - pressY
+                                            if (!root.isDragging && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
+                                                var pt = mapToItem(tableFelt, mouse.x, mouse.y)
+                                                root.startDragging("tableau", colIdx, index, pt, pressX, pressY)
+                                            }
+                                            if (root.isDragging) {
+                                                var pt2 = mapToItem(tableFelt, mouse.x, mouse.y)
+                                                root.updateDragPosition(pt2.x, pt2.y)
+                                            }
+                                        }
+                                    }
+
+                                    onReleased: (mouse) => {
+                                        if (isPressed) {
+                                            isPressed = false
+                                            if (root.isDragging) {
+                                                var pt3 = mapToItem(tableFelt, mouse.x, mouse.y)
+                                                root.endDragging(pt3.x, pt3.y)
+                                            } else {
+                                                root.handleTableauClicked(colIdx, index)
+                                            }
+                                        }
+                                    }
+
+                                    onDoubleClicked: {
+                                        root.handleTableauDoubleClicked(colIdx, index)
+                                    }
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            // Background Click to Deselect
+            MouseArea {
+                anchors.fill: parent
+                z: -1
+                onClicked: {
+                    if (root.selectedCard) {
+                        root.selectedCard = null;
+                        root.refreshUI();
+                    }
+                }
+            }
+
+            // Floating Drag & Drop Overlay (Follows Mouse Cursor)
+            Item {
+                id: dragOverlay
+                visible: root.isDragging && root.dragState !== null
+                z: 9999
+                x: root.dragState ? root.dragState.currentX : 0
+                y: root.dragState ? root.dragState.currentY : 0
+                width: tableFelt.cardWidth
+                height: tableFelt.cardHeight
+
+                Repeater {
+                    model: (root.dragState && root.dragState.cards) ? root.dragState.cards.length : 0
+
+                    PlayingCard {
+                        readonly property var dc: root.dragState.cards[index]
+                        cardData: dc
+                        deckStyle: root.deckStyle
+                        faceUp: true
+                        width: tableFelt.cardWidth
+                        height: tableFelt.cardHeight
+                        isSelected: true
+                        y: index * Math.min(28, Math.round(tableFelt.cardHeight * 0.22))
+                        z: index
                     }
                 }
             }
