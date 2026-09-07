@@ -111,7 +111,7 @@ sudo pacman -U omarchy-arcade-1.0.0-1-any.pkg.tar.zst
 
 ---
 
-## The 24 Games Included
+## The 25 Games Included
 
 Every game includes full offline documentation, keyboard controls mappings, and standalone launch capabilities:
 

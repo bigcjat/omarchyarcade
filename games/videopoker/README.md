@@ -24,9 +24,11 @@ Authentic multi-game casino video terminal built natively with hardware accelera
 
 * **Dual-Era Visual Switcher (`V`):**
   * **1984 Vegas Cobalt CRT:** Deep `#000088` phosphor tube with scanline raster canvas, curved CRT glass bezel, chunky monospace arcade typography, and tactile illuminated 3D push buttons (`[HOLD 1]`–`[HOLD 5]`, `[BET 1]`, `[BET MAX]`, `[DEAL/DRAW]`).
-  * **Neo-Tokyo Cyber Glass:** Obsidian glassmorphism (`#0B0E14`), glowing laser column HUD, and dynamic synchronization with all 22 Omarchy desktop themes (`colors.toml`).
+  * **Neo-Tokyo Cyber Glass:** Obsidian glassmorphism (`#181825`), glowing laser column HUD, and dynamic synchronization with all 22 Omarchy desktop themes (`colors.toml`).
+* **Interactive Game Selection Terminal (`G`):** Direct in-playfield casino game switcher with full keyboard arrow navigation (`↑`, `↓`, `←`, `→`), `Enter` to select, and `Esc` to dismiss. Launches to game selection upon start.
 * **HELD Badge Stamping:** True to classic video poker cabinets, held cards stamp an iconic bold red/gold `HELD` ribbon banner across the card face.
 * **Double-Up Gamble Mode (`D`):** Authentic high-card bonus game offered after every win to risk your payout for 2X.
+* **Master Template Standards:** Integrated help modal (`?` / `H`) with scrollable instructions, keyboard shortcuts, and canonical author attribution to Chris Thompson (@bigcjat) with Gemini.
 * **Complete Physical Arcade Controls:** Keyboard hotkeys `1`–`5` for holds/actions, `Space`/`Enter` for Deal/Draw, `B` for Bet 1, `M` for Max Bet, `G` for Game selection, `V` for visual era toggle, `C` to collect or add credits.
 * **100% True Offline Play:** Zero internet required. No network sockets, zero cloud dependencies, zero telemetry, and zero ads. Plays completely offline forever.
 * **Persistent Settings:** Automatically saves bankroll credits, best win, hands played, preferred visual mode, and active game across sessions via `QSettings`.
@@ -40,13 +42,21 @@ Authentic multi-game casino video terminal built natively with hardware accelera
 | **Deal / Draw / Next** | `Space` | `Enter` | Click "DEAL [SPACE]" button |
 | **Hold Cards 1–5** | `1`, `2`, `3`, `4`, `5` | — | Click card or bottom "HOLD 1-5" buttons |
 | **Bet 1 Coin** | `B` | — | Click "BET 1 [B]" button |
-| **Bet Max (5 Coins)** | `M` | — | Click "BET MAX [M]" button |
-| **Switch Visual Era** | `V` | — | Click "1984 CRT [V]" / "CYBER GLASS [V]" in header |
-| **Open Game Menu** | `G` | — | Click "GAMES (G)" in header |
-| **Double-Up Gamble** | `D` | — | Click "DOUBLE UP [D]" button after any win |
-| **Collect / Cash Out**| `C` | `Esc` | Click "COLLECT (C)" during Double-Up |
-| **Rules & Instructions** | `?` | `H` | Click "?" button in header |
-| **Mute Audio** | `U` | Click Icon | Click speaker icon in header |
+| **Bet Max (5 Coins)** | `M` | — | Click "MAX [M]" button |
+| **Switch Visual Era** | `V` | — | Click "Classic [V]" / "Cyber [V]" in toolbar |
+| **Open Game Menu** | `G` | — | Click "Games (G)" in subheader or console |
+| **Navigate Game Menu** | `↑` `↓` `←` `→` | — | Click game card tile |
+| **Select Highlighted Game** | `Enter` / `Return` | `Space` | Click game card tile |
+| **Double-Up Gamble** | `D` | — | Click "DOUBLE [D]" button after any win |
+| **Collect / Cash Out**| `C` | `Esc` | Click "COLLECT" or press `C` / `Esc` |
+| **Rules & Instructions** | `?` | `H` | Click "?" button in toolbar |
+| **Mute Audio** | — | Click Icon | Click speaker icon in toolbar |
+
+---
+
+## Credits
+
+Created by **Chris Thompson** ([@bigcjat](https://github.com/bigcjat)) with Gemini.
 
 ---
 
