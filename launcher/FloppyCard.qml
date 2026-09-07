@@ -363,6 +363,7 @@ Item {
             case "chess": return compChess;
             case "checkers": return compCheckers;
             case "solitaire": return compSolitaire;
+            case "videopoker": return compVideoPoker;
             default: return compDefault;
         }
     }
@@ -1605,6 +1606,92 @@ Item {
                 drawTableauCard(tx, ty, "K", "♥", true);
                 drawTableauCard(tx, ty + cascadeOffset, "Q", "♠", false);
                 drawTableauCard(tx, ty + cascadeOffset * 2, "J", "♦", true);
+            }
+        }
+    }
+
+    // 25. Video Poker Badge (OA-025)
+    Component {
+        id: compVideoPoker
+        Canvas {
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                // CRT Cobalt Blue Cabinet Screen
+                ctx.fillStyle = "#000088";
+                ctx.fillRect(0, 0, width, height);
+
+                // Subtle scanlines
+                ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+                for (var y = 0; y < height; y += 3) {
+                    ctx.fillRect(0, y, width, 1.2);
+                }
+
+                // CRT curved bezel outline
+                ctx.strokeStyle = "#FEF08A";
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(4, 4, width - 8, height - 8);
+
+                // Top Paytable mini banner
+                ctx.fillStyle = "#DC2626";
+                ctx.fillRect(10, 8, width - 20, 12);
+                ctx.fillStyle = "#FEF08A";
+                ctx.font = "bold 7px monospace";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("ROYAL FLUSH  4000", width / 2, 14);
+
+                // 3 Playing Cards
+                var cardW = 28;
+                var cardH = 42;
+                var startX = width / 2 - (cardW * 1.5 + 8);
+                var cardY = 26;
+
+                function drawPokerCard(cx, cy, rank, suit, isRed, isHeld) {
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+                    ctx.fillRect(cx + 1, cy + 2, cardW, cardH);
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.strokeStyle = isHeld ? "#FEF08A" : "#000000";
+                    ctx.lineWidth = isHeld ? 1.5 : 1;
+                    ctx.fillRect(cx, cy, cardW, cardH);
+                    ctx.strokeRect(cx, cy, cardW, cardH);
+
+                    if (isHeld) {
+                        ctx.fillStyle = "#DC2626";
+                        ctx.fillRect(cx, cy, cardW, 10);
+                        ctx.fillStyle = "#FEF08A";
+                        ctx.font = "bold 6px monospace";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText("HELD", cx + cardW / 2, cy + 5);
+                    }
+
+                    ctx.fillStyle = isRed ? "#DC2626" : "#0F172A";
+                    ctx.font = "bold 8px monospace";
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "top";
+                    ctx.fillText(rank, cx + 2, cy + (isHeld ? 11 : 2));
+
+                    ctx.font = "12px sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(suit, cx + cardW / 2, cy + 26);
+                }
+
+                drawPokerCard(startX, cardY, "10", "♠", false, false);
+                drawPokerCard(startX + cardW + 8, cardY, "J", "♠", false, true);
+                drawPokerCard(startX + (cardW + 8) * 2, cardY, "A", "♠", false, true);
+
+                // Bottom push buttons
+                var btnY = height - 12;
+                ctx.fillStyle = "#0284C7";
+                ctx.fillRect(startX, btnY, cardW, 7);
+                ctx.fillStyle = "#DC2626";
+                ctx.fillRect(startX + cardW + 8, btnY, cardW, 7);
+                ctx.fillStyle = "#16A34A";
+                ctx.fillRect(startX + (cardW + 8) * 2, btnY, cardW, 7);
             }
         }
     }

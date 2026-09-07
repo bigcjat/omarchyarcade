@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Offline-Forever-00f0ff?style=flat-square" alt="Offline Forever"/>
   <img src="https://img.shields.io/badge/Telemetry-Zero-10b981?style=flat-square" alt="Zero Telemetry"/>
   <img src="https://img.shields.io/badge/Ads-Zero-f59e0b?style=flat-square" alt="Zero Ads"/>
-  <img src="https://img.shields.io/badge/Games-24%20Included-ec4899?style=flat-square" alt="24 Games"/>
+  <img src="https://img.shields.io/badge/Games-25%20Included-ec4899?style=flat-square" alt="25 Games"/>
   <img src="https://img.shields.io/badge/Interface-Keyboard--Primary-8b5cf6?style=flat-square" alt="Keyboard-Primary"/>
   <img src="https://img.shields.io/badge/Platform-Omarchy%20Linux%20(Hyprland)-38bdf8?style=flat-square" alt="Omarchy Linux"/>
 </p>
@@ -23,7 +23,7 @@
 
 ## Meet Omarchy Arcade
 
-**Omarchy Arcade** is a dedicated, distraction-free desktop game launcher and catalog of 24 full-featured offline arcade games built specifically for **Omarchy Linux** and tiling window managers (Hyprland).
+**Omarchy Arcade** is a dedicated, distraction-free desktop game launcher and catalog of 25 full-featured offline arcade games built specifically for **Omarchy Linux** and tiling window managers (Hyprland).
 
 Modern casual gaming has been bogged down by online logins, tracking SDKs, ad networks, and multi-gigabyte bloat. Omarchy Arcade delivers instant, tactile, distraction-free retro arcade gaming right from your desktop—running with native **Qt6 / QML** hardware acceleration.
 
@@ -33,7 +33,7 @@ Modern casual gaming has been bogged down by online logins, tracking SDKs, ad ne
 * ⚡ **Built for Keyboards & Tiling:** Instant Vim (`HJKL`) and arrow navigation, numbers `1`–`9` for category jumps, and `/` search. No mouse required.
 * 🎨 **Live System Theme Syncing:** Connects directly with your Omarchy desktop theme (`colors.toml`). Switch themes on your desktop and the arcade hot-reloads its colors on the fly.
 * 🪟 **Tiling-Native Flow:** Launch a game and the launcher automatically hides to keep your workspace clear. Exit the game and the launcher instantly reappears and re-focuses.
-* 🎮 **24 Built-In Games:** Blocks, puzzles, retro vector space combat, casino card games, grandmaster chess, tactical checkers, klondike solitaire, brick breakers, city simulation, and classic action arcade games—ready to launch in milliseconds.
+* 🎮 **25 Built-In Games:** Blocks, puzzles, retro vector space combat, casino card games, grandmaster chess, tactical checkers, klondike solitaire, video poker terminal, brick breakers, city simulation, and classic action arcade games—ready to launch in milliseconds.
 
 ---
 

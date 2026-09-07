@@ -680,6 +680,35 @@
       "size": "562 KB",
       "size_bytes": 575434,
       "download_size": "562 KB"
+    },
+    {
+      "id": "videopoker",
+      "title": "Video Poker",
+      "ref": "OA-025",
+      "category": "Cards & Casino",
+      "floppy_color": "#DC2626",
+      "grid_color": "#F59E0B",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "8-Game Video Terminal • 1984 CRT & Cyber Glass",
+      "description": "Authentic multi-game casino video terminal featuring 8 full game engines: Jacks or Better (9/6), Deuces Wild, Joker Poker, Double Double Bonus, Bonus Poker Deluxe, Red Dog, Single-Deck Blackjack, Casino War, and Double-Up gamble.",
+      "instructions": [
+        "Select from 8 classic casino games at any time using the Games terminal menu (G).",
+        "Toggle visual eras seamlessly with (V) between 1984 Vegas Cobalt CRT and Neo-Tokyo Cyber Glass.",
+        "In Video Poker: place 1-5 coins (B or M), press Deal, hold your cards (1-5), and press Draw.",
+        "After any winning hand, take the Double-Up challenge (D) to beat the dealer's card for 2X.",
+        "Play classic table games: Red Dog (spread betting), Single-Deck Blackjack (3:2), and Casino War."
+      ],
+      "controls": {
+        "keyboard": "Space/Enter to Deal/Draw, 1-5 for Card Holds / Actions, B for Bet 1, M for Bet Max",
+        "shortcuts": "V to toggle CRT/Cyber mode, G for Game Menu, D for Double-Up, C to Collect, ? for Help"
+      },
+      "folder": "games/videopoker",
+      "entrypoint": "games/videopoker/main.qml",
+      "cover_image": "assets/covers/videopoker.png",
+      "size": "1.5 MB",
+      "size_bytes": 1624267,
+      "download_size": "1.5 MB"
     }
   ]
 }

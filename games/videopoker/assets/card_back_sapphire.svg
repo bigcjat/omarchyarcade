@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 188 272" width="188" height="272">
+  <defs>
+    <radialGradient id="sapphireBg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#1E3A8A"/>
+      <stop offset="60%" stop-color="#172554"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </radialGradient>
+    <linearGradient id="silverTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="50%" stop-color="#CBD5E1"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
+    </linearGradient>
+    <pattern id="sapphireLattice" width="14" height="14" patternUnits="userSpaceOnUse">
+      <path d="M 7 0 L 14 7 L 7 14 L 0 7 Z" fill="none" stroke="#E2E8F0" stroke-width="0.75" opacity="0.2"/>
+      <circle cx="7" cy="7" r="1" fill="#38BDF8" opacity="0.4"/>
+    </pattern>
+  </defs>
+
+  <!-- Card Base -->
+  <rect x="1" y="1" width="186" height="270" rx="14" fill="url(#sapphireBg)" stroke="#E2E8F0" stroke-width="2"/>
+
+  <!-- Ornate Double Silver Border -->
+  <rect x="7" y="7" width="174" height="258" rx="10" fill="none" stroke="url(#silverTrim)" stroke-width="1.2" opacity="0.9"/>
+  <rect x="10" y="10" width="168" height="252" rx="8" fill="none" stroke="#38BDF8" stroke-width="0.6" opacity="0.6"/>
+
+  <!-- Lattice Pattern Field -->
+  <rect x="11" y="11" width="166" height="250" rx="7" fill="url(#sapphireLattice)"/>
+
+  <!-- Monte Carlo Filigree Corner Accents -->
+  <g stroke="#E2E8F0" stroke-width="1.2" fill="none" opacity="0.8">
+    <path d="M 16 30 C 16 20 20 16 30 16"/>
+    <path d="M 172 30 C 172 20 168 16 158 16"/>
+    <path d="M 16 242 C 16 252 20 256 30 256"/>
+    <path d="M 172 242 C 172 252 168 256 158 256"/>
+  </g>
+
+  <!-- Center Sapphire Medallion -->
+  <g transform="translate(94, 136)">
+    <circle cx="0" cy="0" r="42" fill="#0F172A" stroke="#E2E8F0" stroke-width="2"/>
+    <circle cx="0" cy="0" r="36" fill="#172554" stroke="#38BDF8" stroke-width="1" stroke-dasharray="3,2"/>
+    <circle cx="0" cy="0" r="30" fill="#0A0F1D" stroke="#E2E8F0" stroke-width="1.4"/>
+
+    <!-- Concentric Omarchy Square in Ice Silver & Electric Cyan -->
+    <rect x="-18" y="-18" width="36" height="36" rx="3" fill="none" stroke="#E2E8F0" stroke-width="2.5"/>
+    <rect x="-11" y="-11" width="22" height="22" rx="2" fill="none" stroke="#38BDF8" stroke-width="1.8"/>
+    <rect x="-5" y="-5" width="10" height="10" rx="1" fill="#E2E8F0"/>
+
+    <circle cx="0" cy="-24" r="1.8" fill="#38BDF8"/>
+    <circle cx="0" cy="24" r="1.8" fill="#38BDF8"/>
+    <circle cx="-24" cy="0" r="1.8" fill="#38BDF8"/>
+    <circle cx="24" cy="0" r="1.8" fill="#38BDF8"/>
+  </g>
+
+  <!-- Title Accents -->
+  <text x="94" y="27" text-anchor="middle" font-family="'Georgia', serif" font-weight="bold" font-size="10" letter-spacing="3" fill="#E2E8F0">MONTE CARLO</text>
+  <text x="94" y="255" text-anchor="middle" font-family="'Georgia', serif" font-weight="bold" font-size="8.5" letter-spacing="3" fill="#38BDF8" opacity="0.9">ROYAL SAPPHIRE</text>
+</svg>

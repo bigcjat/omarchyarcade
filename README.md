@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Offline-Forever-00f0ff?style=flat-square" alt="Offline Forever"/>
   <img src="https://img.shields.io/badge/Telemetry-Zero-10b981?style=flat-square" alt="Zero Telemetry"/>
   <img src="https://img.shields.io/badge/Ads-Zero-f59e0b?style=flat-square" alt="Zero Ads"/>
-  <img src="https://img.shields.io/badge/Games-24%20Included-ec4899?style=flat-square" alt="24 Games"/>
+  <img src="https://img.shields.io/badge/Games-25%20Included-ec4899?style=flat-square" alt="25 Games"/>
   <img src="https://img.shields.io/badge/Interface-Keyboard--Primary-8b5cf6?style=flat-square" alt="Keyboard-Primary"/>
   <img src="https://img.shields.io/badge/Platform-Omarchy%20Linux%20(Hyprland)-38bdf8?style=flat-square" alt="Omarchy Linux"/>
 </p>
@@ -141,6 +141,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **Chess** | Board Strategy & Chess | **821 KB** | Calibrated multi-tier AI (Novice to Expert) with glowing vector pieces. | [Manual](games/chess/README.md) |
 | **Checkers** | Board Strategy & Checkers | **754 KB** | Multi-tier AI with mandatory jump chains and king coronation. | [Manual](games/checkers/README.md) |
 | **Solitaire** | Cards & Casino | **562 KB** | Klondike with 3D card flips, vector decks, Draw 1/3, and auto-foundation. | [Manual](games/solitaire/README.md) |
+| **Video Poker** | Cards & Casino | **1.5 MB** | 8-Game Casino Video Terminal with Dual-Era CRT switcher and Double-Up gamble. | [Manual](games/videopoker/README.md) |
 
 ---
 

@@ -227,4 +227,12 @@ Clean line art, flat vector icon aesthetic, solid vibrant colors, sticker graphi
 * **Illustration:** Cascading columns of illuminated cards with glowing Aces hovering in golden foundation pedestals, observed by a cloaked grandmaster in a grand cathedral arcade hall under a cosmic night sky.
 * **Bottom Text:** `CARDS & CASINO • OA-024`
 
+### 25. `Video Poker` (Ref: `OA-025`)
+* **Category:** Cards & Casino
+* **Floppy Color:** Ruby Red (`#DC2626`) with flat silver shutter
+* **Grid Color:** Golden Yellow (`#F59E0B`)
+* **Illustration:** Glowing retro video poker arcade cabinet displaying a Royal Flush hand on a cobalt-blue CRT screen with HELD stamps and arcade push buttons.
+* **Bottom Text:** `CARDS & CASINO • OA-025`
+
+
 
