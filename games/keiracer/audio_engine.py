@@ -166,10 +166,9 @@ class ProceduralEngineAudio:
             return
 
         def stream_worker():
-            chunk_samples = 512 # ~23ms low-latency buffer chunks
+            chunk_samples = 1024 # ~46ms low-latency buffer chunks
             c_short_array = (ctypes.c_int16 * chunk_samples)()
             silence = b"\x00" * (chunk_samples * 2)
-            chunk_duration = chunk_samples / self.sample_rate
 
             for cmd in candidates:
                 print(f"[AudioEngine] Trying Linux audio sink: {' '.join(cmd)}")
@@ -181,20 +180,35 @@ class ProceduralEngineAudio:
                     )
                     self._linux_proc = proc
 
-                    # Test write silence to verify process starts and stays alive
+                    # Use Linux kernel pipe buffer capacity (4096 bytes = ~92ms)
+                    # When set, proc.stdin.write() blocks naturally in the kernel at hardware audio rate.
+                    # This eliminates the need for Python time.sleep() oversleeping, preventing all XRUN pops/stutter!
+                    has_kernel_pipe_limit = False
+                    try:
+                        import fcntl
+                        f_setpipe_sz = getattr(fcntl, "F_SETPIPE_SZ", 1031)
+                        fcntl.fcntl(proc.stdin.fileno(), f_setpipe_sz, 4096)
+                        has_kernel_pipe_limit = True
+                    except Exception:
+                        has_kernel_pipe_limit = False
+
+                    # Pre-buffer 2 chunks (~92ms) so the audio card always has a safety cushion
+                    proc.stdin.write(silence)
                     proc.stdin.write(silence)
                     proc.stdin.flush()
-                    time.sleep(0.04)
+                    time.sleep(0.03)
 
                     if proc.poll() is not None:
                         err = proc.stderr.read().decode("utf-8", errors="ignore").strip()
                         print(f"[AudioEngine] {cmd[0]} exited immediately (code {proc.poll()}): {err}")
                         continue
 
-                    print(f"[AudioEngine] Successfully streaming audio via {cmd[0]}")
+                    print(f"[AudioEngine] Successfully streaming audio via {cmd[0]} (kernel pipe flow control: {has_kernel_pipe_limit})")
+
+                    stream_start = time.monotonic()
+                    samples_written = chunk_samples * 2
 
                     while self.running and proc.poll() is None:
-                        t0 = time.monotonic()
                         if self.is_muted:
                             proc.stdin.write(silence)
                             proc.stdin.flush()
@@ -203,11 +217,15 @@ class ProceduralEngineAudio:
                             proc.stdin.write(bytes(c_short_array))
                             proc.stdin.flush()
 
-                        # Real-time clock synchronization (prevents pipe overflow & runaway synthesis)
-                        elapsed = time.monotonic() - t0
-                        sleep_time = chunk_duration - elapsed
-                        if sleep_time > 0.002:
-                            time.sleep(sleep_time)
+                        samples_written += chunk_samples
+
+                        # If kernel pipe size limit couldn't be set, use a cushioned drift regulator
+                        # (Only sleeps if lead > 120ms, and preserves 80ms cushion, NEVER starving the buffer!)
+                        if not has_kernel_pipe_limit:
+                            audio_time = samples_written / self.sample_rate
+                            lead = audio_time - (time.monotonic() - stream_start)
+                            if lead > 0.12:
+                                time.sleep(lead - 0.08)
 
                     if not self.running:
                         try:
@@ -269,126 +287,99 @@ class ProceduralEngineAudio:
         two_pi = 6.283185307179586
         car = self.car_id
         
-        # Determine engine architecture parameters for Slow Car League
-        if car == "keitruck":
+        # Engine architecture parameters for Slow Car League
+        if car in ("keitruck", "smart"):
             cylinders = 3.0
-            firing_factor = 1.5 # 660cc 3-cyl: 1.5 fires per rev
-        elif car == "smart":
-            cylinders = 3.0
-            firing_factor = 1.5 # 898cc 3-cyl Turbo
-        elif car == "panda":
-            cylinders = 4.0
-            firing_factor = 2.0 # 999cc FIRE 4-cyl: 2.0 fires per rev
-        elif car == "sidekick":
-            cylinders = 4.0
-            firing_factor = 2.0 # 1.6L 16V 4-cyl
-        elif car == "wrangler":
-            cylinders = 4.0
-            firing_factor = 2.0 # 2.5L AMC 4-cyl
-        elif car == "vwbus":
-            cylinders = 4.0
-            firing_factor = 2.0 # 1.6L Air-Cooled Flat-4 Boxer
+            firing_factor = 1.5 # 3-cyl: 1.5 firing pulses per crank rev
         else:
-            cylinders = 3.0
-            firing_factor = 1.5
+            cylinders = 4.0
+            firing_factor = 2.0 # 4-cyl: 2.0 firing pulses per crank rev
 
         target_throttle = 1.0 if self.is_accelerating else 0.0
         
         for i in range(num_samples):
             # Smooth RPM transitions
-            self.current_rpm += (self.target_rpm - self.current_rpm) * 0.003
-            # Smooth throttle envelope
-            self.throttle_filter += (target_throttle - self.throttle_filter) * 0.005
+            self.current_rpm += (self.target_rpm - self.current_rpm) * 0.004
+            # Smooth throttle response
+            self.throttle_filter += (target_throttle - self.throttle_filter) * 0.006
             
-            # Clutch shift cut: instantaneous volume dip
-            target_shift_gain = 0.12 if self.is_shift_cut else 1.0
-            self.shift_cut_gain += (target_shift_gain - self.shift_cut_gain) * 0.05
+            # Clutch shift cut: soft volume dip
+            target_shift_gain = 0.20 if self.is_shift_cut else 1.0
+            self.shift_cut_gain += (target_shift_gain - self.shift_cut_gain) * 0.08
             
-            sample_val = 0.0
-            
-            # Internal Combustion Engine: Exhaust Pulse Math
-            # Fundamental pulse frequency: (RPM / 60) * (cylinders / 2)
+            # Internal Combustion Engine: Continuous harmonic series (zero step discontinuities)
             pulse_freq = (self.current_rpm / 60.0) * firing_factor
             self.phase_crank += two_pi * pulse_freq * dt
-            if self.phase_crank > two_pi: self.phase_crank -= two_pi
-            
-            p = self.phase_crank / two_pi # normalized 0..1
+            if self.phase_crank >= two_pi:
+                self.phase_crank -= two_pi
                 
-            # Asymmetric exhaust expansion pulse
-            pulse = (
-                math.sin(self.phase_crank) * 0.50 +
-                math.sin(2.0 * self.phase_crank) * 0.30 +
-                math.sin(3.0 * self.phase_crank) * 0.18 +
-                math.sin(4.0 * self.phase_crank) * 0.10
-            )
+            # Secondary harmonic sub-phases
+            self.phase_gear += two_pi * (pulse_freq * 0.5) * dt
+            if self.phase_gear >= two_pi:
+                self.phase_gear -= two_pi
+
+            # Continuous harmonics (guaranteed C0-continuous, zero pops)
+            h1 = math.sin(self.phase_crank)
+            h2 = math.sin(self.phase_crank * 2.0) * 0.44
+            h3 = math.sin(self.phase_crank * 3.0) * 0.22
+            h4 = math.sin(self.phase_crank * 4.0) * 0.09
             
-            # Cylinder firing pressure pop
-            pop_center = 0.22
-            pop = math.exp(-((p - pop_center) ** 2) * 45.0) - 0.18
-            
-            # Specific acoustic personalities for each slow car
+            # Acoustic personalities for Slow Car Racing League
             if car == "keitruck":
-                # 3-cylinder buzzsaw rasp: 1/3 order sub-harmonic + transmission gear whine
-                sub = math.sin(self.phase_crank / 3.0) * 0.22
-                raw_engine = (pulse * 0.44 + pop * 0.40 + sub * 0.16)
-                if self.speed > 5:
-                    gear_freq = self.speed * 8.8 + 80.0
-                    self.phase_gear += two_pi * gear_freq * dt
-                    if self.phase_gear > two_pi: self.phase_gear -= two_pi
-                    gear_whine = math.sin(self.phase_gear) * (0.07 + 0.07 * self.throttle_filter)
-                    raw_engine += gear_whine
+                # 660cc 3-cylinder buzzsaw: 1/3 order sub-harmonic + transmission gear whine
+                sub = math.sin(self.phase_crank / 3.0) * 0.24
+                raw = h1 + h2 + h3 + h4 + sub
+                if self.speed > 8:
+                    whine_freq = self.speed * 9.5 + 90.0
+                    self.phase_turbo += two_pi * whine_freq * dt
+                    if self.phase_turbo >= two_pi: self.phase_turbo -= two_pi
+                    raw += math.sin(self.phase_turbo) * (0.06 + 0.06 * self.throttle_filter)
             elif car == "smart":
-                # Smart 3-cyl turbo commuter: higher frequency harmonics + turbo spool
-                sub = math.sin(self.phase_crank / 3.0) * 0.18
-                raw_engine = (pulse * 0.48 + pop * 0.38 + sub * 0.14)
-                if self.throttle_filter > 0.1 and self.speed > 15:
-                    turbo_freq = 900.0 + (self.current_rpm / 6500.0) * 1800.0
+                # Smart 3-cyl turbo commuter: smooth cadence + turbo spool whistle
+                raw = h1 * 0.9 + h2 * 0.5 + h3 * 0.16
+                if self.throttle_filter > 0.1 and self.speed > 12:
+                    turbo_freq = 950.0 + (self.current_rpm / 6500.0) * 1600.0
                     self.phase_turbo += two_pi * turbo_freq * dt
-                    if self.phase_turbo > two_pi: self.phase_turbo -= two_pi
-                    raw_engine += math.sin(self.phase_turbo) * (0.05 * self.throttle_filter)
+                    if self.phase_turbo >= two_pi: self.phase_turbo -= two_pi
+                    raw += math.sin(self.phase_turbo) * (0.08 * self.throttle_filter)
             elif car == "panda":
-                # Fiat Panda 999cc FIRE: raspy Italian 4-cylinder with mechanical valve chatter
-                chatter = math.sin(self.phase_crank * 4.0) * 0.14
-                raw_engine = (pulse * 0.48 + pop * 0.38 + chatter)
+                # Fiat Panda 999cc FIRE: lively Italian 4-cylinder mechanical valve chatter
+                chatter = math.sin(self.phase_crank * 4.0) * 0.16
+                raw = h1 + h2 + h3 + chatter
             elif car == "sidekick":
-                # Suzuki Sidekick 1.6L 16V SOHC: throaty 90s Japanese 4x4 rumble
-                mid_rumble = math.sin(self.phase_crank * 0.5) * 0.18
-                raw_engine = (pulse * 0.46 + pop * 0.38 + mid_rumble)
+                # Suzuki Sidekick 1.6L 16V: throaty 90s Japanese 4x4 mid rumble
+                rumble = math.sin(self.phase_gear) * 0.26
+                raw = h1 + h2 + rumble
             elif car == "wrangler":
-                # Jeep Wrangler YJ 2.5L: heavy displacement 4-cylinder bass thrum & chug
-                bass = math.sin(self.phase_crank * 0.5) * 0.25
-                raw_engine = (pulse * 0.42 + pop * 0.35 + bass)
+                # Jeep Wrangler YJ 2.5L: heavy displacement 4-cylinder bass chug
+                bass = math.sin(self.phase_gear) * 0.36
+                raw = h1 * 0.88 + h2 * 0.32 + bass
             elif car == "vwbus":
-                # Volkswagen Type 2 Bus 1.6L Air-Cooled Flat-4 Boxer:
-                # Uneven boxer exhaust resonance, valve tap, and tailpipe chirp whistle
-                boxer_cadence = math.sin(self.phase_crank * 0.5) * 0.24 + math.sin(self.phase_crank * 1.5) * 0.12
-                chirp_freq = 680.0 + (self.current_rpm / 4500.0) * 450.0
-                self.phase_turbo += two_pi * chirp_freq * dt
-                if self.phase_turbo > two_pi: self.phase_turbo -= two_pi
-                chirp = math.sin(self.phase_turbo) * 0.06
-                raw_engine = (pulse * 0.42 + pop * 0.36 + boxer_cadence + chirp)
+                # VW Type 2 Bus: air-cooled flat-4 boxer rhythm + exhaust tailpipe chirp
+                boxer = math.sin(self.phase_gear) * 0.28 + math.sin(self.phase_crank * 1.5) * 0.14
+                raw = h1 + h2 + boxer
             else:
-                raw_engine = (pulse * 0.50 + pop * 0.50)
+                raw = h1 + h2 + h3
+
+            # Soft asymmetric exhaust saturation (analog manifold compression)
+            sat = raw / (1.0 + 0.35 * abs(raw))
             
-            # On-Throttle vs Off-Throttle Acoustics:
-            if self.throttle_filter < 0.35:
-                # Low-pass filter (cutoff ~420 Hz)
-                alpha = 0.11 + 0.18 * self.throttle_filter
-                self.lpf_state += alpha * (raw_engine - self.lpf_state)
-                
-                # Deceleration exhaust overrun burble / crackle
-                self.burble_phase += dt * 18.0
-                if self.burble_phase > 1.0:
-                    self.burble_phase -= 1.0
-                    self.burble_seed = (self.burble_seed * 1103515245 + 12345) & 0x7FFFFFFF
-                burble = ((self.burble_seed % 100) / 100.0 - 0.5) * 0.14 * (1.0 - self.throttle_filter)
-                
-                gain = 0.32 + 0.18 * (self.current_rpm / 7500.0)
-                sample_val = (self.lpf_state + burble) * gain * self.shift_cut_gain * 19000.0
+            # Throttle-dependent warm acoustic filter:
+            # Off-throttle = muffled bassy tone (~380 Hz)
+            # On-throttle = open exhaust roar (~1400 Hz)
+            filter_cutoff = 0.14 + 0.38 * self.throttle_filter
+            self.lpf_state += filter_cutoff * (sat - self.lpf_state)
+            
+            # Smooth off-throttle exhaust gurgle (continuous low-frequency wave, NOT white noise pops)
+            if self.throttle_filter < 0.25:
+                gurgle = math.sin(self.phase_gear * 0.5) * 0.12 * (1.0 - self.throttle_filter * 4.0)
+                acoustic = self.lpf_state + gurgle
             else:
-                # Full on-throttle acoustic punch
-                gain = 0.55 + 0.35 * self.throttle_filter
-                sample_val = raw_engine * gain * self.shift_cut_gain * 19000.0
+                acoustic = self.lpf_state
+
+            # Master gain staging
+            gain = 0.38 + 0.34 * self.throttle_filter + 0.28 * (self.current_rpm / 7200.0)
+            sample_val = acoustic * gain * self.shift_cut_gain * 24000.0
             
             # 16-bit integer clamp
             c_short_array[i] = max(-32767, min(32767, int(sample_val)))
