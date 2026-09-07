@@ -89,6 +89,13 @@ Window {
     // Modals
     property bool gameMenuOpen: false
 
+    Timer {
+        id: doubleUpCloseTimer
+        interval: 1400
+        repeat: false
+        onTriggered: doubleUpActive = false
+    }
+
     // =========================================================================
     // THEME CONTROLLER (From Master Template)
     // =========================================================================
@@ -795,7 +802,7 @@ Window {
             lastWinAmount = 0;
             isWinningRound = false;
             playSound("lose");
-            QTimer.singleShot(1400, function() { doubleUpActive = false; });
+            doubleUpCloseTimer.restart();
         }
         saveSettings();
     }
