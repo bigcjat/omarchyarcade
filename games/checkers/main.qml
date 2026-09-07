@@ -285,6 +285,11 @@ Window {
             } else {
                 root.selectedSquare = null;
                 root.validMoves = [];
+                var hasJumps = (root.allLegalMoves.length > 0 && root.allLegalMoves[0].captures.length > 0);
+                if (hasJumps) {
+                    root.playSound("push");
+                    soundToast.show("JUMP REQUIRED! Checkers rules mandate captures.");
+                }
             }
         } else {
             root.selectedSquare = null;
@@ -1213,6 +1218,11 @@ Window {
                 font.pixelSize: 11
                 font.bold: true
                 color: root.themeFg
+            }
+
+            function show(msg) {
+                toastText.text = msg;
+                toastAnim.restart();
             }
 
             SequentialAnimation {
