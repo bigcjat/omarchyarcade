@@ -1323,7 +1323,7 @@ Window {
                 // =============================================================
                 Item {
                     id: playerArea
-                    anchors.bottom: (oddsAdvisorStrip.visible && oddsAdvisorStrip.opacity > 0) ? oddsAdvisorStrip.top : controlsRow.top
+                    anchors.bottom: oddsAdvisorStrip.top
                     anchors.bottomMargin: 8
                     anchors.horizontalCenter: parent.horizontalCenter
                     width: root.isSplit ? Math.min(parent.width - 32, 540) : Math.max(300, playerHandRow.width + 40)
