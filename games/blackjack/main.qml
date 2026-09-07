@@ -1521,30 +1521,6 @@ Window {
                     }
                 }
 
-                // Status Message Banner (floating pill positioned in open felt between dealer and player)
-                Rectangle {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: root.isCompactHeight ? undefined : dealerArea.bottom
-                    anchors.topMargin: root.isCompactHeight ? 0 : 18
-                    anchors.verticalCenter: root.isCompactHeight ? parent.verticalCenter : undefined
-                    anchors.verticalCenterOffset: root.isCompactHeight ? -16 : 0
-                    height: 28
-                    width: statusText.implicitWidth + 24
-                    radius: 14
-                    color: Qt.rgba(0, 0, 0, 0.75)
-                    border.color: root.roundOutcome === "win" || root.roundOutcome === "blackjack" ? root.themeGold : (root.roundOutcome === "bust" || root.roundOutcome === "dealer" ? "#EF4444" : root.themeBorder)
-                    border.width: 1
-                    visible: root.statusMessage.length > 0
-
-                    Text {
-                        id: statusText
-                        anchors.centerIn: parent
-                        text: root.statusMessage
-                        font.pixelSize: 11
-                        font.bold: true
-                        color: root.roundOutcome === "win" || root.roundOutcome === "blackjack" ? root.themeGold : (root.roundOutcome === "bust" || root.roundOutcome === "dealer" ? "#FCA5A5" : root.themeFg)
-                    }
-                }
 
                 // =============================================================
                 // REAL-TIME ODDS & BASIC STRATEGY ADVISOR STRIP
