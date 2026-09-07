@@ -10,6 +10,21 @@ Item {
     property bool faceUp: true
     property bool isWinning: false
     property bool isSelected: false
+    property string deckStyle: (typeof root !== "undefined" && root.deckStyle) ? root.deckStyle : "synthwave"
+
+    readonly property string cardBackSvg: {
+        if (deckStyle === "crimson") return "assets/card_back_crimson.svg";
+        if (deckStyle === "obsidian") return "assets/card_back_obsidian.svg";
+        if (deckStyle === "sapphire") return "assets/card_back_sapphire.svg";
+        return "assets/card_back_synthwave.svg";
+    }
+
+    readonly property color cardBackBorderColor: {
+        if (deckStyle === "crimson") return "#FDE047";
+        if (deckStyle === "obsidian") return "#F59E0B";
+        if (deckStyle === "sapphire") return "#E2E8F0";
+        return "#00F0FF";
+    }
 
     // Deal slide-in animation
     opacity: 1
@@ -192,14 +207,14 @@ Item {
             anchors.fill: parent
             radius: 6
             color: "#080612"
-            border.color: "#00F0FF"
+            border.color: cardRoot.cardBackBorderColor
             border.width: 1.5
             clip: true
             visible: cardRotation.angle >= 90
 
             Image {
                 anchors.fill: parent
-                source: "assets/card_back_synthwave.svg"
+                source: cardRoot.cardBackSvg
                 fillMode: Image.PreserveAspectCrop
                 mirror: true
                 smooth: true

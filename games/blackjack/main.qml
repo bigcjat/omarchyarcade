@@ -70,6 +70,48 @@ Window {
     readonly property real shoePenetration: totalShoeCards > 0 ? (shoeCardsRemaining / totalShoeCards) : 1.0
     readonly property bool isCompactHeight: (boardContainer && boardContainer.height > 0 && boardContainer.height < 460)
 
+    // Table Customization: Deck and Felt styles
+    property bool showSettings: false
+    property string deckStyle: "synthwave" // "synthwave", "crimson", "obsidian", "sapphire"
+    property string feltStyle: "emerald"   // "emerald", "navy", "crimson", "obsidian"
+
+    readonly property color currentFeltBg: {
+        if (feltStyle === "navy") return "#07162C";
+        if (feltStyle === "crimson") return "#280812";
+        if (feltStyle === "obsidian") return "#0E1017";
+        return root.themeBoardBg; // Emerald default
+    }
+
+    readonly property color currentFeltSubtext: {
+        if (feltStyle === "navy") return "#7DD3FC";
+        if (feltStyle === "crimson") return "#FDA4AF";
+        if (feltStyle === "obsidian") return "#C4B5FD";
+        return "#A7F3D0";
+    }
+
+    readonly property color currentFeltBorder: {
+        if (feltStyle === "navy") return "#1E3A5F";
+        if (feltStyle === "crimson") return "#5B1626";
+        if (feltStyle === "obsidian") return "#262938";
+        return root.themeBorder;
+    }
+
+    function setDeckStyle(style) {
+        root.deckStyle = style;
+        if (typeof settingsManager !== "undefined" && settingsManager) {
+            settingsManager.setValue("deckStyle", style);
+        }
+        soundToast.show("🎴 Deck: " + style.charAt(0).toUpperCase() + style.slice(1));
+    }
+
+    function setFeltStyle(style) {
+        root.feltStyle = style;
+        if (typeof settingsManager !== "undefined" && settingsManager) {
+            settingsManager.setValue("feltStyle", style);
+        }
+        soundToast.show("🟢 Felt: " + style.charAt(0).toUpperCase() + style.slice(1));
+    }
+
     readonly property var activePlayerCards: {
         if (!isSplit) return playerCards;
         if (splitHands && splitHands.length > activeSplitIndex) {
@@ -190,6 +232,14 @@ Window {
             } else {
                 root.bestScore = root.bankroll;
                 settingsManager.setBestScore(root.bestScore);
+            }
+            var savedDeck = settingsManager.getValue("deckStyle", "synthwave");
+            if (savedDeck && ["synthwave", "crimson", "obsidian", "sapphire"].indexOf(savedDeck) !== -1) {
+                root.deckStyle = savedDeck;
+            }
+            var savedFelt = settingsManager.getValue("feltStyle", "emerald");
+            if (savedFelt && ["emerald", "navy", "crimson", "obsidian"].indexOf(savedFelt) !== -1) {
+                root.feltStyle = savedFelt;
             }
         }
         initShoe();
@@ -800,6 +850,20 @@ Window {
                 }
             }
 
+            if (root.showSettings) {
+                if (event.key === Qt.Key_Escape) {
+                    root.showSettings = false;
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            if (event.key === Qt.Key_T) {
+                root.showSettings = !root.showSettings;
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_Question || event.key === Qt.Key_Slash) {
                 root.showHelp = !root.showHelp;
                 event.accepted = true;
@@ -1059,6 +1123,45 @@ Window {
                     }
                 }
 
+                // Table Style Customization Button (🎨 Table)
+                Rectangle {
+                    id: settingsBtn
+                    height: 30
+                    width: subheaderItem.isCrowded ? 30 : (settingsRow.implicitWidth + 16)
+                    radius: 6
+                    color: root.showSettings ? Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.2) : (settingsMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
+                    border.color: root.showSettings ? root.themeAccent : (settingsMouse.containsMouse ? root.themeAccent : root.themeBorder)
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        id: settingsRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "🎨"
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "Table"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.showSettings ? root.themeAccent : root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: settingsMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showSettings = !root.showSettings
+                    }
+                }
+
                 // Odds Advisor Toggle Button (O)
                 Rectangle {
                     id: oddsToggleBtn
@@ -1249,11 +1352,13 @@ Window {
             Rectangle {
                 id: boardContainer
                 anchors.fill: parent
-                color: root.themeBoardBg
-                border.color: root.themeBorder
+                color: root.currentFeltBg
+                border.color: root.currentFeltBorder
                 border.width: 1.5
                 radius: 12
                 clip: true
+                Behavior on color { ColorAnimation { duration: 250 } }
+                Behavior on border.color { ColorAnimation { duration: 250 } }
 
                 // Casino felt damask pattern featuring Omarchy square emblem
                 Image {
@@ -1308,7 +1413,7 @@ Window {
                             text: "DEALER STANDS ON 17 AND DRAWS TO 16"
                             font.family: root.monoFontFamily
                             font.pixelSize: 9
-                            color: "#A7F3D0"
+                            color: root.currentFeltSubtext
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
                     }
@@ -2098,6 +2203,298 @@ Window {
                         color: root.themeSubtext
                         anchors.horizontalCenter: parent.horizontalCenter
                         opacity: 0.75
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // TABLE CUSTOMIZATION MODAL
+        // =====================================================================
+        Rectangle {
+            id: tableSettingsModal
+            anchors.fill: parent
+            color: "#b3000000"
+            visible: root.showSettings
+            z: 910
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: root.showSettings = false
+            }
+
+            Rectangle {
+                width: Math.min(parent.width * 0.92, 480)
+                height: settingsCol.implicitHeight + 36
+                anchors.centerIn: parent
+                color: root.themeCardBg
+                border.color: root.themeBorder
+                border.width: 1
+                radius: 12
+
+                MouseArea {
+                    anchors.fill: parent
+                }
+
+                Column {
+                    id: settingsCol
+                    anchors.top: parent.top
+                    anchors.topMargin: 18
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width - 36
+                    spacing: 14
+
+                    // Header Row
+                    Row {
+                        width: parent.width
+                        spacing: 8
+
+                        Column {
+                            width: parent.width - 36
+                            spacing: 2
+                            Text {
+                                text: "TABLE CUSTOMIZATION"
+                                font.pixelSize: 14
+                                font.bold: true
+                                color: root.themeAccent
+                            }
+                            Text {
+                                text: "Choose your card deck style and table felt"
+                                font.pixelSize: 10
+                                color: root.themeSubtext
+                            }
+                        }
+
+                        Rectangle {
+                            width: 26
+                            height: 26
+                            radius: 13
+                            color: closeSettingsMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(1, 1, 1, 0.05)
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✕"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: root.themeSubtext
+                            }
+                            MouseArea {
+                                id: closeSettingsMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.showSettings = false
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        color: root.themeBorder
+                        opacity: 0.5
+                    }
+
+                    // Section 1: Card Decks
+                    Column {
+                        width: parent.width
+                        spacing: 8
+
+                        Text {
+                            text: "CARD DECK BACK"
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+
+                        Row {
+                            width: parent.width
+                            spacing: 8
+
+                            Repeater {
+                                model: [
+                                    { id: "synthwave", label: "Synthwave", svg: "assets/card_back_synthwave.svg", border: "#00F0FF" },
+                                    { id: "crimson",   label: "Crimson",   svg: "assets/card_back_crimson.svg",   border: "#FDE047" },
+                                    { id: "obsidian",  label: "Obsidian",  svg: "assets/card_back_obsidian.svg",  border: "#F59E0B" },
+                                    { id: "sapphire",  label: "Sapphire",  svg: "assets/card_back_sapphire.svg",  border: "#38BDF8" }
+                                ]
+
+                                Rectangle {
+                                    width: (settingsCol.width - 24) / 4
+                                    height: 86
+                                    radius: 8
+                                    color: (root.deckStyle === modelData.id) ? Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.15) : (dMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : Qt.rgba(0, 0, 0, 0.25))
+                                    border.color: (root.deckStyle === modelData.id) ? root.themeAccent : (dMouse.containsMouse ? root.themeSubtext : root.themeBorder)
+                                    border.width: (root.deckStyle === modelData.id) ? 1.5 : 1
+
+                                    Column {
+                                        anchors.centerIn: parent
+                                        spacing: 4
+
+                                        Rectangle {
+                                            width: 36
+                                            height: 52
+                                            radius: 4
+                                            clip: true
+                                            color: "#080612"
+                                            border.color: modelData.border
+                                            border.width: 1
+                                            anchors.horizontalCenter: parent.horizontalCenter
+
+                                            Image {
+                                                anchors.fill: parent
+                                                source: modelData.svg
+                                                fillMode: Image.PreserveAspectCrop
+                                                smooth: true
+                                            }
+                                        }
+
+                                        Text {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            text: modelData.label
+                                            font.pixelSize: 9
+                                            font.bold: true
+                                            color: (root.deckStyle === modelData.id) ? root.themeAccent : root.themeFg
+                                        }
+                                    }
+
+                                    // Active Checkmark Badge
+                                    Rectangle {
+                                        width: 14
+                                        height: 14
+                                        radius: 7
+                                        color: root.themeAccent
+                                        anchors.top: parent.top
+                                        anchors.right: parent.right
+                                        anchors.margins: 4
+                                        visible: root.deckStyle === modelData.id
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "✓"
+                                            font.pixelSize: 8
+                                            font.bold: true
+                                            color: root.themeBtnFg
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: dMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.setDeckStyle(modelData.id)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Section 2: Table Felt Colors
+                    Column {
+                        width: parent.width
+                        spacing: 8
+
+                        Text {
+                            text: "TABLE FELT COLOR"
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+
+                        Row {
+                            width: parent.width
+                            spacing: 8
+
+                            Repeater {
+                                model: [
+                                    { id: "emerald",  label: "Emerald",  color: "#0F281E", border: "#22C55E", text: "#A7F3D0" },
+                                    { id: "navy",     label: "Navy",     color: "#07162C", border: "#38BDF8", text: "#7DD3FC" },
+                                    { id: "crimson",  label: "Crimson",  color: "#280812", border: "#F43F5E", text: "#FDA4AF" },
+                                    { id: "obsidian", label: "Obsidian", color: "#0E1017", border: "#A78BFA", text: "#C4B5FD" }
+                                ]
+
+                                Rectangle {
+                                    width: (settingsCol.width - 24) / 4
+                                    height: 52
+                                    radius: 8
+                                    color: (root.feltStyle === modelData.id) ? Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.15) : (fMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : Qt.rgba(0, 0, 0, 0.25))
+                                    border.color: (root.feltStyle === modelData.id) ? root.themeAccent : (fMouse.containsMouse ? root.themeSubtext : root.themeBorder)
+                                    border.width: (root.feltStyle === modelData.id) ? 1.5 : 1
+
+                                    Row {
+                                        anchors.centerIn: parent
+                                        spacing: 6
+
+                                        Rectangle {
+                                            width: 18
+                                            height: 18
+                                            radius: 9
+                                            color: modelData.color
+                                            border.color: modelData.border
+                                            border.width: 1.5
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        Text {
+                                            text: modelData.label
+                                            font.pixelSize: 9
+                                            font.bold: true
+                                            color: (root.feltStyle === modelData.id) ? root.themeAccent : root.themeFg
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                    }
+
+                                    // Active Checkmark Badge
+                                    Rectangle {
+                                        width: 14
+                                        height: 14
+                                        radius: 7
+                                        color: root.themeAccent
+                                        anchors.top: parent.top
+                                        anchors.right: parent.right
+                                        anchors.margins: 4
+                                        visible: root.feltStyle === modelData.id
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "✓"
+                                            font.pixelSize: 8
+                                            font.bold: true
+                                            color: root.themeBtnFg
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: fMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.setFeltStyle(modelData.id)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Footer Done Button
+                    Rectangle {
+                        width: parent.width
+                        height: 32
+                        radius: 6
+                        color: root.themeAccent
+                        Text {
+                            anchors.centerIn: parent
+                            text: "DONE"
+                            font.bold: true
+                            font.pixelSize: 11
+                            color: root.themeBtnFg
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.showSettings = false
+                        }
                     }
                 }
             }
