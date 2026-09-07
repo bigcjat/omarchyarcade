@@ -296,6 +296,7 @@ Window {
 
         // Fresh deck shuffle
         activeDeck = (activeGameId === "joker_poker") ? Engine.createJokerDeck() : Engine.createStandardDeck();
+        Engine.shuffle(activeDeck);
         var dealt = [];
         for (var i = 0; i < 5; i++) {
             var c = activeDeck.pop();
@@ -376,6 +377,7 @@ Window {
         credits -= betCoins;
         handsPlayed++;
         activeDeck = Engine.createStandardDeck();
+        Engine.shuffle(activeDeck);
         var c1 = activeDeck.pop();
         var c2 = activeDeck.pop();
         c1.faceUp = true;
@@ -469,6 +471,7 @@ Window {
         credits -= betCoins;
         handsPlayed++;
         activeDeck = Engine.createStandardDeck();
+        Engine.shuffle(activeDeck);
 
         var p1 = activeDeck.pop(); p1.faceUp = true;
         var d1 = activeDeck.pop(); d1.faceUp = true;
@@ -614,6 +617,7 @@ Window {
         credits -= betCoins;
         handsPlayed++;
         activeDeck = Engine.createStandardDeck();
+        Engine.shuffle(activeDeck);
 
         var pCard = activeDeck.pop(); pCard.faceUp = true;
         var dCard = activeDeck.pop(); dCard.faceUp = true;
@@ -704,6 +708,7 @@ Window {
         doubleUpMessage = "PICK A CARD HIGHER THAN DEALER'S CARD TO DOUBLE!";
 
         var bonusDeck = Engine.createStandardDeck();
+        Engine.shuffle(bonusDeck);
         var dCard = bonusDeck.pop();
         dCard.faceUp = true;
         doubleUpDealerCard = dCard;

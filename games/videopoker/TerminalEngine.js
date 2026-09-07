@@ -28,14 +28,32 @@ function createStandardDeck() {
             });
         }
     }
-    return deck;
+    return shuffle(deck);
 }
 
 /**
  * Creates a 53-card deck with 1 Joker wildcard (for Joker Poker).
  */
 function createJokerDeck() {
-    var deck = createStandardDeck();
+    var deck = [];
+    for (var s = 0; s < SUITS.length; s++) {
+        var suit = SUITS[s];
+        var isRed = (suit === "♥" || suit === "♦");
+        for (var v = 0; v < VALUES.length; v++) {
+            var val = VALUES[v];
+            var rank = v + 2;
+            deck.push({
+                suit: suit,
+                value: val,
+                rank: rank,
+                isRed: isRed,
+                isJoker: false,
+                isWild: false,
+                faceUp: true,
+                id: suit + "_" + val + "_" + Math.random().toString(36).substring(2, 7)
+            });
+        }
+    }
     deck.push({
         suit: "★",
         value: "JK",
@@ -46,7 +64,7 @@ function createJokerDeck() {
         faceUp: true,
         id: "JOKER_" + Math.random().toString(36).substring(2, 7)
     });
-    return deck;
+    return shuffle(deck);
 }
 
 /**
