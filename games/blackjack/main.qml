@@ -37,10 +37,19 @@ Window {
     // =========================================================================
     property string gameState: "betting" // "betting", "dealing", "playing", "dealer_turn", "round_over"
     property int bankroll: 1000
-    property int currentBet: 25
+    property int currentBet: 0
+    property int baseBet: 25
     property int lastBet: 25
+    property int maxBet: 2500
+    property int minBet: 5
     property int score: bankroll
     property int bestScore: 1000
+
+    function formatMoney(amount) {
+        if (isNaN(amount) || amount === null || amount === undefined) return "$0";
+        var num = Math.floor(amount);
+        return "$" + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
 
     property var shoe: []
     property var dealerCards: []
@@ -169,14 +178,18 @@ Window {
     Component.onCompleted: {
         if (typeof settingsManager !== "undefined" && settingsManager) {
             var savedBank = settingsManager.getBankroll();
-            if (savedBank && savedBank > 0) {
+            if (savedBank && savedBank > 0 && savedBank <= 100000) {
                 root.bankroll = savedBank;
+            } else {
+                root.bankroll = 1000;
+                settingsManager.setBankroll(1000);
             }
             var savedBest = settingsManager.getBestScore();
-            if (savedBest && savedBest > root.bankroll) {
+            if (savedBest && savedBest > root.bankroll && savedBest <= 100000) {
                 root.bestScore = savedBest;
             } else {
                 root.bestScore = root.bankroll;
+                settingsManager.setBestScore(root.bestScore);
             }
         }
         initShoe();
@@ -220,9 +233,15 @@ Window {
             root.dealerCards = [];
             root.roundOutcome = "";
         }
+        if (root.currentBet + amount > root.maxBet) {
+            soundToast.show("Max bet is " + root.formatMoney(root.maxBet));
+            playSound("bust");
+            return;
+        }
         if (root.bankroll >= amount) {
             root.currentBet += amount;
             root.bankroll -= amount;
+            root.baseBet = root.currentBet;
             root.lastBet = root.currentBet;
             saveBankroll();
             playSound("chip");
@@ -244,11 +263,23 @@ Window {
 
     function doubleBet() {
         if (root.gameState !== "betting" && root.gameState !== "round_over") return;
-        if (root.currentBet <= 0) return;
-        if (root.bankroll >= root.currentBet) {
-            root.bankroll -= root.currentBet;
-            root.currentBet *= 2;
-            root.lastBet = root.currentBet;
+        if (root.gameState === "round_over") {
+            root.gameState = "betting";
+            root.playerCards = [];
+            root.dealerCards = [];
+            root.roundOutcome = "";
+        }
+        var targetBet = root.currentBet > 0 ? root.currentBet * 2 : (root.lastBet > 0 ? root.lastBet * 2 : 50);
+        if (targetBet > root.maxBet) {
+            soundToast.show("Max bet is " + root.formatMoney(root.maxBet));
+            return;
+        }
+        var needed = targetBet - root.currentBet;
+        if (root.bankroll >= needed && needed > 0) {
+            root.bankroll -= needed;
+            root.currentBet = targetBet;
+            root.baseBet = targetBet;
+            root.lastBet = targetBet;
             saveBankroll();
             playSound("chip");
         } else {
@@ -262,18 +293,19 @@ Window {
     function dealHand() {
         if (root.gameState !== "betting" && root.gameState !== "round_over") return;
         if (root.currentBet <= 0) {
-            if (root.lastBet > 0 && root.bankroll >= root.lastBet) {
-                root.currentBet = root.lastBet;
-                root.bankroll -= root.currentBet;
+            if (root.bankroll < root.minBet) {
+                root.bankroll = 1000;
+                soundToast.show("Bankroll reloaded to $1,000!");
                 saveBankroll();
-            } else if (root.bankroll >= 25) {
-                root.currentBet = 25;
-                root.bankroll -= 25;
-                saveBankroll();
-            } else {
-                soundToast.show("Place a bet first");
-                return;
             }
+            var betToPlace = (root.lastBet > 0 && root.lastBet <= root.bankroll) ? root.lastBet : Math.min(25, root.bankroll);
+            betToPlace = Math.min(betToPlace, root.maxBet);
+            root.currentBet = betToPlace;
+            root.baseBet = betToPlace;
+            root.bankroll -= betToPlace;
+            saveBankroll();
+        } else {
+            root.baseBet = root.currentBet;
         }
 
         root.gameState = "dealing";
@@ -462,8 +494,13 @@ Window {
 
     function splitHand() {
         if (!root.canSplitHand) return;
-        root.bankroll -= root.currentBet;
-        root.splitBet = root.currentBet;
+        var splitAmount = (root.baseBet > 0) ? root.baseBet : root.currentBet;
+        if (root.bankroll < splitAmount) {
+            soundToast.show("Insufficient bankroll to split");
+            return;
+        }
+        root.bankroll -= splitAmount;
+        root.splitBet = splitAmount;
         saveBankroll();
         playSound("chip");
 
@@ -518,13 +555,14 @@ Window {
         if (root.gameState !== "playing") return;
         if (!root.isSplit) {
             if (root.playerCards.length !== 2) return;
-            if (root.bankroll < root.currentBet) {
+            var addBet = (root.baseBet > 0) ? root.baseBet : root.currentBet;
+            if (root.bankroll < addBet) {
                 soundToast.show("Insufficient bankroll to double");
                 return;
             }
 
-            root.bankroll -= root.currentBet;
-            root.currentBet *= 2;
+            root.bankroll -= addBet;
+            root.currentBet += addBet;
             saveBankroll();
             playSound("chip");
 
@@ -544,15 +582,15 @@ Window {
             var hands = root.splitHands.slice();
             var curHand = hands[root.activeSplitIndex].slice();
             if (curHand.length !== 2) return;
-            var betToDouble = (root.activeSplitIndex === 0) ? root.currentBet : root.splitBet;
+            var betToDouble = (root.activeSplitIndex === 0) ? ((root.baseBet > 0) ? root.baseBet : root.currentBet) : root.splitBet;
             if (root.bankroll < betToDouble) {
                 soundToast.show("Insufficient bankroll to double");
                 return;
             }
 
             root.bankroll -= betToDouble;
-            if (root.activeSplitIndex === 0) root.currentBet *= 2;
-            else root.splitBet *= 2;
+            if (root.activeSplitIndex === 0) root.currentBet += betToDouble;
+            else root.splitBet += betToDouble;
             saveBankroll();
             playSound("chip");
 
@@ -665,7 +703,6 @@ Window {
             }
 
             root.bankroll += totalWinnings;
-            saveBankroll();
 
             var totalBet = root.currentBet + root.splitBet;
             var net = totalWinnings - totalBet;
@@ -676,15 +713,22 @@ Window {
             root.roundOutcome = outcome;
             root.statusMessage = summaryMsg;
 
+            // Preserve base bet for next hand re-bet, and reset round bets
+            root.lastBet = (root.baseBet > 0) ? root.baseBet : 25;
+            root.currentBet = 0;
+            root.splitBet = 0;
+            root.insuranceBet = 0;
+            saveBankroll();
+
             if (net > 0) {
                 root.playSound("win");
-                soundToast.show("🏆 WIN! +$" + net);
+                soundToast.show("🏆 WIN! +" + root.formatMoney(net));
             } else if (net === 0) {
                 root.playSound("dock");
                 soundToast.show("🤝 PUSH (Even)");
             } else {
                 root.playSound("bust");
-                soundToast.show("❌ Lost -$" + Math.abs(net));
+                soundToast.show("❌ Lost -" + root.formatMoney(Math.abs(net)));
             }
         }
     }
@@ -694,15 +738,18 @@ Window {
         root.roundOutcome = outcome;
         root.statusMessage = message;
 
+        var netWin = 0;
         if (outcome === "blackjack") {
             var bjWin = Math.floor(root.currentBet * 2.5); // 3:2 + original bet
             root.bankroll += bjWin;
+            netWin = bjWin - root.currentBet;
             root.playSound("blackjack");
-            soundToast.show("🎉 BLACKJACK! +" + (bjWin - root.currentBet));
+            soundToast.show("🎉 BLACKJACK! +" + root.formatMoney(netWin));
         } else if (outcome === "win") {
             root.bankroll += (root.currentBet * 2);
+            netWin = root.currentBet;
             root.playSound("win");
-            soundToast.show("🏆 WIN! +" + root.currentBet);
+            soundToast.show("🏆 WIN! +" + root.formatMoney(netWin));
         } else if (outcome === "push") {
             root.bankroll += root.currentBet;
             root.playSound("dock");
@@ -712,6 +759,10 @@ Window {
             soundToast.show("❌ " + (outcome === "bust" ? "BUST!" : "DEALER WINS"));
         }
 
+        // Preserve base bet for next hand re-bet, and reset round bets
+        root.lastBet = (root.baseBet > 0) ? root.baseBet : 25;
+        root.currentBet = 0;
+        root.insuranceBet = 0;
         saveBankroll();
     }
 
@@ -730,6 +781,11 @@ Window {
         Behavior on color { ColorAnimation { duration: 150 } }
 
         Keys.onPressed: function(event) {
+            if (event.isAutoRepeat && (event.key === Qt.Key_X || event.key === Qt.Key_D || event.key === Qt.Key_P || event.key === Qt.Key_Space || event.key === Qt.Key_Return)) {
+                event.accepted = true;
+                return;
+            }
+
             if (splashEnabled && splashScreen.visible && splashScreen.opacity > 0) {
                 splashScreen.dismiss();
                 event.accepted = true;
@@ -902,7 +958,7 @@ Window {
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: "$" + root.bankroll.toLocaleString()
+                            text: root.formatMoney(root.bankroll)
                             font.pixelSize: 15
                             font.bold: true
                             color: root.themeGold
@@ -932,7 +988,7 @@ Window {
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: "$" + root.currentBet.toLocaleString()
+                            text: root.formatMoney(root.currentBet)
                             font.pixelSize: 15
                             font.bold: true
                             color: root.themeAccent

@@ -36,9 +36,10 @@ class SettingsManager(QObject):
     @Slot(result=int)
     def getBestScore(self):
         try:
-            return int(self.settings.value("bestScore", 0))
+            val = int(self.settings.value("bestScore", 1000))
+            return val if 0 < val <= 100000 else 1000
         except (ValueError, TypeError):
-            return 0
+            return 1000
 
     @Slot(int)
     def setBestScore(self, score):
@@ -49,7 +50,7 @@ class SettingsManager(QObject):
         try:
             val = self.settings.value("bankroll", 1000)
             int_val = int(val)
-            return int_val if int_val > 0 else 1000
+            return int_val if 0 < int_val <= 100000 else 1000
         except (ValueError, TypeError):
             return 1000
 
