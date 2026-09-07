@@ -1108,7 +1108,7 @@ Window {
                     width: Math.max(62, Math.min(78, headerItem.width * 0.17))
                     height: Math.max(38, Math.min(46, headerItem.width * 0.11))
                     radius: 6
-                    color: root.isWinningRound ? (isCyberMode ? "#FF007F26" : "#7F1D1D") : root.themeCardBg
+                    color: root.themeCardBg
                     border.color: root.isWinningRound ? (isCyberMode ? root.neonMagenta : "#FACC15") : root.themeBorder
                     border.width: root.isWinningRound ? 1.5 : 1
 
