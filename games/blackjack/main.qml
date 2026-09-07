@@ -52,6 +52,41 @@ Window {
     property int splitBet: 0
     readonly property bool canSplitHand: (root.gameState === "playing" && !root.isSplit && root.playerCards.length === 2 && Engine.canSplit(root.playerCards) && root.bankroll >= root.currentBet)
 
+    // Casino Odds, Insurance & Shoe Properties
+    property bool showOddsAdvisor: true
+    property bool insuranceOffered: false
+    property int insuranceBet: 0
+    property int totalShoeCards: 312
+    property int shoeCardsRemaining: 312
+    readonly property real shoePenetration: totalShoeCards > 0 ? (shoeCardsRemaining / totalShoeCards) : 1.0
+
+    readonly property var activePlayerCards: {
+        if (!isSplit) return playerCards;
+        if (splitHands && splitHands.length > activeSplitIndex) {
+            return splitHands[activeSplitIndex];
+        }
+        return playerCards;
+    }
+
+    readonly property var dealerUpcard: (dealerCards && dealerCards.length > 0 && dealerCards[0].faceUp) ? dealerCards[0] : null
+
+    readonly property int bustProbability: {
+        if (gameState !== "playing" && gameState !== "insurance_offer") return 0;
+        return Engine.calculateBustProbability(activePlayerCards, shoe);
+    }
+
+    readonly property int dealerBustProbability: {
+        if (gameState !== "playing" && gameState !== "insurance_offer") return 0;
+        return Engine.getDealerBustProbability(dealerUpcard);
+    }
+
+    readonly property var basicStrategyResult: {
+        if (gameState !== "playing" && gameState !== "insurance_offer") return null;
+        var canDbl = (!isSplit && playerCards.length === 2) || (isSplit && splitHands[activeSplitIndex] && splitHands[activeSplitIndex].length === 2);
+        var canSpl = canSplitHand;
+        return Engine.getBasicStrategy(activePlayerCards, dealerUpcard, canDbl, canSpl);
+    }
+
     property string roundOutcome: "" // "win", "dealer", "push", "blackjack", "bust"
     property string statusMessage: "Place your bet and press DEAL"
 
@@ -60,7 +95,7 @@ Window {
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• OBJECTIVE: Beat the dealer's total without exceeding 21.\n\n• CONTROLS:\n  - Space / Enter: Deal Hand\n  - H / Space: Hit (Take another card)\n  - S / Enter: Stand (Keep current total)\n  - D: Double Down (Double bet & take 1 final card)\n  - P: Split Pair (Separate identical cards into 2 hands)\n  - 1 / 2 / 3 / 4: Bet $5 / $25 / $100 / $500\n  - C: Clear Bet  |  X: Double Bet (2x)\n  - M: Toggle Sound  |  R: Re-deal Hand\n  - ? / Esc: Rules & Help\n\n• RULES:\n  - 6-Deck continuous casino shoe.\n  - Dealer stands on soft & hard 17.\n  - Natural Blackjack pays 3 to 2.\n  - Pairs can be Split into two independent hands."
+    property string helpText: "• OBJECTIVE: Beat the dealer's total without exceeding 21.\n\n• CONTROLS:\n  - Space / Enter: Deal Hand\n  - H / Space: Hit (Take another card)\n  - S / Enter: Stand (Keep current total)\n  - D: Double Down (Double bet & take 1 final card)\n  - P: Split Pair (Separate identical cards into 2 hands)\n  - I / Y: Take Insurance (2:1 vs Dealer Ace)\n  - N / Space: Decline Insurance\n  - O: Toggle Real-Time Odds & Strategy Advisor\n  - 1 / 2 / 3 / 4: Bet $5 / $25 / $100 / $500\n  - C: Clear Bet  |  X: Double Bet (2x)\n  - M: Toggle Sound  |  R: Re-deal Hand\n  - ? / Esc: Rules & Help\n\n• RULES:\n  - 6-Deck continuous casino shoe.\n  - Dealer stands on soft & hard 17.\n  - Natural Blackjack pays 3 to 2.\n  - Pairs can be Split into two independent hands.\n  - Insurance pays 2 to 1 when dealer shows an Ace."
 
     // =========================================================================
     // THEME & SOUND CONTROLLERS
@@ -159,6 +194,7 @@ Window {
 
     function initShoe() {
         root.shoe = Engine.createShoe(6);
+        root.shoeCardsRemaining = root.shoe.length;
     }
 
     function drawCard(faceUp) {
@@ -167,6 +203,7 @@ Window {
             soundToast.show("🔀 Reshuffling 6-Deck Shoe");
         }
         var c = root.shoe.pop();
+        root.shoeCardsRemaining = root.shoe.length;
         c.faceUp = (faceUp !== false);
         return c;
     }
@@ -302,26 +339,122 @@ Window {
         }
     }
 
+    function toggleOddsAdvisor() {
+        root.showOddsAdvisor = !root.showOddsAdvisor;
+        root.soundToast.show(root.showOddsAdvisor ? "💡 Odds Advisor: ON" : "💡 Odds Advisor: OFF");
+    }
+
     function checkInitialDeal() {
         var pEval = Engine.calculateHand(root.playerCards);
+        var dUpcard = root.dealerCards[0];
+
+        // 1. If Dealer shows Ace, offer Insurance (2:1)
+        if (dUpcard.value === "A") {
+            root.gameState = "insurance_offer";
+            var insCost = Math.floor(root.currentBet / 2);
+            root.statusMessage = "Dealer shows Ace! Take Insurance (2:1, $" + insCost + ")?";
+            return;
+        }
+
+        // 2. If Dealer shows 10/J/Q/K, dealer peeks for Blackjack
+        if (dUpcard.numericValue === 10) {
+            var dEvalPeek = Engine.calculateHand([
+                root.dealerCards[0],
+                { value: root.dealerCards[1].value, suit: root.dealerCards[1].suit, faceUp: true }
+            ]);
+            if (dEvalPeek.isBlackjack) {
+                revealHoleCard();
+                playSound("card_flip");
+                if (pEval.isBlackjack) {
+                    settleRound("push", "Both have Blackjack! Push (Tie).");
+                } else {
+                    settleRound("lose", "Dealer peeks Blackjack (21)!");
+                }
+                return;
+            }
+        }
+
+        // 3. Player natural blackjack check
+        if (pEval.isBlackjack) {
+            revealHoleCard();
+            settleRound("blackjack", "BLACKJACK! Pays 3:2!");
+            return;
+        }
+
+        // 4. Normal player turn begins
+        root.gameState = "playing";
+        if (root.canSplitHand) {
+            root.statusMessage = "Pair dealt! Hit, Stand, Double, or Split (P)";
+        } else {
+            root.statusMessage = "Your turn — Hit or Stand?";
+        }
+    }
+
+    function takeInsurance() {
+        if (root.gameState !== "insurance_offer") return;
+        var cost = Math.floor(root.currentBet / 2);
+        if (root.bankroll < cost) {
+            soundToast.show("Insufficient bankroll for insurance ($" + cost + ")");
+            declineInsurance();
+            return;
+        }
+        root.insuranceBet = cost;
+        root.bankroll -= cost;
+        saveBankroll();
+        playSound("chip");
+        soundToast.show("Insurance placed: $" + cost);
+        resolveDealerCheck();
+    }
+
+    function declineInsurance() {
+        if (root.gameState !== "insurance_offer") return;
+        root.insuranceBet = 0;
+        resolveDealerCheck();
+    }
+
+    function resolveDealerCheck() {
         var dEvalFull = Engine.calculateHand([
             root.dealerCards[0],
             { value: root.dealerCards[1].value, suit: root.dealerCards[1].suit, faceUp: true }
         ]);
 
-        if (pEval.isBlackjack) {
+        if (dEvalFull.isBlackjack) {
+            // Dealer has natural 21!
             revealHoleCard();
-            if (dEvalFull.isBlackjack) {
+            playSound("card_flip");
+
+            if (root.insuranceBet > 0) {
+                // Insurance pays 2:1 -> returns initial bet + 2x profit = 3x insuranceBet
+                var insuranceWin = root.insuranceBet * 3;
+                root.bankroll += insuranceWin;
+                saveBankroll();
+                soundToast.show("Dealer Blackjack! Insurance pays 2:1 (+$" + (root.insuranceBet * 2) + ")");
+            }
+
+            var pEval = Engine.calculateHand(root.playerCards);
+            if (pEval.isBlackjack) {
                 settleRound("push", "Both have Blackjack! Push (Tie).");
             } else {
-                settleRound("blackjack", "BLACKJACK! Pays 3:2!");
+                settleRound("lose", "Dealer has Blackjack (21)!");
             }
         } else {
-            root.gameState = "playing";
-            if (root.canSplitHand) {
-                root.statusMessage = "Pair dealt! Hit, Stand, Double, or Split (P)";
+            // Dealer does NOT have Blackjack
+            if (root.insuranceBet > 0) {
+                soundToast.show("Dealer has no Blackjack. Insurance lost.");
+                root.insuranceBet = 0;
+            }
+
+            var pEval2 = Engine.calculateHand(root.playerCards);
+            if (pEval2.isBlackjack) {
+                revealHoleCard();
+                settleRound("blackjack", "BLACKJACK! Pays 3:2!");
             } else {
-                root.statusMessage = "Hit or Stand?";
+                root.gameState = "playing";
+                if (root.canSplitHand) {
+                    root.statusMessage = "Pair dealt! Hit, Stand, Double, or Split (P)";
+                } else {
+                    root.statusMessage = "Your turn — Hit or Stand?";
+                }
             }
         }
     }
@@ -622,6 +755,27 @@ Window {
                 return;
             }
 
+            // Odds Advisor Toggle: O
+            if (event.key === Qt.Key_O) {
+                root.toggleOddsAdvisor();
+                event.accepted = true;
+                return;
+            }
+
+            // Insurance Decisions (When Dealer shows Ace)
+            if (root.gameState === "insurance_offer") {
+                if (event.key === Qt.Key_I || event.key === Qt.Key_Y) {
+                    root.takeInsurance();
+                    event.accepted = true;
+                    return;
+                }
+                if (event.key === Qt.Key_N || event.key === Qt.Key_Space || event.key === Qt.Key_Escape) {
+                    root.declineInsurance();
+                    event.accepted = true;
+                    return;
+                }
+            }
+
             // Deal Hand: Space, Enter, Return, or R
             if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_R) {
                 if (root.gameState === "betting" || root.gameState === "round_over") {
@@ -830,7 +984,7 @@ Window {
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
-                            text: "How to Play"
+                            text: "Rules"
                             font.pixelSize: 11
                             font.bold: true
                             color: root.themeFg
@@ -845,6 +999,91 @@ Window {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.showHelp = !root.showHelp
+                    }
+                }
+
+                // Odds Advisor Toggle Button (O)
+                Rectangle {
+                    id: oddsToggleBtn
+                    height: 30
+                    width: subheaderItem.isCrowded ? 30 : (oddsRow.implicitWidth + 16)
+                    radius: 6
+                    color: root.showOddsAdvisor ? Qt.rgba(0.96, 0.62, 0.04, 0.18) : (oddsMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
+                    border.color: root.showOddsAdvisor ? root.themeGold : root.themeBorder
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        id: oddsRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "💡"
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "Odds (O): " + (root.showOddsAdvisor ? "ON" : "OFF")
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.showOddsAdvisor ? root.themeGold : root.themeSubtext
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: oddsMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleOddsAdvisor()
+                    }
+                }
+
+                // Shoe Penetration Gauge
+                Rectangle {
+                    id: shoeGauge
+                    height: 30
+                    width: subheaderItem.isCrowded ? 30 : (shoeRow.implicitWidth + 14)
+                    radius: 6
+                    color: Qt.rgba(0, 0, 0, 0.35)
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: shoeRow
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Text {
+                            text: "🎴"
+                            font.pixelSize: 11
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "Shoe " + root.shoeCardsRemaining + "/" + root.totalShoeCards
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: root.themeSubtext
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                        Rectangle {
+                            width: 28
+                            height: 5
+                            radius: 2.5
+                            color: Qt.rgba(1, 1, 1, 0.15)
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+
+                            Rectangle {
+                                width: parent.width * Math.max(0, Math.min(1.0, root.shoePenetration))
+                                height: parent.height
+                                radius: 2.5
+                                color: root.shoePenetration > 0.25 ? "#22C55E" : "#F59E0B"
+                            }
+                        }
                     }
                 }
             }
@@ -1084,8 +1323,8 @@ Window {
                 // =============================================================
                 Item {
                     id: playerArea
-                    anchors.bottom: controlsRow.top
-                    anchors.bottomMargin: 14
+                    anchors.bottom: (oddsAdvisorStrip.visible && oddsAdvisorStrip.opacity > 0) ? oddsAdvisorStrip.top : controlsRow.top
+                    anchors.bottomMargin: 8
                     anchors.horizontalCenter: parent.horizontalCenter
                     width: root.isSplit ? Math.min(parent.width - 32, 540) : Math.max(300, playerHandRow.width + 40)
                     height: 160
@@ -1277,9 +1516,11 @@ Window {
                     }
                 }
 
-                // Status Message Banner (floating pill)
+                // Status Message Banner (floating pill positioned in open felt between dealer and player)
                 Rectangle {
-                    anchors.centerIn: parent
+                    anchors.top: dealerArea.bottom
+                    anchors.topMargin: 18
+                    anchors.horizontalCenter: parent.horizontalCenter
                     height: 28
                     width: statusText.implicitWidth + 24
                     radius: 14
@@ -1295,6 +1536,173 @@ Window {
                         font.pixelSize: 11
                         font.bold: true
                         color: root.roundOutcome === "win" || root.roundOutcome === "blackjack" ? root.themeGold : (root.roundOutcome === "bust" || root.roundOutcome === "dealer" ? "#FCA5A5" : root.themeFg)
+                    }
+                }
+
+                // =============================================================
+                // REAL-TIME ODDS & BASIC STRATEGY ADVISOR STRIP
+                // =============================================================
+                Rectangle {
+                    id: oddsAdvisorStrip
+                    anchors.bottom: controlsRow.top
+                    anchors.bottomMargin: 8
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width - 24
+                    height: 36
+                    radius: 8
+                    visible: root.showOddsAdvisor && (root.gameState === "playing" || root.gameState === "insurance_offer" || root.gameState === "dealer_turn")
+                    opacity: visible ? 1.0 : 0.0
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                    color: Qt.rgba(0, 0, 0, 0.65)
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    // Left Side: Live Odds Metrics
+                    Row {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
+
+                        // Live Odds Title Badge
+                        Rectangle {
+                            height: 22
+                            width: oddsTitleRow.implicitWidth + 10
+                            radius: 4
+                            color: Qt.rgba(1, 1, 1, 0.1)
+                            border.color: root.themeBorder
+                            border.width: 1
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Row {
+                                id: oddsTitleRow
+                                anchors.centerIn: parent
+                                spacing: 4
+                                Text {
+                                    text: "💡"
+                                    font.pixelSize: 11
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    text: "ODDS"
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    color: root.themeGold
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+                        }
+
+                        // Player Bust on Hit Probability Pill
+                        Rectangle {
+                            height: 22
+                            width: hitProbRow.implicitWidth + 12
+                            radius: 4
+                            color: root.bustProbability === 0 ? Qt.rgba(0.13, 0.77, 0.36, 0.2) : (root.bustProbability < 50 ? Qt.rgba(0.96, 0.62, 0.04, 0.2) : Qt.rgba(0.94, 0.27, 0.24, 0.25))
+                            border.color: root.bustProbability === 0 ? "#22C55E" : (root.bustProbability < 50 ? "#F59E0B" : "#EF4444")
+                            border.width: 1
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Row {
+                                id: hitProbRow
+                                anchors.centerIn: parent
+                                spacing: 4
+                                Text {
+                                    text: "Hit Bust:"
+                                    font.pixelSize: 9
+                                    color: root.themeSubtext
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    text: root.bustProbability === 0 ? "0% (Safe)" : root.bustProbability + "%"
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: root.bustProbability === 0 ? "#4ADE80" : (root.bustProbability < 50 ? "#FBBF24" : "#F87171")
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+                        }
+
+                        // Dealer Bust Probability Pill
+                        Rectangle {
+                            height: 22
+                            width: dealerProbRow.implicitWidth + 12
+                            radius: 4
+                            color: root.dealerBustProbability >= 35 ? Qt.rgba(0.13, 0.77, 0.36, 0.2) : Qt.rgba(0.2, 0.4, 0.8, 0.2)
+                            border.color: root.dealerBustProbability >= 35 ? "#22C55E" : "#3B82F6"
+                            border.width: 1
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Row {
+                                id: dealerProbRow
+                                anchors.centerIn: parent
+                                spacing: 4
+                                Text {
+                                    text: "Dealer Bust:"
+                                    font.pixelSize: 9
+                                    color: root.themeSubtext
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    text: root.dealerBustProbability + "%"
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: root.dealerBustProbability >= 35 ? "#4ADE80" : "#60A5FA"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+                        }
+                    }
+
+                    // Right Side: Basic Strategy Recommendation
+                    Row {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
+                        visible: root.basicStrategyResult !== null
+
+                        Text {
+                            text: root.basicStrategyResult ? root.basicStrategyResult.tip : ""
+                            font.pixelSize: 10
+                            color: root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: oddsAdvisorStrip.width > 520
+                        }
+
+                        Rectangle {
+                            height: 24
+                            width: stratBadgeRow.implicitWidth + 14
+                            radius: 5
+                            color: {
+                                if (!root.basicStrategyResult) return Qt.rgba(0,0,0,0.5);
+                                var act = root.basicStrategyResult.action;
+                                if (act === "STAND") return "#2563EB";
+                                if (act === "DOUBLE") return "#D97706";
+                                if (act === "SPLIT") return "#7C3AED";
+                                return "#16A34A"; // HIT
+                            }
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Row {
+                                id: stratBadgeRow
+                                anchors.centerIn: parent
+                                spacing: 4
+                                Text {
+                                    text: "🎯"
+                                    font.pixelSize: 10
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    text: "BEST: " + (root.basicStrategyResult ? root.basicStrategyResult.label : "")
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: "#FFFFFF"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -1421,7 +1829,7 @@ Window {
                         }
                     }
 
-                    // Right side: Game Actions (HIT, STAND, DOUBLE, DEAL)
+                    // Right side: Game Actions (HIT, STAND, DOUBLE, DEAL, INSURANCE)
                     Row {
                         id: actionsRow
                         anchors.right: parent.right
@@ -1489,6 +1897,29 @@ Window {
                             }
                         }
 
+                        // INSURANCE ACTION BUTTONS (When Dealer Shows Ace)
+                        ActionBtn {
+                            btnLabel: "INSURANCE ($" + Math.floor(root.currentBet / 2) + ")"
+                            shortcutKey: "I"
+                            btnColor: root.themeGold
+                            fgColor: "#0F172A"
+                            isPrimary: true
+                            enabled: root.gameState === "insurance_offer" && root.bankroll >= Math.floor(root.currentBet / 2)
+                            visible: root.gameState === "insurance_offer"
+                            onTriggered: root.takeInsurance()
+                        }
+
+                        ActionBtn {
+                            btnLabel: "DECLINE"
+                            shortcutKey: "N"
+                            btnColor: "#475569"
+                            fgColor: "#FFFFFF"
+                            isPrimary: false
+                            enabled: root.gameState === "insurance_offer"
+                            visible: root.gameState === "insurance_offer"
+                            onTriggered: root.declineInsurance()
+                        }
+
                         // DEAL BUTTON (Active during betting or round over)
                         ActionBtn {
                             btnLabel: "DEAL"
@@ -1509,7 +1940,7 @@ Window {
                             fgColor: "#FFFFFF"
                             isPrimary: true
                             enabled: root.canSplitHand
-                            visible: root.canSplitHand
+                            visible: root.canSplitHand && root.gameState !== "insurance_offer"
                             onTriggered: root.splitHand()
                         }
 
