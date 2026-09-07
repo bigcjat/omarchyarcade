@@ -46,6 +46,12 @@ Window {
     property var dealerCards: []
     property var playerCards: []
 
+    property bool isSplit: false
+    property var splitHands: [] // [ [card1, card...], [card2, card...] ]
+    property int activeSplitIndex: 0 // 0 or 1
+    property int splitBet: 0
+    readonly property bool canSplitHand: (root.gameState === "playing" && !root.isSplit && root.playerCards.length === 2 && Engine.canSplit(root.playerCards) && root.bankroll >= root.currentBet)
+
     property string roundOutcome: "" // "win", "dealer", "push", "blackjack", "bust"
     property string statusMessage: "Place your bet and press DEAL"
 
@@ -54,7 +60,7 @@ Window {
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• OBJECTIVE: Beat the dealer's total without exceeding 21.\n\n• CONTROLS:\n  - Space / Enter: Deal Hand\n  - H / Space: Hit (Take another card)\n  - S / Enter: Stand (Keep current total)\n  - D: Double Down (Double bet & take 1 final card)\n  - 1 / 2 / 3 / 4: Bet $5 / $25 / $100 / $500\n  - C: Clear Bet  |  X: Double Bet (2x)\n  - M: Toggle Sound  |  R: Re-deal Hand\n  - ? / Esc: Rules & Help\n\n• RULES:\n  - 6-Deck continuous casino shoe.\n  - Dealer stands on soft & hard 17.\n  - Natural Blackjack pays 3 to 2."
+    property string helpText: "• OBJECTIVE: Beat the dealer's total without exceeding 21.\n\n• CONTROLS:\n  - Space / Enter: Deal Hand\n  - H / Space: Hit (Take another card)\n  - S / Enter: Stand (Keep current total)\n  - D: Double Down (Double bet & take 1 final card)\n  - P: Split Pair (Separate identical cards into 2 hands)\n  - 1 / 2 / 3 / 4: Bet $5 / $25 / $100 / $500\n  - C: Clear Bet  |  X: Double Bet (2x)\n  - M: Toggle Sound  |  R: Re-deal Hand\n  - ? / Esc: Rules & Help\n\n• RULES:\n  - 6-Deck continuous casino shoe.\n  - Dealer stands on soft & hard 17.\n  - Natural Blackjack pays 3 to 2.\n  - Pairs can be Split into two independent hands."
 
     // =========================================================================
     // THEME & SOUND CONTROLLERS
@@ -236,6 +242,10 @@ Window {
         root.roundOutcome = "";
         root.playerCards = [];
         root.dealerCards = [];
+        root.isSplit = false;
+        root.splitHands = [];
+        root.activeSplitIndex = 0;
+        root.splitBet = 0;
         root.statusMessage = "Dealing cards...";
 
         // Staggered dealing sequence
@@ -308,55 +318,139 @@ Window {
             }
         } else {
             root.gameState = "playing";
-            root.statusMessage = "Hit or Stand?";
+            if (root.canSplitHand) {
+                root.statusMessage = "Pair dealt! Hit, Stand, Double, or Split (P)";
+            } else {
+                root.statusMessage = "Hit or Stand?";
+            }
         }
+    }
+
+    function splitHand() {
+        if (!root.canSplitHand) return;
+        root.bankroll -= root.currentBet;
+        root.splitBet = root.currentBet;
+        saveBankroll();
+        playSound("chip");
+
+        root.isSplit = true;
+        var c1 = root.playerCards[0];
+        var c2 = root.playerCards[1];
+        var newCard1 = root.drawCard(true);
+        var newCard2 = root.drawCard(true);
+        root.splitHands = [
+            [c1, newCard1],
+            [c2, newCard2]
+        ];
+        root.activeSplitIndex = 0;
+        root.statusMessage = "Playing Hand 1: Hit or Stand?";
+        playSound("card_slide");
     }
 
     function hit() {
         if (root.gameState !== "playing") return;
-        var pArr = root.playerCards.slice();
-        pArr.push(root.drawCard(true));
-        root.playerCards = pArr;
-        root.playSound("card_slide");
+        if (!root.isSplit) {
+            var pArr = root.playerCards.slice();
+            pArr.push(root.drawCard(true));
+            root.playerCards = pArr;
+            root.playSound("card_slide");
 
-        var evalRes = Engine.calculateHand(root.playerCards);
-        if (evalRes.isBust) {
-            revealHoleCard();
-            settleRound("bust", "Bust! Over 21.");
-        } else if (evalRes.total === 21) {
-            stand();
+            var evalRes = Engine.calculateHand(root.playerCards);
+            if (evalRes.isBust) {
+                revealHoleCard();
+                settleRound("bust", "Bust! Over 21.");
+            } else if (evalRes.total === 21) {
+                stand();
+            }
+        } else {
+            var hands = root.splitHands.slice();
+            var curHand = hands[root.activeSplitIndex].slice();
+            curHand.push(root.drawCard(true));
+            hands[root.activeSplitIndex] = curHand;
+            root.splitHands = hands;
+            root.playSound("card_slide");
+
+            var evalHand = Engine.calculateHand(curHand);
+            if (evalHand.isBust) {
+                soundToast.show("Hand " + (root.activeSplitIndex + 1) + " Busts (" + evalHand.total + ")!");
+                advanceSplitHand();
+            } else if (evalHand.total === 21) {
+                advanceSplitHand();
+            }
         }
     }
 
     function doubleDown() {
         if (root.gameState !== "playing") return;
-        if (root.playerCards.length !== 2) return;
-        if (root.bankroll < root.currentBet) {
-            soundToast.show("Insufficient bankroll to double");
-            return;
-        }
+        if (!root.isSplit) {
+            if (root.playerCards.length !== 2) return;
+            if (root.bankroll < root.currentBet) {
+                soundToast.show("Insufficient bankroll to double");
+                return;
+            }
 
-        root.bankroll -= root.currentBet;
-        root.currentBet *= 2;
-        saveBankroll();
-        playSound("chip");
+            root.bankroll -= root.currentBet;
+            root.currentBet *= 2;
+            saveBankroll();
+            playSound("chip");
 
-        var pArr = root.playerCards.slice();
-        pArr.push(root.drawCard(true));
-        root.playerCards = pArr;
-        root.playSound("card_slide");
+            var pArr = root.playerCards.slice();
+            pArr.push(root.drawCard(true));
+            root.playerCards = pArr;
+            root.playSound("card_slide");
 
-        var evalRes = Engine.calculateHand(root.playerCards);
-        if (evalRes.isBust) {
-            revealHoleCard();
-            settleRound("bust", "Bust on Double! Over 21.");
+            var evalRes = Engine.calculateHand(root.playerCards);
+            if (evalRes.isBust) {
+                revealHoleCard();
+                settleRound("bust", "Bust on Double! Over 21.");
+            } else {
+                stand();
+            }
         } else {
-            stand();
+            var hands = root.splitHands.slice();
+            var curHand = hands[root.activeSplitIndex].slice();
+            if (curHand.length !== 2) return;
+            var betToDouble = (root.activeSplitIndex === 0) ? root.currentBet : root.splitBet;
+            if (root.bankroll < betToDouble) {
+                soundToast.show("Insufficient bankroll to double");
+                return;
+            }
+
+            root.bankroll -= betToDouble;
+            if (root.activeSplitIndex === 0) root.currentBet *= 2;
+            else root.splitBet *= 2;
+            saveBankroll();
+            playSound("chip");
+
+            curHand.push(root.drawCard(true));
+            hands[root.activeSplitIndex] = curHand;
+            root.splitHands = hands;
+            root.playSound("card_slide");
+
+            advanceSplitHand();
         }
     }
 
     function stand() {
         if (root.gameState !== "playing") return;
+        if (!root.isSplit) {
+            startDealerTurn();
+        } else {
+            advanceSplitHand();
+        }
+    }
+
+    function advanceSplitHand() {
+        if (root.activeSplitIndex === 0) {
+            root.activeSplitIndex = 1;
+            root.statusMessage = "Playing Hand 2: Hit or Stand?";
+            playSound("dock");
+        } else {
+            startDealerTurn();
+        }
+    }
+
+    function startDealerTurn() {
         root.gameState = "dealer_turn";
         root.statusMessage = "Dealer's turn...";
         revealHoleCard();
@@ -391,17 +485,73 @@ Window {
     }
 
     function evaluateFinalHands() {
-        var pEval = Engine.calculateHand(root.playerCards);
         var dEval = Engine.calculateHand(root.dealerCards);
 
-        if (dEval.isBust) {
-            settleRound("win", "Dealer Busts! You Win!");
-        } else if (pEval.total > dEval.total) {
-            settleRound("win", "You Win! " + pEval.total + " vs " + dEval.total);
-        } else if (dEval.total > pEval.total) {
-            settleRound("dealer", "Dealer Wins with " + dEval.total);
+        if (!root.isSplit) {
+            var pEval = Engine.calculateHand(root.playerCards);
+            if (dEval.isBust) {
+                settleRound("win", "Dealer Busts! You Win!");
+            } else if (pEval.total > dEval.total) {
+                settleRound("win", "You Win! " + pEval.total + " vs " + dEval.total);
+            } else if (dEval.total > pEval.total) {
+                settleRound("dealer", "Dealer Wins with " + dEval.total);
+            } else {
+                settleRound("push", "Push! Tie at " + pEval.total);
+            }
         } else {
-            settleRound("push", "Push! Tie at " + pEval.total);
+            var h1 = Engine.calculateHand(root.splitHands[0]);
+            var h2 = Engine.calculateHand(root.splitHands[1]);
+            var totalWinnings = 0;
+            var results = [];
+
+            // Hand 1 evaluation
+            if (h1.isBust) {
+                results.push("Hand 1: Bust (" + h1.total + ")");
+            } else if (dEval.isBust || h1.total > dEval.total) {
+                totalWinnings += root.currentBet * 2;
+                results.push("Hand 1: Won (" + h1.total + " vs " + dEval.total + ")");
+            } else if (h1.total === dEval.total) {
+                totalWinnings += root.currentBet;
+                results.push("Hand 1: Push (" + h1.total + ")");
+            } else {
+                results.push("Hand 1: Lost (" + h1.total + " vs " + dEval.total + ")");
+            }
+
+            // Hand 2 evaluation
+            if (h2.isBust) {
+                results.push("Hand 2: Bust (" + h2.total + ")");
+            } else if (dEval.isBust || h2.total > dEval.total) {
+                totalWinnings += root.splitBet * 2;
+                results.push("Hand 2: Won (" + h2.total + " vs " + dEval.total + ")");
+            } else if (h2.total === dEval.total) {
+                totalWinnings += root.splitBet;
+                results.push("Hand 2: Push (" + h2.total + ")");
+            } else {
+                results.push("Hand 2: Lost (" + h2.total + " vs " + dEval.total + ")");
+            }
+
+            root.bankroll += totalWinnings;
+            saveBankroll();
+
+            var totalBet = root.currentBet + root.splitBet;
+            var net = totalWinnings - totalBet;
+            var outcome = (net > 0) ? "win" : (net === 0 ? "push" : "dealer");
+            var summaryMsg = results.join(" | ");
+
+            root.gameState = "round_over";
+            root.roundOutcome = outcome;
+            root.statusMessage = summaryMsg;
+
+            if (net > 0) {
+                root.playSound("win");
+                soundToast.show("🏆 WIN! +$" + net);
+            } else if (net === 0) {
+                root.playSound("dock");
+                soundToast.show("🤝 PUSH (Even)");
+            } else {
+                root.playSound("bust");
+                soundToast.show("❌ Lost -$" + Math.abs(net));
+            }
         }
     }
 
@@ -499,11 +649,24 @@ Window {
                 }
             }
 
-            // Double: D
-            if (event.key === Qt.Key_D && root.gameState === "playing" && root.playerCards.length === 2) {
-                root.doubleDown();
+            // Split: P
+            if (event.key === Qt.Key_P && root.canSplitHand) {
+                root.splitHand();
                 event.accepted = true;
                 return;
+            }
+
+            // Double: D
+            if (event.key === Qt.Key_D && root.gameState === "playing") {
+                if (!root.isSplit && root.playerCards.length === 2) {
+                    root.doubleDown();
+                    event.accepted = true;
+                    return;
+                } else if (root.isSplit && root.splitHands[root.activeSplitIndex] && root.splitHands[root.activeSplitIndex].length === 2) {
+                    root.doubleDown();
+                    event.accepted = true;
+                    return;
+                }
             }
 
             // Chips: 1 ($5), 2 ($25), 3 ($100), 4 ($500)
@@ -914,54 +1077,191 @@ Window {
                     anchors.bottom: controlsRow.top
                     anchors.bottomMargin: 14
                     anchors.horizontalCenter: parent.horizontalCenter
-                    width: Math.max(300, playerHandRow.width + 40)
+                    width: root.isSplit ? Math.min(parent.width - 32, 540) : Math.max(300, playerHandRow.width + 40)
                     height: 160
 
-                    // Player Cards Row
-                    Row {
-                        id: playerHandRow
-                        anchors.top: parent.top
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: -24
+                    // Single Player Hand (when not split)
+                    Item {
+                        anchors.fill: parent
+                        visible: !root.isSplit
 
-                        Repeater {
-                            model: root.playerCards
-                            PlayingCard {
-                                cardData: modelData
-                                faceUp: true
-                                isWinning: root.roundOutcome === "win" || root.roundOutcome === "blackjack"
+                        Row {
+                            id: playerHandRow
+                            anchors.top: parent.top
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            spacing: -24
+
+                            Repeater {
+                                model: root.playerCards
+                                PlayingCard {
+                                    cardData: modelData
+                                    faceUp: true
+                                    isWinning: root.roundOutcome === "win" || root.roundOutcome === "blackjack"
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            height: 22
+                            width: playerBadgeRow.implicitWidth + 14
+                            radius: 11
+                            color: Qt.rgba(0, 0, 0, 0.45)
+                            border.color: root.themeBorder
+                            border.width: 1
+
+                            Row {
+                                id: playerBadgeRow
+                                anchors.centerIn: parent
+                                spacing: 6
+                                Text {
+                                    text: "PLAYER"
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: root.themeSubtext
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    text: root.playerCards.length > 0 ? root.playerEvaluation.label : "—"
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    color: root.playerEvaluation.isBust ? "#EF4444" : (root.playerEvaluation.isBlackjack ? root.themeGold : root.themeAccent)
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
                             }
                         }
                     }
 
-                    // Player Badge
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        height: 22
-                        width: playerBadgeRow.implicitWidth + 14
-                        radius: 11
-                        color: Qt.rgba(0, 0, 0, 0.45)
-                        border.color: root.themeBorder
-                        border.width: 1
+                    // Split Hands Row (when split into 2 hands)
+                    Row {
+                        anchors.fill: parent
+                        visible: root.isSplit
+                        spacing: 24
 
-                        Row {
-                            id: playerBadgeRow
-                            anchors.centerIn: parent
-                            spacing: 6
-                            Text {
-                                text: "PLAYER"
-                                font.pixelSize: 10
-                                font.bold: true
-                                color: root.themeSubtext
-                                anchors.verticalCenter: parent.verticalCenter
+                        // HAND 1
+                        Item {
+                            width: (parent.width - 24) / 2
+                            height: parent.height
+
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                radius: 8
+                                color: "transparent"
+                                border.color: root.themeGold
+                                border.width: (root.activeSplitIndex === 0 && root.gameState === "playing") ? 2 : 0
+                                opacity: (root.activeSplitIndex === 0 && root.gameState === "playing") ? 0.9 : 0
+                                Behavior on opacity { NumberAnimation { duration: 150 } }
                             }
-                            Text {
-                                text: root.playerCards.length > 0 ? root.playerEvaluation.label : "—"
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: root.playerEvaluation.isBust ? "#EF4444" : (root.playerEvaluation.isBlackjack ? root.themeGold : root.themeAccent)
-                                anchors.verticalCenter: parent.verticalCenter
+
+                            Row {
+                                id: h1Row
+                                anchors.top: parent.top
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: -24
+                                Repeater {
+                                    model: (root.splitHands.length > 0) ? root.splitHands[0] : []
+                                    PlayingCard {
+                                        cardData: modelData
+                                        faceUp: true
+                                        isWinning: root.roundOutcome === "win"
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                height: 22
+                                width: h1Badge.implicitWidth + 14
+                                radius: 11
+                                color: (root.activeSplitIndex === 0 && root.gameState === "playing") ? Qt.rgba(0.98, 0.8, 0.08, 0.25) : Qt.rgba(0, 0, 0, 0.45)
+                                border.color: (root.activeSplitIndex === 0 && root.gameState === "playing") ? root.themeGold : root.themeBorder
+                                border.width: 1
+
+                                Row {
+                                    id: h1Badge
+                                    anchors.centerIn: parent
+                                    spacing: 5
+                                    Text {
+                                        text: "HAND 1"
+                                        font.pixelSize: 10
+                                        font.bold: true
+                                        color: (root.activeSplitIndex === 0 && root.gameState === "playing") ? root.themeGold : root.themeSubtext
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    Text {
+                                        text: root.splitHands.length > 0 ? Engine.calculateHand(root.splitHands[0]).label : "—"
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                        color: root.themeGold
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+                            }
+                        }
+
+                        // HAND 2
+                        Item {
+                            width: (parent.width - 24) / 2
+                            height: parent.height
+
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                radius: 8
+                                color: "transparent"
+                                border.color: root.themeGold
+                                border.width: (root.activeSplitIndex === 1 && root.gameState === "playing") ? 2 : 0
+                                opacity: (root.activeSplitIndex === 1 && root.gameState === "playing") ? 0.9 : 0
+                                Behavior on opacity { NumberAnimation { duration: 150 } }
+                            }
+
+                            Row {
+                                id: h2Row
+                                anchors.top: parent.top
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: -24
+                                Repeater {
+                                    model: (root.splitHands.length > 1) ? root.splitHands[1] : []
+                                    PlayingCard {
+                                        cardData: modelData
+                                        faceUp: true
+                                        isWinning: root.roundOutcome === "win"
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                height: 22
+                                width: h2Badge.implicitWidth + 14
+                                radius: 11
+                                color: (root.activeSplitIndex === 1 && root.gameState === "playing") ? Qt.rgba(0.98, 0.8, 0.08, 0.25) : Qt.rgba(0, 0, 0, 0.45)
+                                border.color: (root.activeSplitIndex === 1 && root.gameState === "playing") ? root.themeGold : root.themeBorder
+                                border.width: 1
+
+                                Row {
+                                    id: h2Badge
+                                    anchors.centerIn: parent
+                                    spacing: 5
+                                    Text {
+                                        text: "HAND 2"
+                                        font.pixelSize: 10
+                                        font.bold: true
+                                        color: (root.activeSplitIndex === 1 && root.gameState === "playing") ? root.themeGold : root.themeSubtext
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    Text {
+                                        text: root.splitHands.length > 1 ? Engine.calculateHand(root.splitHands[1]).label : "—"
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                        color: root.themeGold
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
                             }
                         }
                     }
@@ -1119,7 +1419,7 @@ Window {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 8
 
-                        // Helper Action Button
+                        // Helper Action Button with guaranteed padding and high-contrast shortcut pill
                         component ActionBtn: Rectangle {
                             id: abRoot
                             property string btnLabel: ""
@@ -1129,9 +1429,9 @@ Window {
                             property bool isPrimary: false
                             signal triggered()
 
-                            width: Math.max(68, abText.implicitWidth + 24)
-                            height: 36
-                            radius: 6
+                            width: Math.max(86, btnRow.implicitWidth + 24)
+                            height: 38
+                            radius: 8
                             color: enabled ? (abMouse.containsMouse ? Qt.lighter(btnColor, 1.15) : btnColor) : Qt.rgba(0.2, 0.2, 0.2, 0.5)
                             border.color: enabled ? (isPrimary ? Qt.lighter(btnColor, 1.3) : root.themeBorder) : Qt.rgba(0.3, 0.3, 0.3, 0.3)
                             border.width: 1
@@ -1139,8 +1439,9 @@ Window {
                             Behavior on scale { NumberAnimation { duration: 80 } }
 
                             Row {
+                                id: btnRow
                                 anchors.centerIn: parent
-                                spacing: 4
+                                spacing: 6
                                 Text {
                                     id: abText
                                     text: abRoot.btnLabel
@@ -1149,11 +1450,23 @@ Window {
                                     color: abRoot.enabled ? abRoot.fgColor : "#64748B"
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
-                                Text {
-                                    text: "[" + abRoot.shortcutKey + "]"
-                                    font.pixelSize: 9
-                                    color: abRoot.enabled ? Qt.rgba(abRoot.fgColor.r, abRoot.fgColor.g, abRoot.fgColor.b, 0.6) : "#475569"
+                                Rectangle {
+                                    visible: abRoot.shortcutKey.length > 0
+                                    height: 18
+                                    width: scText.implicitWidth + 8
+                                    radius: 4
+                                    color: Qt.rgba(0, 0, 0, 0.35)
+                                    border.color: Qt.rgba(255, 255, 255, 0.2)
+                                    border.width: 0.5
                                     anchors.verticalCenter: parent.verticalCenter
+                                    Text {
+                                        id: scText
+                                        anchors.centerIn: parent
+                                        text: abRoot.shortcutKey
+                                        font.pixelSize: 9
+                                        font.bold: true
+                                        color: abRoot.enabled ? "#FFFFFF" : "#64748B"
+                                    }
                                 }
                             }
 
@@ -1170,12 +1483,24 @@ Window {
                         ActionBtn {
                             btnLabel: "DEAL"
                             shortcutKey: "Space"
-                            btnColor: "#22C55E"
+                            btnColor: "#15803D" // Deep emerald casino green with clean white contrast
                             fgColor: "#FFFFFF"
                             isPrimary: true
                             enabled: (root.gameState === "betting" || root.gameState === "round_over")
                             visible: (root.gameState === "betting" || root.gameState === "round_over")
                             onTriggered: root.dealHand()
+                        }
+
+                        // SPLIT BUTTON (Active when pair dealt and bankroll permits)
+                        ActionBtn {
+                            btnLabel: "SPLIT"
+                            shortcutKey: "P"
+                            btnColor: "#D97706" // Warm amber gold
+                            fgColor: "#FFFFFF"
+                            isPrimary: true
+                            enabled: root.canSplitHand
+                            visible: root.canSplitHand
+                            onTriggered: root.splitHand()
                         }
 
                         // DOUBLE BUTTON (Active when 2 cards dealt and bankroll permits)
@@ -1184,7 +1509,10 @@ Window {
                             shortcutKey: "D"
                             btnColor: root.themeCardBg
                             fgColor: root.themeGold
-                            enabled: (root.gameState === "playing" && root.playerCards.length === 2 && root.bankroll >= root.currentBet)
+                            enabled: Boolean(root.gameState === "playing" && (
+                                (!root.isSplit && root.playerCards && root.playerCards.length === 2 && root.bankroll >= root.currentBet) ||
+                                (root.isSplit && root.splitHands && root.activeSplitIndex < root.splitHands.length && root.splitHands[root.activeSplitIndex] && root.splitHands[root.activeSplitIndex].length === 2 && root.bankroll >= root.currentBet)
+                            ))
                             visible: (root.gameState === "playing")
                             onTriggered: root.doubleDown()
                         }
@@ -1205,7 +1533,7 @@ Window {
                         ActionBtn {
                             btnLabel: "STAND"
                             shortcutKey: "S"
-                            btnColor: "#EF4444"
+                            btnColor: "#DC2626"
                             fgColor: "#FFFFFF"
                             enabled: (root.gameState === "playing")
                             visible: (root.gameState === "playing")

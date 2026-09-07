@@ -125,6 +125,11 @@ function calculateHand(cards) {
     };
 }
 
+function canSplit(cards) {
+    if (!cards || cards.length !== 2) return false;
+    return (cards[0].value === cards[1].value || (cards[0].numericValue === 10 && cards[1].numericValue === 10));
+}
+
 /**
  * Standard dealer AI rules: Stand on 17 (or soft 17 if table rule stands on all 17).
  */
