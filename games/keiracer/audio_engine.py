@@ -146,46 +146,81 @@ class ProceduralEngineAudio:
             self._start_linux_stream()
 
     def _start_linux_stream(self):
-        cmd = None
         sr = str(int(self.sample_rate))
+        candidates = []
+        # aplay: Rock-solid ALSA standard across all Linux distros; PipeWire-ALSA bridge handles it natively
+        if shutil.which("aplay"):
+            candidates.append(["aplay", "-q", "-r", sr, "-f", "S16_LE", "-c", "1", "-t", "raw", "-"])
+        # pw-cat: PipeWire native (MUST specify --raw when reading headerless PCM from stdin)
         if shutil.which("pw-cat"):
-            cmd = ["pw-cat", "-p", f"--rate={sr}", "--format=s16", "--channels=1", "-"]
-        elif shutil.which("pw-play"):
-            cmd = ["pw-play", f"--rate={sr}", "--format=s16", "--channels=1", "-"]
-        elif shutil.which("paplay"):
-            cmd = ["paplay", "--raw", f"--rate={sr}", "--channels=1", "--format=s16le"]
-        elif shutil.which("aplay"):
-            cmd = ["aplay", "-q", "-r", sr, "-f", "S16_LE", "-c", "1", "-t", "raw", "-"]
+            candidates.append(["pw-cat", "-p", "--raw", f"--rate={sr}", "--format=s16", "--channels=1", "-"])
+        # pw-play: PipeWire playback alias (also requires --raw for stdin)
+        if shutil.which("pw-play"):
+            candidates.append(["pw-play", "--raw", f"--rate={sr}", "--format=s16", "--channels=1", "-"])
+        # pacat: PulseAudio / PipeWire Pulse emulation for raw streaming
+        if shutil.which("pacat"):
+            candidates.append(["pacat", "--playback", "--raw", f"--rate={sr}", "--format=s16le", "--channels=1"])
 
-        if not cmd:
-            print("[AudioEngine] Note: No Linux audio sink (pw-cat/pw-play/paplay/aplay) found.")
+        if not candidates:
+            print("[AudioEngine] Note: No Linux audio sink (aplay/pw-cat/pw-play/pacat) found.")
             return
 
         def stream_worker():
             chunk_samples = 512 # ~23ms low-latency buffer chunks
             c_short_array = (ctypes.c_int16 * chunk_samples)()
             silence = b"\x00" * (chunk_samples * 2)
-            try:
-                proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
-                self._linux_proc = proc
-                while self.running and proc.poll() is None:
-                    if self.is_muted:
-                        proc.stdin.write(silence)
-                        proc.stdin.flush()
-                        time.sleep(chunk_samples / self.sample_rate)
+            chunk_duration = chunk_samples / self.sample_rate
+
+            for cmd in candidates:
+                print(f"[AudioEngine] Trying Linux audio sink: {' '.join(cmd)}")
+                try:
+                    proc = subprocess.Popen(
+                        cmd,
+                        stdin=subprocess.PIPE,
+                        stderr=subprocess.PIPE
+                    )
+                    self._linux_proc = proc
+
+                    # Test write silence to verify process starts and stays alive
+                    proc.stdin.write(silence)
+                    proc.stdin.flush()
+                    time.sleep(0.04)
+
+                    if proc.poll() is not None:
+                        err = proc.stderr.read().decode("utf-8", errors="ignore").strip()
+                        print(f"[AudioEngine] {cmd[0]} exited immediately (code {proc.poll()}): {err}")
                         continue
 
-                    self._generate_samples(c_short_array, chunk_samples)
-                    proc.stdin.write(bytes(c_short_array))
-                    proc.stdin.flush()
+                    print(f"[AudioEngine] Successfully streaming audio via {cmd[0]}")
 
-                try:
-                    proc.stdin.close()
-                    proc.terminate()
-                except Exception:
-                    pass
-            except Exception as e:
-                print("[AudioEngine] Linux stream error:", e)
+                    while self.running and proc.poll() is None:
+                        t0 = time.monotonic()
+                        if self.is_muted:
+                            proc.stdin.write(silence)
+                            proc.stdin.flush()
+                        else:
+                            self._generate_samples(c_short_array, chunk_samples)
+                            proc.stdin.write(bytes(c_short_array))
+                            proc.stdin.flush()
+
+                        # Real-time clock synchronization (prevents pipe overflow & runaway synthesis)
+                        elapsed = time.monotonic() - t0
+                        sleep_time = chunk_duration - elapsed
+                        if sleep_time > 0.002:
+                            time.sleep(sleep_time)
+
+                    if not self.running:
+                        try:
+                            proc.stdin.close()
+                            proc.terminate()
+                        except Exception:
+                            pass
+                        return
+                    else:
+                        print(f"[AudioEngine] {cmd[0]} closed (code {proc.poll()}), attempting next fallback...")
+                except Exception as e:
+                    print(f"[AudioEngine] Failed to initialize {cmd[0]}: {e}")
+                    continue
 
         self._stream_thread = threading.Thread(target=stream_worker, daemon=True)
         self._stream_thread.start()
@@ -357,3 +392,29 @@ class ProceduralEngineAudio:
             
             # 16-bit integer clamp
             c_short_array[i] = max(-32767, min(32767, int(sample_val)))
+
+
+if __name__ == "__main__":
+    print("[AudioEngine] Starting standalone audio synthesizer test...")
+    engine = ProceduralEngineAudio()
+    engine.start()
+    try:
+        print("[AudioEngine] 1. Idling at 950 RPM (1.5s)...")
+        engine.update_state("keitruck", 950, False, 0, False, False)
+        time.sleep(1.5)
+
+        print("[AudioEngine] 2. Full throttle rev to 6800 RPM (2.0s)...")
+        engine.update_state("keitruck", 6800, True, 65, False, False)
+        time.sleep(2.0)
+
+        print("[AudioEngine] 3. Shift cut pop (0.3s)...")
+        engine.update_state("keitruck", 5200, False, 65, True, False)
+        time.sleep(0.3)
+
+        print("[AudioEngine] 4. Off-throttle overrun burble (1.5s)...")
+        engine.update_state("keitruck", 3200, False, 50, False, False)
+        time.sleep(1.5)
+    finally:
+        print("[AudioEngine] Stopping engine audio.")
+        engine.stop()
+    print("[AudioEngine] Standalone test completed.")

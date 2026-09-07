@@ -21,6 +21,7 @@ import tomllib
 import ctypes
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Basic"
 
 from PySide6.QtGui import QGuiApplication
