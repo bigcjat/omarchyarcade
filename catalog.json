@@ -1,7 +1,7 @@
 {
   "version": 1,
   "app_name": "Omarchy Arcade",
-  "updated_at": "2026-09-06T23:10:00Z",
+  "updated_at": "2026-09-08T01:57:00Z",
   "games": [
     {
       "id": "2048",
@@ -688,7 +688,7 @@
       "category": "Cards & Casino",
       "floppy_color": "#DC2626",
       "grid_color": "#F59E0B",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "status": "released",
       "tagline": "8-Game Video Terminal • 1984 CRT & Cyber Glass",
       "description": "Authentic multi-game casino video terminal featuring 8 full game engines: Jacks or Better (9/6), Deuces Wild, Joker Poker, Double Double Bonus, Bonus Poker Deluxe, Red Dog, Single-Deck Blackjack, Casino War, and Double-Up gamble.",
