@@ -16,7 +16,7 @@ import tomllib
 import subprocess
 import threading
 from pathlib import Path
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject, Slot, Signal, Property, QTimer, QUrl, QFileSystemWatcher
 from PySide6.QtQuickControls2 import QQuickStyle
@@ -342,6 +342,19 @@ Usage:
     app = QGuiApplication(sys.argv)
     app.setApplicationName("Omarchy Arcade")
     app.setOrganizationName("Omarchy")
+
+    # App icon from retro boot splash screen
+    icon_candidates = [
+        ASSETS_DIR / "splashscreen.png",
+        LAUNCHER_DIR / "omarchy_arcade_logo.svg",
+        ASSETS_DIR / "omarchy_arcade_logo.png",
+        ASSETS_DIR / "omarchy_arcade_logo.svg",
+        BASE_DIR / "template" / "omarchy_arcade.svg",
+    ]
+    for ic in icon_candidates:
+        if ic.exists():
+            app.setWindowIcon(QIcon(str(ic)))
+            break
 
     backend = ArcadeBackend()
     engine = QQmlApplicationEngine()

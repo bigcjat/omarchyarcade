@@ -150,9 +150,15 @@ def main():
     app.setApplicationName("Solitaire")
 
     script_dir = Path(__file__).resolve().parent
-    icon_path = script_dir / "omarchy_arcade.svg"
-    if icon_path.exists():
-        app.setWindowIcon(QIcon(str(icon_path)))
+    cover_candidates = [
+        script_dir.parent.parent / "assets" / "covers" / "solitaire.png",
+        Path.home() / ".local" / "share" / "omarchy-arcade" / "assets" / "covers" / "solitaire.png",
+        script_dir / "assets" / "cover.png",
+    ]
+    for cp in cover_candidates:
+        if cp.exists():
+            app.setWindowIcon(QIcon(str(cp)))
+            break
 
     engine = QQmlApplicationEngine()
 
