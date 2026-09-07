@@ -150,12 +150,14 @@ def main():
     app.setApplicationName("Solitaire")
 
     script_dir = Path(__file__).resolve().parent
-    cover_candidates = [
+    disk_candidates = [
+        script_dir / "assets" / "disk_icon.png",
+        script_dir.parent.parent / "assets" / "covers" / "solitaire_disk.png",
         script_dir.parent.parent / "assets" / "covers" / "solitaire.png",
         Path.home() / ".local" / "share" / "omarchy-arcade" / "assets" / "covers" / "solitaire.png",
         script_dir / "assets" / "cover.png",
     ]
-    for cp in cover_candidates:
+    for cp in disk_candidates:
         if cp.exists():
             app.setWindowIcon(QIcon(str(cp)))
             break
