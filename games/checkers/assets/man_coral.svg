@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Outer Neon Glow Foundation -->
+  <circle cx="50" cy="50" r="42" fill="#FF4D6D" fill-opacity="0.08" stroke="#FF4D6D" stroke-width="1.5" stroke-opacity="0.3"/>
+  
+  <!-- Outer Beveled Rim -->
+  <circle cx="50" cy="50" r="39" fill="#0B0E14" stroke="#FF4D6D" stroke-width="3.5" stroke-linejoin="round"/>
+  
+  <!-- Inner Tactile Groove -->
+  <circle cx="50" cy="50" r="31" fill="#FF4D6D" fill-opacity="0.12" stroke="#FF4D6D" stroke-width="2"/>
+  
+  <!-- Secondary Precision Ring -->
+  <circle cx="50" cy="50" r="22" fill="none" stroke="#FF4D6D" stroke-width="1.5" stroke-opacity="0.7"/>
+  
+  <!-- Center Core Bullseye -->
+  <circle cx="50" cy="50" r="12" fill="#0B0E14" stroke="#FF4D6D" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="4.5" fill="#FF4D6D"/>
+  
+  <!-- 4 Directional Vector Tick Marks -->
+  <line x1="50" y1="12" x2="50" y2="18" stroke="#FF4D6D" stroke-width="2" stroke-linecap="round"/>
+  <line x1="50" y1="82" x2="50" y2="88" stroke="#FF4D6D" stroke-width="2" stroke-linecap="round"/>
+  <line x1="12" y1="50" x2="18" y2="50" stroke="#FF4D6D" stroke-width="2" stroke-linecap="round"/>
+  <line x1="82" y1="50" x2="88" y2="50" stroke="#FF4D6D" stroke-width="2" stroke-linecap="round"/>
+</svg>

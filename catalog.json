@@ -622,6 +622,35 @@
       "size": "821 KB",
       "size_bytes": 840707,
       "download_size": "821 KB"
+    },
+    {
+      "id": "checkers",
+      "title": "Checkers",
+      "ref": "OA-023",
+      "category": "Board Strategy & Checkers",
+      "floppy_color": "#1E293B",
+      "grid_color": "#00F0FF",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Tactical Draughts AI • Dual-Contour Vector Discs",
+      "description": "Classic American draughts featuring dual-contour vector pieces in Electric Cyan and Neon Coral, multi-tier self-contained AI, mandatory jump enforcement, multi-jump chaining, and king coronation.",
+      "instructions": [
+        "Move pieces forward diagonally 1 square to empty dark tiles.",
+        "If a jump is available, it is mandatory! Multi-jumps must continue.",
+        "Reach the opposite back rank to crown your piece into a King.",
+        "Kings can move and jump diagonally both forward and backward.",
+        "Cycle AI difficulty (D), flip the board (F), or undo moves (U)."
+      ],
+      "controls": {
+        "keyboard": "Click / Drag & Drop to move, U to Undo, F to Flip, D for Difficulty",
+        "shortcuts": "R to restart, M to mute, ? for Help, Esc to back"
+      },
+      "folder": "games/checkers",
+      "entrypoint": "games/checkers/main.qml",
+      "cover_image": "assets/covers/checkers.png",
+      "size": "754 KB",
+      "size_bytes": 773053,
+      "download_size": "754 KB"
     }
   ]
 }
