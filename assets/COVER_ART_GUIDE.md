@@ -205,3 +205,18 @@ Clean line art, flat vector icon aesthetic, solid vibrant colors, sticker graphi
 * **Grid Color:** Casino Emerald Green (`#064E3B`)
 * **Illustration:** Mystical cloaked cardmaster in ornate retro-fantasy robes dealing radiant glowing Ace of Spades with electric filigree alongside court cards and crystalline poker chips in an arched gothic hall.
 * **Bottom Text:** `CARDS & CASINO • OA-021`
+
+### 22. `Chess` (Ref: `OA-022`)
+* **Category:** Board Strategy & Chess
+* **Floppy Color:** Midnight Obsidian (`#1E293B`) with flat silver shutter
+* **Grid Color:** Electric Cyan (`#00F0FF`)
+* **Illustration:** Dual cloaked cyber-grandmasters playing on a luminous holographic chessboard overlooking an ancient citadel under a galaxy sky.
+* **Bottom Text:** `BOARD STRATEGY • OA-022`
+
+### 23. `Checkers` (Ref: `OA-023`)
+* **Category:** Board Strategy & Checkers
+* **Floppy Color:** Midnight Obsidian (`#1E293B`) with flat silver shutter
+* **Grid Color:** Electric Cyan (`#00F0FF`)
+* **Illustration:** Two cloaked tacticians playing with glowing neon discs across an 8x8 checkerboard overlooking a cosmic fantasy fortress.
+* **Bottom Text:** `BOARD STRATEGY • OA-023`
+
