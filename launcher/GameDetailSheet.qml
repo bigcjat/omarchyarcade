@@ -13,6 +13,7 @@ Rectangle {
     property var gameData: null
     readonly property bool isUnreleased: gameData && gameData.status === "unreleased"
     property bool isInstalled: true
+    property bool hasUpdate: false
     property bool isDownloading: false
 
     signal playRequested(string gameId)
@@ -20,13 +21,26 @@ Rectangle {
 
     Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutQuad } }
 
+    Connections {
+        target: (typeof arcadeBackend !== "undefined") ? arcadeBackend : null
+        function onGameInstalled(gameId) {
+            if (gameData && gameData.id === gameId) {
+                detailSheet.isDownloading = false;
+                detailSheet.isInstalled = true;
+                detailSheet.hasUpdate = false;
+            }
+        }
+    }
+
     function open(data) {
         gameData = data;
         isDownloading = false;
         if (typeof arcadeBackend !== "undefined" && data) {
             isInstalled = arcadeBackend.isGameInstalled(data.id);
+            hasUpdate = arcadeBackend.hasGameUpdate(data.id, data.version || "");
         } else {
             isInstalled = true;
+            hasUpdate = false;
         }
         opacity = 1;
         modalScroll.ScrollBar.vertical.position = 0;
@@ -231,15 +245,15 @@ Rectangle {
                     }
                 }
 
-                // Primary Action Button (Play Now / Coming Soon)
+                // Primary Action Button (Play Now / Update / Install / Coming Soon)
                 Rectangle {
                     id: primaryActionBtn
-                    Layout.preferredWidth: detailSheet.isUnreleased ? 200 : (detailSheet.isDownloading ? 180 : (detailSheet.isInstalled ? 150 : 210))
+                    Layout.preferredWidth: detailSheet.isUnreleased ? 200 : (detailSheet.isDownloading ? 180 : (detailSheet.hasUpdate ? 185 : (detailSheet.isInstalled ? 150 : 210)))
                     Layout.preferredHeight: 38
                     radius: 6
                     clip: true
 
-                    readonly property color accentCol: detailSheet.isUnreleased ? "#d97706" : (detailSheet.isDownloading ? "#0284c7" : (detailSheet.isInstalled ? (gameData ? gameData.grid_color : "#10b981") : "#3b82f6"))
+                    readonly property color accentCol: detailSheet.isUnreleased ? "#d97706" : (detailSheet.isDownloading ? "#0284c7" : (detailSheet.hasUpdate ? "#00f0ff" : (detailSheet.isInstalled ? (gameData ? gameData.grid_color : "#10b981") : "#3b82f6")))
                     readonly property bool isHovered: actionMouse.containsMouse && !detailSheet.isUnreleased && !detailSheet.isDownloading
                     readonly property bool isPressed: actionMouse.pressed && !detailSheet.isUnreleased && !detailSheet.isDownloading
 
@@ -261,14 +275,14 @@ Rectangle {
                         spacing: 7
 
                         Text {
-                            text: detailSheet.isUnreleased ? "🔒" : (detailSheet.isDownloading ? "⏳" : (detailSheet.isInstalled ? "▶" : "⬇"))
+                            text: detailSheet.isUnreleased ? "🔒" : (detailSheet.isDownloading ? "⏳" : (detailSheet.hasUpdate ? "🔄" : (detailSheet.isInstalled ? "▶" : "⬇")))
                             font.pixelSize: 11
                             color: detailSheet.isUnreleased ? "#f59e0b" : "#FFFFFF"
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
                         Text {
-                            text: detailSheet.isUnreleased ? "COMING SOON" : (detailSheet.isDownloading ? "DOWNLOADING..." : (detailSheet.isInstalled ? "PLAY NOW" : ("GET (" + (gameData ? gameData.size : "") + ")")))
+                            text: detailSheet.isUnreleased ? "COMING SOON" : (detailSheet.isDownloading ? "UPDATING..." : (detailSheet.hasUpdate ? ("UPDATE (v" + (gameData ? gameData.version : "") + ")") : (detailSheet.isInstalled ? "PLAY NOW" : ("GET (" + (gameData ? gameData.size : "") + ")"))))
                             font.family: "monospace"
                             font.pixelSize: 12
                             font.bold: true
@@ -285,10 +299,14 @@ Rectangle {
                         cursorShape: (detailSheet.isUnreleased || detailSheet.isDownloading) ? Qt.ArrowCursor : Qt.PointingHandCursor
                         onClicked: {
                             if (!detailSheet.isUnreleased && !detailSheet.isDownloading && gameData) {
-                                if (!detailSheet.isInstalled) {
+                                if (detailSheet.hasUpdate || !detailSheet.isInstalled) {
                                     detailSheet.isDownloading = true;
+                                    if (typeof arcadeBackend !== "undefined") {
+                                        arcadeBackend.installGame(gameData.id);
+                                    }
+                                } else {
+                                    detailSheet.playRequested(gameData.id);
                                 }
-                                detailSheet.playRequested(gameData.id);
                             }
                         }
                     }

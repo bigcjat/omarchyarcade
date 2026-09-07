@@ -262,7 +262,41 @@ Item {
             }
         }
 
-        // --- 4. Unreleased "COMING SOON" Badge Overlay ---
+        // --- 4. Update Available Badge ---
+        Rectangle {
+            id: updateBadge
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 6
+            width: 58
+            height: 18
+            radius: 9
+            color: "#0284c7"
+            border.color: "#38bdf8"
+            border.width: 1
+            z: 45
+            visible: !isUnreleased && (typeof arcadeBackend !== "undefined") && gameData && arcadeBackend.hasGameUpdate(gameData.id, gameData.version || "")
+
+            Row {
+                anchors.centerIn: parent
+                spacing: 3
+                Text {
+                    text: "🔄"
+                    font.pixelSize: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Text {
+                    text: "UPDATE"
+                    font.family: "monospace"
+                    font.pixelSize: 8
+                    font.bold: true
+                    color: "#f0f9ff"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+        }
+
+        // --- 5. Unreleased "COMING SOON" Badge Overlay ---
         Rectangle {
             id: unreleasedOverlay
             anchors.fill: parent

@@ -125,6 +125,22 @@ class ArcadeBackend(QObject):
         game_dir = GAMES_DIR / game_id
         return (game_dir / "main.py").exists() or (game_dir / "main.qml").exists()
 
+    @Slot(str, str, result=bool)
+    def hasGameUpdate(self, game_id: str, catalog_version: str) -> bool:
+        """Checks if an installed game has an update available compared to catalog.json."""
+        if not game_id or not catalog_version:
+            return False
+        game_dir = GAMES_DIR / game_id
+        if not (game_dir / "main.py").exists() and not (game_dir / "main.qml").exists():
+            return False
+        version_file = game_dir / ".version"
+        if not version_file.exists():
+            return True # Unversioned / outdated installation
+        try:
+            return version_file.read_text(encoding="utf-8").strip() != str(catalog_version).strip()
+        except Exception:
+            return True
+
     @Slot(str, result=str)
     def getScreenshotUrl(self, folder: str) -> str:
         """Returns the file URL for a game's screenshot, with fallback to remote URL."""
@@ -169,6 +185,16 @@ class ArcadeBackend(QObject):
                                     with open(target_file, "wb") as f:
                                         f.write(extracted.read())
                                     count += 1
+
+                # Record installed version stamp
+                try:
+                    cat_data = json.loads(self.getCatalogJson())
+                    for g in cat_data.get("games", []):
+                        if g.get("id") == game_id:
+                            (dest / ".version").write_text(g.get("version", "1.0.0"), encoding="utf-8")
+                            break
+                except Exception:
+                    pass
 
                 print(f"[Arcade] Installed game: {game_id} ({count} files)")
                 self.gameInstalled.emit(game_id)
