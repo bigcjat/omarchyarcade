@@ -743,6 +743,14 @@ function initRedDogDeal(deck) {
     };
 }
 
+function getRedDogPayoutRate(spread) {
+    if (spread === 1) return 5;
+    if (spread === 2) return 4;
+    if (spread === 3) return 2;
+    if (spread >= 4) return 1;
+    return 0;
+}
+
 function initRedDogRound(card1, card2) {
     var r1 = card1.rank;
     var r2 = card2.rank;
@@ -759,7 +767,20 @@ function initRedDogRound(card1, card2) {
         card1: card1,
         card2: card2,
         spread: spread,
-        status: status
+        status: status,
+        payoutRate: getRedDogPayoutRate(spread)
+    };
+}
+
+function evaluateRedDogThirdCard(r1, r2, r3) {
+    var low = Math.min(r1, r2);
+    var high = Math.max(r1, r2);
+    var spread = (high > low) ? (high - low - 1) : 0;
+    var won = (r3 > low && r3 < high);
+    return {
+        won: won,
+        payoutRate: getRedDogPayoutRate(spread),
+        spread: spread
     };
 }
 

@@ -310,9 +310,10 @@ Window {
             activeDeck = Engine.createStandardDeck();
         }
 
-        // Initialize 5 face-down cards
+        // Initialize face-down cards
         var idleCards = [];
-        for (var i = 0; i < 5; i++) {
+        var count = (gameId === "red_dog") ? 2 : (gameId === "blackjack" ? 2 : (gameId === "casino_war" ? 1 : 5));
+        for (var i = 0; i < count; i++) {
             idleCards.push({ value: "?", suit: "?", rank: 0, held: false, faceUp: false });
         }
         playerHand = idleCards;
@@ -1692,7 +1693,7 @@ Window {
                                     }
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: redDogSpread.toString()
+                                        text: (machineState === "IDLE") ? "—" : redDogSpread.toString()
                                         font.family: root.monoFontFamily
                                         font.pixelSize: 20
                                         font.bold: true
@@ -1700,7 +1701,7 @@ Window {
                                     }
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: (redDogStatus === "pair" ? "PAIR" : (redDogStatus === "consecutive" ? "PUSH" : "BETWEEN"))
+                                        text: (machineState === "IDLE") ? "IN-BETWEEN" : (redDogStatus === "pair" ? "PAIR" : (redDogStatus === "consecutive" ? "PUSH" : ("PAYS " + (Engine.getRedDogPayoutRate ? Engine.getRedDogPayoutRate(redDogSpread) : 1) + ":1")))
                                         font.pixelSize: 8
                                         font.bold: true
                                         color: "#FFFFFF"
@@ -1905,15 +1906,16 @@ Window {
                     height: 30
                     spacing: 8
                     anchors.horizontalCenter: parent.horizontalCenter
-                    visible: !root.isPokerGame && machineState === "DEALT"
+                    visible: !root.isPokerGame
+                    opacity: (machineState === "DEALT") ? 1.0 : 0.45
 
                     // Action 1
                     Rectangle {
                         width: (parent.width - 16) / 2
                         height: 28
                         radius: 4
-                        color: isCyberMode ? "#0369A1" : "#0284C7"
-                        border.color: isCyberMode ? root.neonCyan : "#38BDF8"
+                        color: (machineState === "DEALT") ? (isCyberMode ? "#0369A1" : "#0284C7") : (isCyberMode ? "#0A192F" : "#1E293B")
+                        border.color: (machineState === "DEALT") ? (isCyberMode ? root.neonCyan : "#38BDF8") : (isCyberMode ? "#1E293B" : "#475569")
                         border.width: 1
 
                         Text {
@@ -1923,13 +1925,15 @@ Window {
                                 if (activeGameId === "blackjack") return "HIT [1]";
                                 return "SURRENDER [1]";
                             }
+                            font.family: root.monoFontFamily
                             font.pixelSize: 10
                             font.bold: true
-                            color: "#FFFFFF"
+                            color: (machineState === "DEALT") ? "#FFFFFF" : (isCyberMode ? "#64748B" : "#94A3B8")
                         }
                         MouseArea {
                             anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
+                            cursorShape: (machineState === "DEALT") ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            enabled: (machineState === "DEALT")
                             onClicked: {
                                 if (activeGameId === "red_dog") resolveRedDog(false);
                                 else if (activeGameId === "blackjack") blackjackHit();
@@ -1943,8 +1947,8 @@ Window {
                         width: (parent.width - 16) / 2
                         height: 28
                         radius: 4
-                        color: isCyberMode ? root.neonMagenta : "#D97706"
-                        border.color: isCyberMode ? "#FFB6D9" : "#FDE68A"
+                        color: (machineState === "DEALT") ? (isCyberMode ? root.neonMagenta : "#D97706") : (isCyberMode ? "#1A0B2E" : "#1E293B")
+                        border.color: (machineState === "DEALT") ? (isCyberMode ? "#FFB6D9" : "#FDE68A") : (isCyberMode ? "#1E293B" : "#475569")
                         border.width: 1
 
                         Text {
@@ -1954,13 +1958,15 @@ Window {
                                 if (activeGameId === "blackjack") return "STAND [2]";
                                 return "GO TO WAR [2]";
                             }
+                            font.family: root.monoFontFamily
                             font.pixelSize: 10
                             font.bold: true
-                            color: "#FFFFFF"
+                            color: (machineState === "DEALT") ? "#FFFFFF" : (isCyberMode ? "#64748B" : "#94A3B8")
                         }
                         MouseArea {
                             anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
+                            cursorShape: (machineState === "DEALT") ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            enabled: (machineState === "DEALT")
                             onClicked: {
                                 if (activeGameId === "red_dog") resolveRedDog(true);
                                 else if (activeGameId === "blackjack") blackjackStand();
@@ -2089,6 +2095,7 @@ Window {
                         color: isCyberMode ? root.neonCyan : "#16A34A"
                         border.color: isCyberMode ? "#E0F2FE" : "#86EFAC"
                         border.width: 1.5
+                        opacity: (!isPokerGame && machineState === "DEALT") ? 0.4 : 1.0
 
                         Text {
                             anchors.centerIn: parent
@@ -2100,7 +2107,8 @@ Window {
                         }
                         MouseArea {
                             anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
+                            cursorShape: (!isPokerGame && machineState === "DEALT") ? Qt.ArrowCursor : Qt.PointingHandCursor
+                            enabled: (isPokerGame || machineState !== "DEALT")
                             onClicked: handlePrimaryAction()
                         }
                     }
