@@ -59,6 +59,7 @@ Window {
     property int totalShoeCards: 312
     property int shoeCardsRemaining: 312
     readonly property real shoePenetration: totalShoeCards > 0 ? (shoeCardsRemaining / totalShoeCards) : 1.0
+    readonly property bool isCompactHeight: (boardContainer && boardContainer.height > 0 && boardContainer.height < 460)
 
     readonly property var activePlayerCards: {
         if (!isSplit) return playerCards;
@@ -1263,10 +1264,12 @@ Window {
                 Item {
                     id: dealerArea
                     anchors.top: parent.top
-                    anchors.topMargin: 16
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.topMargin: root.isCompactHeight ? 10 : 16
                     width: Math.max(300, dealerHandRow.width + 40)
                     height: 160
+
+                    x: root.isCompactHeight ? Math.min(parent.width - width - 16, Math.max(16, parent.width * 0.72 - width / 2)) : (parent.width / 2 - width / 2)
+                    Behavior on x { NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
 
                     // Dealer Badge
                     Rectangle {
@@ -1325,9 +1328,11 @@ Window {
                     id: playerArea
                     anchors.bottom: oddsAdvisorStrip.top
                     anchors.bottomMargin: 8
-                    anchors.horizontalCenter: parent.horizontalCenter
                     width: root.isSplit ? Math.min(parent.width - 32, 540) : Math.max(300, playerHandRow.width + 40)
                     height: 160
+
+                    x: (root.isCompactHeight && !root.isSplit) ? Math.max(16, Math.min(parent.width - width - 16, parent.width * 0.28 - width / 2)) : (parent.width / 2 - width / 2)
+                    Behavior on x { NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
 
                     // Single Player Hand (when not split)
                     Item {
@@ -1518,9 +1523,11 @@ Window {
 
                 // Status Message Banner (floating pill positioned in open felt between dealer and player)
                 Rectangle {
-                    anchors.top: dealerArea.bottom
-                    anchors.topMargin: 18
                     anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: root.isCompactHeight ? undefined : dealerArea.bottom
+                    anchors.topMargin: root.isCompactHeight ? 0 : 18
+                    anchors.verticalCenter: root.isCompactHeight ? parent.verticalCenter : undefined
+                    anchors.verticalCenterOffset: root.isCompactHeight ? -16 : 0
                     height: 28
                     width: statusText.implicitWidth + 24
                     radius: 14
