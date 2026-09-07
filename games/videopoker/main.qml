@@ -24,6 +24,11 @@ Window {
     property color themeBtnBg: "#00F0FF"
     property color themeBtnFg: "#050811"
 
+    // Visual Mode: "cyber" (Dark Futuristic Neon) vs "crt" (Classic 1984 Vegas Cobalt Blue)
+    property string visualMode: "cyber"
+    readonly property bool isCrtMode: visualMode === "crt"
+    readonly property bool isCyberMode: visualMode === "cyber"
+
     // High-contrast Neon Accent Colors
     readonly property color neonCyan: "#00F0FF"
     readonly property color neonMagenta: "#FF007F"
@@ -152,6 +157,8 @@ Window {
             handsPlayed = settingsManager.getHandsPlayed();
             var savedGame = settingsManager.getGameMode();
             if (savedGame) activeGameId = savedGame;
+            var savedMode = settingsManager.getVisualMode();
+            if (savedMode) visualMode = savedMode;
         }
         setupGame(activeGameId);
     }
@@ -162,6 +169,7 @@ Window {
             settingsManager.setBestScore(bestScore);
             settingsManager.setHandsPlayed(handsPlayed);
             settingsManager.setGameMode(activeGameId);
+            settingsManager.setVisualMode(visualMode);
         }
     }
 
@@ -220,9 +228,6 @@ Window {
     }
 
     function switchGame(newGameId) {
-        if (machineState === "DEALT") {
-            // Cancel current hand
-        }
         activeGameId = newGameId;
         gameMenuOpen = false;
         playSound("select");
@@ -387,7 +392,6 @@ Window {
             statusMessage = "CONSECUTIVE CARDS! PUSH (BET RETURNED)";
             playSound("win");
         } else if (dogResult.status === "pair") {
-            // Need 3rd card for 11:1 pair payout check
             var c3 = activeDeck.pop();
             c3.faceUp = true;
             playerHand = [c1, c2, c3];
@@ -405,7 +409,6 @@ Window {
                 playSound("win");
             }
         } else {
-            // Spread between 1 and 11
             playerHand = [c1, c2];
             machineState = "DEALT";
             statusMessage = "SPREAD " + redDogSpread + " (PAYS " + dogResult.payoutRate + ":1) - [1] CALL or [2] RAISE 2X";
@@ -432,8 +435,6 @@ Window {
         c3.faceUp = true;
         var r1 = playerHand[0].rank;
         var r2 = playerHand[1].rank;
-        var low = Math.min(r1, r2);
-        var high = Math.max(r1, r2);
 
         var handCopy = playerHand.slice();
         handCopy.push(c3);
@@ -472,7 +473,7 @@ Window {
         var p1 = activeDeck.pop(); p1.faceUp = true;
         var d1 = activeDeck.pop(); d1.faceUp = true;
         var p2 = activeDeck.pop(); p2.faceUp = true;
-        var d2 = activeDeck.pop(); d2.faceUp = false; // Hidden hole card
+        var d2 = activeDeck.pop(); d2.faceUp = false;
 
         playerHand = [p1, p2];
         dealerHand = [d1, d2];
@@ -480,20 +481,18 @@ Window {
         dealerTotal = d1.rank === 14 ? 11 : Math.min(d1.rank, 10);
         playerCanDouble = credits >= betCoins;
 
-        // Check for naturals
         if (playerTotal === 21) {
-            // Reveal dealer
             dealerHand[1].faceUp = true;
             var dTot = Engine.calculateBlackjackScore(dealerHand);
             dealerTotal = dTot;
             machineState = "ROUND_OVER";
 
             if (dTot === 21) {
-                credits += betCoins; // Push
+                credits += betCoins;
                 statusMessage = "BOTH HAVE BLACKJACK! PUSH.";
                 playSound("win");
             } else {
-                var bjWin = Math.floor(betCoins * 2.5); // 3:2 payout + original
+                var bjWin = Math.floor(betCoins * 2.5);
                 credits += bjWin;
                 lastWinAmount = bjWin;
                 isWinningRound = true;
@@ -538,7 +537,6 @@ Window {
         if (activeGameId !== "blackjack" || machineState !== "DEALT") return;
         machineState = "DRAWING";
 
-        // Dealer reveals hole card and hits to soft 17
         dealerHand[1].faceUp = true;
         var dTot = Engine.calculateBlackjackScore(dealerHand);
         while (dTot < 17) {
@@ -565,7 +563,7 @@ Window {
             statusMessage = "YOU WIN! (" + playerTotal + " vs " + dTot + ") - " + winP + " CREDITS!";
             playSound("win");
         } else if (playerTotal === dTot) {
-            credits += betCoins; // Push
+            credits += betCoins;
             statusMessage = "PUSH (" + playerTotal + " vs " + dTot + "). BET RETURNED.";
             playSound("win");
         } else {
@@ -639,7 +637,6 @@ Window {
             statusMessage = "DEALER WINS: " + dCard.value + " BEATS " + pCard.value;
             playSound("lose");
         } else {
-            // TIE! WAR DECISION
             machineState = "DEALT";
             warState = "TIE";
             statusMessage = "TIE CARD (" + pCard.value + ")! [1] SURRENDER (LOSE 50%) or [2] GO TO WAR!";
@@ -666,13 +663,12 @@ Window {
             return;
         }
 
-        credits -= betCoins; // Match original bet
+        credits -= betCoins;
         playSound("chip");
 
         // Burn 3 cards
         activeDeck.pop(); activeDeck.pop(); activeDeck.pop();
 
-        // 1 final card for each
         var pWar = activeDeck.pop(); pWar.faceUp = true;
         var dWar = activeDeck.pop(); dWar.faceUp = true;
 
@@ -682,7 +678,6 @@ Window {
 
         var outcome = Engine.evaluateWarDuel(pWar.rank, dWar.rank);
         if (outcome.winner === "player" || outcome.winner === "tie") {
-            // War win pays 1:1 on raise + tie bonus
             var winAmt = betCoins * 3;
             credits += winAmt;
             lastWinAmount = winAmt;
@@ -731,7 +726,6 @@ Window {
         var chosen = doubleUpPlayerCards[pickIndex];
         chosen.faceUp = true;
 
-        // Reveal other 3 cards as well
         var revealed = doubleUpPlayerCards.slice();
         for (var i = 0; i < revealed.length; i++) {
             revealed[i].faceUp = true;
@@ -750,7 +744,7 @@ Window {
             playSound("draw");
         } else {
             doubleUpMessage = "DEALER WINS: " + doubleUpDealerCard.value + " BEATS " + chosen.value + ". POT LOST!";
-            credits -= lastWinAmount; // Lose previous win
+            credits -= lastWinAmount;
             lastWinAmount = 0;
             isWinningRound = false;
             playSound("lose");
@@ -854,6 +848,11 @@ Window {
             } else if (event.key === Qt.Key_M) {
                 setMaxBet();
                 event.accepted = true;
+            } else if (event.key === Qt.Key_V) {
+                root.visualMode = (root.visualMode === "cyber" ? "crt" : "cyber");
+                root.saveSettings();
+                root.playSound("click");
+                event.accepted = true;
             } else if (event.key === Qt.Key_G) {
                 gameMenuOpen = !gameMenuOpen;
                 playSound("select");
@@ -879,7 +878,6 @@ Window {
 
         // =====================================================================
         // ROW 1: HEADER ITEM (From Master Template 2048 Standard)
-        // Title + Subtitle on Left, Stats Cards on Right
         // =====================================================================
         Item {
             id: headerItem
@@ -905,7 +903,7 @@ Window {
                     text: root.title
                     font.pixelSize: Math.max(18, Math.min(28, headerItem.width * 0.068))
                     font.bold: true
-                    color: root.neonCyan
+                    color: isCyberMode ? root.neonCyan : "#FEF08A"
                 }
                 Text {
                     width: parent.width
@@ -949,7 +947,7 @@ Window {
                             font.family: root.monoFontFamily
                             font.pixelSize: 13
                             font.bold: true
-                            color: root.neonCyan
+                            color: isCyberMode ? root.neonCyan : "#FEF08A"
                         }
                     }
                 }
@@ -959,8 +957,8 @@ Window {
                     width: Math.max(62, Math.min(78, headerItem.width * 0.17))
                     height: Math.max(38, Math.min(46, headerItem.width * 0.11))
                     radius: 6
-                    color: root.isWinningRound ? "#FF007F26" : root.themeCardBg
-                    border.color: root.isWinningRound ? root.neonMagenta : root.themeBorder
+                    color: root.isWinningRound ? (isCyberMode ? "#FF007F26" : "#7F1D1D") : root.themeCardBg
+                    border.color: root.isWinningRound ? (isCyberMode ? root.neonMagenta : "#FACC15") : root.themeBorder
                     border.width: root.isWinningRound ? 1.5 : 1
 
                     Column {
@@ -971,7 +969,7 @@ Window {
                             text: root.isWinningRound ? "PAID" : "BET"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.isWinningRound ? "#FFB6D9" : root.themeSubtext
+                            color: root.isWinningRound ? (isCyberMode ? "#FFB6D9" : "#FDE047") : root.themeSubtext
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -979,7 +977,7 @@ Window {
                             font.family: root.monoFontFamily
                             font.pixelSize: 13
                             font.bold: true
-                            color: root.isWinningRound ? root.neonMagenta : root.neonCyan
+                            color: root.isWinningRound ? (isCyberMode ? root.neonMagenta : "#FEF08A") : (isCyberMode ? root.neonCyan : root.themeAccent)
                         }
                     }
                 }
@@ -987,8 +985,7 @@ Window {
         }
 
         // =====================================================================
-        // ROW 2: SUBHEADER ACTION BAR (Responsive Toolbar)
-        // Clean arcade template toolbar without gimmicky switchers
+        // ROW 2: SUBHEADER ACTION BAR (Responsive Toolbar with Era Switcher)
         // =====================================================================
         Item {
             id: subheaderItem
@@ -1014,7 +1011,7 @@ Window {
                     width: subheaderItem.isCrowded ? 28 : (gameBtnRow.implicitWidth + 14)
                     radius: 6
                     color: gameMenuMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: gameMenuMouse.containsMouse ? root.neonCyan : root.themeBorder
+                    border.color: gameMenuMouse.containsMouse ? (isCyberMode ? root.neonCyan : "#38BDF8") : root.themeBorder
                     border.width: 1
 
                     Row {
@@ -1053,7 +1050,7 @@ Window {
                     width: subheaderItem.isCrowded ? 28 : (helpRow.implicitWidth + 14)
                     radius: 6
                     color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: helpMouse.containsMouse ? root.neonCyan : root.themeBorder
+                    border.color: helpMouse.containsMouse ? (isCyberMode ? root.neonCyan : "#38BDF8") : root.themeBorder
                     border.width: 1
 
                     Row {
@@ -1064,7 +1061,7 @@ Window {
                             text: "?"
                             font.pixelSize: 11
                             font.bold: true
-                            color: root.neonCyan
+                            color: isCyberMode ? root.neonCyan : "#38BDF8"
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
@@ -1089,11 +1086,50 @@ Window {
                 }
             }
 
-            // Right cluster: Add Coins, Mute
+            // Right cluster: Visual Switcher, Add Coins, Mute
             Row {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: subheaderItem.isCrowded ? 4 : 6
+
+                // Classic CRT ↔ Cyber Neon Switcher
+                Rectangle {
+                    height: 28
+                    width: subheaderItem.isCrowded ? 28 : (switcherRow.implicitWidth + 14)
+                    radius: 6
+                    color: isCyberMode ? "#1E1B4B" : "#0C4A6E"
+                    border.color: isCyberMode ? root.neonPurple : "#38BDF8"
+                    border.width: 1
+
+                    Row {
+                        id: switcherRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: isCyberMode ? "📺" : "⚡"
+                            font.pixelSize: 11
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: isCyberMode ? "Classic [V]" : "Cyber [V]"
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: isCyberMode ? "#C084FC" : "#38BDF8"
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.visualMode = (root.visualMode === "cyber" ? "crt" : "cyber");
+                            root.saveSettings();
+                            root.playSound("click");
+                        }
+                    }
+                }
 
                 // Add Coins Button
                 Rectangle {
@@ -1101,7 +1137,7 @@ Window {
                     width: subheaderItem.isCrowded ? 28 : (coinRow.implicitWidth + 14)
                     radius: 6
                     color: coinMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: coinMouse.containsMouse ? root.neonCyan : root.themeBorder
+                    border.color: coinMouse.containsMouse ? (isCyberMode ? root.neonCyan : "#38BDF8") : root.themeBorder
                     border.width: 1
 
                     Row {
@@ -1141,7 +1177,7 @@ Window {
                     width: 28
                     radius: 6
                     color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.isMuted ? root.themeBorder : root.neonCyan
+                    border.color: root.isMuted ? root.themeBorder : (isCyberMode ? root.neonCyan : "#38BDF8")
                     border.width: 1
 
                     Text {
@@ -1161,7 +1197,7 @@ Window {
         }
 
         // =====================================================================
-        // ROW 3: PLAYFIELD BOARD CONTAINER (Dark Futuristic Cyber Terminal)
+        // ROW 3: PLAYFIELD BOARD CONTAINER (Dynamic Terminal Screen)
         // =====================================================================
         Item {
             id: playArea
@@ -1180,11 +1216,11 @@ Window {
             Rectangle {
                 id: boardContainer
                 anchors.fill: parent
-                radius: 8
+                radius: isCyberMode ? 8 : 10
                 clip: true
-                color: root.cyberObsidian
-                border.color: root.neonCyan
-                border.width: 1.5
+                color: isCyberMode ? root.cyberObsidian : "#000088"
+                border.color: isCyberMode ? root.neonCyan : "#1E293B"
+                border.width: isCyberMode ? 1.5 : 4
 
                 // Cyber Mode Neon Laser Grid & Framing Lines
                 Rectangle {
@@ -1194,22 +1230,23 @@ Window {
                     color: "transparent"
                     border.color: "#A855F733"
                     border.width: 1
+                    visible: isCyberMode
                     z: 49
                 }
 
                 // Inside Terminal Screen:
                 Column {
                     anchors.fill: parent
-                    anchors.margins: 10
+                    anchors.margins: isCyberMode ? 10 : 8
                     spacing: 5
 
                     // 1. Paytable Matrix / Game Table HUD
                     Rectangle {
                         width: parent.width
                         height: Math.max(88, Math.min(130, boardContainer.height * 0.28))
-                        radius: 5
-                        color: "#0A0F1ECC"
-                        border.color: "#00F0FF33"
+                        radius: isCyberMode ? 5 : 4
+                        color: isCyberMode ? "#0A0F1ECC" : "#0000AA"
+                        border.color: isCyberMode ? "#00F0FF33" : "#FEF08A"
                         border.width: 1
                         clip: true
 
@@ -1232,7 +1269,7 @@ Window {
                                     font.family: root.monoFontFamily
                                     font.pixelSize: Math.max(7, Math.min(10, boardContainer.width * 0.021))
                                     font.bold: true
-                                    color: root.neonCyan
+                                    color: isCyberMode ? root.neonCyan : "#FEF08A"
                                 }
 
                                 Repeater {
@@ -1241,7 +1278,7 @@ Window {
                                         width: (parent.width * 0.56 - 8) / 5
                                         height: 15
                                         radius: 2
-                                        color: (root.betCoins === modelData) ? root.neonCyan : "transparent"
+                                        color: (root.betCoins === modelData) ? (isCyberMode ? root.neonCyan : "#FEF08A") : "transparent"
 
                                         Text {
                                             anchors.centerIn: parent
@@ -1249,7 +1286,7 @@ Window {
                                             font.family: root.monoFontFamily
                                             font.pixelSize: Math.max(7, Math.min(10, boardContainer.width * 0.021))
                                             font.bold: true
-                                            color: (root.betCoins === modelData) ? "#050811" : "#38BDF8"
+                                            color: (root.betCoins === modelData) ? "#000000" : (isCyberMode ? "#38BDF8" : "#FFFFFF")
                                         }
                                     }
                                 }
@@ -1273,7 +1310,7 @@ Window {
                                             width: parent.width
                                             height: 12
                                             readonly property bool isWinningRow: winningEvaluation && (winningEvaluation.key === modelData.key)
-                                            color: isWinningRow ? root.neonMagenta : "transparent"
+                                            color: isWinningRow ? (isCyberMode ? root.neonMagenta : "#DC2626") : "transparent"
                                             radius: 2
 
                                             Row {
@@ -1286,7 +1323,7 @@ Window {
                                                     font.family: root.monoFontFamily
                                                     font.pixelSize: Math.max(6, Math.min(9, boardContainer.width * 0.019))
                                                     font.bold: parent.parent.isWinningRow
-                                                    color: parent.parent.isWinningRow ? "#FFFFFF" : "#E2E8F0"
+                                                    color: parent.parent.isWinningRow ? "#FFFFFF" : (isCyberMode ? "#E2E8F0" : "#FFFFFF")
                                                     elide: Text.ElideRight
                                                 }
 
@@ -1295,7 +1332,7 @@ Window {
                                                     Rectangle {
                                                         width: (parent.width * 0.56 - 8) / 5
                                                         height: 12
-                                                        color: (root.betCoins === index + 1) ? "#00F0FF22" : "transparent"
+                                                        color: (root.betCoins === index + 1) ? (isCyberMode ? "#00F0FF22" : "#FFFF0033") : "transparent"
 
                                                         Text {
                                                             anchors.centerIn: parent
@@ -1303,7 +1340,7 @@ Window {
                                                             font.family: root.monoFontFamily
                                                             font.pixelSize: Math.max(6, Math.min(9, boardContainer.width * 0.019))
                                                             font.bold: (root.betCoins === index + 1) || parent.parent.parent.isWinningRow
-                                                            color: (root.betCoins === index + 1) ? root.neonCyan : "#64748B"
+                                                            color: (root.betCoins === index + 1) ? (isCyberMode ? root.neonCyan : "#FEF08A") : (isCyberMode ? "#64748B" : "#CBD5E1")
                                                         }
                                                     }
                                                 }
@@ -1335,7 +1372,7 @@ Window {
                                     font.family: root.monoFontFamily
                                     font.pixelSize: 10
                                     font.bold: true
-                                    color: root.neonCyan
+                                    color: isCyberMode ? root.neonCyan : "#FEF08A"
                                 }
 
                                 Text {
@@ -1353,7 +1390,7 @@ Window {
                                         return "Aces high • Tie: Go to War (double bet, win 1:1) or Surrender (lose 50%)";
                                     }
                                     font.pixelSize: 9
-                                    color: "#94A3B8"
+                                    color: isCyberMode ? "#94A3B8" : "#E2E8F0"
                                 }
                             }
                         }
@@ -1364,8 +1401,8 @@ Window {
                         width: parent.width
                         height: 22
                         radius: 3
-                        color: root.isWinningRound ? root.neonMagenta : "#0A1020"
-                        border.color: root.isWinningRound ? "#FFB6D9" : "#00F0FF33"
+                        color: root.isWinningRound ? (isCyberMode ? root.neonMagenta : "#DC2626") : (isCyberMode ? "#0A1020" : "#000055")
+                        border.color: root.isWinningRound ? "#FFB6D9" : (isCyberMode ? "#00F0FF33" : "#FEF08A44")
                         border.width: 1
 
                         Text {
@@ -1374,7 +1411,7 @@ Window {
                             font.family: root.monoFontFamily
                             font.pixelSize: Math.max(9, Math.min(11, boardContainer.width * 0.024))
                             font.bold: true
-                            color: root.isWinningRound ? "#FFFFFF" : root.neonCyan
+                            color: root.isWinningRound ? "#FFFFFF" : (isCyberMode ? root.neonCyan : "#FEF08A")
                         }
                     }
 
@@ -1398,6 +1435,7 @@ Window {
                                     PlayingCard {
                                         anchors.fill: parent
                                         cardData: modelData
+                                        visualMode: root.visualMode
                                         isWinning: root.isWinningRound
                                     }
 
@@ -1420,6 +1458,7 @@ Window {
                                 width: playArea.cardW
                                 height: playArea.cardH
                                 cardData: (playerHand.length >= 1) ? playerHand[0] : null
+                                visualMode: root.visualMode
                             }
 
                             // Center Spread Box
@@ -1427,8 +1466,8 @@ Window {
                                 width: playArea.cardW + 10
                                 height: playArea.cardH
                                 radius: 4
-                                color: "#0A0F1E"
-                                border.color: root.neonCyan
+                                color: isCyberMode ? "#0A0F1E" : "#000044"
+                                border.color: isCyberMode ? root.neonCyan : "#38BDF8"
                                 border.width: 1
 
                                 Column {
@@ -1440,7 +1479,7 @@ Window {
                                         text: "SPREAD"
                                         font.pixelSize: 8
                                         font.bold: true
-                                        color: "#38BDF8"
+                                        color: isCyberMode ? "#38BDF8" : "#93C5FD"
                                     }
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
@@ -1448,7 +1487,7 @@ Window {
                                         font.family: root.monoFontFamily
                                         font.pixelSize: 20
                                         font.bold: true
-                                        color: root.neonMagenta
+                                        color: isCyberMode ? root.neonMagenta : "#FEF08A"
                                     }
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
@@ -1462,6 +1501,7 @@ Window {
                                 PlayingCard {
                                     anchors.fill: parent
                                     cardData: (playerHand.length >= 3) ? playerHand[2] : null
+                                    visualMode: root.visualMode
                                     visible: playerHand.length >= 3
                                 }
                             }
@@ -1470,6 +1510,7 @@ Window {
                                 width: playArea.cardW
                                 height: playArea.cardH
                                 cardData: (playerHand.length >= 2) ? playerHand[1] : null
+                                visualMode: root.visualMode
                             }
                         }
 
@@ -1489,7 +1530,7 @@ Window {
                                     font.family: root.monoFontFamily
                                     font.pixelSize: 10
                                     font.bold: true
-                                    color: root.neonPurple
+                                    color: isCyberMode ? root.neonPurple : "#FEF08A"
                                 }
                                 Repeater {
                                     model: dealerHand
@@ -1497,6 +1538,7 @@ Window {
                                         width: Math.round(playArea.cardW * 0.72)
                                         height: Math.round(playArea.cardH * 0.72)
                                         cardData: modelData
+                                        visualMode: root.visualMode
                                     }
                                 }
                             }
@@ -1511,7 +1553,7 @@ Window {
                                     font.family: root.monoFontFamily
                                     font.pixelSize: 10
                                     font.bold: true
-                                    color: root.neonCyan
+                                    color: isCyberMode ? root.neonCyan : "#38BDF8"
                                 }
                                 Repeater {
                                     model: playerHand
@@ -1519,6 +1561,7 @@ Window {
                                         width: Math.round(playArea.cardW * 0.72)
                                         height: Math.round(playArea.cardH * 0.72)
                                         cardData: modelData
+                                        visualMode: root.visualMode
                                     }
                                 }
                             }
@@ -1538,7 +1581,7 @@ Window {
                                     font.family: root.monoFontFamily
                                     font.pixelSize: 9
                                     font.bold: true
-                                    color: root.neonPurple
+                                    color: isCyberMode ? root.neonPurple : "#FEF08A"
                                 }
                                 Row {
                                     spacing: 4
@@ -1548,6 +1591,7 @@ Window {
                                             width: playArea.cardW
                                             height: playArea.cardH
                                             cardData: modelData
+                                            visualMode: root.visualMode
                                         }
                                     }
                                 }
@@ -1559,7 +1603,7 @@ Window {
                                 font.family: root.monoFontFamily
                                 font.pixelSize: 16
                                 font.bold: true
-                                color: root.neonCyan
+                                color: isCyberMode ? root.neonCyan : "#FFFFFF"
                             }
 
                             Column {
@@ -1570,7 +1614,7 @@ Window {
                                     font.family: root.monoFontFamily
                                     font.pixelSize: 9
                                     font.bold: true
-                                    color: root.neonCyan
+                                    color: isCyberMode ? root.neonCyan : "#38BDF8"
                                 }
                                 Row {
                                     spacing: 4
@@ -1580,6 +1624,7 @@ Window {
                                             width: playArea.cardW
                                             height: playArea.cardH
                                             cardData: modelData
+                                            visualMode: root.visualMode
                                         }
                                     }
                                 }
@@ -1621,10 +1666,10 @@ Window {
                         Rectangle {
                             width: playArea.cardW
                             height: 28
-                            radius: 4
+                            radius: isCyberMode ? 4 : 3
                             readonly property bool cardIsHeld: Boolean(playerHand && playerHand[index] && playerHand[index].held)
-                            color: cardIsHeld ? root.neonMagenta : "#0A0F1E"
-                            border.color: cardIsHeld ? "#FFB6D9" : "#00F0FF33"
+                            color: cardIsHeld ? (isCyberMode ? root.neonMagenta : "#DC2626") : (isCyberMode ? "#0A0F1E" : "#1E293B")
+                            border.color: cardIsHeld ? (isCyberMode ? "#FFB6D9" : "#FEF08A") : (isCyberMode ? "#00F0FF33" : root.themeBorder)
                             border.width: cardIsHeld ? 1.5 : 1
 
                             MouseArea {
@@ -1639,7 +1684,7 @@ Window {
                                 font.family: root.monoFontFamily
                                 font.pixelSize: 9
                                 font.bold: true
-                                color: cardIsHeld ? "#FFFFFF" : root.neonCyan
+                                color: cardIsHeld ? (isCyberMode ? "#FFFFFF" : "#FEF08A") : (isCyberMode ? root.neonCyan : "#FFFFFF")
                             }
                         }
                     }
@@ -1658,8 +1703,8 @@ Window {
                         width: (parent.width - 16) / 2
                         height: 28
                         radius: 4
-                        color: "#0369A1"
-                        border.color: root.neonCyan
+                        color: isCyberMode ? "#0369A1" : "#0284C7"
+                        border.color: isCyberMode ? root.neonCyan : "#38BDF8"
                         border.width: 1
 
                         Text {
@@ -1689,8 +1734,8 @@ Window {
                         width: (parent.width - 16) / 2
                         height: 28
                         radius: 4
-                        color: root.neonMagenta
-                        border.color: "#FFB6D9"
+                        color: isCyberMode ? root.neonMagenta : "#D97706"
+                        border.color: isCyberMode ? "#FFB6D9" : "#FDE68A"
                         border.width: 1
 
                         Text {
@@ -1729,8 +1774,8 @@ Window {
                         height: 30
                         radius: 4
                         visible: isWinningRound && lastWinAmount > 0 && !doubleUpActive
-                        color: root.neonMagenta
-                        border.color: "#FFB6D9"
+                        color: isCyberMode ? root.neonMagenta : "#E11D48"
+                        border.color: "#FEF08A"
                         border.width: 1
 
                         Text {
@@ -1753,8 +1798,8 @@ Window {
                         width: (parent.width - (isWinningRound && lastWinAmount > 0 ? parent.width * 0.28 + 18 : 12)) * 0.38
                         height: 30
                         radius: 4
-                        color: "#0A0F1E"
-                        border.color: root.neonCyan
+                        color: isCyberMode ? "#0A0F1E" : "#0D9488"
+                        border.color: isCyberMode ? root.neonCyan : "#99F6E4"
                         border.width: 1
 
                         Text {
@@ -1763,7 +1808,7 @@ Window {
                             font.family: root.monoFontFamily
                             font.pixelSize: 10
                             font.bold: true
-                            color: root.neonCyan
+                            color: isCyberMode ? root.neonCyan : "#FFFFFF"
                         }
                         MouseArea {
                             anchors.fill: parent
@@ -1777,8 +1822,8 @@ Window {
                         width: (parent.width - (isWinningRound && lastWinAmount > 0 ? parent.width * 0.28 + 18 : 12)) * 0.30
                         height: 30
                         radius: 4
-                        color: "#1E1035"
-                        border.color: root.neonPurple
+                        color: isCyberMode ? "#1E1035" : "#CA8A04"
+                        border.color: isCyberMode ? root.neonPurple : "#FEF08A"
                         border.width: 1
 
                         Text {
@@ -1787,7 +1832,7 @@ Window {
                             font.family: root.monoFontFamily
                             font.pixelSize: 10
                             font.bold: true
-                            color: "#C084FC"
+                            color: isCyberMode ? "#C084FC" : "#FFFFFF"
                         }
                         MouseArea {
                             anchors.fill: parent
@@ -1801,8 +1846,8 @@ Window {
                         width: (parent.width - (isWinningRound && lastWinAmount > 0 ? parent.width * 0.28 + 18 : 12)) * 0.32
                         height: 30
                         radius: 4
-                        color: root.neonCyan
-                        border.color: "#E0F2FE"
+                        color: isCyberMode ? root.neonCyan : "#16A34A"
+                        border.color: isCyberMode ? "#E0F2FE" : "#86EFAC"
                         border.width: 1.5
 
                         Text {
@@ -1811,7 +1856,7 @@ Window {
                             font.family: root.monoFontFamily
                             font.pixelSize: 11
                             font.bold: true
-                            color: "#050811"
+                            color: isCyberMode ? "#050811" : "#FFFFFF"
                         }
                         MouseArea {
                             anchors.fill: parent
@@ -1838,8 +1883,8 @@ Window {
                 height: Math.min(parent.height * 0.88, 380)
                 anchors.centerIn: parent
                 radius: 8
-                color: "#090D1A"
-                border.color: root.neonCyan
+                color: isCyberMode ? "#090D1A" : "#000088"
+                border.color: isCyberMode ? root.neonCyan : "#FEF08A"
                 border.width: 2
 
                 Column {
@@ -1854,7 +1899,7 @@ Window {
                             font.family: root.monoFontFamily
                             font.pixelSize: 12
                             font.bold: true
-                            color: root.neonCyan
+                            color: isCyberMode ? root.neonCyan : "#FEF08A"
                         }
                         Item { width: parent.width - 200 }
                         Rectangle {
@@ -1881,14 +1926,14 @@ Window {
                         width: parent.width
                         height: 28
                         radius: 4
-                        color: "#111827"
+                        color: isCyberMode ? "#111827" : "#000044"
                         Text {
                             anchors.centerIn: parent
                             text: "POT: " + doubleUpCurrentPot + "  →  DOUBLE: " + (doubleUpCurrentPot * 2)
                             font.family: root.monoFontFamily
                             font.pixelSize: 11
                             font.bold: true
-                            color: root.neonMagenta
+                            color: isCyberMode ? root.neonMagenta : "#FEF08A"
                         }
                     }
 
@@ -1919,6 +1964,7 @@ Window {
                                 width: 56
                                 height: 80
                                 cardData: doubleUpDealerCard
+                                visualMode: root.visualMode
                             }
                         }
 
@@ -1937,6 +1983,7 @@ Window {
                                 PlayingCard {
                                     anchors.fill: parent
                                     cardData: modelData
+                                    visualMode: root.visualMode
                                 }
                                 MouseArea {
                                     anchors.fill: parent
@@ -1965,8 +2012,8 @@ Window {
                 height: Math.min(parent.height * 0.90, 520)
                 anchors.centerIn: parent
                 radius: 8
-                color: "#090D1A"
-                border.color: root.neonCyan
+                color: isCyberMode ? "#090D1A" : "#000088"
+                border.color: isCyberMode ? root.neonCyan : "#FEF08A"
                 border.width: 2
 
                 Column {
@@ -1981,7 +2028,7 @@ Window {
                             font.family: root.monoFontFamily
                             font.pixelSize: 12
                             font.bold: true
-                            color: root.neonCyan
+                            color: isCyberMode ? root.neonCyan : "#FEF08A"
                         }
                         Item { width: parent.width - 200 }
                         Rectangle {
@@ -2021,8 +2068,8 @@ Window {
                                     height: 48
                                     radius: 4
                                     readonly property bool isSel: (activeGameId === modelData.id)
-                                    color: isSel ? "#00F0FF22" : "#111827"
-                                    border.color: isSel ? root.neonCyan : root.themeBorder
+                                    color: isSel ? (isCyberMode ? "#00F0FF22" : "#0284C7") : (isCyberMode ? "#111827" : "#000055")
+                                    border.color: isSel ? (isCyberMode ? root.neonCyan : "#FEF08A") : root.themeBorder
                                     border.width: isSel ? 1.5 : 1
 
                                     MouseArea {
@@ -2042,7 +2089,7 @@ Window {
                                                 font.family: root.monoFontFamily
                                                 font.pixelSize: 10
                                                 font.bold: true
-                                                color: isSel ? "#FFFFFF" : root.neonCyan
+                                                color: isSel ? "#FFFFFF" : (isCyberMode ? root.neonCyan : "#FFFFFF")
                                             }
                                             Item { width: 10 }
                                             Rectangle {
@@ -2063,7 +2110,7 @@ Window {
                                             width: parent.width
                                             text: modelData.desc
                                             font.pixelSize: 8
-                                            color: "#94A3B8"
+                                            color: isCyberMode ? "#94A3B8" : "#CBD5E1"
                                             elide: Text.ElideRight
                                         }
                                     }
@@ -2130,6 +2177,7 @@ Window {
                                       "• [1] - [5]: Toggle Hold on cards 1 through 5 (or Table action)\n" +
                                       "• [B]: Increase coin bet (1 to 5)\n" +
                                       "• [M]: Bet Max (5 coins) and immediately deal\n" +
+                                      "• [V]: Toggle terminal visual mode (Classic 1984 Vegas CRT ↔ Cyber Neon)\n" +
                                       "• [G]: Open Game Selection terminal menu\n" +
                                       "• [D]: Double-Up High-Card Gamble after any win\n" +
                                       "• [C]: Collect / Cash Out, or insert 100 free credits\n" +

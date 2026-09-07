@@ -12,8 +12,12 @@ Item {
     property bool isHeld: cardData ? (cardData.held === true) : false
     property bool isWild: cardData ? (cardData.isWild === true) : false
     property bool isSelected: false
+    property string visualMode: (typeof root !== "undefined" && root.visualMode) ? root.visualMode : "cyber"
 
-    readonly property string cardBackSvg: "assets/card_back_cyber.svg"
+    readonly property bool isCrtMode: visualMode === "crt"
+    readonly property bool isCyberMode: visualMode === "cyber"
+
+    readonly property string cardBackSvg: isCyberMode ? "assets/card_back_cyber.svg" : "assets/card_back_sapphire.svg"
 
     opacity: 1
     scale: isWinning ? 1.04 : (isHeld ? 1.02 : 1.0)
@@ -22,12 +26,12 @@ Item {
     // Subtle dark ambient shadow
     Rectangle {
         anchors.fill: cardContainer
-        anchors.topMargin: 2
-        anchors.leftMargin: 1
-        anchors.rightMargin: -1
-        anchors.bottomMargin: -2
-        radius: 6
-        color: "#99000000"
+        anchors.topMargin: isCyberMode ? 2 : 3
+        anchors.leftMargin: isCyberMode ? 1 : 2
+        anchors.rightMargin: isCyberMode ? -1 : -2
+        anchors.bottomMargin: isCyberMode ? -2 : -3
+        radius: isCyberMode ? 6 : 3
+        color: isCyberMode ? "#99000000" : "#AA000000"
         z: 0
     }
 
@@ -35,9 +39,9 @@ Item {
     Rectangle {
         anchors.fill: cardContainer
         anchors.margins: -3
-        radius: 8
+        radius: isCyberMode ? 8 : 4
         color: "transparent"
-        border.color: "#00F0FF"
+        border.color: isCyberMode ? "#00F0FF" : "#FFFF00"
         border.width: isWinning ? 2.5 : 0
         visible: isWinning
         z: 1
@@ -73,19 +77,19 @@ Item {
         }
 
         // =====================================================================
-        // FRONT FACE: Sleek Futuristic Dark Obsidian Glass with Neon Pips
+        // FRONT FACE: Dynamic between Dark Neon Obsidian & 1984 Vegas Ivory
         // =====================================================================
         Rectangle {
             id: frontFace
             anchors.fill: parent
-            radius: 6
-            color: "#0A0E18"
+            radius: isCyberMode ? 6 : 3
+            color: isCyberMode ? "#0A0E18" : "#FFFFFF"
             border.color: {
-                if (cardRoot.isWinning) return "#00F0FF";
-                if (cardRoot.isHeld) return "#FF007F";
-                return "#1E293B";
+                if (cardRoot.isWinning) return isCyberMode ? "#00F0FF" : "#FACC15";
+                if (cardRoot.isHeld) return isCyberMode ? "#FF007F" : "#DC2626";
+                return isCyberMode ? "#1E293B" : "#000000";
             }
-            border.width: (cardRoot.isWinning || cardRoot.isHeld) ? 2 : 1.2
+            border.width: (cardRoot.isWinning || cardRoot.isHeld) ? 2 : (isCyberMode ? 1.2 : 1.5)
             clip: true
             visible: cardRotation.angle < 90
 
@@ -93,17 +97,17 @@ Item {
             readonly property string rankText: cardRoot.cardData ? (isJokerCard ? "JK" : (cardRoot.cardData.value || "")) : ""
             readonly property string suitText: cardRoot.cardData ? (isJokerCard ? "★" : (cardRoot.cardData.suit || "")) : ""
             readonly property color suitColor: {
-                if (isJokerCard) return "#C084FC"; // Radiant neon ultraviolet for Joker
+                if (isJokerCard) return isCyberMode ? "#C084FC" : "#7E22CE";
                 if (cardRoot.cardData && cardRoot.cardData.isRed) {
-                    return "#FF007F"; // Radiant laser neon magenta/pink for Hearts and Diamonds
+                    return isCyberMode ? "#FF007F" : "#DC2626"; // Vibrant neon magenta in cyber, deep red in CRT
                 } else {
-                    return "#00F0FF"; // Radiant electric neon cyan for Spades and Clubs
+                    return isCyberMode ? "#00F0FF" : "#000000"; // Electric neon cyan in cyber, solid black in CRT
                 }
             }
             readonly property bool isFace: rankText === "K" || rankText === "Q" || rankText === "J"
             readonly property bool isAce: rankText === "A"
 
-            // Futuristic Inset Glowing Accent Hairline
+            // Futuristic Inset Glowing Accent Hairline (Cyber Mode only)
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 2.5
@@ -111,18 +115,19 @@ Item {
                 color: "transparent"
                 border.color: cardRoot.isHeld ? "#FF007F55" : (cardRoot.isWinning ? "#00F0FF55" : "#00F0FF18")
                 border.width: 1
+                visible: isCyberMode
             }
 
             // Top-Left Corner Pip
             Column {
                 anchors.top: parent.top
                 anchors.left: parent.left
-                anchors.margins: Math.max(3, Math.round(cardRoot.width * 0.06))
+                anchors.margins: Math.max(2, Math.round(cardRoot.width * 0.06))
                 spacing: -2
 
                 Text {
                     text: frontFace.rankText
-                    font.family: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
+                    font.family: isCyberMode ? ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace") : "Courier New, monospace"
                     font.pixelSize: frontFace.rankText === "10" ? Math.max(9, Math.round(cardRoot.width * 0.16)) : Math.max(10, Math.round(cardRoot.width * 0.19))
                     font.bold: true
                     color: frontFace.suitColor
@@ -140,13 +145,13 @@ Item {
             Column {
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
-                anchors.margins: Math.max(3, Math.round(cardRoot.width * 0.06))
+                anchors.margins: Math.max(2, Math.round(cardRoot.width * 0.06))
                 spacing: -2
                 rotation: 180
 
                 Text {
                     text: frontFace.rankText
-                    font.family: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
+                    font.family: isCyberMode ? ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace") : "Courier New, monospace"
                     font.pixelSize: frontFace.rankText === "10" ? Math.max(9, Math.round(cardRoot.width * 0.16)) : Math.max(10, Math.round(cardRoot.width * 0.19))
                     font.bold: true
                     color: frontFace.suitColor
@@ -179,10 +184,10 @@ Item {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "JOKER"
-                        font.family: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
+                        font.family: isCyberMode ? ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace") : "Courier New, monospace"
                         font.pixelSize: Math.max(7, Math.round(cardRoot.width * 0.13))
                         font.bold: true
-                        color: "#C084FC"
+                        color: frontFace.suitColor
                     }
                 }
 
@@ -195,30 +200,30 @@ Item {
                     visible: frontFace.isAce && !frontFace.isJokerCard
                 }
 
-                // Royal Face Card (Jack / Queen / King) Futuristic Cyber Badge
+                // Royal Face Card (Jack / Queen / King)
                 Rectangle {
                     anchors.centerIn: parent
                     width: parent.width * 0.94
                     height: parent.height * 0.94
-                    radius: 5
-                    color: Qt.rgba(frontFace.suitColor.r, frontFace.suitColor.g, frontFace.suitColor.b, 0.09)
-                    border.color: Qt.rgba(frontFace.suitColor.r, frontFace.suitColor.g, frontFace.suitColor.b, 0.5)
+                    radius: isCyberMode ? 5 : 2
+                    color: Qt.rgba(frontFace.suitColor.r, frontFace.suitColor.g, frontFace.suitColor.b, isCyberMode ? 0.09 : 0.05)
+                    border.color: Qt.rgba(frontFace.suitColor.r, frontFace.suitColor.g, frontFace.suitColor.b, isCyberMode ? 0.5 : 0.3)
                     border.width: 1
                     visible: frontFace.isFace && !frontFace.isJokerCard
 
-                    // Futuristic Micro Corner Brackets
-                    Rectangle { width: 3.5; height: 3.5; radius: 1; color: frontFace.suitColor; anchors.top: parent.top; anchors.left: parent.left; anchors.margins: 1.5 }
-                    Rectangle { width: 3.5; height: 3.5; radius: 1; color: frontFace.suitColor; anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 1.5 }
-                    Rectangle { width: 3.5; height: 3.5; radius: 1; color: frontFace.suitColor; anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.margins: 1.5 }
-                    Rectangle { width: 3.5; height: 3.5; radius: 1; color: frontFace.suitColor; anchors.bottom: parent.bottom; anchors.right: parent.right; anchors.margins: 1.5 }
+                    // Futuristic Micro Corner Brackets (Cyber Mode)
+                    Rectangle { width: 3.5; height: 3.5; radius: 1; color: frontFace.suitColor; anchors.top: parent.top; anchors.left: parent.left; anchors.margins: 1.5; visible: isCyberMode }
+                    Rectangle { width: 3.5; height: 3.5; radius: 1; color: frontFace.suitColor; anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 1.5; visible: isCyberMode }
+                    Rectangle { width: 3.5; height: 3.5; radius: 1; color: frontFace.suitColor; anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.margins: 1.5; visible: isCyberMode }
+                    Rectangle { width: 3.5; height: 3.5; radius: 1; color: frontFace.suitColor; anchors.bottom: parent.bottom; anchors.right: parent.right; anchors.margins: 1.5; visible: isCyberMode }
 
                     Column {
                         anchors.centerIn: parent
-                        spacing: -2
+                        spacing: isCyberMode ? -2 : 0
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: frontFace.rankText
-                            font.family: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
+                            font.family: isCyberMode ? ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace") : "Courier New, monospace"
                             font.pixelSize: Math.round(cardRoot.width * 0.36)
                             font.bold: true
                             color: frontFace.suitColor
@@ -249,9 +254,9 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: wildText.implicitWidth + 8
                 height: 14
-                radius: 3
-                color: "#00F0FF"
-                border.color: "#38BDF8"
+                radius: isCyberMode ? 3 : 2
+                color: isCyberMode ? "#00F0FF" : "#F59E0B"
+                border.color: isCyberMode ? "#38BDF8" : "#B45309"
                 border.width: 1
                 visible: Boolean(cardRoot.isWild || (cardRoot.cardData ? (cardRoot.cardData.isDeuce === true || cardRoot.cardData.isJoker === true) : false))
 
@@ -259,15 +264,15 @@ Item {
                     id: wildText
                     anchors.centerIn: parent
                     text: "WILD"
-                    font.family: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
+                    font.family: isCyberMode ? ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace") : "Courier New, monospace"
                     font.pixelSize: 8
                     font.bold: true
-                    color: "#050811"
+                    color: isCyberMode ? "#050811" : "#FFFFFF"
                 }
             }
 
             // =================================================================
-            // HOLOGRAPHIC HELD HUD BANNER (Neon Magenta Banner)
+            // HELD BANNER: Cyber Neon Magenta vs 1984 Vegas Red Stamp
             // =================================================================
             Rectangle {
                 id: heldBanner
@@ -275,8 +280,8 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width
                 height: Math.round(cardRoot.height * 0.22)
-                color: "#FF007F"
-                border.color: "#FFB6D9"
+                color: isCyberMode ? "#FF007F" : "#DC2626"
+                border.color: isCyberMode ? "#FFB6D9" : "#FEF08A"
                 border.width: 1
                 visible: cardRoot.isHeld
                 z: 10
@@ -284,23 +289,23 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: "HELD"
-                    font.family: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
+                    font.family: isCyberMode ? ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace") : "Courier New, monospace"
                     font.pixelSize: Math.max(9, Math.round(cardRoot.width * 0.18))
                     font.bold: true
-                    color: "#FFFFFF"
+                    color: isCyberMode ? "#FFFFFF" : "#FEF08A"
                 }
             }
         }
 
         // =====================================================================
-        // BACK FACE: Futuristic Cyber Holographic Matrix
+        // BACK FACE: Cyber Holographic Matrix vs 1984 Vegas Royal Blue
         // =====================================================================
         Rectangle {
             id: backFace
             anchors.fill: parent
-            radius: 6
-            color: "#050811"
-            border.color: "#00F0FF"
+            radius: isCyberMode ? 6 : 3
+            color: isCyberMode ? "#050811" : "#0000AA"
+            border.color: isCyberMode ? "#00F0FF" : "#FFCC00"
             border.width: 1.5
             clip: true
             visible: cardRotation.angle >= 90
@@ -318,9 +323,9 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 3
-                radius: 4
+                radius: isCyberMode ? 4 : 2
                 color: "transparent"
-                border.color: "#00F0FF55"
+                border.color: isCyberMode ? "#00F0FF55" : "#FFCC00"
                 border.width: 1
             }
         }

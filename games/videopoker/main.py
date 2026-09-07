@@ -68,6 +68,14 @@ class SettingsManager(QObject):
         self.settings.setValue("handsPlayed", int(count))
 
     @Slot(result=str)
+    def getVisualMode(self):
+        return str(self.settings.value("visualMode", "cyber"))
+
+    @Slot(str)
+    def setVisualMode(self, mode):
+        self.settings.setValue("visualMode", str(mode))
+
+    @Slot(result=str)
     def getGameMode(self):
         return str(self.settings.value("gameMode", "jacks_or_better"))
 
@@ -288,7 +296,10 @@ def main():
     if "--no-splash" in sys.argv:
         root_obj.setProperty("splashEnabled", False)
 
-
+    if "--mode" in sys.argv or "--vibe" in sys.argv:
+        idx = sys.argv.index("--mode") if "--mode" in sys.argv else sys.argv.index("--vibe")
+        if idx + 1 < len(sys.argv):
+            root_obj.setProperty("visualMode", sys.argv[idx + 1])
 
     if "--game" in sys.argv:
         idx = sys.argv.index("--game")
