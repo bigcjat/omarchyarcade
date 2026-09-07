@@ -87,9 +87,20 @@ class ArcadeBackend(QObject):
             with urllib.request.urlopen(req, timeout=5) as resp:
                 data = resp.read().decode("utf-8")
                 if len(data) > 2:
-                    # Cache catalog locally
+                    # Cache catalog locally only if remote has at least as many games as local
                     try:
-                        CATALOG_PATH.write_text(data, encoding="utf-8")
+                        remote_json = json.loads(data)
+                        local_count = 0
+                        if CATALOG_PATH.exists():
+                            try:
+                                local_count = len(json.loads(CATALOG_PATH.read_text(encoding="utf-8")).get("games", []))
+                            except Exception:
+                                pass
+                        if len(remote_json.get("games", [])) >= local_count:
+                            CATALOG_PATH.write_text(data, encoding="utf-8")
+                            return data
+                        elif CATALOG_PATH.exists():
+                            return CATALOG_PATH.read_text(encoding="utf-8")
                     except Exception:
                         pass
                     return data

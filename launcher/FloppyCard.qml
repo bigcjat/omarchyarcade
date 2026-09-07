@@ -360,6 +360,9 @@ Item {
             case "orbpop": return compOrbPop;
             case "keiracer": return compKeiRacer;
             case "blackjack": return compBlackjack;
+            case "chess": return compChess;
+            case "checkers": return compCheckers;
+            case "solitaire": return compSolitaire;
             default: return compDefault;
         }
     }
@@ -1429,6 +1432,179 @@ Item {
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText("21", width - 19, 14);
+            }
+        }
+    }
+
+    // 22. Chess Badge
+    Component {
+        id: compChess
+        Canvas {
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                ctx.fillStyle = "#0B0E14";
+                ctx.fillRect(0, 0, width, height);
+
+                var tileSize = Math.min(width, height) / 5.5;
+                var startX = (width - tileSize * 4) / 2;
+                var startY = (height - tileSize * 4) / 2;
+
+                for (var r = 0; r < 4; r++) {
+                    for (var c = 0; c < 4; c++) {
+                        ctx.fillStyle = (r + c) % 2 === 0 ? "#1E293B" : "#334155";
+                        ctx.fillRect(startX + c * tileSize, startY + r * tileSize, tileSize, tileSize);
+                    }
+                }
+                ctx.strokeStyle = "#00F0FF";
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(startX, startY, tileSize * 4, tileSize * 4);
+
+                ctx.fillStyle = "#00F0FF";
+                ctx.font = "bold 24px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("♞", startX + tileSize * 1.5, startY + tileSize * 2.5);
+
+                ctx.fillStyle = "#F43F5E";
+                ctx.fillText("♚", startX + tileSize * 2.5, startY + tileSize * 1.5);
+            }
+        }
+    }
+
+    // 23. Checkers Badge
+    Component {
+        id: compCheckers
+        Canvas {
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                ctx.fillStyle = "#0B0E14";
+                ctx.fillRect(0, 0, width, height);
+
+                var tileSize = Math.min(width, height) / 5.5;
+                var startX = (width - tileSize * 4) / 2;
+                var startY = (height - tileSize * 4) / 2;
+
+                for (var r = 0; r < 4; r++) {
+                    for (var c = 0; c < 4; c++) {
+                        ctx.fillStyle = (r + c) % 2 === 0 ? "#1E293B" : "#0F172A";
+                        ctx.fillRect(startX + c * tileSize, startY + r * tileSize, tileSize, tileSize);
+                    }
+                }
+                ctx.strokeStyle = "#00F0FF";
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(startX, startY, tileSize * 4, tileSize * 4);
+
+                function drawDisc(cx, cy, color, rimColor, isKing) {
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, tileSize * 0.38, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = rimColor;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    if (isKing) {
+                        ctx.fillStyle = "#FFFFFF";
+                        ctx.font = "bold 10px sans-serif";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText("👑", cx, cy);
+                    }
+                }
+
+                drawDisc(startX + tileSize * 1.5, startY + tileSize * 2.5, "#00F0FF", "#E0F2FE", false);
+                drawDisc(startX + tileSize * 2.5, startY + tileSize * 1.5, "#F43F5E", "#FFE4E6", true);
+            }
+        }
+    }
+
+    // 24. Solitaire Badge
+    Component {
+        id: compSolitaire
+        Canvas {
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                var feltGrad = ctx.createRadialGradient(width / 2, height / 2, 8, width / 2, height / 2, width * 0.7);
+                feltGrad.addColorStop(0, "#163E2A");
+                feltGrad.addColorStop(1, "#0A1D14");
+                ctx.fillStyle = feltGrad;
+                ctx.fillRect(0, 0, width, height);
+
+                var cw = 28;
+                var ch = 40;
+
+                var fx = width - cw - 16;
+                var fy = 8;
+                ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+                ctx.fillRect(fx + 1, fy + 2, cw, ch);
+                ctx.fillStyle = "#FFFFFF";
+                ctx.strokeStyle = "#00F0FF";
+                ctx.lineWidth = 1.5;
+                ctx.fillRect(fx, fy, cw, ch);
+                ctx.strokeRect(fx, fy, cw, ch);
+
+                ctx.fillStyle = "#0F172A";
+                ctx.font = "bold 8px monospace";
+                ctx.textAlign = "left";
+                ctx.textBaseline = "top";
+                ctx.fillText("A", fx + 3, fy + 3);
+                ctx.font = "14px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("♠", fx + cw / 2, fy + ch / 2 + 1);
+
+                var sx = 16;
+                var sy = 8;
+                ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+                ctx.fillRect(sx + 1, sy + 2, cw, ch);
+                ctx.fillStyle = "#0F172A";
+                ctx.strokeStyle = "#00F0FF";
+                ctx.lineWidth = 1.2;
+                ctx.fillRect(sx, sy, cw, ch);
+                ctx.strokeRect(sx, sy, cw, ch);
+                ctx.fillStyle = "#F59E0B";
+                ctx.font = "bold 12px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("☀️", sx + cw / 2, sy + ch / 2);
+
+                var tx = width / 2 - cw / 2;
+                var ty = 14;
+                var cascadeOffset = 15;
+
+                function drawTableauCard(cx, cy, rank, suit, isRed) {
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+                    ctx.fillRect(cx + 1, cy + 2, cw, ch);
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.strokeStyle = "#CBD5E1";
+                    ctx.lineWidth = 1;
+                    ctx.fillRect(cx, cy, cw, ch);
+                    ctx.strokeRect(cx, cy, cw, ch);
+
+                    ctx.fillStyle = isRed ? "#DC2626" : "#0F172A";
+                    ctx.font = "bold 8px monospace";
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "top";
+                    ctx.fillText(rank, cx + 3, cy + 3);
+
+                    ctx.font = "12px sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(suit, cx + cw / 2, cy + 18);
+                }
+
+                drawTableauCard(tx, ty, "K", "♥", true);
+                drawTableauCard(tx, ty + cascadeOffset, "Q", "♠", false);
+                drawTableauCard(tx, ty + cascadeOffset * 2, "J", "♦", true);
             }
         }
     }
