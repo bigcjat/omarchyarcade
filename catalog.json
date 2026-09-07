@@ -565,6 +565,35 @@
       "size": "1.2 MB",
       "size_bytes": 1282755,
       "download_size": "1.2 MB"
+    },
+    {
+      "id": "blackjack",
+      "title": "Blackjack 21",
+      "ref": "OA-021",
+      "category": "Cards & Casino",
+      "floppy_color": "#DC2626",
+      "grid_color": "#FEF08A",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Authentic Casino 21 • Omarchy Vector Decks",
+      "description": "Authentic casino Blackjack featuring custom Omarchy-branded card decks with smooth 3D flips, tactile chip betting, dealer AI standing on soft 17, and true 3:2 natural payouts.",
+      "instructions": [
+        "Place your bet using chips ($5, $25, $100, $500), then press Deal (Space / Enter).",
+        "Hit (H / Space) to draw another card, or Stand (S / Enter) to hold your hand.",
+        "Double Down (D) on your initial two cards to double your wager and receive exactly one card.",
+        "Dealer must hit on 16 and stand on all 17s. Natural Blackjack pays 3:2."
+      ],
+      "controls": {
+        "keyboard": "Space / Enter to Deal, H to Hit, S to Stand, D to Double, 1-4 for Chips",
+        "shortcuts": "C to Clear Bet, X to 2x Bet, ? for Rules, M to Mute, Esc to back"
+      },
+      "folder": "games/blackjack",
+      "entrypoint": "games/blackjack/main.qml",
+      "cover_image": "assets/covers/blackjack.png",
+      "size": "153 KB",
+      "size_bytes": 156592,
+      "download_size": "153 KB"
     }
   ]
 }
+
