@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
 """
 KeiRacer • Procedural Engine Audio Synthesizer
-Continuous real-time acoustic physics synthesis using native AudioQueue.
+Continuous real-time acoustic physics synthesis.
+Supports native macOS AudioQueue and Linux streaming (pw-cat / pw-play / paplay / aplay).
 Implements cylinder exhaust pulse math, on/off throttle filtering, and clutch shift cuts.
 """
 
 import sys
 import math
 import ctypes
+import shutil
+import subprocess
+import threading
+import time
 
-# AudioToolbox ctypes bindings for low-latency streaming
+# AudioToolbox ctypes bindings for macOS low-latency streaming
 try:
-    _toolbox = ctypes.cdll.LoadLibrary("/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox")
+    if sys.platform == "darwin":
+        _toolbox = ctypes.cdll.LoadLibrary("/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox")
+    else:
+        _toolbox = None
 except Exception:
     _toolbox = None
 
@@ -49,6 +57,7 @@ class ProceduralEngineAudio:
     Real-time procedural acoustic synthesizer.
     Generates continuous cylinder exhaust expansion pulses, transmission gear whine,
     turbo whistle, on/off throttle low-pass filtering, and clutch shift cuts.
+    Cross-platform: AudioQueue on macOS, pw-cat/pw-play/paplay/aplay on Linux.
     """
     def __init__(self, sample_rate=22050):
         self.sample_rate = float(sample_rate)
@@ -80,6 +89,8 @@ class ProceduralEngineAudio:
         self.aq_ptr = ctypes.c_void_p()
         self._buffers = []
         self._callback_ref = None
+        self._linux_proc = None
+        self._stream_thread = None
         
         if _toolbox:
             self._init_audio_queue()
@@ -100,7 +111,6 @@ class ProceduralEngineAudio:
         fmt.mBitsPerChannel = 16
         fmt.mReserved = 0
         
-        # Callback reference must be stored to prevent garbage collection
         self._callback_ref = AudioQueueOutputCallback(self._audio_callback)
         
         status = _toolbox.AudioQueueNewOutput(
@@ -116,29 +126,79 @@ class ProceduralEngineAudio:
             print(f"Warning: AudioQueueNewOutput failed with status {status}")
             return
             
-        # Allocate 3 buffers of 1024 samples (~46ms each)
         buf_size = 1024 * 2
         self._buffers = []
         for _ in range(3):
             buf = ctypes.POINTER(AudioQueueBuffer)()
             _toolbox.AudioQueueAllocateBuffer(self.aq_ptr, buf_size, ctypes.byref(buf))
             self._buffers.append(buf)
-            # Pre-fill
             self._fill_buffer(buf)
 
     def start(self):
-        if self.running or not _toolbox or not self.aq_ptr:
+        if self.running:
             return
         self.running = True
-        status = _toolbox.AudioQueueStart(self.aq_ptr, None)
-        if status != 0:
-            print(f"Warning: AudioQueueStart returned {status}")
+        if _toolbox and self.aq_ptr:
+            status = _toolbox.AudioQueueStart(self.aq_ptr, None)
+            if status != 0:
+                print(f"Warning: AudioQueueStart returned {status}")
+        else:
+            self._start_linux_stream()
+
+    def _start_linux_stream(self):
+        cmd = None
+        sr = str(int(self.sample_rate))
+        if shutil.which("pw-cat"):
+            cmd = ["pw-cat", "-p", f"--rate={sr}", "--format=s16", "--channels=1", "-"]
+        elif shutil.which("pw-play"):
+            cmd = ["pw-play", f"--rate={sr}", "--format=s16", "--channels=1", "-"]
+        elif shutil.which("paplay"):
+            cmd = ["paplay", "--raw", f"--rate={sr}", "--channels=1", "--format=s16le"]
+        elif shutil.which("aplay"):
+            cmd = ["aplay", "-q", "-r", sr, "-f", "S16_LE", "-c", "1", "-t", "raw", "-"]
+
+        if not cmd:
+            print("[AudioEngine] Note: No Linux audio sink (pw-cat/pw-play/paplay/aplay) found.")
+            return
+
+        def stream_worker():
+            chunk_samples = 512 # ~23ms low-latency buffer chunks
+            c_short_array = (ctypes.c_int16 * chunk_samples)()
+            silence = b"\x00" * (chunk_samples * 2)
+            try:
+                proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                self._linux_proc = proc
+                while self.running and proc.poll() is None:
+                    if self.is_muted:
+                        proc.stdin.write(silence)
+                        proc.stdin.flush()
+                        time.sleep(chunk_samples / self.sample_rate)
+                        continue
+
+                    self._generate_samples(c_short_array, chunk_samples)
+                    proc.stdin.write(bytes(c_short_array))
+                    proc.stdin.flush()
+
+                try:
+                    proc.stdin.close()
+                    proc.terminate()
+                except Exception:
+                    pass
+            except Exception as e:
+                print("[AudioEngine] Linux stream error:", e)
+
+        self._stream_thread = threading.Thread(target=stream_worker, daemon=True)
+        self._stream_thread.start()
 
     def stop(self):
-        if not self.running or not _toolbox or not self.aq_ptr:
-            return
         self.running = False
-        _toolbox.AudioQueueStop(self.aq_ptr, True)
+        if _toolbox and self.aq_ptr:
+            _toolbox.AudioQueueStop(self.aq_ptr, True)
+        if self._linux_proc:
+            try:
+                self._linux_proc.terminate()
+            except Exception:
+                pass
 
     def update_state(self, car_id, rpm, is_accelerating, speed, is_shift_cut, is_muted):
         """Update audio parameters from QML game tick (60 FPS)."""
@@ -165,6 +225,11 @@ class ProceduralEngineAudio:
             _toolbox.AudioQueueEnqueueBuffer(self.aq_ptr, buf_ptr, 0, None)
             return
 
+        self._generate_samples(c_short_array, num_samples)
+        buf.mAudioDataByteSize = num_samples * 2
+        _toolbox.AudioQueueEnqueueBuffer(self.aq_ptr, buf_ptr, 0, None)
+
+    def _generate_samples(self, c_short_array, num_samples):
         dt = self.dt
         two_pi = 6.283185307179586
         car = self.car_id
@@ -206,7 +271,7 @@ class ProceduralEngineAudio:
             
             sample_val = 0.0
             
-            # Internal Combustion Engine: AngeTheGreat Exhaust Pulse Math
+            # Internal Combustion Engine: Exhaust Pulse Math
             # Fundamental pulse frequency: (RPM / 60) * (cylinders / 2)
             pulse_freq = (self.current_rpm / 60.0) * firing_factor
             self.phase_crank += two_pi * pulse_freq * dt
@@ -292,6 +357,3 @@ class ProceduralEngineAudio:
             
             # 16-bit integer clamp
             c_short_array[i] = max(-32767, min(32767, int(sample_val)))
-            
-        buf.mAudioDataByteSize = num_samples * 2
-        _toolbox.AudioQueueEnqueueBuffer(self.aq_ptr, buf_ptr, 0, None)

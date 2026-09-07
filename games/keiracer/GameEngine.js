@@ -223,6 +223,7 @@ var totalCheckpoints = 0;
 // Camera shake
 var shakeIntensity = 0;
 var engineSoundTimer = 0;
+var offroadSoundTimer = 0;
 var collisionCooldown = 0;
 
 // Particles (smoke, sparks, turbo flame)
@@ -617,6 +618,7 @@ function init(w, h) {
     stage = 1;
     totalCheckpoints = 0;
     shakeIntensity = 0;
+    offroadSoundTimer = 0;
     particles = [];
 
     setActiveVehicle(selectedCar);
@@ -720,7 +722,19 @@ function update(dt, input, soundCallback) {
         }
         // Off-road camera judder
         shakeIntensity = Math.min(6, shakeIntensity + 0.4);
+
+        // Off-road gravel/dirt acoustic rumble
+        if (speed > 8) {
+            offroadSoundTimer += step;
+            if (offroadSoundTimer >= 0.16) {
+                offroadSoundTimer = 0;
+                if (soundCallback) soundCallback("offroad");
+            }
+        } else {
+            offroadSoundTimer = 0;
+        }
     } else {
+        offroadSoundTimer = 0;
         shakeIntensity = Math.max(0, shakeIntensity - step * 10);
     }
 
