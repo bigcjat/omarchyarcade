@@ -74,35 +74,38 @@ class ArcadeBackend(QObject):
         """Fetches the game catalog dynamically from GitHub (with local fallback/cache)."""
         import urllib.request
         import time
-        # Try GitHub API first (instant, bypasses CDN cache lag)
-        endpoints = [
-            ("https://api.github.com/repos/bigcjat/omarchyarcade/contents/catalog.json", {"Accept": "application/vnd.github.raw+json", "User-Agent": "OmarchyArcade/1.0"}),
-            (f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/catalog.json?_={int(time.time())}", {"User-Agent": "OmarchyArcade/1.0", "Cache-Control": "no-cache", "Pragma": "no-cache"})
-        ]
-        for url, headers in endpoints:
-            try:
-                req = urllib.request.Request(url, headers=headers)
-                with urllib.request.urlopen(req, timeout=5) as resp:
-                    data = resp.read().decode("utf-8")
-                    if len(data) > 2:
-                        try:
-                            remote_json = json.loads(data)
-                            local_count = 0
-                            if CATALOG_PATH.exists():
-                                try:
-                                    local_count = len(json.loads(CATALOG_PATH.read_text(encoding="utf-8")).get("games", []))
-                                except Exception:
-                                    pass
-                            if len(remote_json.get("games", [])) >= local_count:
-                                CATALOG_PATH.write_text(data, encoding="utf-8")
-                                return data
-                            elif CATALOG_PATH.exists():
-                                return CATALOG_PATH.read_text(encoding="utf-8")
-                        except Exception:
-                            pass
-                        return data
-            except Exception:
-                continue
+        remote_url = f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/catalog.json?_={int(time.time())}"
+        try:
+            req = urllib.request.Request(
+                remote_url,
+                headers={
+                    "User-Agent": "OmarchyArcade/1.0",
+                    "Cache-Control": "no-cache",
+                    "Pragma": "no-cache"
+                }
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = resp.read().decode("utf-8")
+                if len(data) > 2:
+                    # Cache catalog locally only if remote has at least as many games as local
+                    try:
+                        remote_json = json.loads(data)
+                        local_count = 0
+                        if CATALOG_PATH.exists():
+                            try:
+                                local_count = len(json.loads(CATALOG_PATH.read_text(encoding="utf-8")).get("games", []))
+                            except Exception:
+                                pass
+                        if len(remote_json.get("games", [])) >= local_count:
+                            CATALOG_PATH.write_text(data, encoding="utf-8")
+                            return data
+                        elif CATALOG_PATH.exists():
+                            return CATALOG_PATH.read_text(encoding="utf-8")
+                    except Exception:
+                        pass
+                    return data
+        except Exception as e:
+            print(f"[Arcade] Note: Could not reach remote catalog ({e}), trying local cache...")
 
         if CATALOG_PATH.exists():
             try:
