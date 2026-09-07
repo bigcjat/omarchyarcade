@@ -191,65 +191,19 @@ Item {
             id: backFace
             anchors.fill: parent
             radius: 6
-            color: "#991B1B" // Rich casino crimson red
-            border.color: "#FEF08A" // Casino gold trim
+            color: "#080612"
+            border.color: "#00F0FF"
             border.width: 1.5
             clip: true
-            rotation: 180
             visible: cardRotation.angle >= 90
 
-            // Repeating geometric micro-diamond lattice watermark
-            Canvas {
+            Image {
                 anchors.fill: parent
-                opacity: 0.18
-                onPaint: {
-                    var ctx = getContext("2d");
-                    ctx.strokeStyle = "#FFFFFF";
-                    ctx.lineWidth = 0.75;
-                    var step = 8;
-                    for (var x = -height; x < width + height; x += step) {
-                        ctx.beginPath();
-                        ctx.moveTo(x, 0);
-                        ctx.lineTo(x + height, height);
-                        ctx.stroke();
-
-                        ctx.beginPath();
-                        ctx.moveTo(x, height);
-                        ctx.lineTo(x + height, 0);
-                        ctx.stroke();
-                    }
-                }
-            }
-
-            // Inner Gold Pinstripe Border
-            Rectangle {
-                anchors.fill: parent
-                anchors.margins: 4
-                radius: 4
-                color: "transparent"
-                border.color: "#FEF08A"
-                border.width: 1
-            }
-
-            // Ornate Center Medallion with Official Omarchy Logo
-            Rectangle {
-                anchors.centerIn: parent
-                width: 44
-                height: 44
-                radius: 22
-                color: "#18181B"
-                border.color: "#FEF08A"
-                border.width: 1.5
-
-                Image {
-                    anchors.centerIn: parent
-                    width: 26
-                    height: 26
-                    source: "assets/omarchy-logo.svg"
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
-                    mipmap: true
-                }
+                source: "assets/card_back_synthwave.svg"
+                fillMode: Image.PreserveAspectCrop
+                mirror: true
+                smooth: true
+                mipmap: true
             }
         }
     }
