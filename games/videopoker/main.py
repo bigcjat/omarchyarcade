@@ -225,7 +225,6 @@ def main():
     disk_candidates = [
         script_dir / "assets" / "disk_icon.png",
         script_dir.parent.parent / "assets" / "covers" / "videopoker_disk.png",
-        script_dir / "assets" / "cover.png",
         script_dir.parent.parent / "assets" / "covers" / "videopoker.png",
         Path.home() / ".local" / "share" / "omarchy-arcade" / "assets" / "covers" / "videopoker.png",
     ]
