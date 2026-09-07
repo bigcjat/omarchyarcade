@@ -1,7 +1,7 @@
 {
-  "version": 1,
+  "version": 2,
   "app_name": "Omarchy Arcade",
-  "updated_at": "2026-09-08T01:57:00Z",
+  "updated_at": "2026-09-08T02:00:00Z",
   "games": [
     {
       "id": "2048",
