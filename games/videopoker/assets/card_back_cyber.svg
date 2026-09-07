@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 188 272" width="188" height="272">
+  <defs>
+    <!-- Dark Void Background Gradient -->
+    <radialGradient id="cyberBg" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="50%" stop-color="#090D1A"/>
+      <stop offset="100%" stop-color="#04060C"/>
+    </radialGradient>
+
+    <!-- Neon Cyan Gradient -->
+    <linearGradient id="neonCyanGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F0FF"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+
+    <!-- Neon Magenta Gradient -->
+    <linearGradient id="neonMagentaGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF007F"/>
+      <stop offset="100%" stop-color="#9333EA"/>
+    </linearGradient>
+
+    <!-- Futuristic Tech Hex Grid Pattern -->
+    <pattern id="hexGrid" width="24" height="41.569" patternUnits="userSpaceOnUse">
+      <path d="M 12 0 L 24 6.928 L 24 20.785 L 12 27.713 L 0 20.785 L 0 6.928 Z M 12 41.569 L 24 34.641 L 24 20.785 L 12 27.713 L 0 20.785 L 0 34.641 Z" 
+            fill="none" stroke="#00F0FF" stroke-width="0.6" opacity="0.12"/>
+      <circle cx="12" cy="27.713" r="1.2" fill="#00F0FF" opacity="0.3"/>
+      <circle cx="12" cy="0" r="1.2" fill="#FF007F" opacity="0.25"/>
+    </pattern>
+  </defs>
+
+  <!-- Outer Card Shell -->
+  <rect x="1" y="1" width="186" height="270" rx="12" fill="url(#cyberBg)" stroke="#00F0FF" stroke-width="1.8"/>
+
+  <!-- Secondary Neon Framing Border -->
+  <rect x="5" y="5" width="178" height="262" rx="9" fill="none" stroke="#FF007F" stroke-width="0.8" opacity="0.7"/>
+  <rect x="8" y="8" width="172" height="256" rx="7" fill="none" stroke="#00F0FF" stroke-width="0.5" opacity="0.4"/>
+
+  <!-- High-Tech Hexagonal Lattice Fill -->
+  <rect x="9" y="9" width="170" height="254" rx="6" fill="url(#hexGrid)"/>
+
+  <!-- Corner Cybernetic HUD Brackets -->
+  <!-- Top-Left -->
+  <path d="M 14 26 L 14 14 L 26 14" fill="none" stroke="#00F0FF" stroke-width="2"/>
+  <rect x="14" y="14" width="3" height="3" fill="#FF007F"/>
+  <!-- Top-Right -->
+  <path d="M 174 26 L 174 14 L 162 14" fill="none" stroke="#00F0FF" stroke-width="2"/>
+  <rect x="171" y="14" width="3" height="3" fill="#FF007F"/>
+  <!-- Bottom-Left -->
+  <path d="M 14 246 L 14 258 L 26 258" fill="none" stroke="#00F0FF" stroke-width="2"/>
+  <rect x="14" y="255" width="3" height="3" fill="#FF007F"/>
+  <!-- Bottom-Right -->
+  <path d="M 174 246 L 174 258 L 162 258" fill="none" stroke="#00F0FF" stroke-width="2"/>
+  <rect x="171" y="255" width="3" height="3" fill="#FF007F"/>
+
+  <!-- Futuristic Cyber Circuit Conduit Traces -->
+  <g stroke="url(#neonCyanGlow)" stroke-width="1.2" fill="none" opacity="0.75">
+    <!-- Top branch -->
+    <path d="M 30 18 L 60 18 L 74 32 L 114 32 L 128 18 L 158 18"/>
+    <circle cx="94" cy="32" r="2" fill="#00F0FF"/>
+    <!-- Bottom branch -->
+    <path d="M 30 254 L 60 254 L 74 240 L 114 240 L 128 254 L 158 254"/>
+    <circle cx="94" cy="240" r="2" fill="#00F0FF"/>
+    <!-- Vertical lateral conduits -->
+    <path d="M 18 50 L 18 80 L 26 88 L 26 184 L 18 192 L 18 222"/>
+    <path d="M 170 50 L 170 80 L 162 88 L 162 184 L 170 192 L 170 222"/>
+  </g>
+
+  <!-- Magenta Accent Circuit Nodes -->
+  <g fill="#FF007F" opacity="0.8">
+    <circle cx="26" cy="136" r="2.5"/>
+    <circle cx="162" cy="136" r="2.5"/>
+  </g>
+
+  <!-- Center Holographic Cyber Core -->
+  <g transform="translate(94, 136)">
+    <!-- Outer Cyber Hex Shield -->
+    <polygon points="0,-48 42,-24 42,24 0,48 -42,24 -42,-24" fill="#060A14" stroke="#00F0FF" stroke-width="1.6" opacity="0.95"/>
+    
+    <!-- Concentric Neon Magenta Hex Ring -->
+    <polygon points="0,-38 33,-19 33,19 0,38 -33,19 -33,-19" fill="none" stroke="#FF007F" stroke-width="1.2" stroke-dasharray="4,2" opacity="0.85"/>
+    
+    <!-- Inner Dark Glass Core -->
+    <circle cx="0" cy="0" r="24" fill="#0B1224" stroke="#00F0FF" stroke-width="1"/>
+
+    <!-- Omarchy Cyber Square Emblem -->
+    <rect x="-14" y="-14" width="28" height="28" rx="3" fill="none" stroke="#00F0FF" stroke-width="2"/>
+    <rect x="-8" y="-8" width="16" height="16" rx="2" fill="none" stroke="#FF007F" stroke-width="1.5"/>
+    <rect x="-3" y="-3" width="6" height="6" rx="1" fill="#00F0FF"/>
+
+    <!-- Orbital Cardinal Nodes -->
+    <circle cx="0" cy="-30" r="2" fill="#00F0FF"/>
+    <circle cx="0" cy="30" r="2" fill="#00F0FF"/>
+    <circle cx="-26" cy="0" r="2" fill="#FF007F"/>
+    <circle cx="26" cy="0" r="2" fill="#FF007F"/>
+  </g>
+
+  <!-- Futuristic Micro-HUD Labels -->
+  <text x="94" y="44" font-family="'JetBrains Mono', 'Menlo', 'Courier New', monospace" font-size="6" font-weight="bold" fill="#00F0FF" letter-spacing="3" text-anchor="middle" opacity="0.7">OMARCHY ARCADE</text>
+  <text x="94" y="232" font-family="'JetBrains Mono', 'Menlo', 'Courier New', monospace" font-size="5" font-weight="bold" fill="#FF007F" letter-spacing="2.5" text-anchor="middle" opacity="0.65">CYBER TERMINAL</text>
+</svg>

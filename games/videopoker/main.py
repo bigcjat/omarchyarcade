@@ -1,32 +1,28 @@
 #!/usr/bin/env python3
 """
-Omarchy Arcade • Video Poker & Tabletop Multi-Terminal (OA-025)
-Full 8-Game Casino Video Machine with Dual-Era Switcher (1984 Vegas CRT ↔ Neo-Tokyo Cyber Glass).
+Omarchy Arcade • Video Poker & Multi-Terminal (OA-025)
+8-Game Casino Video Machine with Dual-Era Switcher (1984 Vegas CRT ↔ Neo-Tokyo Cyber Glass).
 
-Includes:
-- Jacks or Better (9/6 Full Pay)
-- Deuces Wild (Four Deuces 200x)
-- Joker Poker (53-card Kings or Better)
-- Double Double Bonus Poker (Special Quad Kickers)
-- Bonus Poker Deluxe (Flat Quad 80:1)
-- Red Dog (In-Between / Acey-Deucey)
-- Single-Deck Video Blackjack (3:2 Natural, Dealer Soft 17)
-- Casino War (War / Surrender, 50% tie rule)
-- Double-Up Gamble (High-card 1-vs-4 pick)
-
-Native Qt6/QML frontend with low-latency CoreAudio / Linux sound dispatchers.
-Part of the Omarchy Arcade game suite.
+Fully adhering to the Omarchy Arcade Master Template:
+- True 100% offline play
+- Responsive 2048 layout with 1/4 and 1/2 tile support
+- Live Omarchy Desktop theme hot-reloading (~/.config/omarchy/current/theme/colors.toml)
+- CoreAudio low-latency sound synthesis on macOS + PipeWire/PulseAudio on Linux
+- QSettings persistent machine state & high score management
 """
 
-import sys
 import os
-import argparse
+import sys
+import re
+import shutil
+import subprocess
+import tomllib
 import ctypes
 from pathlib import Path
 
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
-from PySide6.QtCore import QObject, Signal, Slot, QSettings, QTimer, QUrl
+from PySide6.QtCore import QFileSystemWatcher, QTimer, QObject, Slot, QSettings, Qt, QUrl
 
 # =============================================================================
 # PERSISTENT SETTINGS MANAGER
@@ -50,14 +46,14 @@ class SettingsManager(QObject):
         self.settings.setValue("credits", int(credits))
 
     @Slot(result=int)
-    def getBestWin(self):
+    def getBestScore(self):
         try:
             return int(self.settings.value("bestWin", 0))
         except (ValueError, TypeError):
             return 0
 
     @Slot(int)
-    def setBestWin(self, win):
+    def setBestScore(self, win):
         self.settings.setValue("bestWin", int(win))
 
     @Slot(result=int)
@@ -70,14 +66,6 @@ class SettingsManager(QObject):
     @Slot(int)
     def setHandsPlayed(self, count):
         self.settings.setValue("handsPlayed", int(count))
-
-    @Slot(result=str)
-    def getVisualMode(self):
-        return str(self.settings.value("visualMode", "crt"))
-
-    @Slot(str)
-    def setVisualMode(self, mode):
-        self.settings.setValue("visualMode", str(mode))
 
     @Slot(result=str)
     def getGameMode(self):
@@ -148,50 +136,75 @@ class SoundManager(QObject):
                 self.is_mac = False
 
         if not self.is_mac:
-            import shutil
-            self.player = None
-            for p in ["pw-play", "paplay", "aplay"]:
-                if shutil.which(p):
-                    self.player = p
-                    break
+            self.player_cmd = shutil.which("pw-play") or shutil.which("paplay") or shutil.which("aplay")
 
     @Slot(str)
-    def playSound(self, sound_name):
-        if self.is_mac and sound_name in self.sounds:
-            self.AudioServicesPlaySystemSound(self.sounds[sound_name])
-        elif not self.is_mac and hasattr(self, 'player') and self.player:
-            wav_path = self.sounds_dir / f"{sound_name}.wav"
-            if wav_path.is_file():
-                import subprocess
+    def play(self, name):
+        self.playSound(name)
+
+    @Slot(str)
+    def playSound(self, name):
+        if self.is_mac and name in self.sounds:
+            self.AudioServicesPlaySystemSound(self.sounds[name])
+        elif hasattr(self, "player_cmd") and self.player_cmd:
+            wav_file = self.sounds_dir / f"{name}.wav"
+            if wav_file.is_file():
                 try:
-                    subprocess.Popen(
-                        [self.player, str(wav_path)],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL
-                    )
+                    subprocess.Popen([self.player_cmd, str(wav_file)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 except Exception:
                     pass
 
 # =============================================================================
-# APPLICATION ENTRYPOINT
+# THEME UTILITIES (From Master Template)
+# =============================================================================
+def load_all_omarchy_themes():
+    themes_js = Path(__file__).resolve().parent / "Themes.js"
+    if not themes_js.is_file():
+        return {}
+    with open(themes_js, "r", encoding="utf-8") as f:
+        content = f.read()
+    themes = {}
+    blocks = re.findall(r"\{([^{}]+)\}", content)
+    for b in blocks:
+        t = {}
+        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", b):
+            t[k] = v
+        if "id" in t and "name" in t:
+            themes[t["id"]] = t
+    return themes
+
+ALL_THEMES = load_all_omarchy_themes()
+
+def find_omarchy_colors_file():
+    home = Path.home()
+    candidates = [
+        home / ".config" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "colors.toml",
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    return None
+
+def load_toml_colors(file_path):
+    try:
+        with open(file_path, "rb") as f:
+            data = tomllib.load(f)
+            return data.get("colors", data)
+    except Exception as e:
+        print(f"Warning: Failed to load {file_path}: {e}", file=sys.stderr)
+        return None
+
+# =============================================================================
+# MAIN ENTRYPOINT
 # =============================================================================
 def main():
-    parser = argparse.ArgumentParser(description="Omarchy Arcade • Video Poker & Multi-Terminal")
-    parser.add_argument("--no-splash", action="store_true", help="Skip arcade startup screen")
-    parser.add_argument("--screenshot", type=str, help="Capture screenshot to path and exit")
-    parser.add_argument("--theme", type=str, help="Override Omarchy color theme")
-    parser.add_argument("--game", type=str, choices=[
-        "jacks_or_better", "deuces_wild", "joker_poker",
-        "double_double_bonus", "bonus_poker_deluxe",
-        "red_dog", "blackjack", "casino_war"
-    ], help="Starting game engine")
-    parser.add_argument("--mode", "--vibe", dest="mode", type=str, choices=["crt", "cyber"], help="Visual era mode ('crt' or 'cyber')")
-    parser.add_argument("--deck", type=str, choices=["synthwave", "crimson", "sapphire", "obsidian"], help="Card back theme")
-    args = parser.parse_args()
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+    os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
 
     app = QGuiApplication(sys.argv)
-    app.setOrganizationName("Omarchy")
-    app.setApplicationName("VideoPoker")
+    app.setApplicationName("Video Poker")
+    app.setOrganizationName("Arcade")
 
     script_dir = Path(__file__).resolve().parent
     icon_path = script_dir / "omarchy_arcade.svg"
@@ -200,41 +213,97 @@ def main():
 
     engine = QQmlApplicationEngine()
 
-    settings_manager = SettingsManager("VideoPoker")
-    engine.rootContext().setContextProperty("settingsManager", settings_manager)
+    sound_mgr = SoundManager(script_dir / "sounds")
+    engine.rootContext().setContextProperty("soundManager", sound_mgr)
 
-    sound_manager = SoundManager(script_dir / "sounds")
-    engine.rootContext().setContextProperty("soundManager", sound_manager)
+    settings_mgr = SettingsManager("VideoPoker")
+    engine.rootContext().setContextProperty("settingsManager", settings_mgr)
 
     qml_file = script_dir / "main.qml"
     engine.load(QUrl.fromLocalFile(str(qml_file)))
 
     if not engine.rootObjects():
-        print("Error: Could not load main.qml", file=sys.stderr)
+        print("Error: Failed to load QML root object.", file=sys.stderr)
         sys.exit(1)
 
-    root = engine.rootObjects()[0]
+    root_obj = engine.rootObjects()[0]
+
+    # CLI Theme Argument Parsing
+    theme_arg = None
+    if "--theme" in sys.argv:
+        idx = sys.argv.index("--theme")
+        if idx + 1 < len(sys.argv):
+            theme_arg = sys.argv[idx + 1]
+
+    if theme_arg:
+        clean_arg = theme_arg.lower().replace("_", "-")
+        if clean_arg in ALL_THEMES:
+            t = ALL_THEMES[clean_arg]
+            root_obj.applyTheme(t, t["name"])
+        else:
+            custom_path = Path(theme_arg).expanduser().resolve()
+            if custom_path.is_file():
+                data = load_toml_colors(custom_path)
+                if data:
+                    root_obj.applyTheme(data, custom_path.parent.name.capitalize())
+    else:
+        system_colors = find_omarchy_colors_file()
+        if system_colors:
+            data = load_toml_colors(system_colors)
+            if data:
+                theme_name = system_colors.parent.name.capitalize()
+                root_obj.applyTheme(data, theme_name)
+
+            watcher = QFileSystemWatcher(app)
+            watcher.addPath(str(system_colors))
+            if system_colors.parent.exists():
+                watcher.addPath(str(system_colors.parent))
+
+            def on_theme_updated(path):
+                colors_path = find_omarchy_colors_file()
+                if colors_path and colors_path.is_file():
+                    updated = load_toml_colors(colors_path)
+                    if updated:
+                        root_obj.applyTheme(updated, colors_path.parent.name.capitalize())
+
+            watcher.fileChanged.connect(on_theme_updated)
+            watcher.directoryChanged.connect(on_theme_updated)
+        else:
+            def apply_system_scheme():
+                scheme = app.styleHints().colorScheme()
+                if scheme == Qt.ColorScheme.Light:
+                    target_theme = ALL_THEMES.get("catppuccin-latte") or ALL_THEMES.get("github-light")
+                    name = "System Light"
+                else:
+                    target_theme = ALL_THEMES.get("catppuccin") or ALL_THEMES.get("tokyonight")
+                    name = "System Dark"
+
+                if target_theme:
+                    root_obj.applyTheme(target_theme, name)
+
+            apply_system_scheme()
+            app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
 
     # CLI Overrides
-    if args.no_splash:
-        root.setProperty("splashEnabled", False)
+    if "--no-splash" in sys.argv:
+        root_obj.setProperty("splashEnabled", False)
 
-    if args.theme:
-        root.setProperty("forcedTheme", args.theme)
 
-    if args.mode:
-        root.setProperty("visualMode", args.mode)
 
-    if args.game:
-        root.setProperty("activeGameId", args.game)
+    if "--game" in sys.argv:
+        idx = sys.argv.index("--game")
+        if idx + 1 < len(sys.argv):
+            root_obj.setProperty("activeGameId", sys.argv[idx + 1])
 
-    if args.deck:
-        root.setProperty("deckStyle", args.deck)
-
-    if args.screenshot:
-        def do_capture():
-            root.captureScreenshot(args.screenshot, True)
-        QTimer.singleShot(600 if not args.no_splash else 200, do_capture)
+    if "--screenshot" in sys.argv:
+        root_obj.setProperty("splashEnabled", False)
+        def capture():
+            out_idx = sys.argv.index("--screenshot") + 1
+            out_file = sys.argv[out_idx] if out_idx < len(sys.argv) and not sys.argv[out_idx].startswith("--") else "screenshot.png"
+            out_path = Path(out_file).resolve()
+            root_obj.captureScreenshot(str(out_path), False)
+            QTimer.singleShot(350, app.quit)
+        QTimer.singleShot(300, capture)
 
     sys.exit(app.exec())
 

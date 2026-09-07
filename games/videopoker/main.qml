@@ -1,67 +1,76 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
-import QtQuick.Window
-import "Themes.js" as Themes
 import "TerminalEngine.js" as Engine
 
-ApplicationWindow {
+Window {
     id: root
-    width: 1040
-    height: 760
-    minimumWidth: 920
-    minimumHeight: 680
     visible: true
-    title: "Omarchy Arcade • Video Terminal (OA-025)"
-    color: isCrtMode ? "#000044" : theme.bg
+    width: 480
+    height: 640
+    minimumWidth: 320
+    minimumHeight: 400
+    title: "Video Poker"
 
     // =========================================================================
-    // CONFIGURATION & PERSISTENCE
+    // COLOR PALETTE TOKENS (From Master Template & Theme Controller)
     // =========================================================================
+    property color themeBg: "#181825"
+    property color themeBoardBg: "#11111b"
+    property color themeCardBg: "#1e1e2e"
+    property color themeBorder: "#313244"
+    property color themeFg: "#cdd6f4"
+    property color themeSubtext: "#a6adc8"
+    property color themeAccent: "#00F0FF" // Neon Cyan standard
+    property color themeBtnBg: "#00F0FF"
+    property color themeBtnFg: "#050811"
+
+    // High-contrast Neon Accent Colors
+    readonly property color neonCyan: "#00F0FF"
+    readonly property color neonMagenta: "#FF007F"
+    readonly property color neonPurple: "#A855F7"
+    readonly property color neonAmber: "#FACC15"
+    readonly property color cyberObsidian: "#050811"
+
+    function colorLuminance(c) {
+        var col = Qt.color(c);
+        return 0.299 * col.r + 0.587 * col.g + 0.114 * col.b;
+    }
+
+    // =========================================================================
+    // AUDIO & APPLICATION PROPERTIES
+    // =========================================================================
+    property bool isMuted: false
     property bool splashEnabled: true
-    property string forcedTheme: ""
-    property string visualMode: "crt" // "crt" (1984 Vegas) or "cyber" (Neo-Tokyo Glass)
-    property string activeGameId: "jacks_or_better"
-    onActiveGameIdChanged: setupGame(activeGameId)
-    property string deckStyle: "synthwave"
-    property bool soundMuted: false
-
-    readonly property bool isCrtMode: visualMode === "crt"
-    readonly property var theme: Themes.getTheme(forcedTheme)
+    property bool showHelp: false
+    property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
 
     // Machine Credits & Bets
     property int credits: 1000
     property int betCoins: 1 // 1..5
     property int lastWinAmount: 0
-    property int bestWin: 0
+    property int bestScore: 0
     property int handsPlayed: 0
 
-    // Master Game State
-    // "IDLE", "DEALT", "DRAWING", "GAMBLE_OFFERED", "GAMBLE_PLAYING", "ROUND_OVER"
+    // Master Game State: "IDLE", "DEALT", "DRAWING", "ROUND_OVER"
     property string machineState: "IDLE"
     property string statusMessage: "INSERT COIN OR PRESS DEAL TO PLAY"
+    property string activeGameId: "jacks_or_better"
+    onActiveGameIdChanged: setupGame(activeGameId)
 
     // Active Deck & Hands
     property var activeDeck: []
-    property var playerHand: []      // Array of card objects
-    property var dealerHand: []      // For Blackjack / War
-    property var winningEvaluation: null // { key, name, rankLevel }
+    property var playerHand: []
+    property var dealerHand: []
+    property var winningEvaluation: null
     property bool isWinningRound: false
 
-    // Game-specific State
-    // Red Dog
+    // Table Game States
     property int redDogSpread: 0
-    property string redDogStatus: "" // "spread", "consecutive", "pair"
-    property int redDogRaiseBet: 0
-
-    // Blackjack
+    property string redDogStatus: ""
     property int playerTotal: 0
     property int dealerTotal: 0
     property bool playerCanDouble: false
-
-    // Casino War
-    property string warState: "" // "tie", "war_dealt"
-    property int warExtraBet: 0
+    property string warState: ""
 
     // Double-Up Gamble
     property bool doubleUpActive: false
@@ -73,18 +82,74 @@ ApplicationWindow {
 
     // Modals
     property bool gameMenuOpen: false
-    property bool helpModalOpen: false
+
+    // =========================================================================
+    // THEME CONTROLLER (From Master Template)
+    // =========================================================================
+    signal screenshotSaved(string filePath)
+
+    function applyTheme(data, name) {
+        if (!data || typeof data !== "object") return;
+        var bg = data.background || data.bg || "#181825";
+        var fg = data.foreground || data.fg || "#cdd6f4";
+        var accent = data.accent || "#00F0FF";
+        var c0 = data.color0 || "#313244";
+        var c8 = data.color8 || data.color0 || "#45475a";
+
+        themeBg = bg;
+        themeFg = fg;
+        themeAccent = accent;
+        themeBorder = c8;
+
+        var lum = colorLuminance(bg);
+        if (lum > 0.5) {
+            themeBoardBg = Qt.darker(bg, 1.06);
+            themeCardBg = Qt.darker(bg, 1.03);
+            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
+            themeBorder = c8 || Qt.darker(bg, 1.15);
+            themeBtnBg = accent;
+            themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+        } else {
+            themeBoardBg = Qt.darker(bg, 1.25);
+            themeCardBg = c0;
+            themeSubtext = "#a6adc8";
+            themeBorder = c8;
+            themeBtnBg = accent;
+            themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+        }
+    }
+
+    function playSound(name) {
+        if (!isMuted && typeof soundManager !== "undefined" && soundManager) {
+            soundManager.playSound(name);
+        }
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        if (!isMuted) playSound("select");
+    }
+
+    function captureScreenshot(filePath, shouldQuit) {
+        var targetItem = (splashScreen && splashScreen.visible && splashScreen.opacity > 0) ? splashScreen : mainContainer;
+        targetItem.grabToImage(function(result) {
+            result.saveToFile(filePath);
+            console.log("Screenshot saved successfully to " + filePath);
+            root.screenshotSaved(filePath);
+            if (shouldQuit) {
+                Qt.quit();
+            }
+        });
+    }
 
     // =========================================================================
     // INITIALIZATION & SETTINGS
     // =========================================================================
     Component.onCompleted: {
-        if (typeof settingsManager !== "undefined") {
+        if (typeof settingsManager !== "undefined" && settingsManager) {
             credits = settingsManager.getCredits();
-            bestWin = settingsManager.getBestWin();
+            bestScore = settingsManager.getBestScore();
             handsPlayed = settingsManager.getHandsPlayed();
-            var savedMode = settingsManager.getVisualMode();
-            if (savedMode) visualMode = savedMode;
             var savedGame = settingsManager.getGameMode();
             if (savedGame) activeGameId = savedGame;
         }
@@ -92,758 +157,693 @@ ApplicationWindow {
     }
 
     function saveSettings() {
-        if (typeof settingsManager !== "undefined") {
+        if (typeof settingsManager !== "undefined" && settingsManager) {
             settingsManager.setCredits(credits);
-            settingsManager.setBestWin(bestWin);
+            settingsManager.setBestScore(bestScore);
             settingsManager.setHandsPlayed(handsPlayed);
-            settingsManager.setVisualMode(visualMode);
             settingsManager.setGameMode(activeGameId);
         }
-    }
-
-    function playAudio(soundName) {
-        if (!soundMuted && typeof soundManager !== "undefined") {
-            soundManager.playSound(soundName);
-        }
-    }
-
-    // Screenshot helper for automated test suites
-    function captureScreenshot(filePath, shouldExit) {
-        var targetItem = cabinetBackground;
-        targetItem.grabToImage(function(result) {
-            result.saveToFile(filePath);
-            console.log("Screenshot saved successfully to " + filePath);
-            if (shouldExit) {
-                Qt.quit();
-            }
-        });
     }
 
     // =========================================================================
     // GAME REGISTRY METADATA
     // =========================================================================
     readonly property var gameList: [
-        { id: "jacks_or_better", name: "JACKS OR BETTER", type: "poker", desc: "9/6 Full Pay Classic Video Poker. Pair of Jacks pays." },
-        { id: "deuces_wild", name: "DEUCES WILD", type: "poker", desc: "All 2s are Wildcards! Natural Royal pays 800x, 4 Deuces pays 200x." },
+        { id: "jacks_or_better", name: "JACKS OR BETTER", type: "poker", desc: "9/6 Full Pay Classic. Pair of Jacks pays." },
+        { id: "deuces_wild", name: "DEUCES WILD", type: "poker", desc: "All 2s are Wild! Natural Royal pays 800x, 4 Deuces pays 200x." },
         { id: "joker_poker", name: "JOKER POKER", type: "poker", desc: "53-Card Deck with 1 Joker. Kings or Better minimum pay." },
-        { id: "double_double_bonus", name: "DOUBLE DOUBLE BONUS", type: "poker", desc: "Massive quad payouts! 4 Aces with 2-4 kicker pays 400x." },
-        { id: "bonus_poker_deluxe", name: "BONUS POKER DELUXE", type: "poker", desc: "High-octane flat 80:1 jackpot for any Four of a Kind!" },
-        { id: "red_dog", name: "RED DOG (IN-BETWEEN)", type: "table", desc: "Classic Acey-Deucey. Bet whether 3rd card lands between the first two." },
-        { id: "blackjack", name: "SINGLE-DECK BLACKJACK", type: "table", desc: "Casino 3:2 Natural Blackjack. Dealer hits soft 16, stands on 17." },
-        { id: "casino_war", name: "CASINO WAR", type: "table", desc: "High card wins. Ties offer 1:1 War Showdown or Surrender." }
+        { id: "double_double_bonus", name: "DOUBLE DOUBLE BONUS", type: "poker", desc: "High-octane Four-of-a-Kind bonus kickers up to 400x." },
+        { id: "bonus_poker_deluxe", name: "BONUS POKER DELUXE", type: "poker", desc: "Flat 80:1 jackpot bonus on ANY Four of a Kind." },
+        { id: "red_dog", name: "RED DOG", type: "table", desc: "High-spread card betting. In-between spread pays up to 5:1." },
+        { id: "blackjack", name: "SINGLE-DECK BLACKJACK", type: "table", desc: "Classic 3:2 Vegas strip blackjack. Dealer stands on 17." },
+        { id: "casino_war", name: "CASINO WAR", type: "table", desc: "Direct high-card duel against the house. Aces high." }
     ]
 
-    function getActiveGameMeta() {
+    readonly property var activeGameObj: {
         for (var i = 0; i < gameList.length; i++) {
             if (gameList[i].id === activeGameId) return gameList[i];
         }
         return gameList[0];
     }
 
-    readonly property bool isPokerGame: {
-        var meta = getActiveGameMeta();
-        return meta && meta.type === "poker";
-    }
+    readonly property bool isPokerGame: activeGameObj.type === "poker"
 
     // =========================================================================
-    // SWITCH GAMES
+    // GAME ENGINE & DISPATCH CONTROLLERS
     // =========================================================================
-    function switchGame(gameId) {
-        if (machineState === "DEALT" || machineState === "DRAWING" || doubleUpActive) {
-            // Can't switch mid-hand
-            return;
-        }
-        activeGameId = gameId;
-        gameMenuOpen = false;
-        setupGame(gameId);
-        saveSettings();
-        playAudio("select");
-    }
-
-    function isPoker(id) {
-        return id === "jacks_or_better" || id === "deuces_wild" || id === "joker_poker" ||
-               id === "double_double_bonus" || id === "bonus_poker_deluxe";
-    }
-
     function setupGame(gameId) {
         machineState = "IDLE";
-        lastWinAmount = 0;
         winningEvaluation = null;
         isWinningRound = false;
-        dealerHand = [];
         doubleUpActive = false;
+        dealerHand = [];
+        playerTotal = 0;
+        dealerTotal = 0;
+        redDogSpread = 0;
+        warState = "";
 
-        if (activeDeck.length < 15) {
-            activeDeck = (gameId === "joker_poker") ? Engine.createJokerDeck() : Engine.createStandardDeck();
-            activeDeck = Engine.shuffle(activeDeck);
+        if (gameId === "joker_poker") {
+            activeDeck = Engine.createJokerDeck();
+        } else {
+            activeDeck = Engine.createStandardDeck();
         }
 
-        if (isPoker(gameId)) {
-            // Setup 5 blank or face-down demo cards
-            var sample = [];
-            for (var i = 0; i < 5; i++) {
-                sample.push({
-                    value: "A", suit: "♠", isRed: false, faceUp: false, held: false, isWild: false
-                });
-            }
-            playerHand = sample;
-            statusMessage = "PRESS DEAL OR BET TO START (" + getActiveGameMeta().name + ")";
-        } else if (gameId === "red_dog") {
-            playerHand = [
-                { value: "?", suit: "♠", isRed: false, faceUp: false },
-                { value: "?", suit: "♠", isRed: false, faceUp: false }
-            ];
-            redDogSpread = 0;
-            redDogStatus = "";
-            statusMessage = "RED DOG: PLACE BET AND PRESS DEAL";
-        } else if (gameId === "blackjack") {
-            dealerHand = [
-                { value: "?", suit: "♠", isRed: false, faceUp: false },
-                { value: "?", suit: "♠", isRed: false, faceUp: false }
-            ];
-            playerHand = [
-                { value: "?", suit: "♠", isRed: false, faceUp: false },
-                { value: "?", suit: "♠", isRed: false, faceUp: false }
-            ];
-            playerTotal = 0;
-            dealerTotal = 0;
-            statusMessage = "BLACKJACK: PLACE BET (1-5 COINS) AND PRESS DEAL";
-        } else if (gameId === "casino_war") {
-            dealerHand = [{ value: "?", suit: "♠", isRed: false, faceUp: false }];
-            playerHand = [{ value: "?", suit: "♠", isRed: false, faceUp: false }];
-            warState = "";
-            statusMessage = "CASINO WAR: PLACE BET AND PRESS DEAL";
+        // Initialize 5 face-down cards
+        var idleCards = [];
+        for (var i = 0; i < 5; i++) {
+            idleCards.push({ value: "?", suit: "?", rank: 0, held: false, faceUp: false });
         }
+        playerHand = idleCards;
+
+        statusMessage = "INSERT COIN OR PRESS DEAL TO PLAY";
+        saveSettings();
     }
 
-    // =========================================================================
-    // BETTING CONTROLS
-    // =========================================================================
-    function increaseBet() {
-        if (machineState !== "IDLE" && machineState !== "ROUND_OVER") return;
-        if (betCoins >= 5) {
-            betCoins = 1;
-        } else {
-            betCoins++;
+    function switchGame(newGameId) {
+        if (machineState === "DEALT") {
+            // Cancel current hand
         }
-        playAudio("chip");
+        activeGameId = newGameId;
+        gameMenuOpen = false;
+        playSound("select");
     }
 
     function setMaxBet() {
-        if (machineState !== "IDLE" && machineState !== "ROUND_OVER") return;
+        if (machineState === "DEALT" && isPokerGame) return;
         betCoins = 5;
-        playAudio("chip");
-        // In classic casino terminals, hitting BET MAX immediately deals!
-        startDeal();
+        playSound("chip");
+        handlePrimaryAction();
     }
 
-    // =========================================================================
-    // MASTER DEAL / ACTION DISPATCHER
-    // =========================================================================
-    function handlePrimaryAction() {
-        if (doubleUpActive) {
-            collectDoubleUp();
-            return;
-        }
-
-        if (isPokerGame) {
-            if (machineState === "IDLE" || machineState === "ROUND_OVER") {
-                startDeal();
-            } else if (machineState === "DEALT") {
-                drawCards();
-            }
-        } else if (activeGameId === "red_dog") {
-            if (machineState === "IDLE" || machineState === "ROUND_OVER") {
-                dealRedDog();
-            } else if (machineState === "DEALT") {
-                // Call by default if pressed
-                resolveRedDog(false);
-            }
-        } else if (activeGameId === "blackjack") {
-            if (machineState === "IDLE" || machineState === "ROUND_OVER") {
-                dealBlackjack();
-            } else if (machineState === "DEALT") {
-                blackjackHit();
-            }
-        } else if (activeGameId === "casino_war") {
-            if (machineState === "IDLE" || machineState === "ROUND_OVER") {
-                dealCasinoWar();
-            }
-        }
-    }
-
-    // =========================================================================
-    // VIDEO POKER LOGIC (GAMES 1-5)
-    // =========================================================================
-    function startDeal() {
-        if (credits < betCoins) {
-            statusMessage = "OUT OF CREDITS! INSERT COIN (C)";
-            playAudio("bust");
-            return;
-        }
-
-        credits -= betCoins;
-        handsPlayed++;
-        lastWinAmount = 0;
-        winningEvaluation = null;
-        isWinningRound = false;
-        doubleUpActive = false;
-
-        // Fresh shuffled deck
-        activeDeck = (activeGameId === "joker_poker") ? Engine.createJokerDeck() : Engine.createStandardDeck();
-        activeDeck = Engine.shuffle(activeDeck);
-
-        // Deal 5 cards
-        var hand = [];
-        for (var i = 0; i < 5; i++) {
-            var c = activeDeck.pop();
-            c.faceUp = true;
-            c.held = false;
-            // Mark wild if Deuces Wild
-            if (activeGameId === "deuces_wild" && c.rank === 2) {
-                c.isWild = true;
-                c.isDeuce = true;
-            }
-            hand.push(c);
-        }
-        playerHand = hand;
-        machineState = "DEALT";
-        statusMessage = "SELECT CARDS TO HOLD (1-5), THEN PRESS DRAW";
-        playAudio("card_slide");
-
-        // Preliminary hand check
-        var evalRes = Engine.evaluateHand(activeGameId, playerHand);
-        if (evalRes) {
-            statusMessage = evalRes.name + " DEALT! HOLD CARDS AND DRAW";
-        }
+    function increaseBet() {
+        if (machineState === "DEALT" && isPokerGame) return;
+        betCoins = (betCoins % 5) + 1;
+        playSound("chip");
     }
 
     function toggleHold(index) {
-        if (machineState !== "DEALT" || !isPokerGame) return;
+        if (!isPokerGame || machineState !== "DEALT") return;
         if (index < 0 || index >= playerHand.length) return;
 
-        var list = [];
-        for (var i = 0; i < playerHand.length; i++) {
-            var card = playerHand[i];
-            if (i === index) {
-                card.held = !card.held;
-            }
-            list.push(card);
-        }
-        playerHand = list;
-        playAudio(playerHand[index].held ? "click" : "undo");
+        var handCopy = playerHand.slice();
+        handCopy[index].held = !handCopy[index].held;
+        playerHand = handCopy;
+        playSound("click");
     }
 
-    function drawCards() {
-        if (machineState !== "DEALT" || !isPokerGame) return;
-        machineState = "DRAWING";
+    function handlePrimaryAction() {
+        if (doubleUpActive) return;
 
-        var list = [];
-        for (var i = 0; i < playerHand.length; i++) {
-            var card = playerHand[i];
-            if (!card.held) {
-                var newCard = activeDeck.pop();
-                newCard.faceUp = true;
-                newCard.held = false;
-                if (activeGameId === "deuces_wild" && newCard.rank === 2) {
-                    newCard.isWild = true;
-                    newCard.isDeuce = true;
-                }
-                list.push(newCard);
-            } else {
-                list.push(card);
+        if (isPokerGame) {
+            if (machineState === "IDLE" || machineState === "ROUND_OVER") {
+                dealPokerInitial();
+            } else if (machineState === "DEALT") {
+                drawPokerFinal();
+            }
+        } else if (activeGameId === "red_dog") {
+            if (machineState === "IDLE" || machineState === "ROUND_OVER") {
+                dealRedDogInitial();
+            }
+        } else if (activeGameId === "blackjack") {
+            if (machineState === "IDLE" || machineState === "ROUND_OVER") {
+                dealBlackjackInitial();
+            }
+        } else if (activeGameId === "casino_war") {
+            if (machineState === "IDLE" || machineState === "ROUND_OVER") {
+                dealWarInitial();
             }
         }
-        playerHand = list;
-        playAudio("card_flip");
-
-        // Evaluate Hand
-        var evalRes = Engine.evaluateHand(activeGameId, playerHand);
-        winningEvaluation = evalRes;
-
-        if (evalRes) {
-            var payout = Engine.getPayout(activeGameId, evalRes.key, betCoins);
-            lastWinAmount = payout;
-            credits += payout;
-            if (payout > bestWin) bestWin = payout;
-            isWinningRound = true;
-            statusMessage = evalRes.name + "! WIN " + payout + " COINS!";
-            playAudio((evalRes.key === "royal_flush" || evalRes.key === "natural_royal_flush") ? "blackjack" : "win");
-            machineState = "ROUND_OVER";
-        } else {
-            lastWinAmount = 0;
-            isWinningRound = false;
-            statusMessage = "GAME OVER - NO WINNING COMBINATION";
-            playAudio("bust");
-            machineState = "ROUND_OVER";
-        }
-        saveSettings();
     }
 
-    // =========================================================================
-    // GAME 6: RED DOG (IN-BETWEEN)
-    // =========================================================================
-    function dealRedDog() {
+    // --- POKER DISPATCH ---
+    function dealPokerInitial() {
         if (credits < betCoins) {
-            statusMessage = "OUT OF CREDITS!";
-            playAudio("bust");
+            statusMessage = "OUT OF CREDITS! PRESS (C) TO ADD COINS";
+            playSound("lose");
             return;
         }
 
         credits -= betCoins;
         handsPlayed++;
-        lastWinAmount = 0;
         winningEvaluation = null;
         isWinningRound = false;
-        doubleUpActive = false;
-        redDogRaiseBet = 0;
+        lastWinAmount = 0;
 
-        activeDeck = Engine.shuffle(Engine.createStandardDeck());
-        var dealRes = Engine.initRedDogDeal(activeDeck);
-        activeDeck = dealRes.remainingDeck;
+        // Fresh deck shuffle
+        activeDeck = (activeGameId === "joker_poker") ? Engine.createJokerDeck() : Engine.createStandardDeck();
+        var dealt = [];
+        for (var i = 0; i < 5; i++) {
+            var c = activeDeck.pop();
+            c.held = false;
+            c.faceUp = true;
+            dealt.push(c);
+        }
+        playerHand = dealt;
+        machineState = "DEALT";
+        playSound("deal");
 
-        redDogSpread = dealRes.spread;
-        redDogStatus = dealRes.status;
-
-        var c1 = dealRes.card1;
-        var c2 = dealRes.card2;
-        c1.faceUp = true;
-        c2.faceUp = true;
-        playerHand = [c1, c2];
-
-        playAudio("card_slide");
-
-        if (redDogStatus === "consecutive") {
-            // Automatic push
-            credits += betCoins;
-            statusMessage = "CONSECUTIVE CARDS! PUSH - BET RETURNED";
-            machineState = "ROUND_OVER";
-            playAudio("undo");
-        } else if (redDogStatus === "pair") {
-            statusMessage = "PAIR DEALT! DRAWING 3RD CARD FOR 11:1 PAYOUT...";
-            machineState = "DEALT";
-            // Auto draw 3rd card
-            QTimer.singleShot(800, function() {
-                resolveRedDog(false);
-            });
+        var preEval = evaluateHand(playerHand);
+        if (preEval && preEval.winMultiplier > 0) {
+            statusMessage = preEval.name + " - SELECT CARDS TO HOLD & PRESS DRAW";
         } else {
-            // Spread between 1 and 11
-            var multStr = "1:1";
-            if (redDogSpread === 1) multStr = "5:1";
-            else if (redDogSpread === 2) multStr = "4:1";
-            else if (redDogSpread === 3) multStr = "2:1";
+            statusMessage = "HOLD (1-5) OR PRESS DRAW";
+        }
+    }
 
-            statusMessage = "SPREAD IS " + redDogSpread + " (PAYS " + multStr + "). CALL OR RAISE?";
-            machineState = "DEALT";
+    function drawPokerFinal() {
+        machineState = "DRAWING";
+        playSound("draw");
+
+        var handCopy = playerHand.slice();
+        for (var i = 0; i < 5; i++) {
+            if (!handCopy[i].held) {
+                var newCard = activeDeck.pop();
+                newCard.held = false;
+                newCard.faceUp = true;
+                handCopy[i] = newCard;
+            }
+        }
+        playerHand = handCopy;
+        machineState = "ROUND_OVER";
+
+        var result = evaluateHand(playerHand);
+        winningEvaluation = result;
+
+        if (result && result.winMultiplier > 0) {
+            var winCoins = result.pays[betCoins - 1];
+            credits += winCoins;
+            lastWinAmount = winCoins;
+            if (credits > bestScore) bestScore = credits;
+            isWinningRound = true;
+
+            statusMessage = result.name + " WINS " + winCoins + " CREDITS! [D] TO DOUBLE";
+            if (result.key === "ROYAL_FLUSH" || result.key === "NATURAL_ROYAL") {
+                playSound("jackpot");
+            } else {
+                playSound("win");
+            }
+        } else {
+            isWinningRound = false;
+            lastWinAmount = 0;
+            statusMessage = "GAME OVER. PRESS DEAL TO PLAY AGAIN";
+            playSound("lose");
         }
         saveSettings();
     }
 
-    function resolveRedDog(didRaise) {
-        if (machineState !== "DEALT" || activeGameId !== "red_dog") return;
+    function evaluateHand(hand) {
+        if (activeGameId === "jacks_or_better") return Engine.evaluateJacksOrBetter(hand);
+        if (activeGameId === "deuces_wild") return Engine.evaluateDeucesWild(hand);
+        if (activeGameId === "joker_poker") return Engine.evaluateJokerPoker(hand);
+        if (activeGameId === "double_double_bonus") return Engine.evaluateDoubleDoubleBonus(hand);
+        if (activeGameId === "bonus_poker_deluxe") return Engine.evaluateBonusPokerDeluxe(hand);
+        return null;
+    }
 
-        var totalBet = betCoins;
-        if (didRaise) {
+    // --- RED DOG DISPATCH ---
+    function dealRedDogInitial() {
+        if (credits < betCoins) {
+            statusMessage = "OUT OF CREDITS! PRESS (C) TO ADD COINS";
+            playSound("lose");
+            return;
+        }
+
+        credits -= betCoins;
+        handsPlayed++;
+        activeDeck = Engine.createStandardDeck();
+        var c1 = activeDeck.pop();
+        var c2 = activeDeck.pop();
+        c1.faceUp = true;
+        c2.faceUp = true;
+
+        var dogResult = Engine.initRedDogRound(c1, c2);
+        redDogSpread = dogResult.spread;
+        redDogStatus = dogResult.status;
+
+        if (dogResult.status === "consecutive") {
+            playerHand = [c1, c2];
+            credits += betCoins; // Push
+            machineState = "ROUND_OVER";
+            statusMessage = "CONSECUTIVE CARDS! PUSH (BET RETURNED)";
+            playSound("win");
+        } else if (dogResult.status === "pair") {
+            // Need 3rd card for 11:1 pair payout check
+            var c3 = activeDeck.pop();
+            c3.faceUp = true;
+            playerHand = [c1, c2, c3];
+            machineState = "ROUND_OVER";
+            if (c3.rank === c1.rank) {
+                var pairWin = betCoins * 11 + betCoins;
+                credits += pairWin;
+                lastWinAmount = pairWin;
+                isWinningRound = true;
+                statusMessage = "THREE OF A KIND! WINS 11:1 (" + pairWin + " CREDITS)";
+                playSound("jackpot");
+            } else {
+                credits += betCoins; // Push
+                statusMessage = "PAIR! PUSH (BET RETURNED)";
+                playSound("win");
+            }
+        } else {
+            // Spread between 1 and 11
+            playerHand = [c1, c2];
+            machineState = "DEALT";
+            statusMessage = "SPREAD " + redDogSpread + " (PAYS " + dogResult.payoutRate + ":1) - [1] CALL or [2] RAISE 2X";
+            playSound("deal");
+        }
+        saveSettings();
+    }
+
+    function resolveRedDog(isRaise) {
+        if (activeGameId !== "red_dog" || machineState !== "DEALT") return;
+
+        var totalRisk = betCoins;
+        if (isRaise) {
             if (credits >= betCoins) {
                 credits -= betCoins;
-                redDogRaiseBet = betCoins;
-                totalBet = betCoins * 2;
-                playAudio("chip");
+                totalRisk = betCoins * 2;
+                playSound("chip");
+            } else {
+                statusMessage = "NOT ENOUGH CREDITS TO RAISE. CALLING...";
             }
         }
 
         var c3 = activeDeck.pop();
         c3.faceUp = true;
+        var r1 = playerHand[0].rank;
+        var r2 = playerHand[1].rank;
+        var low = Math.min(r1, r2);
+        var high = Math.max(r1, r2);
 
-        var pList = [playerHand[0], playerHand[1], c3];
-        playerHand = pList;
-        playAudio("card_flip");
-
-        var res = Engine.resolveRedDogThirdCard(playerHand[0], playerHand[1], c3, redDogSpread, redDogStatus);
-
-        if (res.result === "win") {
-            var won = totalBet + (totalBet * res.multiplier);
-            credits += won;
-            lastWinAmount = won;
-            isWinningRound = true;
-            statusMessage = res.desc + "! WON " + won + " COINS!";
-            playAudio("win");
-        } else if (res.result === "push") {
-            credits += totalBet;
-            statusMessage = res.desc + " - BET RETURNED";
-            playAudio("undo");
-        } else {
-            lastWinAmount = 0;
-            isWinningRound = false;
-            statusMessage = res.desc + " - DEALER WINS";
-            playAudio("bust");
-        }
-
+        var handCopy = playerHand.slice();
+        handCopy.push(c3);
+        playerHand = handCopy;
         machineState = "ROUND_OVER";
+
+        var dogOutcome = Engine.evaluateRedDogThirdCard(r1, r2, c3.rank);
+        if (dogOutcome.won) {
+            var winPayout = totalRisk * dogOutcome.payoutRate + totalRisk;
+            credits += winPayout;
+            lastWinAmount = winPayout;
+            isWinningRound = true;
+            statusMessage = "INSIDE CARD (" + c3.value + ")! WON " + winPayout + " CREDITS!";
+            playSound("win");
+        } else {
+            isWinningRound = false;
+            lastWinAmount = 0;
+            statusMessage = "OUTSIDE (" + c3.value + "). HOUSE WINS. PRESS DEAL";
+            playSound("lose");
+        }
         saveSettings();
     }
 
-    // =========================================================================
-    // GAME 7: SINGLE-DECK BLACKJACK
-    // =========================================================================
-    function dealBlackjack() {
+    // --- BLACKJACK DISPATCH ---
+    function dealBlackjackInitial() {
         if (credits < betCoins) {
-            statusMessage = "OUT OF CREDITS!";
-            playAudio("bust");
+            statusMessage = "OUT OF CREDITS! PRESS (C) TO ADD COINS";
+            playSound("lose");
             return;
         }
 
         credits -= betCoins;
         handsPlayed++;
-        lastWinAmount = 0;
-        winningEvaluation = null;
-        isWinningRound = false;
-        doubleUpActive = false;
-        playerCanDouble = (credits >= betCoins);
+        activeDeck = Engine.createStandardDeck();
 
-        activeDeck = Engine.shuffle(Engine.createStandardDeck());
-        var res = Engine.initBlackjackDeal(activeDeck);
-        activeDeck = res.remainingDeck;
+        var p1 = activeDeck.pop(); p1.faceUp = true;
+        var d1 = activeDeck.pop(); d1.faceUp = true;
+        var p2 = activeDeck.pop(); p2.faceUp = true;
+        var d2 = activeDeck.pop(); d2.faceUp = false; // Hidden hole card
 
-        playerHand = res.playerHand;
-        dealerHand = res.dealerHand;
-        playAudio("card_slide");
+        playerHand = [p1, p2];
+        dealerHand = [d1, d2];
+        playerTotal = Engine.calculateBlackjackScore(playerHand);
+        dealerTotal = d1.rank === 14 ? 11 : Math.min(d1.rank, 10);
+        playerCanDouble = credits >= betCoins;
 
-        playerTotal = Engine.calculateBlackjackTotal(playerHand);
-        dealerTotal = Engine.calculateBlackjackTotal([dealerHand[0]]); // Upcard only
-
-        if (res.isNaturalBlackjack) {
-            // Check dealer hole card
+        // Check for naturals
+        if (playerTotal === 21) {
+            // Reveal dealer
             dealerHand[1].faceUp = true;
-            dealerTotal = Engine.calculateBlackjackTotal(dealerHand);
-            if (dealerTotal === 21) {
-                // Push
-                credits += betCoins;
-                statusMessage = "BOTH HAVE BLACKJACK! PUSH - BET RETURNED";
-                playAudio("undo");
-            } else {
-                // Natural 3:2 win! (e.g. bet 5 pays 7.5 -> rounded 8, or bet*2.5)
-                var payout = betCoins + Math.round(betCoins * 1.5);
-                credits += payout;
-                lastWinAmount = payout;
-                isWinningRound = true;
-                statusMessage = "BLACKJACK! PAYS 3:2! WON " + payout + " COINS!";
-                playAudio("blackjack");
-            }
+            var dTot = Engine.calculateBlackjackScore(dealerHand);
+            dealerTotal = dTot;
             machineState = "ROUND_OVER";
+
+            if (dTot === 21) {
+                credits += betCoins; // Push
+                statusMessage = "BOTH HAVE BLACKJACK! PUSH.";
+                playSound("win");
+            } else {
+                var bjWin = Math.floor(betCoins * 2.5); // 3:2 payout + original
+                credits += bjWin;
+                lastWinAmount = bjWin;
+                isWinningRound = true;
+                statusMessage = "NATURAL BLACKJACK! WINS " + bjWin + " CREDITS (3:2)!";
+                playSound("jackpot");
+            }
         } else {
-            statusMessage = "HIT, STAND, OR DOUBLE DOWN? (TOTAL: " + playerTotal + ")";
             machineState = "DEALT";
+            statusMessage = "PLAYER HAS " + playerTotal + ". [1] HIT, [2] STAND, [3] DOUBLE";
+            playSound("deal");
         }
         saveSettings();
     }
 
     function blackjackHit() {
-        if (machineState !== "DEALT" || activeGameId !== "blackjack") return;
-        playerCanDouble = false;
-
+        if (activeGameId !== "blackjack" || machineState !== "DEALT") return;
         var card = activeDeck.pop();
         card.faceUp = true;
-        var pList = playerHand.slice();
-        pList.push(card);
-        playerHand = pList;
-        playAudio("card_flip");
+        var handCopy = playerHand.slice();
+        handCopy.push(card);
+        playerHand = handCopy;
+        playerTotal = Engine.calculateBlackjackScore(playerHand);
+        playSound("draw");
 
-        playerTotal = Engine.calculateBlackjackTotal(playerHand);
         if (playerTotal > 21) {
-            // BUST
             dealerHand[1].faceUp = true;
-            dealerTotal = Engine.calculateBlackjackTotal(dealerHand);
-            statusMessage = "BUST! TOTAL " + playerTotal + " - DEALER WINS";
-            playAudio("bust");
+            dealerTotal = Engine.calculateBlackjackScore(dealerHand);
             machineState = "ROUND_OVER";
+            isWinningRound = false;
+            lastWinAmount = 0;
+            statusMessage = "BUST! PLAYER HAS " + playerTotal + ". HOUSE WINS.";
+            playSound("lose");
             saveSettings();
         } else if (playerTotal === 21) {
             blackjackStand();
         } else {
-            statusMessage = "TOTAL IS " + playerTotal + ". HIT OR STAND?";
-        }
-    }
-
-    function blackjackDouble() {
-        if (machineState !== "DEALT" || activeGameId !== "blackjack" || !playerCanDouble) return;
-        credits -= betCoins;
-        playAudio("chip");
-
-        var card = activeDeck.pop();
-        card.faceUp = true;
-        var pList = playerHand.slice();
-        pList.push(card);
-        playerHand = pList;
-        playAudio("card_flip");
-
-        playerTotal = Engine.calculateBlackjackTotal(playerHand);
-        playerCanDouble = false;
-
-        if (playerTotal > 21) {
-            dealerHand[1].faceUp = true;
-            dealerTotal = Engine.calculateBlackjackTotal(dealerHand);
-            statusMessage = "BUST ON DOUBLE! TOTAL " + playerTotal + " - DEALER WINS";
-            playAudio("bust");
-            machineState = "ROUND_OVER";
-            saveSettings();
-        } else {
-            // Stand with double bet
-            resolveBlackjackDealer(betCoins * 2);
+            statusMessage = "PLAYER HAS " + playerTotal + ". [1] HIT, [2] STAND";
         }
     }
 
     function blackjackStand() {
-        if (machineState !== "DEALT" || activeGameId !== "blackjack") return;
-        resolveBlackjackDealer(betCoins);
-    }
+        if (activeGameId !== "blackjack" || machineState !== "DEALT") return;
+        machineState = "DRAWING";
 
-    function resolveBlackjackDealer(currentBet) {
+        // Dealer reveals hole card and hits to soft 17
+        dealerHand[1].faceUp = true;
+        var dTot = Engine.calculateBlackjackScore(dealerHand);
+        while (dTot < 17) {
+            var c = activeDeck.pop();
+            c.faceUp = true;
+            dealerHand.push(c);
+            dTot = Engine.calculateBlackjackScore(dealerHand);
+        }
+        dealerTotal = dTot;
         machineState = "ROUND_OVER";
-        var res = Engine.dealerDrawBlackjack(dealerHand, activeDeck);
-        dealerHand = res.dealerHand;
-        dealerTotal = res.dealerTotal;
-        activeDeck = res.remainingDeck;
-        playAudio("card_slide");
 
-        if (res.isBust) {
-            var won = currentBet * 2;
-            credits += won;
-            lastWinAmount = won;
+        if (dTot > 21) {
+            var win = betCoins * 2;
+            credits += win;
+            lastWinAmount = win;
             isWinningRound = true;
-            statusMessage = "DEALER BUSTS (" + dealerTotal + ")! YOU WIN " + won + " COINS!";
-            playAudio("win");
-        } else if (dealerTotal > playerTotal) {
-            lastWinAmount = 0;
-            isWinningRound = false;
-            statusMessage = "DEALER WINS (" + dealerTotal + " TO " + playerTotal + ")";
-            playAudio("bust");
-        } else if (dealerTotal === playerTotal) {
-            credits += currentBet;
-            statusMessage = "PUSH (" + playerTotal + " EACH) - BET RETURNED";
-            playAudio("undo");
+            statusMessage = "DEALER BUSTS (" + dTot + ")! YOU WIN " + win + " CREDITS!";
+            playSound("win");
+        } else if (playerTotal > dTot) {
+            var winP = betCoins * 2;
+            credits += winP;
+            lastWinAmount = winP;
+            isWinningRound = true;
+            statusMessage = "YOU WIN! (" + playerTotal + " vs " + dTot + ") - " + winP + " CREDITS!";
+            playSound("win");
+        } else if (playerTotal === dTot) {
+            credits += betCoins; // Push
+            statusMessage = "PUSH (" + playerTotal + " vs " + dTot + "). BET RETURNED.";
+            playSound("win");
         } else {
-            var wonP = currentBet * 2;
-            credits += wonP;
-            lastWinAmount = wonP;
-            isWinningRound = true;
-            statusMessage = "YOU WIN (" + playerTotal + " TO " + dealerTotal + ")! WON " + wonP + " COINS!";
-            playAudio("win");
+            isWinningRound = false;
+            lastWinAmount = 0;
+            statusMessage = "HOUSE WINS (" + dTot + " vs " + playerTotal + "). PRESS DEAL.";
+            playSound("lose");
         }
         saveSettings();
     }
 
-    // =========================================================================
-    // GAME 8: CASINO WAR
-    // =========================================================================
-    function dealCasinoWar() {
+    function blackjackDouble() {
+        if (activeGameId !== "blackjack" || machineState !== "DEALT" || !playerCanDouble) return;
+        credits -= betCoins;
+        betCoins *= 2;
+        playSound("chip");
+
+        var card = activeDeck.pop();
+        card.faceUp = true;
+        var handCopy = playerHand.slice();
+        handCopy.push(card);
+        playerHand = handCopy;
+        playerTotal = Engine.calculateBlackjackScore(playerHand);
+
+        if (playerTotal > 21) {
+            dealerHand[1].faceUp = true;
+            dealerTotal = Engine.calculateBlackjackScore(dealerHand);
+            machineState = "ROUND_OVER";
+            isWinningRound = false;
+            statusMessage = "DOUBLE DOWN BUST (" + playerTotal + ")!";
+            playSound("lose");
+            betCoins = Math.floor(betCoins / 2);
+            saveSettings();
+        } else {
+            blackjackStand();
+            betCoins = Math.floor(betCoins / 2);
+        }
+    }
+
+    // --- CASINO WAR DISPATCH ---
+    function dealWarInitial() {
         if (credits < betCoins) {
-            statusMessage = "OUT OF CREDITS!";
-            playAudio("bust");
+            statusMessage = "OUT OF CREDITS! PRESS (C) TO ADD COINS";
+            playSound("lose");
             return;
         }
 
         credits -= betCoins;
         handsPlayed++;
-        lastWinAmount = 0;
-        winningEvaluation = null;
-        isWinningRound = false;
-        doubleUpActive = false;
-        warExtraBet = 0;
+        activeDeck = Engine.createStandardDeck();
 
-        activeDeck = Engine.shuffle(Engine.createStandardDeck());
-        var res = Engine.initCasinoWarDeal(activeDeck);
-        activeDeck = res.remainingDeck;
+        var pCard = activeDeck.pop(); pCard.faceUp = true;
+        var dCard = activeDeck.pop(); dCard.faceUp = true;
 
-        var pC = res.playerCard;
-        var dC = res.dealerCard;
-        pC.faceUp = true;
-        dC.faceUp = true;
-        playerHand = [pC];
-        dealerHand = [dC];
-        playAudio("card_slide");
+        playerHand = [pCard];
+        dealerHand = [dCard];
 
-        if (res.outcome === "win") {
-            var won = betCoins * 2;
-            credits += won;
-            lastWinAmount = won;
+        var outcome = Engine.evaluateWarDuel(pCard.rank, dCard.rank);
+        if (outcome.winner === "player") {
+            var w = betCoins * 2;
+            credits += w;
+            lastWinAmount = w;
             isWinningRound = true;
-            statusMessage = "YOU WIN! (" + pC.value + " BEATS " + dC.value + ") WON " + won + " COINS!";
-            playAudio("win");
             machineState = "ROUND_OVER";
-        } else if (res.outcome === "loss") {
-            lastWinAmount = 0;
+            statusMessage = "YOU WIN! " + pCard.value + " BEATS " + dCard.value + " (" + w + " CREDITS)";
+            playSound("win");
+        } else if (outcome.winner === "dealer") {
             isWinningRound = false;
-            statusMessage = "DEALER WINS (" + dC.value + " BEATS " + pC.value + ")";
-            playAudio("bust");
+            lastWinAmount = 0;
             machineState = "ROUND_OVER";
+            statusMessage = "DEALER WINS: " + dCard.value + " BEATS " + pCard.value;
+            playSound("lose");
         } else {
-            // TIE -> GO TO WAR OR SURRENDER
-            warState = "tie";
+            // TIE! WAR DECISION
             machineState = "DEALT";
-            statusMessage = "WAR! TIE AT " + pC.value + "! GO TO WAR (W) OR SURRENDER (S)?";
-            playAudio("target");
+            warState = "TIE";
+            statusMessage = "TIE CARD (" + pCard.value + ")! [1] SURRENDER (LOSE 50%) or [2] GO TO WAR!";
+            playSound("draw");
         }
         saveSettings();
     }
 
     function warSurrender() {
-        if (machineState !== "DEALT" || activeGameId !== "casino_war" || warState !== "tie") return;
-        var returnHalf = Math.floor(betCoins / 2);
-        credits += returnHalf;
-        statusMessage = "SURRENDERED: HALF BET (" + returnHalf + " COINS) RETURNED";
+        if (activeGameId !== "casino_war" || machineState !== "DEALT") return;
+        var refund = Math.floor(betCoins / 2);
+        credits += refund;
         machineState = "ROUND_OVER";
-        playAudio("undo");
+        statusMessage = "SURRENDERED. " + refund + " CREDITS RETURNED.";
+        playSound("lose");
         saveSettings();
     }
 
     function warGoToWar() {
-        if (machineState !== "DEALT" || activeGameId !== "casino_war" || warState !== "tie") return;
+        if (activeGameId !== "casino_war" || machineState !== "DEALT") return;
         if (credits < betCoins) {
-            statusMessage = "INSUFFICIENT CREDITS TO GO TO WAR! SURRENDERING...";
+            statusMessage = "NOT ENOUGH CREDITS FOR WAR (NEED " + betCoins + "). SURRENDERING...";
             warSurrender();
             return;
         }
 
-        credits -= betCoins; // Match initial bet
-        warExtraBet = betCoins;
-        playAudio("chip");
+        credits -= betCoins; // Match original bet
+        playSound("chip");
 
-        var res = Engine.resolveCasinoWarGoToWar(activeDeck);
-        activeDeck = res.remainingDeck;
+        // Burn 3 cards
+        activeDeck.pop(); activeDeck.pop(); activeDeck.pop();
 
-        var pWar = res.playerWarCard;
-        var dWar = res.dealerWarCard;
-        pWar.faceUp = true;
-        dWar.faceUp = true;
+        // 1 final card for each
+        var pWar = activeDeck.pop(); pWar.faceUp = true;
+        var dWar = activeDeck.pop(); dWar.faceUp = true;
 
-        playerHand = [playerHand[0], pWar];
-        dealerHand = [dealerHand[0], dWar];
-        playAudio("card_flip");
-
-        if (res.playerWon) {
-            // Standard casino war rule: War bet pays 1:1, original bet pushes (Total return = 3x bet)
-            var won = (betCoins * 3);
-            credits += won;
-            lastWinAmount = won;
-            isWinningRound = true;
-            statusMessage = (res.isTie ? "WAR TIE (WINNER)! " : "WAR VICTORY! ") + "(" + pWar.value + " vs " + dWar.value + ") WON " + won + " COINS!";
-            playAudio("win");
-        } else {
-            lastWinAmount = 0;
-            isWinningRound = false;
-            statusMessage = "WAR LOSS (" + dWar.value + " BEATS " + pWar.value + ") - DEALER TAKES ALL";
-            playAudio("bust");
-        }
-
+        playerHand.push(pWar);
+        dealerHand.push(dWar);
         machineState = "ROUND_OVER";
+
+        var outcome = Engine.evaluateWarDuel(pWar.rank, dWar.rank);
+        if (outcome.winner === "player" || outcome.winner === "tie") {
+            // War win pays 1:1 on raise + tie bonus
+            var winAmt = betCoins * 3;
+            credits += winAmt;
+            lastWinAmount = winAmt;
+            isWinningRound = true;
+            statusMessage = "WAR WON! " + pWar.value + " BEATS " + dWar.value + " (" + winAmt + " CREDITS)";
+            playSound("jackpot");
+        } else {
+            isWinningRound = false;
+            lastWinAmount = 0;
+            statusMessage = "WAR LOST: " + dWar.value + " BEATS " + pWar.value;
+            playSound("lose");
+        }
         saveSettings();
     }
 
     // =========================================================================
-    // BONUS GAME: DOUBLE-UP HIGH-CARD GAMBLE
+    // DOUBLE-UP GAMBLE BONUS (High Card 1-vs-4 Pick)
     // =========================================================================
     function startDoubleUp() {
-        if (lastWinAmount <= 0) return;
+        if (!isWinningRound || lastWinAmount <= 0) return;
         doubleUpActive = true;
-        doubleUpCurrentPot = lastWinAmount;
         doubleUpResolved = false;
+        doubleUpCurrentPot = lastWinAmount;
+        doubleUpMessage = "PICK A CARD HIGHER THAN DEALER'S CARD TO DOUBLE!";
 
-        var dDeck = Engine.shuffle(Engine.createStandardDeck());
-        var res = Engine.initDoubleUpGamble(dDeck);
+        var bonusDeck = Engine.createStandardDeck();
+        var dCard = bonusDeck.pop();
+        dCard.faceUp = true;
+        doubleUpDealerCard = dCard;
 
-        doubleUpDealerCard = res.dealerCard;
-        doubleUpPlayerCards = res.playerCards;
-        doubleUpMessage = "PICK A CARD HIGHER THAN " + doubleUpDealerCard.value + " TO DOUBLE YOUR WIN!";
-        playAudio("card_slide");
+        var pCards = [];
+        for (var i = 0; i < 4; i++) {
+            var c = bonusDeck.pop();
+            c.faceUp = false;
+            pCards.push(c);
+        }
+        doubleUpPlayerCards = pCards;
+        playSound("deal");
     }
 
-    function pickDoubleUpCard(index) {
+    function pickDoubleUpCard(pickIndex) {
         if (!doubleUpActive || doubleUpResolved) return;
-        if (index < 0 || index >= doubleUpPlayerCards.length) return;
+        if (pickIndex < 0 || pickIndex >= doubleUpPlayerCards.length) return;
 
         doubleUpResolved = true;
-        var picked = doubleUpPlayerCards[index];
-        var outcome = Engine.resolveDoubleUp(doubleUpDealerCard, picked);
+        var chosen = doubleUpPlayerCards[pickIndex];
+        chosen.faceUp = true;
 
-        // Update list to trigger reactivity
-        var list = [];
-        for (var i = 0; i < doubleUpPlayerCards.length; i++) {
-            list.push(doubleUpPlayerCards[i]);
+        // Reveal other 3 cards as well
+        var revealed = doubleUpPlayerCards.slice();
+        for (var i = 0; i < revealed.length; i++) {
+            revealed[i].faceUp = true;
         }
-        doubleUpPlayerCards = list;
-        playAudio("card_flip");
+        doubleUpPlayerCards = revealed;
 
-        if (outcome === "win") {
-            var doubled = doubleUpCurrentPot * 2;
-            credits += (doubled - doubleUpCurrentPot); // Credit the extra
-            doubleUpCurrentPot = doubled;
-            lastWinAmount = doubled;
-            doubleUpMessage = "DOUBLE UP WINNER! POT IS NOW " + doubled + " COINS! DOUBLE AGAIN OR COLLECT?";
-            playAudio("win");
-        } else if (outcome === "tie") {
-            doubleUpMessage = "TIE! PUSH - POT REMAINS " + doubleUpCurrentPot + " COINS. PICK AGAIN OR COLLECT.";
-            playAudio("undo");
-            // Allow picking another card or reset
-            QTimer.singleShot(1000, function() {
-                startDoubleUp();
-            });
+        var dealerRank = doubleUpDealerCard.rank;
+        var playerRank = chosen.rank;
+
+        if (playerRank > dealerRank) {
+            doubleUpCurrentPot *= 2;
+            doubleUpMessage = "YOU WIN! " + chosen.value + " BEATS " + doubleUpDealerCard.value + "! POT: " + doubleUpCurrentPot;
+            playSound("win");
+        } else if (playerRank === dealerRank) {
+            doubleUpMessage = "TIE! " + chosen.value + " PUSHES " + doubleUpDealerCard.value + ". POT REMAINS " + doubleUpCurrentPot;
+            playSound("draw");
         } else {
-            credits -= doubleUpCurrentPot; // Forfeits win
+            doubleUpMessage = "DEALER WINS: " + doubleUpDealerCard.value + " BEATS " + chosen.value + ". POT LOST!";
+            credits -= lastWinAmount; // Lose previous win
             lastWinAmount = 0;
-            doubleUpCurrentPot = 0;
-            doubleUpMessage = "DEALER WINS - GAMBLE LOST!";
-            playAudio("bust");
-            QTimer.singleShot(1400, function() {
-                doubleUpActive = false;
-                machineState = "ROUND_OVER";
-            });
+            isWinningRound = false;
+            playSound("lose");
+            QTimer.singleShot(1400, function() { doubleUpActive = false; });
         }
         saveSettings();
     }
 
     function collectDoubleUp() {
+        if (!doubleUpActive) return;
+        if (doubleUpCurrentPot > lastWinAmount) {
+            var extra = doubleUpCurrentPot - lastWinAmount;
+            credits += extra;
+            lastWinAmount = doubleUpCurrentPot;
+        }
         doubleUpActive = false;
-        machineState = "ROUND_OVER";
-        statusMessage = "COLLECTED " + doubleUpCurrentPot + " COINS!";
-        playAudio("chip");
+        statusMessage = "COLLECTED " + doubleUpCurrentPot + " CREDITS!";
+        playSound("chip");
+        saveSettings();
     }
 
     // =========================================================================
-    // KEYBOARD SHORTCUTS
+    // MAIN CONTAINER & KEYBOARD HANDLERS
     // =========================================================================
-    Item {
-        id: keyboardListener
+    Rectangle {
+        id: mainContainer
         anchors.fill: parent
+        color: root.themeBg
         focus: true
 
         Keys.onPressed: function(event) {
-            // Hotkeys
-            if (event.key === Qt.Key_Space || event.key === Qt.Key_Return) {
+            if (splashEnabled && splashScreen.visible && splashScreen.opacity > 0) {
+                splashScreen.dismiss();
+                event.accepted = true;
+                return;
+            }
+
+            if (root.showHelp) {
+                if (event.key === Qt.Key_Escape || event.key === Qt.Key_Question || event.key === Qt.Key_Slash || event.key === Qt.Key_H) {
+                    root.showHelp = false;
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            if (gameMenuOpen) {
+                if (event.key === Qt.Key_Escape || event.key === Qt.Key_G) {
+                    gameMenuOpen = false;
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            if (doubleUpActive) {
+                if (event.key >= Qt.Key_1 && event.key <= Qt.Key_4) {
+                    pickDoubleUpCard(event.key - Qt.Key_1);
+                    event.accepted = true;
+                    return;
+                }
+                if (event.key === Qt.Key_C || event.key === Qt.Key_Return || event.key === Qt.Key_Space) {
+                    if (doubleUpResolved) collectDoubleUp();
+                    event.accepted = true;
+                    return;
+                }
+                if (event.key === Qt.Key_Escape) {
+                    collectDoubleUp();
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            // Global Game Keys
+            if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                 handlePrimaryAction();
                 event.accepted = true;
             } else if (event.key === Qt.Key_1) {
-                if (doubleUpActive) pickDoubleUpCard(0);
-                else if (isPokerGame) toggleHold(0);
-                else if (activeGameId === "red_dog") resolveRedDog(false); // Call
+                if (isPokerGame) toggleHold(0);
+                else if (activeGameId === "red_dog") resolveRedDog(false);
                 else if (activeGameId === "blackjack") blackjackHit();
-                else if (activeGameId === "casino_war" && warState === "tie") warSurrender();
+                else if (activeGameId === "casino_war") warSurrender();
                 event.accepted = true;
             } else if (event.key === Qt.Key_2) {
-                if (doubleUpActive) pickDoubleUpCard(1);
-                else if (isPokerGame) toggleHold(1);
-                else if (activeGameId === "red_dog") resolveRedDog(true); // Raise
+                if (isPokerGame) toggleHold(1);
+                else if (activeGameId === "red_dog") resolveRedDog(true);
                 else if (activeGameId === "blackjack") blackjackStand();
-                else if (activeGameId === "casino_war" && warState === "tie") warGoToWar();
+                else if (activeGameId === "casino_war") warGoToWar();
                 event.accepted = true;
             } else if (event.key === Qt.Key_3) {
-                if (doubleUpActive) pickDoubleUpCard(2);
-                else if (isPokerGame) toggleHold(2);
+                if (isPokerGame) toggleHold(2);
                 else if (activeGameId === "blackjack") blackjackDouble();
                 event.accepted = true;
             } else if (event.key === Qt.Key_4) {
-                if (doubleUpActive) pickDoubleUpCard(3);
-                else if (isPokerGame) toggleHold(3);
+                if (isPokerGame) toggleHold(3);
                 event.accepted = true;
             } else if (event.key === Qt.Key_5) {
                 if (isPokerGame) toggleHold(4);
@@ -854,901 +854,778 @@ ApplicationWindow {
             } else if (event.key === Qt.Key_M) {
                 setMaxBet();
                 event.accepted = true;
-            } else if (event.key === Qt.Key_V) {
-                visualMode = (visualMode === "crt" ? "cyber" : "crt");
-                saveSettings();
-                playAudio("click");
-                event.accepted = true;
             } else if (event.key === Qt.Key_G) {
                 gameMenuOpen = !gameMenuOpen;
-                playAudio("select");
+                playSound("select");
                 event.accepted = true;
             } else if (event.key === Qt.Key_D) {
-                if (isWinningRound && !doubleUpActive && lastWinAmount > 0) {
-                    startDoubleUp();
-                }
+                if (isWinningRound && !doubleUpActive && lastWinAmount > 0) startDoubleUp();
                 event.accepted = true;
             } else if (event.key === Qt.Key_C) {
                 if (doubleUpActive) {
                     collectDoubleUp();
                 } else {
-                    // Add 100 free credits
                     credits += 100;
-                    playAudio("chip");
-                    statusMessage = "INSERTED 100 CREDITS";
+                    playSound("chip");
+                    statusMessage = "+100 CREDITS INSERTED";
                 }
                 event.accepted = true;
-            } else if (event.key === Qt.Key_Question || event.key === Qt.Key_H) {
-                helpModalOpen = !helpModalOpen;
-                playAudio("select");
-                event.accepted = true;
-            } else if (event.key === Qt.Key_Escape) {
-                if (doubleUpActive) collectDoubleUp();
-                if (gameMenuOpen) gameMenuOpen = false;
-                if (helpModalOpen) helpModalOpen = false;
+            } else if (event.key === Qt.Key_Question || event.key === Qt.Key_Slash || event.key === Qt.Key_H) {
+                root.showHelp = !root.showHelp;
+                playSound("select");
                 event.accepted = true;
             }
         }
-    }
 
-    // =========================================================================
-    // CRT CABINET BEZEL / BACKGROUND LAYER
-    // =========================================================================
-    Rectangle {
-        id: cabinetBackground
-        anchors.fill: parent
-        color: isCrtMode ? "#020210" : theme.bg
+        // =====================================================================
+        // ROW 1: HEADER ITEM (From Master Template 2048 Standard)
+        // Title + Subtitle on Left, Stats Cards on Right
+        // =====================================================================
+        Item {
+            id: headerItem
+            anchors.top: parent.top
+            anchors.topMargin: 12
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 14
+            anchors.rightMargin: 14
+            height: Math.max(titleCol.height, statRow.height)
 
-        // Subtle gradient bezel for CRT cabinet
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: isCrtMode ? 14 : 0
-            radius: isCrtMode ? 16 : 0
-            color: isCrtMode ? "#000088" : theme.bg
-            border.color: isCrtMode ? "#1E293B" : theme.border
-            border.width: isCrtMode ? 6 : 1
-            clip: true
-
-            // =================================================================
-            // CRT SCANLINE RASTER OVERLAY (Canvas)
-            // =================================================================
-            Canvas {
-                id: scanlineCanvas
-                anchors.fill: parent
-                visible: isCrtMode
-                opacity: 0.18
-                z: 100
-                onPaint: {
-                    var ctx = getContext("2d");
-                    ctx.clearRect(0, 0, width, height);
-                    ctx.fillStyle = "#000000";
-                    for (var y = 0; y < height; y += 3) {
-                        ctx.fillRect(0, y, width, 1.2);
-                    }
-                }
-                onWidthChanged: requestPaint()
-                onHeightChanged: requestPaint()
-            }
-
-            // CRT Subtle Curved Glass Flare
-            Rectangle {
-                anchors.top: parent.top
+            Column {
+                id: titleCol
                 anchors.left: parent.left
-                anchors.right: parent.right
-                height: 120
-                visible: isCrtMode
-                z: 101
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: "#22FFFFFF" }
-                    GradientStop { position: 1.0; color: "#00FFFFFF" }
+                anchors.right: statRow.left
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 2
+
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: root.title
+                    font.pixelSize: Math.max(18, Math.min(28, headerItem.width * 0.068))
+                    font.bold: true
+                    color: root.neonCyan
+                }
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: activeGameObj.name
+                    font.pixelSize: Math.max(9, Math.min(12, headerItem.width * 0.026))
+                    font.bold: true
+                    color: root.themeSubtext
                 }
             }
 
-            // =================================================================
-            // MAIN TERMINAL VIEWPORT
-            // =================================================================
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: isCrtMode ? 16 : 20
-                spacing: 10
+            // Stat Cards on the Right
+            Row {
+                id: statRow
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 6
 
-                // -------------------------------------------------------------
-                // 1. TOP HEADER & HUD BAR
-                // -------------------------------------------------------------
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
+                // CREDITS Card
+                Rectangle {
+                    width: Math.max(62, Math.min(78, headerItem.width * 0.17))
+                    height: Math.max(38, Math.min(46, headerItem.width * 0.11))
+                    radius: 6
+                    color: root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
 
-                    // Game Title & Machine ID
-                    ColumnLayout {
-                        spacing: 2
-                        RowLayout {
-                            spacing: 8
-                            Text {
-                                text: "★ OMARCHY ARCADE"
-                                font.family: isCrtMode ? "Courier New, monospace" : ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font")
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: isCrtMode ? "#FEF08A" : theme.accent
-                            }
-                            Rectangle {
-                                width: 52
-                                height: 16
-                                radius: 3
-                                color: isCrtMode ? "#DC2626" : theme.primary
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "OA-025"
-                                    font.pixelSize: 9
-                                    font.bold: true
-                                    color: "#FFFFFF"
-                                }
-                            }
-                        }
-
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 1
                         Text {
-                            text: getActiveGameMeta().name
-                            font.family: isCrtMode ? "Courier New, monospace" : ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font")
-                            font.pixelSize: 18
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "CREDITS"
+                            font.pixelSize: 8
                             font.bold: true
-                            color: isCrtMode ? "#FFFFFF" : theme.fg
+                            color: root.themeSubtext
                         }
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    // Navigation / Switcher Buttons
-                    RowLayout {
-                        spacing: 8
-
-                        // Game Menu Switcher
-                        Rectangle {
-                            width: 100
-                            height: 32
-                            radius: 4
-                            color: isCrtMode ? "#0284C7" : theme.surface
-                            border.color: isCrtMode ? "#BAE6FD" : theme.border
-                            border.width: 1
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    gameMenuOpen = !gameMenuOpen;
-                                    playAudio("select");
-                                }
-                            }
-                            Text {
-                                anchors.centerIn: parent
-                                text: "GAMES (G)"
-                                font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                        }
-
-                        // Vibe Mode Switcher (1984 CRT vs Neo-Tokyo Cyber)
-                        Rectangle {
-                            width: 128
-                            height: 32
-                            radius: 4
-                            color: isCrtMode ? "#9333EA" : "#10B981"
-                            border.color: isCrtMode ? "#E9D5FF" : "#A7F3D0"
-                            border.width: 1
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    visualMode = (visualMode === "crt" ? "cyber" : "crt");
-                                    saveSettings();
-                                    playAudio("click");
-                                }
-                            }
-                            Text {
-                                anchors.centerIn: parent
-                                text: isCrtMode ? "1984 CRT [V]" : "CYBER GLASS [V]"
-                                font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                        }
-
-                        // Help / Rules Modal
-                        Rectangle {
-                            width: 32
-                            height: 32
-                            radius: 4
-                            color: isCrtMode ? "#334155" : theme.surface
-                            border.color: isCrtMode ? "#64748B" : theme.border
-                            border.width: 1
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    helpModalOpen = !helpModalOpen;
-                                    playAudio("select");
-                                }
-                            }
-                            Text {
-                                anchors.centerIn: parent
-                                text: "?"
-                                font.pixelSize: 14
-                                font.bold: true
-                                color: isCrtMode ? "#FFFFFF" : theme.fg
-                            }
-                        }
-
-                        // Sound Mute Toggle
-                        Rectangle {
-                            width: 32
-                            height: 32
-                            radius: 4
-                            color: isCrtMode ? "#334155" : theme.surface
-                            border.color: isCrtMode ? "#64748B" : theme.border
-                            border.width: 1
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: soundMuted = !soundMuted
-                            }
-                            Text {
-                                anchors.centerIn: parent
-                                text: soundMuted ? "🔇" : "🔊"
-                                font.pixelSize: 13
-                            }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.credits.toString()
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: root.neonCyan
                         }
                     }
                 }
 
-                // -------------------------------------------------------------
-                // 2. UPPER PAYTABLE / GAME HUD MATRIX
-                // -------------------------------------------------------------
+                // WIN / BET Card
                 Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: isPokerGame ? 170 : 90
-                    radius: isCrtMode ? 4 : 8
-                    color: isCrtMode ? "#0000AA" : (theme.bg === "#000000" ? "#111827" : theme.surface)
-                    border.color: isCrtMode ? "#FEF08A" : theme.border
-                    border.width: isCrtMode ? 2 : 1
-                    clip: true
+                    width: Math.max(62, Math.min(78, headerItem.width * 0.17))
+                    height: Math.max(38, Math.min(46, headerItem.width * 0.11))
+                    radius: 6
+                    color: root.isWinningRound ? "#FF007F26" : root.themeCardBg
+                    border.color: root.isWinningRound ? root.neonMagenta : root.themeBorder
+                    border.width: root.isWinningRound ? 1.5 : 1
 
-                    // POKER PAYTABLE GRID (5 COLUMNS)
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 6
+                    Column {
+                        anchors.centerIn: parent
                         spacing: 1
-                        visible: isPokerGame
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.isWinningRound ? "PAID" : "BET"
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.isWinningRound ? "#FFB6D9" : root.themeSubtext
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.isWinningRound ? root.lastWinAmount.toString() : (root.betCoins + " / 5")
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: root.isWinningRound ? root.neonMagenta : root.neonCyan
+                        }
+                    }
+                }
+            }
+        }
 
-                        // Header Row (1 COIN ... 5 COINS)
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 2
-                            Text {
-                                Layout.preferredWidth: 200
-                                text: "HAND RANKING"
-                                font.family: isCrtMode ? "Courier New, monospace" : ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font")
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: isCrtMode ? "#FEF08A" : theme.accent
-                            }
-                            Repeater {
-                                model: [1, 2, 3, 4, 5]
-                                Rectangle {
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: 18
-                                    color: (betCoins === modelData) ? (isCrtMode ? "#FEF08A" : theme.primary) : "transparent"
-                                    radius: 2
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: modelData + " COIN" + (modelData > 1 ? "S" : "")
-                                        font.family: isCrtMode ? "Courier New, monospace" : ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font")
-                                        font.pixelSize: 10
-                                        font.bold: true
-                                        color: (betCoins === modelData) ? (isCrtMode ? "#000088" : "#FFFFFF") : (isCrtMode ? "#FFFFFF" : theme.muted)
+        // =====================================================================
+        // ROW 2: SUBHEADER ACTION BAR (Responsive Toolbar)
+        // Clean arcade template toolbar without gimmicky switchers
+        // =====================================================================
+        Item {
+            id: subheaderItem
+            anchors.top: headerItem.bottom
+            anchors.topMargin: 8
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 14
+            anchors.rightMargin: 14
+            height: 30
+
+            readonly property bool isCrowded: subheaderItem.width < 440
+
+            // Left cluster: Games & Rules
+            Row {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: subheaderItem.isCrowded ? 4 : 6
+
+                // Game Selector Menu Button
+                Rectangle {
+                    height: 28
+                    width: subheaderItem.isCrowded ? 28 : (gameBtnRow.implicitWidth + 14)
+                    radius: 6
+                    color: gameMenuMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: gameMenuMouse.containsMouse ? root.neonCyan : root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: gameBtnRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "🎮"
+                            font.pixelSize: 11
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "Games (G)"
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+                    MouseArea {
+                        id: gameMenuMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            gameMenuOpen = !gameMenuOpen;
+                            root.playSound("select");
+                        }
+                    }
+                }
+
+                // Help Button
+                Rectangle {
+                    height: 28
+                    width: subheaderItem.isCrowded ? 28 : (helpRow.implicitWidth + 14)
+                    radius: 6
+                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: helpMouse.containsMouse ? root.neonCyan : root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: helpRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "?"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.neonCyan
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "Rules"
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+                    MouseArea {
+                        id: helpMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.showHelp = !root.showHelp;
+                            root.playSound("select");
+                        }
+                    }
+                }
+            }
+
+            // Right cluster: Add Coins, Mute
+            Row {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: subheaderItem.isCrowded ? 4 : 6
+
+                // Add Coins Button
+                Rectangle {
+                    height: 28
+                    width: subheaderItem.isCrowded ? 28 : (coinRow.implicitWidth + 14)
+                    radius: 6
+                    color: coinMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: coinMouse.containsMouse ? root.neonCyan : root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: coinRow
+                        anchors.centerIn: parent
+                        spacing: 3
+                        Text {
+                            text: "🪙"
+                            font.pixelSize: 11
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "+100 (C)"
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+                    MouseArea {
+                        id: coinMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.credits += 100;
+                            root.playSound("chip");
+                            root.statusMessage = "+100 CREDITS INSERTED";
+                        }
+                    }
+                }
+
+                // Mute Button
+                Rectangle {
+                    height: 28
+                    width: 28
+                    radius: 6
+                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: root.isMuted ? root.themeBorder : root.neonCyan
+                    border.width: 1
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: root.isMuted ? "🔇" : "🔊"
+                        font.pixelSize: 12
+                    }
+                    MouseArea {
+                        id: muteMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // ROW 3: PLAYFIELD BOARD CONTAINER (Dark Futuristic Cyber Terminal)
+        // =====================================================================
+        Item {
+            id: playArea
+            anchors.top: subheaderItem.bottom
+            anchors.topMargin: 8
+            anchors.bottom: buttonDeckItem.top
+            anchors.bottomMargin: 8
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 14
+            anchors.rightMargin: 14
+
+            readonly property int cardW: Math.max(46, Math.min(76, Math.floor((width - 44) / 5)))
+            readonly property int cardH: Math.round(cardW * 1.42)
+
+            Rectangle {
+                id: boardContainer
+                anchors.fill: parent
+                radius: 8
+                clip: true
+                color: root.cyberObsidian
+                border.color: root.neonCyan
+                border.width: 1.5
+
+                // Cyber Mode Neon Laser Grid & Framing Lines
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 3
+                    radius: 6
+                    color: "transparent"
+                    border.color: "#A855F733"
+                    border.width: 1
+                    z: 49
+                }
+
+                // Inside Terminal Screen:
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 5
+
+                    // 1. Paytable Matrix / Game Table HUD
+                    Rectangle {
+                        width: parent.width
+                        height: Math.max(88, Math.min(130, boardContainer.height * 0.28))
+                        radius: 5
+                        color: "#0A0F1ECC"
+                        border.color: "#00F0FF33"
+                        border.width: 1
+                        clip: true
+
+                        // Poker 5-Column Paytable
+                        Column {
+                            anchors.fill: parent
+                            anchors.margins: 4
+                            spacing: 1
+                            visible: root.isPokerGame
+
+                            // Paytable Header Row
+                            Row {
+                                width: parent.width
+                                height: 15
+                                spacing: 2
+
+                                Text {
+                                    width: parent.width * 0.44
+                                    text: "HAND"
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: Math.max(7, Math.min(10, boardContainer.width * 0.021))
+                                    font.bold: true
+                                    color: root.neonCyan
+                                }
+
+                                Repeater {
+                                    model: [1, 2, 3, 4, 5]
+                                    Rectangle {
+                                        width: (parent.width * 0.56 - 8) / 5
+                                        height: 15
+                                        radius: 2
+                                        color: (root.betCoins === modelData) ? root.neonCyan : "transparent"
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: modelData.toString()
+                                            font.family: root.monoFontFamily
+                                            font.pixelSize: Math.max(7, Math.min(10, boardContainer.width * 0.021))
+                                            font.bold: true
+                                            color: (root.betCoins === modelData) ? "#050811" : "#38BDF8"
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        // Paytable Rows
-                        Repeater {
-                            model: Engine.PAYTABLES[activeGameId] ? Engine.PAYTABLES[activeGameId] : []
-                            Rectangle {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 14
-                                readonly property bool isWinningRow: winningEvaluation && (winningEvaluation.key === modelData.key)
-                                color: isWinningRow ? (isCrtMode ? "#DC2626" : theme.accent) : "transparent"
-                                radius: 2
+                            // Paytable Rows (Scrollable Flickable)
+                            Flickable {
+                                width: parent.width
+                                height: parent.parent.height - 24
+                                contentHeight: payRowsCol.implicitHeight
+                                clip: true
 
-                                RowLayout {
-                                    anchors.fill: parent
-                                    spacing: 2
-
-                                    Text {
-                                        Layout.preferredWidth: 200
-                                        text: modelData.name
-                                        font.family: isCrtMode ? "Courier New, monospace" : ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font")
-                                        font.pixelSize: 10
-                                        font.bold: parent.parent.isWinningRow
-                                        color: parent.parent.isWinningRow ? "#FFFFFF" : (isCrtMode ? "#FFFFFF" : theme.fg)
-                                        elide: Text.ElideRight
-                                    }
+                                Column {
+                                    id: payRowsCol
+                                    width: parent.width
+                                    spacing: 1
 
                                     Repeater {
-                                        model: modelData.pays
+                                        model: Engine.PAYTABLES[activeGameId] ? Engine.PAYTABLES[activeGameId] : []
                                         Rectangle {
-                                            Layout.fillWidth: true
-                                            Layout.fillHeight: true
-                                            color: (betCoins === index + 1) ? (isCrtMode ? "#FFFF0033" : "#38BDF822") : "transparent"
-                                            Text {
-                                                anchors.centerIn: parent
-                                                text: modelData
-                                                font.family: isCrtMode ? "Courier New, monospace" : ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font")
-                                                font.pixelSize: 10
-                                                font.bold: (betCoins === index + 1) || parent.parent.parent.isWinningRow
-                                                color: (betCoins === index + 1) ? (isCrtMode ? "#FEF08A" : theme.accent) : (isCrtMode ? "#CBD5E1" : theme.muted)
+                                            width: parent.width
+                                            height: 12
+                                            readonly property bool isWinningRow: winningEvaluation && (winningEvaluation.key === modelData.key)
+                                            color: isWinningRow ? root.neonMagenta : "transparent"
+                                            radius: 2
+
+                                            Row {
+                                                anchors.fill: parent
+                                                spacing: 2
+
+                                                Text {
+                                                    width: parent.width * 0.44
+                                                    text: modelData.name
+                                                    font.family: root.monoFontFamily
+                                                    font.pixelSize: Math.max(6, Math.min(9, boardContainer.width * 0.019))
+                                                    font.bold: parent.parent.isWinningRow
+                                                    color: parent.parent.isWinningRow ? "#FFFFFF" : "#E2E8F0"
+                                                    elide: Text.ElideRight
+                                                }
+
+                                                Repeater {
+                                                    model: modelData.pays
+                                                    Rectangle {
+                                                        width: (parent.width * 0.56 - 8) / 5
+                                                        height: 12
+                                                        color: (root.betCoins === index + 1) ? "#00F0FF22" : "transparent"
+
+                                                        Text {
+                                                            anchors.centerIn: parent
+                                                            text: modelData.toString()
+                                                            font.family: root.monoFontFamily
+                                                            font.pixelSize: Math.max(6, Math.min(9, boardContainer.width * 0.019))
+                                                            font.bold: (root.betCoins === index + 1) || parent.parent.parent.isWinningRow
+                                                            color: (root.betCoins === index + 1) ? root.neonCyan : "#64748B"
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    // TABLE GAME HUD: RED DOG
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 8
-                        spacing: 4
-                        visible: activeGameId === "red_dog"
+                        // Table Game HUDs (Red Dog, Blackjack, War)
+                        Item {
+                            anchors.fill: parent
+                            anchors.margins: 6
+                            visible: !root.isPokerGame
 
-                        Text {
-                            text: "RED DOG SPREAD PAYOUT TABLE"
-                            font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                            font.pixelSize: 12
-                            font.bold: true
-                            color: isCrtMode ? "#FEF08A" : theme.accent
-                        }
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 4
+                                width: parent.width
 
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 10
-                            Repeater {
-                                model: [
-                                    { spread: "SPREAD 1", pay: "5 TO 1" },
-                                    { spread: "SPREAD 2", pay: "4 TO 1" },
-                                    { spread: "SPREAD 3", pay: "2 TO 1" },
-                                    { spread: "SPREAD 4-11", pay: "1 TO 1" },
-                                    { spread: "PAIR (3RD SAME)", pay: "11 TO 1" }
-                                ]
-                                Rectangle {
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: 36
-                                    radius: 4
-                                    color: isCrtMode ? "#000066" : theme.bg
-                                    border.color: isCrtMode ? "#38BDF8" : theme.border
-                                    border.width: 1
-                                    Column {
-                                        anchors.centerIn: parent
-                                        spacing: 1
-                                        Text {
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            text: modelData.spread
-                                            font.pixelSize: 9
-                                            font.bold: true
-                                            color: isCrtMode ? "#93C5FD" : theme.muted
-                                        }
-                                        Text {
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            text: modelData.pay
-                                            font.pixelSize: 11
-                                            font.bold: true
-                                            color: isCrtMode ? "#FEF08A" : theme.accent
-                                        }
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: {
+                                        if (activeGameId === "red_dog") return "RED DOG SPREAD PAYOUTS";
+                                        if (activeGameId === "blackjack") return "SINGLE-DECK BLACKJACK (PAYS 3:2)";
+                                        return "CASINO WAR (HIGH CARD WINS 1:1)";
                                     }
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: root.neonCyan
+                                }
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: parent.width - 10
+                                    horizontalAlignment: Text.AlignHCenter
+                                    wrapMode: Text.WordWrap
+                                    text: {
+                                        if (activeGameId === "red_dog") {
+                                            return "Spread 1: 5:1 • Spread 2: 4:1 • Spread 3: 2:1 • Spread 4-11: 1:1 • Pair: 11:1";
+                                        }
+                                        if (activeGameId === "blackjack") {
+                                            return "Dealer stands on all 17s • Double Down on any 2 cards • 52-card deck";
+                                        }
+                                        return "Aces high • Tie: Go to War (double bet, win 1:1) or Surrender (lose 50%)";
+                                    }
+                                    font.pixelSize: 9
+                                    color: "#94A3B8"
                                 }
                             }
                         }
                     }
 
-                    // TABLE GAME HUD: BLACKJACK
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        spacing: 4
-                        visible: activeGameId === "blackjack"
-
-                        Text {
-                            text: "SINGLE-DECK CASINO BLACKJACK RULES"
-                            font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                            font.pixelSize: 12
-                            font.bold: true
-                            color: isCrtMode ? "#FEF08A" : theme.accent
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 10
-                            Repeater {
-                                model: [
-                                    { title: "BLACKJACK PAYS", val: "3 TO 2" },
-                                    { title: "DEALER RULE", val: "STANDS ON ALL 17s" },
-                                    { title: "DOUBLE DOWN", val: "ON ANY INITIAL 2 CARDS" },
-                                    { title: "DECKS IN PLAY", val: "SINGLE 52-CARD SHUFFLE" }
-                                ]
-                                Rectangle {
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: 36
-                                    radius: 4
-                                    color: isCrtMode ? "#000066" : theme.bg
-                                    border.color: isCrtMode ? "#38BDF8" : theme.border
-                                    border.width: 1
-                                    Column {
-                                        anchors.centerIn: parent
-                                        spacing: 1
-                                        Text {
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            text: modelData.title
-                                            font.pixelSize: 9
-                                            font.bold: true
-                                            color: isCrtMode ? "#93C5FD" : theme.muted
-                                        }
-                                        Text {
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            text: modelData.val
-                                            font.pixelSize: 11
-                                            font.bold: true
-                                            color: isCrtMode ? "#FEF08A" : theme.accent
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // TABLE GAME HUD: CASINO WAR
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        spacing: 4
-                        visible: activeGameId === "casino_war"
-
-                        Text {
-                            text: "CASINO WAR SHOWDOWN RULES"
-                            font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                            font.pixelSize: 12
-                            font.bold: true
-                            color: isCrtMode ? "#FEF08A" : theme.accent
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 10
-                            Repeater {
-                                model: [
-                                    { title: "STANDARD WIN", val: "HIGHER CARD PAYS 1 TO 1" },
-                                    { title: "ACES RANKING", val: "ACES ARE ALWAYS HIGH" },
-                                    { title: "ON TIE: GO TO WAR", val: "MATCH BET • WIN PAYS 1:1" },
-                                    { title: "ON TIE: SURRENDER", val: "FORFEIT 50% OF ORIGINAL BET" }
-                                ]
-                                Rectangle {
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: 36
-                                    radius: 4
-                                    color: isCrtMode ? "#000066" : theme.bg
-                                    border.color: isCrtMode ? "#38BDF8" : theme.border
-                                    border.width: 1
-                                    Column {
-                                        anchors.centerIn: parent
-                                        spacing: 1
-                                        Text {
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            text: modelData.title
-                                            font.pixelSize: 9
-                                            font.bold: true
-                                            color: isCrtMode ? "#93C5FD" : theme.muted
-                                        }
-                                        Text {
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            text: modelData.val
-                                            font.pixelSize: 11
-                                            font.bold: true
-                                            color: isCrtMode ? "#FEF08A" : theme.accent
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // -------------------------------------------------------------
-                // 3. CENTER PLAYFIELD & CARDS AREA
-                // -------------------------------------------------------------
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    radius: isCrtMode ? 4 : 8
-                    color: isCrtMode ? "#000066" : (theme.bg === "#000000" ? "#0A0D14" : theme.surface)
-                    border.color: isCrtMode ? "#0088FF" : theme.border
-                    border.width: isCrtMode ? 2 : 1
-                    clip: true
-
-                    // STATUS MESSAGE BANNER
+                    // 2. Status Message Banner
                     Rectangle {
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        height: 32
-                        color: isWinningRound ? (isCrtMode ? "#DC2626" : theme.accent) : (isCrtMode ? "#000088" : theme.surface)
-                        z: 10
+                        width: parent.width
+                        height: 22
+                        radius: 3
+                        color: root.isWinningRound ? root.neonMagenta : "#0A1020"
+                        border.color: root.isWinningRound ? "#FFB6D9" : "#00F0FF33"
+                        border.width: 1
 
                         Text {
                             anchors.centerIn: parent
-                            text: statusMessage
-                            font.family: isCrtMode ? "Courier New, monospace" : ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font")
-                            font.pixelSize: 13
+                            text: root.statusMessage
+                            font.family: root.monoFontFamily
+                            font.pixelSize: Math.max(9, Math.min(11, boardContainer.width * 0.024))
                             font.bold: true
-                            color: isCrtMode ? "#FEF08A" : "#FFFFFF"
+                            color: root.isWinningRound ? "#FFFFFF" : root.neonCyan
                         }
                     }
 
-                    // POKER VIEW: 5 CARDS CENTERED
-                    Row {
-                        anchors.centerIn: parent
-                        anchors.verticalCenterOffset: 12
-                        spacing: 18
-                        visible: isPokerGame
+                    // 3. Main Center Card Playfield
+                    Item {
+                        width: parent.width
+                        height: parent.height - 180
 
-                        Repeater {
-                            model: playerHand
-                            Item {
-                                width: 110
-                                height: 160
+                        // POKER VIEW (5 CARDS)
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: Math.max(4, Math.floor((parent.width - playArea.cardW * 5) / 6))
+                            visible: root.isPokerGame
 
-                                PlayingCard {
-                                    anchors.centerIn: parent
-                                    width: 108
-                                    height: 154
-                                    cardData: modelData
-                                    visualMode: root.visualMode
-                                    deckStyle: root.deckStyle
-                                    isWinning: root.isWinningRound
-                                }
+                            Repeater {
+                                model: root.playerHand
+                                Item {
+                                    width: playArea.cardW
+                                    height: playArea.cardH
 
-                                // Interactive Hold Toggle
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: (machineState === "DEALT") ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                    onClicked: toggleHold(index)
+                                    PlayingCard {
+                                        anchors.fill: parent
+                                        cardData: modelData
+                                        isWinning: root.isWinningRound
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: (machineState === "DEALT") ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                        onClicked: toggleHold(index)
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    // RED DOG VIEW: 2 CARDS + 1 CENTER CARD
-                    Row {
-                        anchors.centerIn: parent
-                        anchors.verticalCenterOffset: 12
-                        spacing: 36
-                        visible: activeGameId === "red_dog" && playerHand.length >= 2
+                        // RED DOG VIEW (2 Outer + 1 Center)
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: Math.max(12, Math.floor(playArea.cardW * 0.3))
+                            visible: activeGameId === "red_dog"
 
-                        // Card 1
-                        PlayingCard {
-                            width: 114
-                            height: 160
-                            cardData: (playerHand.length >= 1) ? playerHand[0] : null
-                            visualMode: root.visualMode
-                            deckStyle: root.deckStyle
-                        }
+                            PlayingCard {
+                                width: playArea.cardW
+                                height: playArea.cardH
+                                cardData: (playerHand.length >= 1) ? playerHand[0] : null
+                            }
 
-                        // Center 3rd card slot / Spread Meter
-                        Item {
-                            width: 140
-                            height: 160
+                            // Center Spread Box
                             Rectangle {
-                                anchors.fill: parent
-                                radius: 8
-                                color: isCrtMode ? "#000044" : theme.bg
-                                border.color: isCrtMode ? "#38BDF8" : theme.border
-                                border.width: 1.5
+                                width: playArea.cardW + 10
+                                height: playArea.cardH
+                                radius: 4
+                                color: "#0A0F1E"
+                                border.color: root.neonCyan
+                                border.width: 1
 
                                 Column {
                                     anchors.centerIn: parent
-                                    spacing: 4
+                                    spacing: 2
                                     visible: playerHand.length < 3
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: "SPREAD"
-                                        font.pixelSize: 11
+                                        font.pixelSize: 8
                                         font.bold: true
-                                        color: isCrtMode ? "#93C5FD" : theme.muted
+                                        color: "#38BDF8"
                                     }
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: redDogSpread.toString()
-                                        font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                        font.pixelSize: 28
+                                        font.family: root.monoFontFamily
+                                        font.pixelSize: 20
                                         font.bold: true
-                                        color: isCrtMode ? "#FEF08A" : theme.accent
+                                        color: root.neonMagenta
                                     }
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: (redDogStatus === "pair" ? "PAIR (11:1)" : (redDogStatus === "consecutive" ? "CONSECUTIVE" : "IN-BETWEEN"))
-                                        font.pixelSize: 10
+                                        text: (redDogStatus === "pair" ? "PAIR" : (redDogStatus === "consecutive" ? "PUSH" : "BETWEEN"))
+                                        font.pixelSize: 8
                                         font.bold: true
-                                        color: isCrtMode ? "#FFFFFF" : theme.fg
+                                        color: "#FFFFFF"
                                     }
                                 }
 
-                                // When 3rd card dealt
                                 PlayingCard {
-                                    anchors.centerIn: parent
-                                    width: 114
-                                    height: 160
+                                    anchors.fill: parent
                                     cardData: (playerHand.length >= 3) ? playerHand[2] : null
-                                    visualMode: root.visualMode
-                                    deckStyle: root.deckStyle
                                     visible: playerHand.length >= 3
                                 }
                             }
-                        }
 
-                        // Card 2
-                        PlayingCard {
-                            width: 114
-                            height: 160
-                            cardData: (playerHand.length >= 2) ? playerHand[1] : null
-                            visualMode: root.visualMode
-                            deckStyle: root.deckStyle
-                        }
-                    }
-
-                    // BLACKJACK VIEW: DEALER + PLAYER HANDS
-                    Column {
-                        anchors.centerIn: parent
-                        anchors.verticalCenterOffset: 12
-                        spacing: 12
-                        visible: activeGameId === "blackjack" && (playerHand.length > 0 || dealerHand.length > 0)
-
-                        // Dealer Hand
-                        Row {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            spacing: 10
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: "DEALER (" + (machineState === "ROUND_OVER" ? dealerTotal : "?") + "): "
-                                font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                font.pixelSize: 13
-                                font.bold: true
-                                color: isCrtMode ? "#FEF08A" : theme.accent
-                            }
-                            Repeater {
-                                model: dealerHand
-                                PlayingCard {
-                                    width: 80
-                                    height: 114
-                                    cardData: modelData
-                                    visualMode: root.visualMode
-                                    deckStyle: root.deckStyle
-                                }
+                            PlayingCard {
+                                width: playArea.cardW
+                                height: playArea.cardH
+                                cardData: (playerHand.length >= 2) ? playerHand[1] : null
                             }
                         }
 
-                        // Player Hand
-                        Row {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            spacing: 10
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: "YOU (" + playerTotal + "): "
-                                font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                font.pixelSize: 13
-                                font.bold: true
-                                color: isCrtMode ? "#38BDF8" : theme.fg
-                            }
-                            Repeater {
-                                model: playerHand
-                                PlayingCard {
-                                    width: 80
-                                    height: 114
-                                    cardData: modelData
-                                    visualMode: root.visualMode
-                                    deckStyle: root.deckStyle
-                                }
-                            }
-                        }
-                    }
-
-                    // CASINO WAR VIEW: SHOWDOWN
-                    Row {
-                        anchors.centerIn: parent
-                        anchors.verticalCenterOffset: 12
-                        spacing: 40
-                        visible: activeGameId === "casino_war" && playerHand.length > 0
-
-                        // Dealer Card
+                        // BLACKJACK VIEW (Dealer Top, Player Bottom)
                         Column {
+                            anchors.centerIn: parent
                             spacing: 6
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "DEALER"
-                                font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: isCrtMode ? "#FEF08A" : theme.accent
-                            }
+                            visible: activeGameId === "blackjack"
+
+                            // Dealer
                             Row {
-                                spacing: 8
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 6
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "D (" + (machineState === "ROUND_OVER" ? dealerTotal : "?") + "): "
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: root.neonPurple
+                                }
                                 Repeater {
                                     model: dealerHand
                                     PlayingCard {
-                                        width: 100
-                                        height: 142
+                                        width: Math.round(playArea.cardW * 0.72)
+                                        height: Math.round(playArea.cardH * 0.72)
                                         cardData: modelData
-                                        visualMode: root.visualMode
-                                        deckStyle: root.deckStyle
                                     }
                                 }
                             }
-                        }
 
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "VS"
-                            font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                            font.pixelSize: 22
-                            font.bold: true
-                            color: isCrtMode ? "#FFFFFF" : theme.fg
-                        }
-
-                        // Player Card
-                        Column {
-                            spacing: 6
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "YOU"
-                                font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: isCrtMode ? "#38BDF8" : theme.fg
-                            }
+                            // Player
                             Row {
-                                spacing: 8
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 6
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "P (" + playerTotal + "): "
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: root.neonCyan
+                                }
                                 Repeater {
                                     model: playerHand
                                     PlayingCard {
-                                        width: 100
-                                        height: 142
+                                        width: Math.round(playArea.cardW * 0.72)
+                                        height: Math.round(playArea.cardH * 0.72)
                                         cardData: modelData
-                                        visualMode: root.visualMode
-                                        deckStyle: root.deckStyle
+                                    }
+                                }
+                            }
+                        }
+
+                        // CASINO WAR VIEW
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 16
+                            visible: activeGameId === "casino_war"
+
+                            Column {
+                                spacing: 2
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "DEALER"
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    color: root.neonPurple
+                                }
+                                Row {
+                                    spacing: 4
+                                    Repeater {
+                                        model: dealerHand
+                                        PlayingCard {
+                                            width: playArea.cardW
+                                            height: playArea.cardH
+                                            cardData: modelData
+                                        }
+                                    }
+                                }
+                            }
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "VS"
+                                font.family: root.monoFontFamily
+                                font.pixelSize: 16
+                                font.bold: true
+                                color: root.neonCyan
+                            }
+
+                            Column {
+                                spacing: 2
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "YOU"
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    color: root.neonCyan
+                                }
+                                Row {
+                                    spacing: 4
+                                    Repeater {
+                                        model: playerHand
+                                        PlayingCard {
+                                            width: playArea.cardW
+                                            height: playArea.cardH
+                                            cardData: modelData
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
+            }
+        }
 
-                // -------------------------------------------------------------
-                // 4. METERS & DIGITAL SCORE COUNTERS
-                // -------------------------------------------------------------
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 16
+        // =====================================================================
+        // ROW 4: PHYSICAL BUTTON DECK (Underneath Screen)
+        // Two compact rows: Row 1 = 5 Holds, Row 2 = Bet & Deal actions
+        // =====================================================================
+        Item {
+            id: buttonDeckItem
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 10
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 14
+            anchors.rightMargin: 14
+            height: 68
 
-                    // Credits Display
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 38
-                        radius: 4
-                        color: isCrtMode ? "#000033" : theme.surface
-                        border.color: isCrtMode ? "#FEF08A" : theme.border
-                        border.width: 1.5
+            Column {
+                anchors.fill: parent
+                spacing: 4
 
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 8
-                            Text {
-                                text: "CREDITS"
-                                font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: isCrtMode ? "#FEF08A" : theme.muted
-                            }
-                            Item { Layout.fillWidth: true }
-                            Text {
-                                text: credits.toString()
-                                font.family: isCrtMode ? "Courier New, monospace" : ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font")
-                                font.pixelSize: 18
-                                font.bold: true
-                                color: isCrtMode ? "#FEF08A" : theme.fg
-                            }
-                        }
-                    }
+                // ROW A: 5 HOLD BUTTONS (or Table Actions)
+                Row {
+                    width: parent.width
+                    height: 30
+                    spacing: Math.max(4, Math.floor((width - playArea.cardW * 5) / 6))
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: root.isPokerGame
 
-                    // Bet Display
-                    Rectangle {
-                        Layout.preferredWidth: 150
-                        Layout.preferredHeight: 38
-                        radius: 4
-                        color: isCrtMode ? "#000033" : theme.surface
-                        border.color: isCrtMode ? "#38BDF8" : theme.border
-                        border.width: 1.5
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 8
-                            Text {
-                                text: "BET"
-                                font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: isCrtMode ? "#38BDF8" : theme.muted
-                            }
-                            Item { Layout.fillWidth: true }
-                            Text {
-                                text: betCoins.toString()
-                                font.family: isCrtMode ? "Courier New, monospace" : ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font")
-                                font.pixelSize: 18
-                                font.bold: true
-                                color: isCrtMode ? "#38BDF8" : theme.accent
-                            }
-                        }
-                    }
-
-                    // Win Display
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 38
-                        radius: 4
-                        color: isWinningRound ? (isCrtMode ? "#7F1D1D" : theme.accent) : (isCrtMode ? "#000033" : theme.surface)
-                        border.color: isWinningRound ? "#FDE047" : (isCrtMode ? "#64748B" : theme.border)
-                        border.width: 1.5
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 8
-                            Text {
-                                text: "WINNER PAID"
-                                font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: isWinningRound ? "#FFFFFF" : (isCrtMode ? "#94A3B8" : theme.muted)
-                            }
-                            Item { Layout.fillWidth: true }
-                            Text {
-                                text: lastWinAmount.toString()
-                                font.family: isCrtMode ? "Courier New, monospace" : ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font")
-                                font.pixelSize: 18
-                                font.bold: true
-                                color: isWinningRound ? "#FEF08A" : (isCrtMode ? "#FFFFFF" : theme.fg)
-                            }
-                        }
-                    }
-                }
-
-                // -------------------------------------------------------------
-                // 5. BOTTOM ARCADE PUSH BUTTONS PANEL
-                // -------------------------------------------------------------
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 56
-                    spacing: 10
-
-                    // In Poker: 5 HOLD BUTTONS
                     Repeater {
                         model: 5
                         Rectangle {
-                            visible: root.isPokerGame
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 52
+                            width: playArea.cardW
+                            height: 28
                             radius: 4
                             readonly property bool cardIsHeld: Boolean(playerHand && playerHand[index] && playerHand[index].held)
-                            color: cardIsHeld ? (isCrtMode ? "#DC2626" : theme.primary) : (isCrtMode ? "#1E293B" : theme.surface)
-                            border.color: cardIsHeld ? "#FEF08A" : (isCrtMode ? "#475569" : theme.border)
-                            border.width: cardIsHeld ? 2 : 1
+                            color: cardIsHeld ? root.neonMagenta : "#0A0F1E"
+                            border.color: cardIsHeld ? "#FFB6D9" : "#00F0FF33"
+                            border.width: cardIsHeld ? 1.5 : 1
 
                             MouseArea {
                                 anchors.fill: parent
@@ -1756,677 +1633,315 @@ ApplicationWindow {
                                 onClicked: toggleHold(index)
                             }
 
-                            Column {
+                            Text {
                                 anchors.centerIn: parent
-                                spacing: 2
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: cardIsHeld ? "HELD" : "HOLD " + (index + 1)
-                                    font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                    font.pixelSize: 11
-                                    font.bold: true
-                                    color: cardIsHeld ? "#FEF08A" : "#FFFFFF"
-                                }
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "[" + (index + 1) + "]"
-                                    font.pixelSize: 9
-                                    color: isCrtMode ? "#94A3B8" : theme.muted
-                                }
+                                text: cardIsHeld ? "HELD" : "HOLD " + (index + 1)
+                                font.family: root.monoFontFamily
+                                font.pixelSize: 9
+                                font.bold: true
+                                color: cardIsHeld ? "#FFFFFF" : root.neonCyan
                             }
                         }
                     }
+                }
 
-                    // In Red Dog: CALL & RAISE BUTTONS
+                // Table Actions for Red Dog, Blackjack, War
+                Row {
+                    width: parent.width
+                    height: 30
+                    spacing: 8
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: !root.isPokerGame && machineState === "DEALT"
+
+                    // Action 1
                     Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 52
+                        width: (parent.width - 16) / 2
+                        height: 28
                         radius: 4
-                        visible: activeGameId === "red_dog" && machineState === "DEALT"
-                        color: isCrtMode ? "#0284C7" : theme.surface
-                        border.color: isCrtMode ? "#7DD3FC" : theme.border
-                        border.width: 1.5
+                        color: "#0369A1"
+                        border.color: root.neonCyan
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: {
+                                if (activeGameId === "red_dog") return "CALL [1]";
+                                if (activeGameId === "blackjack") return "HIT [1]";
+                                return "SURRENDER [1]";
+                            }
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: "#FFFFFF"
+                        }
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: resolveRedDog(false)
-                        }
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 1
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "CALL [1]"
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "(NO RAISE)"
-                                font.pixelSize: 9
-                                color: "#BAE6FD"
+                            onClicked: {
+                                if (activeGameId === "red_dog") resolveRedDog(false);
+                                else if (activeGameId === "blackjack") blackjackHit();
+                                else warSurrender();
                             }
                         }
                     }
 
+                    // Action 2
                     Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 52
+                        width: (parent.width - 16) / 2
+                        height: 28
                         radius: 4
-                        visible: activeGameId === "red_dog" && machineState === "DEALT"
-                        color: isCrtMode ? "#D97706" : theme.primary
-                        border.color: isCrtMode ? "#FDE68A" : theme.accent
-                        border.width: 1.5
+                        color: root.neonMagenta
+                        border.color: "#FFB6D9"
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: {
+                                if (activeGameId === "red_dog") return "RAISE 2X [2]";
+                                if (activeGameId === "blackjack") return "STAND [2]";
+                                return "GO TO WAR [2]";
+                            }
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: "#FFFFFF"
+                        }
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: resolveRedDog(true)
-                        }
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 1
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "RAISE 2X [2]"
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "(+" + betCoins + " COINS)"
-                                font.pixelSize: 9
-                                color: "#FEF08A"
+                            onClicked: {
+                                if (activeGameId === "red_dog") resolveRedDog(true);
+                                else if (activeGameId === "blackjack") blackjackStand();
+                                else warGoToWar();
                             }
                         }
                     }
+                }
 
-                    // In Blackjack: HIT, STAND, DOUBLE BUTTONS
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 52
-                        radius: 4
-                        visible: activeGameId === "blackjack" && machineState === "DEALT"
-                        color: isCrtMode ? "#0284C7" : theme.surface
-                        border.color: isCrtMode ? "#7DD3FC" : theme.border
-                        border.width: 1.5
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: blackjackHit()
-                        }
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 1
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "HIT [1]"
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "TAKE CARD"
-                                font.pixelSize: 9
-                                color: "#BAE6FD"
-                            }
-                        }
-                    }
+                // ROW B: BET & DEAL ACTIONS
+                Row {
+                    width: parent.width
+                    height: 32
+                    spacing: 6
+                    anchors.horizontalCenter: parent.horizontalCenter
 
+                    // Double-Up Trigger Button (when winning)
                     Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 52
-                        radius: 4
-                        visible: activeGameId === "blackjack" && machineState === "DEALT"
-                        color: isCrtMode ? "#DC2626" : theme.accent
-                        border.color: isCrtMode ? "#FECACA" : theme.border
-                        border.width: 1.5
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: blackjackStand()
-                        }
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 1
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "STAND [2]"
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "HOLD TOTAL"
-                                font.pixelSize: 9
-                                color: "#FEE2E2"
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 52
-                        radius: 4
-                        visible: activeGameId === "blackjack" && machineState === "DEALT" && playerCanDouble
-                        color: isCrtMode ? "#D97706" : theme.primary
-                        border.color: isCrtMode ? "#FDE68A" : theme.border
-                        border.width: 1.5
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: blackjackDouble()
-                        }
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 1
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "DOUBLE [3]"
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "2X BET + 1 CARD"
-                                font.pixelSize: 9
-                                color: "#FEF08A"
-                            }
-                        }
-                    }
-
-                    // In Casino War: GO TO WAR / SURRENDER BUTTONS ON TIE
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 52
-                        radius: 4
-                        visible: activeGameId === "casino_war" && machineState === "DEALT" && warState === "tie"
-                        color: isCrtMode ? "#DC2626" : theme.surface
-                        border.color: isCrtMode ? "#FECACA" : theme.border
-                        border.width: 1.5
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: warSurrender()
-                        }
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 1
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "SURRENDER [1]"
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "(LOSE 50% BET)"
-                                font.pixelSize: 9
-                                color: "#FEE2E2"
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 52
-                        radius: 4
-                        visible: activeGameId === "casino_war" && machineState === "DEALT" && warState === "tie"
-                        color: isCrtMode ? "#16A34A" : theme.primary
-                        border.color: isCrtMode ? "#BBF7D0" : theme.accent
-                        border.width: 1.5
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: warGoToWar()
-                        }
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 1
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "GO TO WAR [2]"
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "(MATCH BET • WIN 1:1)"
-                                font.pixelSize: 9
-                                color: "#DCFCE7"
-                            }
-                        }
-                    }
-
-                    // DOUBLE-UP GAMBLE BUTTON (OFFERED AFTER WIN)
-                    Rectangle {
-                        Layout.preferredWidth: 124
-                        Layout.preferredHeight: 52
+                        width: Math.floor(parent.width * 0.28)
+                        height: 30
                         radius: 4
                         visible: isWinningRound && lastWinAmount > 0 && !doubleUpActive
-                        color: isCrtMode ? "#E11D48" : theme.accent
-                        border.color: "#FDE047"
-                        border.width: 2
+                        color: root.neonMagenta
+                        border.color: "#FFB6D9"
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "DOUBLE [D]"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 9
+                            font.bold: true
+                            color: "#FFFFFF"
+                        }
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: startDoubleUp()
                         }
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 1
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "DOUBLE UP [D]"
-                                font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "HIGH CARD GAMBLE"
-                                font.pixelSize: 8
-                                font.bold: true
-                                color: "#FEF08A"
-                            }
-                        }
                     }
 
-                    // BET ONE COIN BUTTON
+                    // BET 1
                     Rectangle {
-                        Layout.preferredWidth: 100
-                        Layout.preferredHeight: 52
+                        width: (parent.width - (isWinningRound && lastWinAmount > 0 ? parent.width * 0.28 + 18 : 12)) * 0.38
+                        height: 30
                         radius: 4
-                        color: isCrtMode ? "#0D9488" : theme.surface
-                        border.color: isCrtMode ? "#99F6E4" : theme.border
-                        border.width: 1.5
+                        color: "#0A0F1E"
+                        border.color: root.neonCyan
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "BET 1 [B]"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: root.neonCyan
+                        }
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: increaseBet()
                         }
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 1
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "BET 1 [B]"
-                                font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "UP TO 5"
-                                font.pixelSize: 9
-                                color: "#CCFBF1"
-                            }
-                        }
                     }
 
-                    // BET MAX BUTTON
+                    // BET MAX
                     Rectangle {
-                        Layout.preferredWidth: 100
-                        Layout.preferredHeight: 52
+                        width: (parent.width - (isWinningRound && lastWinAmount > 0 ? parent.width * 0.28 + 18 : 12)) * 0.30
+                        height: 30
                         radius: 4
-                        color: isCrtMode ? "#CA8A04" : theme.accent
-                        border.color: isCrtMode ? "#FEF08A" : theme.accent
-                        border.width: 1.5
+                        color: "#1E1035"
+                        border.color: root.neonPurple
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "MAX [M]"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: "#C084FC"
+                        }
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: setMaxBet()
                         }
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 1
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "BET MAX [M]"
-                                font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: "#FFFFFF"
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "5 COINS"
-                                font.pixelSize: 9
-                                color: "#FEF9C3"
-                            }
-                        }
                     }
 
-                    // MASTER DEAL / DRAW BUTTON
+                    // DEAL / DRAW
                     Rectangle {
-                        Layout.preferredWidth: 140
-                        Layout.preferredHeight: 52
+                        width: (parent.width - (isWinningRound && lastWinAmount > 0 ? parent.width * 0.28 + 18 : 12)) * 0.32
+                        height: 30
                         radius: 4
-                        color: isCrtMode ? "#16A34A" : theme.primary
-                        border.color: isCrtMode ? "#86EFAC" : theme.accent
-                        border.width: 2
+                        color: root.neonCyan
+                        border.color: "#E0F2FE"
+                        border.width: 1.5
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: (machineState === "DEALT" && isPokerGame) ? "DRAW" : "DEAL"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: "#050811"
+                        }
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: handlePrimaryAction()
                         }
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 1
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // DOUBLE-UP GAMBLE OVERLAY MODAL
+        // =====================================================================
+        Rectangle {
+            id: doubleUpModal
+            anchors.fill: parent
+            color: "#E6000000"
+            visible: doubleUpActive
+            z: 800
+
+            Rectangle {
+                width: Math.min(parent.width * 0.92, 420)
+                height: Math.min(parent.height * 0.88, 380)
+                anchors.centerIn: parent
+                radius: 8
+                color: "#090D1A"
+                border.color: root.neonCyan
+                border.width: 2
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 14
+                    spacing: 8
+
+                    Row {
+                        width: parent.width
+                        Text {
+                            text: "DOUBLE-UP BONUS"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 12
+                            font.bold: true
+                            color: root.neonCyan
+                        }
+                        Item { width: parent.width - 200 }
+                        Rectangle {
+                            width: 70
+                            height: 22
+                            radius: 3
+                            color: "#DC2626"
                             Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: {
-                                    if (doubleUpActive) return "COLLECT [C]";
-                                    if (machineState === "DEALT" && isPokerGame) return "DRAW [SPACE]";
-                                    return "DEAL [SPACE]";
-                                }
-                                font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                font.pixelSize: 13
+                                anchors.centerIn: parent
+                                text: "COLLECT (C)"
+                                font.pixelSize: 9
                                 font.bold: true
                                 color: "#FFFFFF"
                             }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: (machineState === "DEALT" && isPokerGame) ? "REPLACE UNHELD" : "START HAND"
-                                font.pixelSize: 9
-                                color: "#DCFCE7"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // =========================================================================
-    // DOUBLE-UP HIGH-CARD GAMBLE OVERLAY MODAL
-    // =========================================================================
-    Rectangle {
-        id: doubleUpModal
-        anchors.fill: parent
-        color: "#E6000033"
-        visible: doubleUpActive
-        z: 200
-
-        Rectangle {
-            anchors.centerIn: parent
-            width: 760
-            height: 480
-            radius: 12
-            color: isCrtMode ? "#000088" : theme.surface
-            border.color: isCrtMode ? "#FEF08A" : theme.accent
-            border.width: 3
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 20
-                spacing: 14
-
-                // Modal Header
-                RowLayout {
-                    Layout.fillWidth: true
-                    Text {
-                        text: "★ DOUBLE-UP HIGH-CARD BONUS GAMBLE ★"
-                        font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                        font.pixelSize: 18
-                        font.bold: true
-                        color: isCrtMode ? "#FEF08A" : theme.accent
-                    }
-                    Item { Layout.fillWidth: true }
-                    Rectangle {
-                        width: 100
-                        height: 30
-                        radius: 4
-                        color: "#DC2626"
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: collectDoubleUp()
-                        }
-                        Text {
-                            anchors.centerIn: parent
-                            text: "COLLECT (C)"
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: "#FFFFFF"
-                        }
-                    }
-                }
-
-                // Pot Meter
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 42
-                    radius: 6
-                    color: isCrtMode ? "#000044" : theme.bg
-                    border.color: "#FEF08A"
-                    border.width: 1.5
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        Text {
-                            text: "CURRENT POT: " + doubleUpCurrentPot + " COINS"
-                            font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                            font.pixelSize: 14
-                            font.bold: true
-                            color: "#FEF08A"
-                        }
-                        Item { Layout.fillWidth: true }
-                        Text {
-                            text: "DOUBLE WIN VALUE: " + (doubleUpCurrentPot * 2) + " COINS"
-                            font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                            font.pixelSize: 14
-                            font.bold: true
-                            color: "#38BDF8"
-                        }
-                    }
-                }
-
-                // Instruction Message
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: doubleUpMessage
-                    font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                    font.pixelSize: 13
-                    font.bold: true
-                    color: "#FFFFFF"
-                }
-
-                // Card Arena: Dealer on Left, 4 Player Picks on Right
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    spacing: 30
-
-                    // Dealer Card
-                    Column {
-                        spacing: 8
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "DEALER'S CARD"
-                            font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                            font.pixelSize: 12
-                            font.bold: true
-                            color: isCrtMode ? "#FEF08A" : theme.accent
-                        }
-                        PlayingCard {
-                            width: 110
-                            height: 154
-                            cardData: doubleUpDealerCard
-                            visualMode: root.visualMode
-                            deckStyle: root.deckStyle
-                        }
-                    }
-
-                    Rectangle {
-                        width: 2
-                        Layout.fillHeight: true
-                        color: isCrtMode ? "#38BDF8" : theme.border
-                    }
-
-                    // 4 Player Hidden Cards
-                    Column {
-                        Layout.fillWidth: true
-                        spacing: 8
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "PICK 1 CARD TO BEAT DEALER"
-                            font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                            font.pixelSize: 12
-                            font.bold: true
-                            color: isCrtMode ? "#38BDF8" : theme.fg
-                        }
-                        Row {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            spacing: 14
-                            Repeater {
-                                model: doubleUpPlayerCards
-                                Item {
-                                    width: 104
-                                    height: 150
-                                    PlayingCard {
-                                        anchors.centerIn: parent
-                                        width: 102
-                                        height: 146
-                                        cardData: modelData
-                                        visualMode: root.visualMode
-                                        deckStyle: root.deckStyle
-                                    }
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: (!doubleUpResolved) ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                        onClicked: pickDoubleUpCard(index)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // =========================================================================
-    // GAME SELECTOR MODAL (8 GAMES)
-    // =========================================================================
-    Rectangle {
-        id: gameSelectModal
-        anchors.fill: parent
-        color: "#CC000000"
-        visible: gameMenuOpen
-        z: 300
-
-        Rectangle {
-            anchors.centerIn: parent
-            width: 740
-            height: 520
-            radius: 12
-            color: isCrtMode ? "#000088" : theme.surface
-            border.color: isCrtMode ? "#FEF08A" : theme.accent
-            border.width: 3
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 20
-                spacing: 12
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    Text {
-                        text: "SELECT GAME TERMINAL ENGINE"
-                        font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                        font.pixelSize: 16
-                        font.bold: true
-                        color: isCrtMode ? "#FEF08A" : theme.accent
-                    }
-                    Item { Layout.fillWidth: true }
-                    Rectangle {
-                        width: 28
-                        height: 28
-                        radius: 4
-                        color: "#DC2626"
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: gameMenuOpen = false
-                        }
-                        Text {
-                            anchors.centerIn: parent
-                            text: "✕"
-                            font.pixelSize: 13
-                            color: "#FFFFFF"
-                        }
-                    }
-                }
-
-                // Grid of 8 Games
-                GridLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    columns: 2
-                    rowSpacing: 10
-                    columnSpacing: 10
-
-                    Repeater {
-                        model: gameList
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            radius: 6
-                            readonly property bool isSelected: (activeGameId === modelData.id)
-                            color: isSelected ? (isCrtMode ? "#0284C7" : theme.primary) : (isCrtMode ? "#000055" : theme.bg)
-                            border.color: isSelected ? "#FEF08A" : (isCrtMode ? "#38BDF8" : theme.border)
-                            border.width: isSelected ? 2 : 1
-
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: switchGame(modelData.id)
+                                onClicked: collectDoubleUp()
                             }
+                        }
+                    }
 
-                            ColumnLayout {
-                                anchors.fill: parent
-                                anchors.margins: 10
-                                spacing: 2
+                    Rectangle {
+                        width: parent.width
+                        height: 28
+                        radius: 4
+                        color: "#111827"
+                        Text {
+                            anchors.centerIn: parent
+                            text: "POT: " + doubleUpCurrentPot + "  →  DOUBLE: " + (doubleUpCurrentPot * 2)
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.neonMagenta
+                        }
+                    }
 
-                                RowLayout {
-                                    Text {
-                                        text: modelData.name
-                                        font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                                        font.pixelSize: 12
-                                        font.bold: true
-                                        color: parent.parent.parent.isSelected ? "#FEF08A" : "#FFFFFF"
-                                    }
-                                    Item { Layout.fillWidth: true }
-                                    Rectangle {
-                                        width: 44
-                                        height: 16
-                                        radius: 3
-                                        color: modelData.type === "poker" ? "#16A34A" : "#D97706"
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: modelData.type.toUpperCase()
-                                            font.pixelSize: 8
-                                            font.bold: true
-                                            color: "#FFFFFF"
-                                        }
-                                    }
+                    Text {
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        text: doubleUpMessage
+                        font.pixelSize: 10
+                        font.bold: true
+                        color: "#FFFFFF"
+                    }
+
+                    // Cards
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 8
+
+                        // Dealer
+                        Column {
+                            spacing: 4
+                            Text {
+                                text: "DEALER"
+                                font.pixelSize: 8
+                                font.bold: true
+                                color: "#FEF08A"
+                            }
+                            PlayingCard {
+                                width: 56
+                                height: 80
+                                cardData: doubleUpDealerCard
+                            }
+                        }
+
+                        Rectangle {
+                            width: 1
+                            height: 80
+                            color: "#64748B"
+                        }
+
+                        // 4 Player Hidden Picks
+                        Repeater {
+                            model: doubleUpPlayerCards
+                            Item {
+                                width: 56
+                                height: 80
+                                PlayingCard {
+                                    anchors.fill: parent
+                                    cardData: modelData
                                 }
-
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: modelData.desc
-                                    font.pixelSize: 10
-                                    color: parent.parent.isSelected ? "#E0F2FE" : (isCrtMode ? "#CBD5E1" : theme.muted)
-                                    wrapMode: Text.WordWrap
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: (!doubleUpResolved) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                    onClicked: pickDoubleUpCard(index)
                                 }
                             }
                         }
@@ -2434,119 +1949,217 @@ ApplicationWindow {
                 }
             }
         }
-    }
 
-    // =========================================================================
-    // HELP / RULES MODAL
-    // =========================================================================
-    Rectangle {
-        id: helpModal
-        anchors.fill: parent
-        color: "#CC000000"
-        visible: helpModalOpen
-        z: 350
-
+        // =====================================================================
+        // GAMES SELECTOR MODAL (8 Games)
+        // =====================================================================
         Rectangle {
-            anchors.centerIn: parent
-            width: 700
-            height: 520
-            radius: 12
-            color: isCrtMode ? "#000088" : theme.surface
-            border.color: isCrtMode ? "#FEF08A" : theme.accent
-            border.width: 3
+            id: gameSelectModal
+            anchors.fill: parent
+            color: "#CC000000"
+            visible: gameMenuOpen
+            z: 850
 
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 20
-                spacing: 12
+            Rectangle {
+                width: Math.min(parent.width * 0.94, 440)
+                height: Math.min(parent.height * 0.90, 520)
+                anchors.centerIn: parent
+                radius: 8
+                color: "#090D1A"
+                border.color: root.neonCyan
+                border.width: 2
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    Text {
-                        text: "TERMINAL INSTRUCTIONS & SHORTCUTS"
-                        font.family: isCrtMode ? "Courier New, monospace" : "sans-serif"
-                        font.pixelSize: 16
-                        font.bold: true
-                        color: isCrtMode ? "#FEF08A" : theme.accent
-                    }
-                    Item { Layout.fillWidth: true }
-                    Rectangle {
-                        width: 28
-                        height: 28
-                        radius: 4
-                        color: "#DC2626"
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: helpModalOpen = false
-                        }
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 8
+
+                    Row {
+                        width: parent.width
                         Text {
-                            anchors.centerIn: parent
-                            text: "✕"
-                            font.pixelSize: 13
-                            color: "#FFFFFF"
+                            text: "SELECT GAME TERMINAL"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 12
+                            font.bold: true
+                            color: root.neonCyan
+                        }
+                        Item { width: parent.width - 200 }
+                        Rectangle {
+                            width: 22
+                            height: 22
+                            radius: 3
+                            color: "#DC2626"
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✕"
+                                font.pixelSize: 11
+                                color: "#FFFFFF"
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: gameMenuOpen = false
+                            }
                         }
                     }
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    radius: 6
-                    color: isCrtMode ? "#000044" : theme.bg
-                    border.color: isCrtMode ? "#38BDF8" : theme.border
-                    border.width: 1
-                    clip: true
 
                     Flickable {
-                        anchors.fill: parent
-                        anchors.margins: 14
-                        contentHeight: helpCol.implicitHeight
+                        width: parent.width
+                        height: parent.height - 40
+                        contentHeight: gameGrid.implicitHeight
                         clip: true
 
                         Column {
-                            id: helpCol
+                            id: gameGrid
                             width: parent.width
-                            spacing: 12
+                            spacing: 6
 
-                            Text {
-                                text: "KEYBOARD CONTROLS"
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: isCrtMode ? "#FEF08A" : theme.accent
+                            Repeater {
+                                model: gameList
+                                Rectangle {
+                                    width: parent.width
+                                    height: 48
+                                    radius: 4
+                                    readonly property bool isSel: (activeGameId === modelData.id)
+                                    color: isSel ? "#00F0FF22" : "#111827"
+                                    border.color: isSel ? root.neonCyan : root.themeBorder
+                                    border.width: isSel ? 1.5 : 1
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: switchGame(modelData.id)
+                                    }
+
+                                    Column {
+                                        anchors.fill: parent
+                                        anchors.margins: 6
+                                        spacing: 2
+                                        Row {
+                                            width: parent.width
+                                            Text {
+                                                text: modelData.name
+                                                font.family: root.monoFontFamily
+                                                font.pixelSize: 10
+                                                font.bold: true
+                                                color: isSel ? "#FFFFFF" : root.neonCyan
+                                            }
+                                            Item { width: 10 }
+                                            Rectangle {
+                                                width: 38
+                                                height: 12
+                                                radius: 2
+                                                color: modelData.type === "poker" ? "#16A34A" : "#D97706"
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: modelData.type.toUpperCase()
+                                                    font.pixelSize: 7
+                                                    font.bold: true
+                                                    color: "#FFFFFF"
+                                                }
+                                            }
+                                        }
+                                        Text {
+                                            width: parent.width
+                                            text: modelData.desc
+                                            font.pixelSize: 8
+                                            color: "#94A3B8"
+                                            elide: Text.ElideRight
+                                        }
+                                    }
+                                }
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // HOW TO PLAY / RULES MODAL (Template Standard)
+        // =====================================================================
+        Rectangle {
+            id: helpModal
+            anchors.fill: parent
+            color: "#b3000000"
+            visible: root.showHelp
+            z: 900
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: root.showHelp = false
+            }
+
+            Rectangle {
+                width: Math.min(parent.width * 0.90, 420)
+                height: Math.min(parent.height * 0.88, 480)
+                anchors.centerIn: parent
+                color: root.themeCardBg
+                border.color: root.themeBorder
+                border.width: 1
+                radius: 10
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    spacing: 10
+
+                    Text {
+                        text: "HOW TO PLAY & SHORTCUTS"
+                        font.pixelSize: 13
+                        font.bold: true
+                        color: root.themeAccent
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+
+                    Flickable {
+                        width: parent.width
+                        height: parent.height - 40
+                        contentHeight: helpBody.implicitHeight
+                        clip: true
+
+                        Column {
+                            id: helpBody
+                            width: parent.width
+                            spacing: 8
 
                             Text {
                                 width: parent.width
+                                wrapMode: Text.WordWrap
                                 text: "• [SPACE] or [ENTER]: Deal cards or Draw unheld cards\n" +
-                                      "• [1] - [5]: Toggle Hold on cards 1 through 5 (or game action)\n" +
+                                      "• [1] - [5]: Toggle Hold on cards 1 through 5 (or Table action)\n" +
                                       "• [B]: Increase coin bet (1 to 5)\n" +
                                       "• [M]: Bet Max (5 coins) and immediately deal\n" +
-                                      "• [V]: Toggle visual era (1984 Vegas CRT ↔ Neo-Tokyo Cyber Glass)\n" +
                                       "• [G]: Open Game Selection terminal menu\n" +
-                                      "• [D]: Double-Up High-Card Gamble (when offered after winning hand)\n" +
-                                      "• [C]: Collect Double-Up pot / Cash out, or insert free credits\n" +
-                                      "• [? / H]: Toggle this instructions manual\n" +
-                                      "• [ESC]: Close modals or cancel active dialogs"
-                                font.pixelSize: 11
-                                color: isCrtMode ? "#FFFFFF" : theme.fg
+                                      "• [D]: Double-Up High-Card Gamble after any win\n" +
+                                      "• [C]: Collect / Cash Out, or insert 100 free credits\n" +
+                                      "• [? / H]: Toggle this help modal\n" +
+                                      "• [ESC]: Close modals"
+                                font.pixelSize: 10
+                                color: root.themeFg
                                 lineHeight: 1.3
                             }
 
                             Text {
-                                text: "DUAL-ERA VISUAL SWITCHER"
-                                font.pixelSize: 12
+                                text: "THE 8 CASINO ENGINES"
+                                font.pixelSize: 11
                                 font.bold: true
-                                color: isCrtMode ? "#FEF08A" : theme.accent
+                                color: root.themeAccent
                             }
 
                             Text {
                                 width: parent.width
-                                text: "Switch instantly at any time by pressing [V] between:\n" +
-                                      "1. 1984 Vegas CRT: Authentic cobalt blue phosphor tube with scanline raster canvas, chunky monospace typography, and tactile physical push buttons.\n" +
-                                      "2. Neo-Tokyo Cyber Glass: Deep obsidian glassmorphism, dynamic theme synchronization with all 22 Omarchy desktop themes, and laser HUD columns."
-                                font.pixelSize: 11
-                                color: isCrtMode ? "#FFFFFF" : theme.fg
+                                wrapMode: Text.WordWrap
+                                text: "1. Jacks or Better: Pair of Jacks or better pays, 4000 jackpot.\n" +
+                                      "2. Deuces Wild: Four 2s are wildcards, Four Deuces pays 200x.\n" +
+                                      "3. Joker Poker: 53-card deck with 1 Joker, Kings or better min.\n" +
+                                      "4. Double Double Bonus: 4 Aces with 2-4 kicker pays 400x!\n" +
+                                      "5. Bonus Poker Deluxe: Flat 80:1 on any Four of a Kind.\n" +
+                                      "6. Red Dog: Spread betting on 3rd card in-between.\n" +
+                                      "7. Blackjack: 3:2 Natural Blackjack, Dealer stands on 17.\n" +
+                                      "8. Casino War: High card showdown against dealer."
+                                font.pixelSize: 10
+                                color: root.themeSubtext
                                 lineHeight: 1.3
                             }
                         }
@@ -2554,15 +2167,15 @@ ApplicationWindow {
                 }
             }
         }
-    }
 
-    // =========================================================================
-    // SPLASH SCREEN
-    // =========================================================================
-    SplashScreen {
-        id: splashScreen
-        anchors.fill: parent
-        visible: root.splashEnabled && opacity > 0
-        z: 1000
+        // =====================================================================
+        // CANONICAL RETRO SPLASH SCREEN
+        // =====================================================================
+        SplashScreen {
+            id: splashScreen
+            anchors.fill: parent
+            visible: root.splashEnabled && opacity > 0
+            z: 1000
+        }
     }
 }

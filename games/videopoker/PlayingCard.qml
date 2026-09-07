@@ -3,8 +3,8 @@ import QtQuick.Controls
 
 Item {
     id: cardRoot
-    width: 100
-    height: 144
+    width: 76
+    height: 108
 
     property var cardData: null
     property bool faceUp: cardData ? (cardData.faceUp !== false) : true
@@ -12,50 +12,33 @@ Item {
     property bool isHeld: cardData ? (cardData.held === true) : false
     property bool isWild: cardData ? (cardData.isWild === true) : false
     property bool isSelected: false
-    property string visualMode: (typeof root !== "undefined" && root.visualMode) ? root.visualMode : "crt"
-    property string deckStyle: (typeof root !== "undefined" && root.deckStyle) ? root.deckStyle : "synthwave"
 
-    readonly property bool isCrtMode: visualMode === "crt"
-
-    readonly property string cardBackSvg: {
-        if (deckStyle === "crimson") return "assets/card_back_crimson.svg";
-        if (deckStyle === "obsidian") return "assets/card_back_obsidian.svg";
-        if (deckStyle === "sapphire") return "assets/card_back_sapphire.svg";
-        return "assets/card_back_synthwave.svg";
-    }
-
-    readonly property color cardBackBorderColor: {
-        if (isCrtMode) return "#FFCC00";
-        if (deckStyle === "crimson") return "#FDE047";
-        if (deckStyle === "obsidian") return "#F59E0B";
-        if (deckStyle === "sapphire") return "#E2E8F0";
-        return "#00F0FF";
-    }
+    readonly property string cardBackSvg: "assets/card_back_cyber.svg"
 
     opacity: 1
-    scale: isWinning ? 1.05 : (isHeld ? 1.02 : 1.0)
+    scale: isWinning ? 1.04 : (isHeld ? 1.02 : 1.0)
     Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
 
-    // Subtle drop shadow
+    // Subtle dark ambient shadow
     Rectangle {
         anchors.fill: cardContainer
-        anchors.topMargin: isCrtMode ? 4 : 3
-        anchors.leftMargin: isCrtMode ? 4 : 2
-        anchors.rightMargin: isCrtMode ? -4 : -2
-        anchors.bottomMargin: isCrtMode ? -4 : -3
-        radius: isCrtMode ? 4 : 8
-        color: isCrtMode ? "#AA000000" : "#55000000"
+        anchors.topMargin: 2
+        anchors.leftMargin: 1
+        anchors.rightMargin: -1
+        anchors.bottomMargin: -2
+        radius: 6
+        color: "#99000000"
         z: 0
     }
 
     // Winning Glow Halo
     Rectangle {
         anchors.fill: cardContainer
-        anchors.margins: -4
-        radius: isCrtMode ? 4 : 10
+        anchors.margins: -3
+        radius: 8
         color: "transparent"
-        border.color: isCrtMode ? "#FFFF00" : "#FACC15"
-        border.width: isWinning ? 3 : 0
+        border.color: "#00F0FF"
+        border.width: isWinning ? 2.5 : 0
         visible: isWinning
         z: 1
 
@@ -85,24 +68,24 @@ Item {
 
             Behavior on angle {
                 enabled: cardRoot.initialized
-                NumberAnimation { duration: 220; easing.type: Easing.InOutCubic }
+                NumberAnimation { duration: 200; easing.type: Easing.InOutCubic }
             }
         }
 
         // =====================================================================
-        // FRONT FACE (Visible when angle < 90)
+        // FRONT FACE: Sleek Futuristic Dark Obsidian Glass with Neon Pips
         // =====================================================================
         Rectangle {
             id: frontFace
             anchors.fill: parent
-            radius: cardRoot.isCrtMode ? 4 : 8
-            color: cardRoot.isCrtMode ? "#FFFFFF" : "#FCFCFD"
+            radius: 6
+            color: "#0A0E18"
             border.color: {
-                if (cardRoot.isWinning) return "#FACC15";
-                if (cardRoot.isHeld) return (cardRoot.isCrtMode ? "#FFCC00" : "#38BDF8");
-                return (cardRoot.isCrtMode ? "#000000" : "#CBD5E1");
+                if (cardRoot.isWinning) return "#00F0FF";
+                if (cardRoot.isHeld) return "#FF007F";
+                return "#1E293B";
             }
-            border.width: (cardRoot.isWinning || cardRoot.isHeld) ? 2.5 : (cardRoot.isCrtMode ? 2 : 1.2)
+            border.width: (cardRoot.isWinning || cardRoot.isHeld) ? 2 : 1.2
             clip: true
             visible: cardRotation.angle < 90
 
@@ -110,30 +93,44 @@ Item {
             readonly property string rankText: cardRoot.cardData ? (isJokerCard ? "JK" : (cardRoot.cardData.value || "")) : ""
             readonly property string suitText: cardRoot.cardData ? (isJokerCard ? "★" : (cardRoot.cardData.suit || "")) : ""
             readonly property color suitColor: {
-                if (isJokerCard) return "#9333EA";
-                return (cardRoot.cardData && cardRoot.cardData.isRed) ? "#DC2626" : "#0F172A";
+                if (isJokerCard) return "#C084FC"; // Radiant neon ultraviolet for Joker
+                if (cardRoot.cardData && cardRoot.cardData.isRed) {
+                    return "#FF007F"; // Radiant laser neon magenta/pink for Hearts and Diamonds
+                } else {
+                    return "#00F0FF"; // Radiant electric neon cyan for Spades and Clubs
+                }
             }
             readonly property bool isFace: rankText === "K" || rankText === "Q" || rankText === "J"
             readonly property bool isAce: rankText === "A"
+
+            // Futuristic Inset Glowing Accent Hairline
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 2.5
+                radius: 4.5
+                color: "transparent"
+                border.color: cardRoot.isHeld ? "#FF007F55" : (cardRoot.isWinning ? "#00F0FF55" : "#00F0FF18")
+                border.width: 1
+            }
 
             // Top-Left Corner Pip
             Column {
                 anchors.top: parent.top
                 anchors.left: parent.left
-                anchors.margins: Math.max(3, Math.round(cardRoot.width * 0.05))
+                anchors.margins: Math.max(3, Math.round(cardRoot.width * 0.06))
                 spacing: -2
 
                 Text {
                     text: frontFace.rankText
-                    font.family: cardRoot.isCrtMode ? "Courier New, monospace" : ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font")
-                    font.pixelSize: frontFace.rankText === "10" ? Math.max(10, Math.round(cardRoot.width * 0.14)) : Math.max(12, Math.round(cardRoot.width * 0.17))
+                    font.family: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
+                    font.pixelSize: frontFace.rankText === "10" ? Math.max(9, Math.round(cardRoot.width * 0.16)) : Math.max(10, Math.round(cardRoot.width * 0.19))
                     font.bold: true
                     color: frontFace.suitColor
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
                     text: frontFace.suitText
-                    font.pixelSize: Math.max(11, Math.round(cardRoot.width * 0.16))
+                    font.pixelSize: Math.max(9, Math.round(cardRoot.width * 0.18))
                     color: frontFace.suitColor
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -143,21 +140,21 @@ Item {
             Column {
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
-                anchors.margins: Math.max(3, Math.round(cardRoot.width * 0.05))
+                anchors.margins: Math.max(3, Math.round(cardRoot.width * 0.06))
                 spacing: -2
                 rotation: 180
 
                 Text {
                     text: frontFace.rankText
-                    font.family: cardRoot.isCrtMode ? "Courier New, monospace" : ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font")
-                    font.pixelSize: frontFace.rankText === "10" ? Math.max(10, Math.round(cardRoot.width * 0.14)) : Math.max(12, Math.round(cardRoot.width * 0.17))
+                    font.family: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
+                    font.pixelSize: frontFace.rankText === "10" ? Math.max(9, Math.round(cardRoot.width * 0.16)) : Math.max(10, Math.round(cardRoot.width * 0.19))
                     font.bold: true
                     color: frontFace.suitColor
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
                     text: frontFace.suitText
-                    font.pixelSize: Math.max(11, Math.round(cardRoot.width * 0.16))
+                    font.pixelSize: Math.max(9, Math.round(cardRoot.width * 0.18))
                     color: frontFace.suitColor
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -166,7 +163,7 @@ Item {
             // Center Art Frame
             Item {
                 anchors.fill: parent
-                anchors.margins: Math.round(cardRoot.width * 0.22)
+                anchors.margins: Math.round(cardRoot.width * 0.20)
 
                 // Joker Center Display
                 Column {
@@ -177,14 +174,15 @@ Item {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "🃏"
-                        font.pixelSize: Math.round(cardRoot.width * 0.36)
+                        font.pixelSize: Math.round(cardRoot.width * 0.38)
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "JOKER"
-                        font.pixelSize: Math.round(cardRoot.width * 0.13)
+                        font.family: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
+                        font.pixelSize: Math.max(7, Math.round(cardRoot.width * 0.13))
                         font.bold: true
-                        color: "#9333EA"
+                        color: "#C084FC"
                     }
                 }
 
@@ -192,34 +190,43 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: frontFace.suitText
-                    font.pixelSize: Math.round(cardRoot.width * 0.44)
+                    font.pixelSize: Math.round(cardRoot.width * 0.46)
                     color: frontFace.suitColor
                     visible: frontFace.isAce && !frontFace.isJokerCard
                 }
 
-                // Royal Face Card (Jack / Queen / King) Retro Badge
+                // Royal Face Card (Jack / Queen / King) Futuristic Cyber Badge
                 Rectangle {
                     anchors.centerIn: parent
-                    width: parent.width * 0.95
-                    height: parent.height * 0.95
-                    radius: cardRoot.isCrtMode ? 2 : 4
-                    color: Qt.rgba(frontFace.suitColor.r, frontFace.suitColor.g, frontFace.suitColor.b, 0.06)
-                    border.color: Qt.rgba(frontFace.suitColor.r, frontFace.suitColor.g, frontFace.suitColor.b, 0.3)
+                    width: parent.width * 0.94
+                    height: parent.height * 0.94
+                    radius: 5
+                    color: Qt.rgba(frontFace.suitColor.r, frontFace.suitColor.g, frontFace.suitColor.b, 0.09)
+                    border.color: Qt.rgba(frontFace.suitColor.r, frontFace.suitColor.g, frontFace.suitColor.b, 0.5)
                     border.width: 1
                     visible: frontFace.isFace && !frontFace.isJokerCard
 
+                    // Futuristic Micro Corner Brackets
+                    Rectangle { width: 3.5; height: 3.5; radius: 1; color: frontFace.suitColor; anchors.top: parent.top; anchors.left: parent.left; anchors.margins: 1.5 }
+                    Rectangle { width: 3.5; height: 3.5; radius: 1; color: frontFace.suitColor; anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 1.5 }
+                    Rectangle { width: 3.5; height: 3.5; radius: 1; color: frontFace.suitColor; anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.margins: 1.5 }
+                    Rectangle { width: 3.5; height: 3.5; radius: 1; color: frontFace.suitColor; anchors.bottom: parent.bottom; anchors.right: parent.right; anchors.margins: 1.5 }
+
                     Column {
                         anchors.centerIn: parent
-                        spacing: 2
+                        spacing: -2
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: frontFace.rankText === "K" ? "👑" : (frontFace.rankText === "Q" ? "👸" : "⚔️")
-                            font.pixelSize: Math.round(cardRoot.width * 0.24)
+                            text: frontFace.rankText
+                            font.family: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
+                            font.pixelSize: Math.round(cardRoot.width * 0.36)
+                            font.bold: true
+                            color: frontFace.suitColor
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: frontFace.suitText
-                            font.pixelSize: Math.round(cardRoot.width * 0.18)
+                            font.pixelSize: Math.round(cardRoot.width * 0.22)
                             color: frontFace.suitColor
                         }
                     }
@@ -229,72 +236,72 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: frontFace.suitText
-                    font.pixelSize: Math.round(cardRoot.width * 0.32)
+                    font.pixelSize: Math.round(cardRoot.width * 0.34)
                     color: frontFace.suitColor
                     visible: !frontFace.isAce && !frontFace.isFace && !frontFace.isJokerCard
                 }
             }
 
-            // WILD Badge (Deuces Wild or Joker)
+            // Futuristic WILD Badge (Deuces Wild or Joker)
             Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 4
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: wildText.implicitWidth + 8
-                height: 15
+                height: 14
                 radius: 3
-                color: "#F59E0B"
-                border.color: "#B45309"
+                color: "#00F0FF"
+                border.color: "#38BDF8"
                 border.width: 1
-                visible: cardRoot.isWild || (cardRoot.cardData ? (cardRoot.cardData.isDeuce === true || cardRoot.cardData.isJoker === true) : false)
+                visible: Boolean(cardRoot.isWild || (cardRoot.cardData ? (cardRoot.cardData.isDeuce === true || cardRoot.cardData.isJoker === true) : false))
 
                 Text {
                     id: wildText
                     anchors.centerIn: parent
                     text: "WILD"
-                    font.pixelSize: 9
+                    font.family: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
+                    font.pixelSize: 8
                     font.bold: true
-                    color: "#FFFFFF"
+                    color: "#050811"
                 }
             }
 
             // =================================================================
-            // HELD BANNER (The Iconic Video Poker Stamp)
+            // HOLOGRAPHIC HELD HUD BANNER (Neon Magenta Banner)
             // =================================================================
             Rectangle {
                 id: heldBanner
                 anchors.top: parent.top
-                anchors.topMargin: 0
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width
                 height: Math.round(cardRoot.height * 0.22)
-                color: cardRoot.isCrtMode ? "#DC2626" : "#E11D48"
-                border.color: cardRoot.isCrtMode ? "#FEF08A" : "#FFFFFF"
-                border.width: 1.5
+                color: "#FF007F"
+                border.color: "#FFB6D9"
+                border.width: 1
                 visible: cardRoot.isHeld
                 z: 10
 
                 Text {
                     anchors.centerIn: parent
                     text: "HELD"
-                    font.family: cardRoot.isCrtMode ? "Courier New, monospace" : ((Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font")
-                    font.pixelSize: Math.max(11, Math.round(cardRoot.width * 0.18))
+                    font.family: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font, monospace"
+                    font.pixelSize: Math.max(9, Math.round(cardRoot.width * 0.18))
                     font.bold: true
-                    color: cardRoot.isCrtMode ? "#FEF08A" : "#FFFFFF"
+                    color: "#FFFFFF"
                 }
             }
         }
 
         // =====================================================================
-        // BACK FACE (Visible when angle >= 90, flipped 180° so logo is upright)
+        // BACK FACE: Futuristic Cyber Holographic Matrix
         // =====================================================================
         Rectangle {
             id: backFace
             anchors.fill: parent
-            radius: cardRoot.isCrtMode ? 4 : 8
-            color: cardRoot.isCrtMode ? "#0000AA" : "#080612"
-            border.color: cardRoot.cardBackBorderColor
-            border.width: cardRoot.isCrtMode ? 2 : 1.2
+            radius: 6
+            color: "#050811"
+            border.color: "#00F0FF"
+            border.width: 1.5
             clip: true
             visible: cardRotation.angle >= 90
 
@@ -307,14 +314,14 @@ Item {
                 mipmap: true
             }
 
-            // In CRT mode, if no custom back svg, display classic cross-hatch or solid blue retro border
+            // Glowing Inner Tech Border
             Rectangle {
                 anchors.fill: parent
-                anchors.margins: 4
+                anchors.margins: 3
+                radius: 4
                 color: "transparent"
-                border.color: "#FFCC00"
+                border.color: "#00F0FF55"
                 border.width: 1
-                visible: cardRoot.isCrtMode
             }
         }
     }
