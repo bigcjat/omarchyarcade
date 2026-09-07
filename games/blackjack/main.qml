@@ -959,6 +959,16 @@ Window {
                 radius: 12
                 clip: true
 
+                // Casino felt damask pattern featuring Omarchy square emblem
+                Image {
+                    anchors.fill: parent
+                    source: "assets/felt-pattern.svg"
+                    fillMode: Image.Tile
+                    sourceSize: Qt.size(80, 80)
+                    opacity: 0.075
+                    smooth: true
+                }
+
                 // Subtle casino felt vignette shadow
                 Rectangle {
                     anchors.fill: parent
