@@ -90,8 +90,13 @@ Window {
                 return;
             }
 
-            // Execute AI move in local engine
-            executeMove(move);
+            try {
+                executeMove(move);
+            } catch (e) {
+                console.log("Error executing AI move:", e);
+                root.isAiThinking = false;
+                syncGameState();
+            }
         }
 
         function onThinkingChanged(thinking) {
@@ -313,18 +318,24 @@ Window {
         root.selectedSquare = null;
         root.validMoves = [];
 
-        if (move.captures.length > 0) {
-            root.playSound("push");
-        } else {
-            root.playSound("move");
+        try {
+            if (move.captures && move.captures.length > 0) {
+                root.playSound("push");
+            } else {
+                root.playSound("move");
+            }
+
+            if (res && res.promoted) {
+                root.playSound("dock");
+                if (soundToast && typeof soundToast.show === "function") {
+                    soundToast.show("CROWNED KING!");
+                }
+            }
+        } catch (e) {
+            console.log("Sound/toast notification error:", e);
         }
 
-        if (res.promoted) {
-            root.playSound("dock");
-            soundToast.show("CROWNED KING!");
-        }
-
-        // Switch turn
+        // Switch turn ALWAYS
         root.currentTurn = (root.currentTurn === "w") ? "b" : "w";
         syncGameState();
 
