@@ -2072,115 +2072,167 @@ Window {
             z: 850
 
             Rectangle {
-                width: Math.min(parent.width * 0.94, 440)
-                height: Math.min(parent.height * 0.90, 520)
+                width: Math.min(parent.width * 0.94, 460)
+                height: Math.min(parent.height * 0.92, 530)
                 anchors.centerIn: parent
-                radius: 8
-                color: isCyberMode ? "#090D1A" : "#000088"
+                radius: 6
+                color: isCyberMode ? "#0A0F1E" : "#000066"
                 border.color: isCyberMode ? root.neonCyan : "#FEF08A"
-                border.width: 2
+                border.width: isCyberMode ? 2 : 3
 
                 Column {
                     anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 8
+                    anchors.margins: 14
+                    spacing: 10
 
-                    Row {
+                    // Modal Header
+                    Item {
                         width: parent.width
+                        height: 26
+
                         Text {
-                            text: "SELECT GAME TERMINAL"
+                            anchors.centerIn: parent
+                            text: "SELECT A GAME"
                             font.family: root.monoFontFamily
-                            font.pixelSize: 12
+                            font.pixelSize: 13
                             font.bold: true
                             color: isCyberMode ? root.neonCyan : "#FEF08A"
                         }
-                        Item { width: parent.width - 200 }
+
                         Rectangle {
-                            width: 22
-                            height: 22
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 72
+                            height: 24
                             radius: 3
-                            color: "#DC2626"
-                            Text {
-                                anchors.centerIn: parent
-                                text: "✕"
-                                font.pixelSize: 11
-                                color: "#FFFFFF"
-                            }
-                            MouseArea {
+                            color: isCyberMode ? (closeGameMenuArea.containsMouse ? root.neonCyan : "#1E293B") : (closeGameMenuArea.containsMouse ? "#FEF08A" : "#D97706")
+                            border.color: isCyberMode ? root.neonCyan : "#FEF08A"
+                            border.width: 1
+
+                            Rectangle {
                                 anchors.fill: parent
+                                anchors.margins: 1.5
+                                radius: 2
+                                color: isCyberMode ? "#0A0F1D" : "#7F1D1D"
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "EXIT [ESC]"
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 8
+                                    font.bold: true
+                                    color: isCyberMode ? root.neonCyan : "#FEF08A"
+                                }
+                            }
+
+                            MouseArea {
+                                id: closeGameMenuArea
+                                anchors.fill: parent
+                                hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: gameMenuOpen = false
                             }
                         }
                     }
 
+                    // 3D Beveled Touch Buttons Grid (IGT Game King Style)
                     Flickable {
                         width: parent.width
-                        height: parent.height - 40
+                        height: parent.height - 70
                         contentHeight: gameGrid.implicitHeight
                         clip: true
 
-                        Column {
+                        Grid {
                             id: gameGrid
                             width: parent.width
-                            spacing: 6
+                            columns: 2
+                            spacing: 8
 
                             Repeater {
                                 model: gameList
                                 Rectangle {
-                                    width: parent.width
-                                    height: 48
+                                    id: gameCardItem
+                                    width: Math.floor((gameGrid.width - 8) / 2)
+                                    height: 54
                                     radius: 4
                                     readonly property bool isSel: (activeGameId === modelData.id)
-                                    color: isSel ? (isCyberMode ? "#00F0FF22" : "#0284C7") : (isCyberMode ? "#111827" : "#000055")
-                                    border.color: isSel ? (isCyberMode ? root.neonCyan : "#FEF08A") : root.themeBorder
-                                    border.width: isSel ? 1.5 : 1
+                                    readonly property bool isHov: btnMouseArea.containsMouse
 
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: switchGame(modelData.id)
-                                    }
+                                    // Green selection highlight border (exact IGT machine style)
+                                    color: isSel ? "#22C55E" : (isCyberMode ? (isHov ? root.neonCyan : "#1E293B") : (isHov ? "#FEF08A" : "#D97706"))
 
-                                    Column {
+                                    // Outer Beveled Rim
+                                    Rectangle {
                                         anchors.fill: parent
-                                        anchors.margins: 6
-                                        spacing: 2
-                                        Row {
-                                            width: parent.width
-                                            Text {
-                                                text: modelData.name
-                                                font.family: root.monoFontFamily
-                                                font.pixelSize: 10
-                                                font.bold: true
-                                                color: isSel ? "#FFFFFF" : (isCyberMode ? root.neonCyan : "#FFFFFF")
+                                        anchors.margins: isSel ? 3 : 2
+                                        radius: 3
+                                        color: isCyberMode ? (isSel ? "#00F0FF33" : "#0F172A") : (isSel ? "#FEF08A" : "#F59E0B")
+
+                                        // Inner Button Face
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            anchors.margins: isCyberMode ? 1 : 2.5
+                                            radius: 2
+                                            gradient: Gradient {
+                                                GradientStop {
+                                                    position: 0.0
+                                                    color: isCyberMode ? (gameCardItem.isSel ? "#1E293B" : "#0A0F1D") : (gameCardItem.isSel ? "#DC2626" : (gameCardItem.isHov ? "#B91C1C" : "#991B1B"))
+                                                }
+                                                GradientStop {
+                                                    position: 1.0
+                                                    color: isCyberMode ? (gameCardItem.isSel ? "#0F172A" : "#030712") : (gameCardItem.isSel ? "#991B1B" : (gameCardItem.isHov ? "#881337" : "#7F1D1D"))
+                                                }
                                             }
-                                            Item { width: 10 }
-                                            Rectangle {
-                                                width: 38
-                                                height: 12
-                                                radius: 2
-                                                color: modelData.type === "poker" ? "#16A34A" : "#D97706"
+
+                                            Column {
+                                                anchors.centerIn: parent
+                                                spacing: 2
+                                                width: parent.width - 8
+
                                                 Text {
-                                                    anchors.centerIn: parent
-                                                    text: modelData.type.toUpperCase()
-                                                    font.pixelSize: 7
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    text: modelData.type === "poker" ? "VIDEO POKER" : "TABLE GAME"
+                                                    font.family: root.monoFontFamily
+                                                    font.pixelSize: 8
+                                                    font.bold: true
+                                                    color: isCyberMode ? root.neonCyan : "#FEF08A"
+                                                }
+
+                                                Text {
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    width: parent.width
+                                                    horizontalAlignment: Text.AlignHCenter
+                                                    text: modelData.name
+                                                    font.family: root.monoFontFamily
+                                                    font.pixelSize: Math.max(8, Math.min(10, gameCardItem.width * 0.052))
                                                     font.bold: true
                                                     color: "#FFFFFF"
+                                                    elide: Text.ElideRight
                                                 }
                                             }
                                         }
-                                        Text {
-                                            width: parent.width
-                                            text: modelData.desc
-                                            font.pixelSize: 8
-                                            color: isCyberMode ? "#94A3B8" : "#CBD5E1"
-                                            elide: Text.ElideRight
-                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: btnMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: switchGame(modelData.id)
                                     }
                                 }
                             }
                         }
+                    }
+
+                    // Bottom Arcade Prompt (Exact IGT Casino Legend)
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "TO START PLAY, SELECT A GAME"
+                        font.family: root.monoFontFamily
+                        font.pixelSize: 9
+                        font.bold: true
+                        color: isCyberMode ? root.neonCyan : "#FEF08A"
                     }
                 }
             }
