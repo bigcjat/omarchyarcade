@@ -25,7 +25,7 @@ ApplicationWindow {
     property bool splashEnabled: true
     property string selectedCategory: "LIBRARY"
     property string searchQuery: ""
-    property string viewMode: "grid" // "grid", "carousel", "desktop", "sidebar"
+    property string viewMode: "sidebar" // "grid", "carousel", "desktop", "sidebar"
     property var catalogData: []
     property var filteredGames: []
     property int focusedIndex: 0

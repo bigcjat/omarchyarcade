@@ -193,12 +193,12 @@ class ArcadeBackend(QObject):
         if settings_file.exists():
             try:
                 data = json.loads(settings_file.read_text(encoding="utf-8"))
-                mode = data.get("view_mode", "grid")
+                mode = data.get("view_mode", "sidebar")
                 if mode in ("grid", "carousel", "desktop", "sidebar"):
                     return mode
             except Exception:
                 pass
-        return "grid"
+        return "sidebar"
 
     @Slot(str)
     def setViewMode(self, mode: str):

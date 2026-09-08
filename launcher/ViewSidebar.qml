@@ -10,6 +10,10 @@ Item {
     property int selectedIndex: 0
     property var activeGame: (games && selectedIndex >= 0 && selectedIndex < games.length) ? games[selectedIndex] : null
 
+    // Responsive breakpoints
+    readonly property bool isNarrow: sidebarView.width < 900
+    readonly property bool isUltraNarrow: sidebarView.width < 740
+
     signal gameSelected(int index)
     signal gameLaunched(string gameId)
     signal detailRequested(var gameData)
@@ -30,10 +34,13 @@ Item {
         spacing: 0
 
         // =====================================================================
-        // 1. LEFT SIDEBAR: Vertical Game Library List
+        // 1. LEFT SIDEBAR: Vertical Game Library List (Responsive Width)
         // =====================================================================
         Rectangle {
-            Layout.preferredWidth: 320
+            // Give the right details pane the majority of space on small screens
+            Layout.preferredWidth: sidebarView.isUltraNarrow ? 180 : (sidebarView.isNarrow ? 215 : 270)
+            Layout.minimumWidth: 170
+            Layout.maximumWidth: 300
             Layout.fillHeight: true
             color: "#111118"
             border.color: "#1e1e2c"
@@ -54,13 +61,13 @@ Item {
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 16
-                        anchors.rightMargin: 16
+                        anchors.leftMargin: sidebarView.isNarrow ? 10 : 14
+                        anchors.rightMargin: sidebarView.isNarrow ? 10 : 14
 
                         Text {
-                            text: "LIBRARY TITLES"
+                            text: sidebarView.isUltraNarrow ? "TITLES" : "LIBRARY TITLES"
                             font.family: "monospace"
-                            font.pixelSize: 11
+                            font.pixelSize: sidebarView.isNarrow ? 10 : 11
                             font.bold: true
                             color: "#94a3b8"
                         }
@@ -71,7 +78,7 @@ Item {
                             height: 18
                             radius: 9
                             color: "#1e2232"
-                            width: countLabel.implicitWidth + 12
+                            width: countLabel.implicitWidth + 10
 
                             Text {
                                 id: countLabel
@@ -99,7 +106,7 @@ Item {
                     delegate: Rectangle {
                         id: rowItem
                         width: sidebarList.width
-                        height: 52
+                        height: sidebarView.isNarrow ? 48 : 52
                         color: isSelected ? "#1c1f2e" : (rowMouse.containsMouse ? "#151722" : "transparent")
 
                         readonly property bool isSelected: index === sidebarView.selectedIndex
@@ -110,21 +117,21 @@ Item {
                             anchors.left: parent.left
                             anchors.top: parent.top
                             anchors.bottom: parent.bottom
-                            width: 3.5
+                            width: 3
                             color: themeAccent
                             visible: rowItem.isSelected
                         }
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 14
-                            anchors.rightMargin: 14
-                            spacing: 12
+                            anchors.leftMargin: sidebarView.isNarrow ? 8 : 12
+                            anchors.rightMargin: sidebarView.isNarrow ? 8 : 12
+                            spacing: sidebarView.isNarrow ? 8 : 10
 
                             // 3.5" Disk Icon thumbnail
                             Rectangle {
-                                width: 34
-                                height: 34
+                                width: sidebarView.isNarrow ? 28 : 32
+                                height: sidebarView.isNarrow ? 28 : 32
                                 radius: 4
                                 color: modelData && modelData.floppy_color ? modelData.floppy_color : "#20202a"
                                 border.color: "#0a0a0f"
@@ -132,8 +139,8 @@ Item {
 
                                 Image {
                                     anchors.centerIn: parent
-                                    width: 30
-                                    height: 30
+                                    width: parent.width - 4
+                                    height: parent.height - 4
                                     fillMode: Image.PreserveAspectFit
                                     source: {
                                         if (!modelData) return "";
@@ -148,11 +155,11 @@ Item {
                             // Title & Category Subtitle
                             ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: 2
+                                spacing: 1
 
                                 Text {
                                     text: modelData ? modelData.title : ""
-                                    font.pixelSize: 12
+                                    font.pixelSize: sidebarView.isNarrow ? 11 : 12
                                     font.bold: rowItem.isSelected
                                     color: rowItem.isSelected ? "#FFFFFF" : (rowMouse.containsMouse ? "#e2e8f0" : "#94a3b8")
                                     elide: Text.ElideRight
@@ -161,7 +168,7 @@ Item {
 
                                 Text {
                                     text: modelData ? (modelData.category + (modelData.size ? " • " + modelData.size : "")) : ""
-                                    font.pixelSize: 10
+                                    font.pixelSize: sidebarView.isNarrow ? 9 : 10
                                     color: rowItem.isSelected ? themeAccent : "#64748b"
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
@@ -170,9 +177,9 @@ Item {
 
                             // Status dot
                             Rectangle {
-                                width: 8
-                                height: 8
-                                radius: 4
+                                width: sidebarView.isNarrow ? 6 : 8
+                                height: sidebarView.isNarrow ? 6 : 8
+                                radius: width / 2
                                 color: rowItem.installed ? "#22c55e" : "#f59e0b"
                             }
                         }
@@ -256,12 +263,12 @@ Item {
                 Column {
                     id: contentCol
                     width: rightFlickable.width
-                    spacing: 24
+                    spacing: 20
 
                     // HERO BANNER SECTION (Top)
                     Item {
                         width: parent.width
-                        height: 330
+                        height: sidebarView.isNarrow ? 300 : 330
 
                         // Hero Screenshot / Cover background
                         Image {
@@ -283,7 +290,7 @@ Item {
                                 gradient: Gradient {
                                     orientation: Gradient.Vertical
                                     GradientStop { position: 0.0; color: "#20000000" }
-                                    GradientStop { position: 0.5; color: "#800c0d14" }
+                                    GradientStop { position: 0.45; color: "#850c0d14" }
                                     GradientStop { position: 1.0; color: "#0c0d14" }
                                 }
                             }
@@ -294,62 +301,62 @@ Item {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.bottom: parent.bottom
-                            anchors.margins: 28
-                            spacing: 12
+                            anchors.margins: sidebarView.isNarrow ? 18 : 26
+                            spacing: sidebarView.isNarrow ? 8 : 12
 
-                            // Tags & Category row (Row ensures badges do not squish!)
+                            // Tags & Category row
                             Row {
-                                spacing: 8
+                                spacing: 6
 
                                 Rectangle {
-                                    height: 22
+                                    height: 20
                                     radius: 4
                                     color: (activeGame && activeGame.grid_color) ? activeGame.grid_color : themeAccent
-                                    width: heroCatText.implicitWidth + 14
+                                    width: heroCatText.implicitWidth + 12
 
                                     Text {
                                         id: heroCatText
                                         anchors.centerIn: parent
                                         text: activeGame ? activeGame.category : ""
-                                        font.pixelSize: 10
+                                        font.pixelSize: 9
                                         font.bold: true
                                         color: "#09090e"
                                     }
                                 }
 
                                 Rectangle {
-                                    height: 22
+                                    height: 20
                                     radius: 4
                                     color: "#181d2a"
                                     border.color: "#2c364e"
                                     border.width: 1
-                                    width: yrText.implicitWidth + 14
+                                    width: yrText.implicitWidth + 12
 
                                     Text {
                                         id: yrText
                                         anchors.centerIn: parent
                                         text: activeGame && activeGame.release_year ? activeGame.release_year : "2026"
                                         font.family: "monospace"
-                                        font.pixelSize: 10
+                                        font.pixelSize: 9
                                         font.bold: true
                                         color: "#94a3b8"
                                     }
                                 }
 
                                 Rectangle {
-                                    height: 22
+                                    height: 20
                                     radius: 4
                                     color: "#181d2a"
                                     border.color: "#2c364e"
                                     border.width: 1
-                                    width: szText.implicitWidth + 14
+                                    width: szText.implicitWidth + 12
 
                                     Text {
                                         id: szText
                                         anchors.centerIn: parent
                                         text: activeGame && activeGame.size ? activeGame.size : ""
                                         font.family: "monospace"
-                                        font.pixelSize: 10
+                                        font.pixelSize: 9
                                         font.bold: true
                                         color: "#94a3b8"
                                     }
@@ -360,7 +367,7 @@ Item {
                             Text {
                                 width: parent.width
                                 text: activeGame ? activeGame.title : ""
-                                font.pixelSize: 34
+                                font.pixelSize: sidebarView.isNarrow ? 26 : 34
                                 font.bold: true
                                 color: "#FFFFFF"
                                 elide: Text.ElideRight
@@ -370,19 +377,20 @@ Item {
                             Text {
                                 width: parent.width
                                 text: activeGame ? activeGame.tagline : ""
-                                font.pixelSize: 15
+                                font.pixelSize: sidebarView.isNarrow ? 13 : 15
                                 font.italic: true
                                 color: themeAccent
                                 elide: Text.ElideRight
                             }
 
-                            // Big Action Buttons
-                            Row {
-                                spacing: 14
+                            // Action Buttons (Flow wrapping prevents clipping on small widths!)
+                            Flow {
+                                width: parent.width
+                                spacing: 10
 
                                 Rectangle {
-                                    height: 44
-                                    width: 180
+                                    height: sidebarView.isNarrow ? 38 : 44
+                                    width: sidebarView.isNarrow ? 150 : 180
                                     radius: 8
                                     color: sidebarPlayMouse.containsMouse ? Qt.lighter(themeAccent, 1.15) : themeAccent
                                     border.color: Qt.lighter(themeAccent, 1.4)
@@ -390,9 +398,9 @@ Item {
 
                                     RowLayout {
                                         anchors.centerIn: parent
-                                        spacing: 8
-                                        Text { text: "▶"; font.pixelSize: 14; color: "#09090e" }
-                                        Text { text: "PLAY GAME"; font.pixelSize: 13; font.bold: true; color: "#09090e" }
+                                        spacing: 6
+                                        Text { text: "▶"; font.pixelSize: sidebarView.isNarrow ? 12 : 14; color: "#09090e" }
+                                        Text { text: "PLAY GAME"; font.pixelSize: sidebarView.isNarrow ? 11 : 13; font.bold: true; color: "#09090e" }
                                     }
 
                                     MouseArea {
@@ -407,8 +415,8 @@ Item {
                                 }
 
                                 Rectangle {
-                                    height: 44
-                                    width: 140
+                                    height: sidebarView.isNarrow ? 38 : 44
+                                    width: sidebarView.isNarrow ? 120 : 140
                                     radius: 8
                                     color: sidebarInfoMouse.containsMouse ? "#272a3c" : "#1b1d2a"
                                     border.color: "#353950"
@@ -417,8 +425,8 @@ Item {
                                     RowLayout {
                                         anchors.centerIn: parent
                                         spacing: 6
-                                        Text { text: "ℹ"; font.pixelSize: 13; color: "#94a3b8" }
-                                        Text { text: "Full Details"; font.pixelSize: 12; font.bold: true; color: "#cbd5e1" }
+                                        Text { text: "ℹ"; font.pixelSize: 12; color: "#94a3b8" }
+                                        Text { text: "Full Details"; font.pixelSize: sidebarView.isNarrow ? 11 : 12; font.bold: true; color: "#cbd5e1" }
                                     }
 
                                     MouseArea {
@@ -435,16 +443,16 @@ Item {
                         }
                     }
 
-                    // PROFILE BODY DETAILS (Cards with horizontal margins)
+                    // PROFILE BODY DETAILS (Cards with adaptive horizontal padding)
                     Column {
-                        width: parent.width - 56
-                        x: 28
-                        spacing: 20
+                        width: parent.width - (sidebarView.isNarrow ? 36 : 52)
+                        x: sidebarView.isNarrow ? 18 : 26
+                        spacing: 16
 
                         // Synopsis Card
                         Rectangle {
                             width: parent.width
-                            implicitHeight: synCol.implicitHeight + 32
+                            implicitHeight: synCol.implicitHeight + 28
                             radius: 10
                             color: "#12141e"
                             border.color: "#1e2232"
@@ -453,13 +461,13 @@ Item {
                             Column {
                                 id: synCol
                                 anchors.fill: parent
-                                anchors.margins: 16
+                                anchors.margins: 14
                                 spacing: 8
 
                                 Text {
                                     text: "ABOUT THIS GAME"
                                     font.family: "monospace"
-                                    font.pixelSize: 11
+                                    font.pixelSize: 10
                                     font.bold: true
                                     color: themeAccent
                                 }
@@ -467,92 +475,87 @@ Item {
                                 Text {
                                     width: parent.width
                                     text: activeGame ? activeGame.description : ""
-                                    font.pixelSize: 13
-                                    lineHeight: 1.45
+                                    font.pixelSize: 12
+                                    lineHeight: 1.4
                                     color: "#cbd5e1"
                                     wrapMode: Text.WordWrap
                                 }
                             }
                         }
 
-                        // Controls & Keybindings Card
+                        // Controls & Keybindings Card (Clean stacked layout so it never clips)
                         Rectangle {
                             width: parent.width
-                            implicitHeight: 70
+                            implicitHeight: ctrlCol.implicitHeight + 24
                             radius: 10
                             color: "#12141e"
                             border.color: "#1e2232"
                             border.width: 1
 
-                            RowLayout {
+                            Column {
+                                id: ctrlCol
                                 anchors.fill: parent
-                                anchors.margins: 16
-                                spacing: 16
+                                anchors.margins: 14
+                                spacing: 6
 
                                 Text {
-                                    text: "CONTROLS"
+                                    text: "🎮 CONTROLS"
                                     font.family: "monospace"
-                                    font.pixelSize: 11
+                                    font.pixelSize: 10
                                     font.bold: true
                                     color: themeAccent
                                 }
 
-                                Rectangle {
-                                    width: 1
-                                    Layout.fillHeight: true
-                                    color: "#22273a"
-                                }
-
                                 Text {
+                                    width: parent.width
                                     text: activeGame && activeGame.controls ? (typeof activeGame.controls === "string" ? activeGame.controls : (activeGame.controls.keyboard || activeGame.controls.mouse || "Keyboard & Mouse")) : "Keyboard & Mouse"
-                                    font.pixelSize: 12
+                                    font.pixelSize: 11
                                     font.bold: true
                                     color: "#f1f5f9"
-                                    Layout.fillWidth: true
                                     wrapMode: Text.WordWrap
+                                    lineHeight: 1.3
                                 }
                             }
                         }
 
-                        // Metadata Grid Card
+                        // Metadata Grid Card (Flow wrap prevents any truncation on small screens!)
                         Rectangle {
                             width: parent.width
-                            implicitHeight: 64
+                            implicitHeight: statsFlow.implicitHeight + 24
                             radius: 10
                             color: "#12141e"
                             border.color: "#1e2232"
                             border.width: 1
 
-                            RowLayout {
+                            Flow {
+                                id: statsFlow
                                 anchors.fill: parent
-                                anchors.margins: 16
-                                spacing: 28
+                                anchors.margins: 14
+                                spacing: sidebarView.isNarrow ? 14 : 24
 
-                                ColumnLayout {
+                                Column {
                                     spacing: 2
                                     Text { text: "PLATFORM"; font.pixelSize: 9; font.bold: true; color: "#64748b" }
                                     Text { text: "Omarchy Linux Native"; font.pixelSize: 11; font.bold: true; color: "#e2e8f0" }
                                 }
 
-                                ColumnLayout {
+                                Column {
                                     spacing: 2
                                     Text { text: "AUDIO ENGINE"; font.pixelSize: 9; font.bold: true; color: "#64748b" }
                                     Text { text: "PySide6 / QAudio (Offline)"; font.pixelSize: 11; font.bold: true; color: "#e2e8f0" }
                                 }
 
-                                ColumnLayout {
+                                Column {
                                     spacing: 2
                                     Text { text: "TELEMETRY"; font.pixelSize: 9; font.bold: true; color: "#64748b" }
                                     Text { text: "Zero Tracking / Local Only"; font.pixelSize: 11; font.bold: true; color: "#22c55e" }
                                 }
-
-                                Item { Layout.fillWidth: true }
                             }
                         }
 
                         Item {
                             width: parent.width
-                            height: 24
+                            height: 20
                         }
                     }
                 }
