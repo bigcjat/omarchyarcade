@@ -17,6 +17,8 @@ import sys
 import re
 import shutil
 import subprocess
+import threading
+import time
 import tomllib
 import ctypes
 from pathlib import Path
@@ -107,12 +109,48 @@ class SoundManager(QObject):
         if not self.is_mac:
             self.player_cmd = shutil.which("pw-play") or shutil.which("paplay") or shutil.which("aplay")
 
+        self.is_muted = True
+        self.ambient_proc = None
+        self.ambient_running = True
+        self.ambient_wav = self.sounds_dir / "cave_ambience.wav"
+        self.ambient_thread = threading.Thread(target=self._ambient_loop, daemon=True)
+        self.ambient_thread.start()
+
+    def _ambient_loop(self):
+        player = "/usr/bin/afplay" if self.is_mac else (shutil.which("pw-play") or shutil.which("paplay") or shutil.which("aplay"))
+        if not player or not self.ambient_wav.is_file():
+            return
+        while self.ambient_running:
+            if not self.is_muted:
+                try:
+                    cmd = [player]
+                    if self.is_mac:
+                        cmd += ["-v", "0.35"]
+                    cmd.append(str(self.ambient_wav))
+                    self.ambient_proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    self.ambient_proc.wait()
+                except Exception:
+                    time.sleep(0.5)
+            else:
+                time.sleep(0.2)
+
+    @Slot(bool)
+    def setMuted(self, muted):
+        self.is_muted = bool(muted)
+        if self.is_muted and self.ambient_proc:
+            try:
+                self.ambient_proc.terminate()
+            except Exception:
+                pass
+
     @Slot(str)
     def play(self, name):
         self.playSound(name)
 
     @Slot(str)
     def playSound(self, name):
+        if self.is_muted:
+            return
         if self.is_mac and name in self.sounds:
             self.AudioServicesPlaySystemSound(self.sounds[name])
         elif hasattr(self, "player_cmd") and self.player_cmd:
@@ -188,7 +226,7 @@ def main():
         sys.exit(0)
 
     app = QGuiApplication(sys.argv)
-    app.setApplicationName("SlimeSpikes")
+    app.setApplicationName("Slime's Adventure")
     app.setOrganizationName("Arcade")
 
     icon_path = Path(__file__).resolve().parent / "assets" / "disk_icon.png"
@@ -201,7 +239,7 @@ def main():
     sound_mgr = SoundManager(Path(__file__).resolve().parent / "sounds")
     engine.rootContext().setContextProperty("soundManager", sound_mgr)
 
-    settings_mgr = SettingsManager("SlimeSpikes")
+    settings_mgr = SettingsManager("SlimesAdventure")
     engine.rootContext().setContextProperty("settingsManager", settings_mgr)
 
     qml_file = Path(__file__).resolve().parent / "main.qml"

@@ -852,33 +852,33 @@
       "download_size": "1.0 MB"
     },
     {
-      "id": "slimespikes",
-      "title": "SlimeSpikes",
+      "id": "slimesadventure",
+      "title": "Slime's Adventure",
       "ref": "OA-031",
       "category": "Action Arcade",
       "floppy_color": "#232328",
       "grid_color": "#00E5FF",
       "version": "1.0.0",
       "status": "released",
-      "tagline": "Japanese Crane-Game Slime Gravity-Flip Corridor Runner",
-      "description": "An addictive high-speed gravity runner inspired by classic arcade corridor reflex games. Control lovable Japanese teardrop plushie slimes with organic squish & stretch physics, dodging razor-sharp neon spikes between the floor and ceiling across 6 playable slimes.",
+      "tagline": "Subterranean Cavern Slime Gravity Runner",
+      "description": "An addictive high-speed gravity runner inspired by classic arcade corridor reflex games. Guide lovable Japanese teardrop slimes with continuous dough-rolling locomotion and organic squash & stretch physics through a glowing subterranean cavern, dodging stalactites and stalagmites alongside flapping bats and peeking cave critters across 6 playable slimes.",
       "instructions": [
         "Tap / Click or press Space / W / S / Up / Down to invert gravity instantly between floor and ceiling.",
-        "Dodge razor spikes on the floor by flipping upward, and ceiling spikes by dropping downward.",
+        "Dodge stalagmites rising from the floor by flipping upward, and stalactites hanging from the ceiling by dropping downward.",
         "Choose from 6 playable Japanese slimes: Gooey (Classic Blue), Cherry (Pink), Lime (Neon Green), Metal (Chrome), Gold (King), and Shadow (Phantom).",
-        "Experience bouncy gelatinous squash and stretch physics, pancake landing splats, and trailing slime bubbles.",
-        "Survive as far as possible as corridor speed surges smoothly over time."
+        "Experience gelatinous squash and stretch physics, pancake landing splats, animated bats, and bioluminescent cave critters.",
+        "Survive as far as possible through the subterranean cavern as speed surges smoothly over time."
       ],
       "controls": {
         "keyboard": "Space / Enter / Up / Down / W / S to flip gravity, 1-6 to switch slimes, F for Full Window",
         "shortcuts": "R to restart, P/Esc to pause, ? for help, M to mute, C for Character Tray"
       },
-      "folder": "games/slimespikes",
-      "entrypoint": "games/slimespikes/main.py",
-      "cover_image": "assets/covers/slimespikes.png",
-      "size": "620 KB",
-      "size_bytes": 622787,
-      "download_size": "620 KB"
+      "folder": "games/slimesadventure",
+      "entrypoint": "games/slimesadventure/main.py",
+      "cover_image": "assets/covers/slimesadventure.png",
+      "size": "1.1 MB",
+      "size_bytes": 1190419,
+      "download_size": "1.1 MB"
     }
   ]
 }

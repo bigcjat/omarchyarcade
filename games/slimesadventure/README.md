@@ -1,8 +1,8 @@
-# SlimeSpikes (Japanese Crane-Game Slime Gravity Runner • QML / QtQuick)
+# Slime's Adventure (Subterranean Cavern Gravity Runner • QML / QtQuick)
 
-![SlimeSpikes Gameplay](screenshot.png)
+![Slime's Adventure Gameplay](screenshot.png)
 
-A high-speed reflex corridor runner inspired by classic arcade gravity-flip reflex games and beloved Japanese UFO crane-game teardrop plushies. Guide lovable gelatinous slimes through a high-voltage neon hazard corridor, dynamically flipping gravity between floor and ceiling to dodge razor-sharp crystalline spikes with organic squash & stretch physics!
+A high-speed reflex corridor runner inspired by classic arcade gravity-flip reflex games and beloved Japanese teardrop slimes. Guide lovable gelatinous slimes with continuous dough-rolling locomotion through a glowing subterranean cavern, dynamically flipping gravity between floor and ceiling to dodge stalagmites and stalactites with organic squash & stretch physics!
 
 Built natively with hardware acceleration for **Omarchy Linux** and tiling window managers.
 
@@ -55,7 +55,7 @@ Built natively with hardware acceleration for **Omarchy Linux** and tiling windo
 ## Running
 
 ```bash
-./.venv/bin/python games/slimespikes/main.py
+./.venv/bin/python games/slimesadventure/main.py
 ```
 
 ---

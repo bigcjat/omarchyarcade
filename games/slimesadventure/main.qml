@@ -10,7 +10,7 @@ ApplicationWindow {
     height: 760
     minimumWidth: 340
     minimumHeight: 380
-    title: "SlimeSpikes"
+    title: "Slime's Adventure"
 
     // =========================================================================
     // OMARCHY THEME TOKENS (Auto-synchronized from colors.toml)
@@ -40,16 +40,18 @@ ApplicationWindow {
     property var activeCharData: Engine.SLIME_CHARACTERS[Engine.selectedCharacter] || Engine.SLIME_CHARACTERS.gooey
 
     property bool splashEnabled: true
-    property bool isMuted: false
+    property bool isMuted: true
     property bool showHelp: false
     property bool showCharPicker: false
     property bool pausedByHelp: false
     property bool isPaused: false
     property bool fullPlayfield: false
     readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
+    property int gameDistance: 0
+    property int gameBestDistance: 0
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Flip Gravity: Space, Enter, Up, Down, W, or S\n• Avoid Spikes: Flip between floor and ceiling to dodge hazards\n• Slime Characters: Press 1-6 to switch between Gooey, Cherry, Lime, Metal, Gold, and Shadow\n• Restart: R\n• Sound: M\n• Help: ? or Esc"
+    property string helpText: "• Flip Gravity: Space, Enter, Up, Down, W, or S\n• Avoid Hazards: Flip between floor and ceiling to dodge stalactites and stalagmites\n• Slime Characters: Press 1-6 to switch between Gooey, Cherry, Lime, Metal, Gold, and Shadow\n• Restart: R\n• Sound: M\n• Help: ? or Esc"
 
     signal screenshotSaved(string filePath)
 
@@ -73,6 +75,9 @@ ApplicationWindow {
 
     function toggleMute() {
         root.isMuted = !root.isMuted;
+        if (typeof soundManager !== "undefined" && soundManager && soundManager.setMuted) {
+            soundManager.setMuted(root.isMuted);
+        }
         soundToast.show(root.isMuted ? "Audio Muted" : "Audio Active");
     }
 
@@ -83,25 +88,25 @@ ApplicationWindow {
     }
 
     function openHelp() {
-        if (!root.showHelp) {
-            if (!root.isPaused && Engine.gameState === "playing") {
-                root.pausedByHelp = true;
-                root.togglePause();
-            } else {
-                root.pausedByHelp = false;
-            }
-            root.showHelp = true;
+        if (root.showHelp) return;
+        root.pausedByHelp = !root.isPaused;
+        root.showHelp = true;
+        if (root.pausedByHelp) {
+            root.isPaused = true;
+            Engine.setPaused(true);
         }
     }
 
     function closeHelp() {
-        if (root.showHelp) {
-            root.showHelp = false;
-            if (root.pausedByHelp) {
-                root.pausedByHelp = false;
-                if (root.isPaused && Engine.gameState === "playing") {
-                    root.togglePause();
-                }
+        if (!root.showHelp) return;
+        root.showHelp = false;
+        if (root.pausedByHelp) {
+            root.isPaused = false;
+            Engine.setPaused(false);
+            root.pausedByHelp = false;
+            if (gameCanvas) {
+                gameCanvas.forceActiveFocus();
+                gameCanvas.requestPaint();
             }
         }
     }
@@ -114,6 +119,7 @@ ApplicationWindow {
     function selectSlime(charId) {
         Engine.selectCharacter(charId);
         root.activeCharData = Engine.SLIME_CHARACTERS[charId];
+        root.showCharPicker = false;
         playSound("click");
         soundToast.show("Selected " + root.activeCharData.name);
         gameCanvas.requestPaint();
@@ -124,6 +130,8 @@ ApplicationWindow {
         Engine.resetGame();
         root.isPaused = false;
         Engine.setPaused(false);
+        root.gameDistance = 0;
+        root.gameBestDistance = Engine.bestDistance;
         playSound("select");
         gameCanvas.requestPaint();
     }
@@ -142,6 +150,9 @@ ApplicationWindow {
     Component.onCompleted: {
         if (typeof settingsManager !== "undefined" && settingsManager) {
             Engine.bestDistance = settingsManager.getBestScore();
+        }
+        if (typeof soundManager !== "undefined" && soundManager && soundManager.setMuted) {
+            soundManager.setMuted(root.isMuted);
         }
         Engine.init(gameCanvas.width, gameCanvas.height);
     }
@@ -261,7 +272,7 @@ ApplicationWindow {
                 Text {
                     width: parent.width
                     elide: Text.ElideRight
-                    text: "SlimeSpikes"
+                    text: "Slime's Adventure"
                     font.pixelSize: Math.max(20, Math.min(30, headerItem.width * 0.07))
                     font.bold: true
                     color: root.activeCharData ? root.activeCharData.color : root.themeAccent
@@ -270,7 +281,7 @@ ApplicationWindow {
                 Text {
                     width: parent.width
                     elide: Text.ElideRight
-                    text: "Japanese Crane-Game Gravity Runner"
+                    text: "Japanese Crane-Game Cavern Runner"
                     font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.03))
                     color: root.themeSubtext
                 }
@@ -303,7 +314,7 @@ ApplicationWindow {
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
                         Text {
-                            text: Engine.distance.toString() + "m"
+                            text: root.gameDistance.toString() + "m"
                             font.pixelSize: 14
                             font.bold: true
                             font.family: root.monoFontFamily
@@ -333,7 +344,7 @@ ApplicationWindow {
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
                         Text {
-                            text: Engine.bestDistance.toString() + "m"
+                            text: root.gameBestDistance.toString() + "m"
                             font.pixelSize: 14
                             font.bold: true
                             font.family: root.monoFontFamily
@@ -686,7 +697,7 @@ ApplicationWindow {
                         }
 
                         Text {
-                            text: "• " + Engine.distance + "m"
+                            text: "• " + root.gameDistance + "m"
                             font.pixelSize: 11
                             font.bold: true
                             font.family: root.monoFontFamily
@@ -694,7 +705,7 @@ ApplicationWindow {
                         }
 
                         Text {
-                            text: "(BEST: " + Engine.bestDistance + "m)"
+                            text: "(BEST: " + root.gameBestDistance + "m)"
                             font.pixelSize: 10
                             color: root.themeSubtext
                         }
@@ -775,7 +786,7 @@ ApplicationWindow {
                         }
 
                         Text {
-                            text: "Distance: " + Engine.distance + "m"
+                            text: "Distance: " + root.gameDistance + "m"
                             color: root.themeFg
                             font.pixelSize: 20
                             font.bold: true
@@ -784,7 +795,7 @@ ApplicationWindow {
                         }
 
                         Text {
-                            text: "Best: " + Engine.bestDistance + "m"
+                            text: "Best: " + root.gameBestDistance + "m"
                             color: root.activeCharData ? root.activeCharData.color : root.themeAccent
                             font.pixelSize: 14
                             font.bold: true
@@ -851,7 +862,7 @@ ApplicationWindow {
                         }
 
                         Text {
-                            text: "Distance: " + Engine.distance + "m • Slime: " + (root.activeCharData ? root.activeCharData.name : "")
+                            text: "Distance: " + root.gameDistance + "m • Slime: " + (root.activeCharData ? root.activeCharData.name : "")
                             color: root.themeSubtext
                             font.pixelSize: 13
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -1022,6 +1033,8 @@ ApplicationWindow {
                         }
                     }
                 });
+                root.gameDistance = Engine.distance;
+                root.gameBestDistance = Engine.bestDistance;
                 gameCanvas.requestPaint();
             }
         }
