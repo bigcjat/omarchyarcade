@@ -39,6 +39,7 @@ Window {
     property bool isMuted: false
     property bool showHelp: false
     property bool showInaugurationModal: true
+    property bool showGraphModal: false
     property bool showAdvisorModal: false
     property int selectedSetupTab: 0
     property int currentSeed: 42
@@ -48,7 +49,7 @@ Window {
     property int fundCheatCount: 0
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Pan View: Drag with Right/Middle Mouse, Shift + Trackpad Scroll, or WASD / Arrows\n• Zoom View: Mouse Wheel or + / -\n• Build: Left-click with active tool (Road, Wire, Rail, Bulldozer support drag)\n• Speed: Space (Pause), 1 (Normal), 2 (Fast), 3 (Ultra)\n• Sound: M | Help: ? or Esc\n• Advisor: Click Dr. Wright in the bottom status bar for municipal counsel!\n\nBuild power plants, connect roads and wires, and balance Residential, Commercial, and Industrial zones to grow your metropolis!"
+    property string helpText: "• Pan View: Drag with Right/Middle Mouse, Shift + Trackpad Scroll, or WASD / Arrows\n• Zoom View: Mouse Wheel or + / -\n• Build: Left-click with active tool (Road, Wire, Rail, Bulldozer support drag)\n• Speed: Space (Pause), 1 (Normal), 2 (Fast), 3 (Ultra)\n• Sound: M | Help: ? or Esc\n• Advisor: Click Dr. DHH in the bottom status bar for municipal counsel!\n• Graphs: Click the RCI Demand Gauge or Graphs button to view 10-Yr & 120-Yr census data!\n\nBuild power plants, connect roads and wires, and balance Residential, Commercial, and Industrial zones to grow your metropolis!"
 
     function applyTheme(data, name) {
         if (!data || typeof data !== "object") return;
@@ -350,13 +351,14 @@ Window {
                     }
                 }
 
-                // RCI Demand Gauge Card
+                // RCI Demand Gauge Card (Clickable to open City History & Demographic Graphs)
                 Rectangle {
+                    id: rciCard
                     width: 76
                     height: 44
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: rciMouseArea.containsMouse ? Qt.lighter(root.themeCardBg, 1.1) : root.themeCardBg
+                    border.color: rciMouseArea.containsMouse ? root.themeAccent : root.themeBorder
                     border.width: 1
 
                     Column {
@@ -367,7 +369,7 @@ Window {
                             text: "R C I"
                             font.pixelSize: 9
                             font.bold: true
-                            color: root.themeSubtext
+                            color: rciMouseArea.containsMouse ? root.themeAccent : root.themeSubtext
                         }
                         Row {
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -415,6 +417,14 @@ Window {
                                 }
                             }
                         }
+                    }
+
+                    MouseArea {
+                        id: rciMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showGraphModal = !root.showGraphModal
                     }
                 }
             }
@@ -561,7 +571,7 @@ Window {
                     Row {
                         anchors.centerIn: parent; spacing: 4
                         Image {
-                            source: "assets/dr_wright.svg"
+                            source: "assets/dr_dhh.svg"
                             width: 16; height: 16
                             anchors.verticalCenter: parent.verticalCenter
                             smooth: true
@@ -571,6 +581,29 @@ Window {
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                         onClicked: root.showAdvisorModal = true
+                    }
+                }
+
+                // City Graphs Button (Classic SimCity 10 & 120 Year Census)
+                Rectangle {
+                    height: 28; width: 82; radius: 6
+                    color: root.showGraphModal ? root.themeAccent : root.themeCardBg
+                    border.color: root.showGraphModal ? root.themeAccent : root.themeBorder
+                    border.width: 1
+                    Row {
+                        anchors.centerIn: parent; spacing: 4
+                        Text { text: "📈"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
+                        Text {
+                            text: "Graphs";
+                            font.pixelSize: 11;
+                            font.bold: true;
+                            color: root.showGraphModal ? root.themeBtnFg : root.themeFg;
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showGraphModal = !root.showGraphModal
                     }
                 }
 
@@ -764,38 +797,38 @@ Window {
                 anchors.rightMargin: 12
                 spacing: 8
 
-                // Dr. Wright interactive avatar badge
+                // Dr. DHH interactive avatar badge
                 Rectangle {
-                    id: drWrightStatusBadge
+                    id: drDhhStatusBadge
                     height: 24
-                    width: drWrightStatusRow.implicitWidth + 14
+                    width: drDhhStatusRow.implicitWidth + 14
                     radius: 12
                     anchors.verticalCenter: parent.verticalCenter
-                    color: drWrightStatusMouse.containsMouse ? root.themeAccent : Qt.rgba(Qt.color(root.themeAccent).r, Qt.color(root.themeAccent).g, Qt.color(root.themeAccent).b, 0.15)
+                    color: drDhhStatusMouse.containsMouse ? root.themeAccent : Qt.rgba(Qt.color(root.themeAccent).r, Qt.color(root.themeAccent).g, Qt.color(root.themeAccent).b, 0.15)
                     border.color: root.themeAccent
                     border.width: 1
 
                     Row {
-                        id: drWrightStatusRow
+                        id: drDhhStatusRow
                         anchors.centerIn: parent
                         spacing: 4
                         Image {
-                            source: "assets/dr_wright.svg"
+                            source: "assets/dr_dhh.svg"
                             width: 18; height: 18
                             anchors.verticalCenter: parent.verticalCenter
                             smooth: true
                         }
                         Text {
-                            text: "Dr. Wright"
+                            text: "Dr. DHH"
                             font.pixelSize: 10
                             font.bold: true
-                            color: drWrightStatusMouse.containsMouse ? root.themeBtnFg : root.themeAccent
+                            color: drDhhStatusMouse.containsMouse ? root.themeBtnFg : root.themeAccent
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
 
                     MouseArea {
-                        id: drWrightStatusMouse
+                        id: drDhhStatusMouse
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
@@ -806,11 +839,11 @@ Window {
                 Text {
                     id: advisorText
                     anchors.verticalCenter: parent.verticalCenter
-                    text: cityEngine ? cityEngine.advisorMessage : "Welcome to OmarchyCity! Click Dr. Wright or build zones to begin."
+                    text: cityEngine ? cityEngine.advisorMessage : "Welcome to OmarchyCity! Click Dr. DHH or build zones to begin."
                     font.pixelSize: 11
                     color: root.themeFg
                     elide: Text.ElideRight
-                    width: Math.max(100, parent.width - drWrightStatusBadge.width - 240)
+                    width: Math.max(100, parent.width - drDhhStatusBadge.width - 240)
                 }
 
                 Item { width: 10; height: 1 }
@@ -860,7 +893,7 @@ Window {
                         spacing: 12
 
                         Image {
-                            source: "assets/dr_wright.svg"
+                            source: "assets/dr_dhh.svg"
                             width: 36
                             height: 36
                             smooth: true
@@ -879,7 +912,7 @@ Window {
                                 color: root.themeAccent
                             }
                             Text {
-                                text: "Executive Municipal Administration • OmarchyCity"
+                                text: "Executive Municipal Administration • Dr. DHH"
                                 font.pixelSize: 11
                                 color: root.themeSubtext
                             }
@@ -913,7 +946,7 @@ Window {
                             model: [
                                 { idx: 0, label: "🏛️ New Territory" },
                                 { idx: 1, label: "📜 Historic Scenarios (8)" },
-                                { idx: 2, label: "💡 Dr. Wright's Briefing" }
+                                { idx: 2, label: "💡 Dr. DHH's Briefing" }
                             ]
                             Rectangle {
                                 width: (modalBox.width - 32 - 12) / 3
@@ -954,7 +987,7 @@ Window {
                             anchors.fill: parent
                             spacing: 10
 
-                            // Speech Bubble from Dr. Wright
+                            // Speech Bubble from Dr. DHH
                             Rectangle {
                                 width: parent.width
                                 height: 46
@@ -975,7 +1008,7 @@ Window {
                                     Text {
                                         width: parent.width - 36
                                         wrapMode: Text.Wrap
-                                        text: "Greetings, your Honor! I am Dr. Wright, your Senior Advisor. Name your city, allocate our starting funds, and prepare to govern!"
+                                        text: "Greetings, your Honor! I am Dr. DHH, your Senior Advisor. Cut the municipal bloat, keep your systems modular, and deploy with confidence!"
                                         font.pixelSize: 11
                                         color: root.themeFg
                                         anchors.verticalCenter: parent.verticalCenter
@@ -1250,7 +1283,7 @@ Window {
                         }
                     }
 
-                    // TAB 2: DR. WRIGHT'S BRIEFING
+                    // TAB 2: DR. DHH'S BRIEFING
                     Item {
                         id: tabBriefing
                         width: parent.width
@@ -1272,7 +1305,7 @@ Window {
                                     spacing: 12
                                     width: parent.width
                                     Image {
-                                        source: "assets/dr_wright.svg"
+                                        source: "assets/dr_dhh.svg"
                                         width: 54
                                         height: 54
                                         smooth: true
@@ -1288,7 +1321,7 @@ Window {
                                             anchors.fill: parent
                                             anchors.margins: 8
                                             wrapMode: Text.Wrap
-                                            text: "\"Listen closely, Mayor! A thriving city requires foresight, zone balance, and steady municipal power. Here are my top principles for governing OmarchyCity:\""
+                                            text: "\"Listen closely, Mayor! A thriving city requires foresight, simplicity, and zone balance without wasteful overhead. Here are my core principles for governing OmarchyCity:\""
                                             font.pixelSize: 11
                                             font.italic: true
                                             color: root.themeFg
@@ -1367,7 +1400,7 @@ Window {
         }
 
         // =====================================================================
-        // DR. WRIGHT ADVISOR CONSULTATION MODAL
+        // DR. DHH ADVISOR CONSULTATION MODAL
         // =====================================================================
         Rectangle {
             id: advisorModal
@@ -1404,7 +1437,7 @@ Window {
                         spacing: 12
 
                         Image {
-                            source: "assets/dr_wright.svg"
+                            source: "assets/dr_dhh.svg"
                             width: 52
                             height: 52
                             smooth: true
@@ -1417,13 +1450,13 @@ Window {
                             width: parent.width - 96
 
                             Text {
-                                text: "Dr. Wright"
+                                text: "Dr. DHH"
                                 font.pixelSize: 18
                                 font.bold: true
                                 color: root.themeAccent
                             }
                             Text {
-                                text: "Senior Municipal Advisor & City Planner"
+                                text: "Chief Municipal Architect • Simplicity & Sovereignty"
                                 font.pixelSize: 11
                                 color: root.themeSubtext
                             }
@@ -1466,13 +1499,13 @@ Window {
                             lineHeight: 1.3
                             color: root.themeFg
                             text: {
-                                if (!cityEngine) return "Welcome to OmarchyCity, your Honor!";
-                                if (cityEngine.population === 0) return "Our territory is untouched virgin wilderness! Begin by constructing a power plant, zoning residential, commercial, and industrial plots, and connecting them with roads!";
-                                if (cityEngine.funds < 1500) return "Warning, Mayor! Our city treasury is running critically low ($" + cityEngine.funds.toLocaleString() + "). Consider adjusting taxes or holding off on large infrastructure!";
-                                if (cityEngine.demandRes > 0.4) return "Citizens are flocking to our borders! Demand for Residential housing is soaring—zone more residential neighborhoods immediately!";
-                                if (cityEngine.demandCom > 0.4) return "Commercial enterprise is booming! Local businesses need more Commercial zoning near active thoroughfares!";
-                                if (cityEngine.demandInd > 0.4) return "Factory owners and manufacturers are requesting land! Expand Industrial zoning near railway corridors.";
-                                return cityEngine.advisorMessage || "OmarchyCity is running smoothly, Mayor! Keep maintaining power networks and monitoring zone demands!";
+                                if (!cityEngine) return "Welcome to OmarchyCity, your Honor! Keep your systems lean, modular, and unencumbered.";
+                                if (cityEngine.population === 0) return "Our territory is untouched virgin wilderness! Deploy your core power plant, zone essential residential, commercial, and industrial districts, and avoid over-engineering your road network!";
+                                if (cityEngine.funds < 1500) return "Warning, Mayor! Cash flow is bleeding out ($" + cityEngine.funds.toLocaleString() + "). You cannot spend your way out of bad fundamentals—cut wasteful overhead and balance the budget!";
+                                if (cityEngine.demandRes > 0.4) return "Citizens are flocking to our borders! Demand for residential living is surging—zone clean, walkable residential neighborhoods!";
+                                if (cityEngine.demandCom > 0.4) return "Commercial enterprise is booming! Local merchants and businesses need commercial zoning along active transit arteries!";
+                                if (cityEngine.demandInd > 0.4) return "Manufacturers and builders need land! Expand industrial zoning along rail links, away from leafy neighborhoods.";
+                                return cityEngine.advisorMessage || "OmarchyCity is running smoothly, Mayor! Maintain infrastructure sanity and avoid runaway municipal bloat!";
                             }
                         }
                     }
@@ -1611,12 +1644,410 @@ Window {
         }
 
         // =====================================================================
-        // HELP OVERLAY MODAL
+        // CITY HISTORY & DEMOGRAPHIC GRAPHS MODAL (Classic SimCity 10/120 Year)
+        // =====================================================================
+        Rectangle {
+            id: graphModal
+            anchors.fill: parent
+            color: Qt.rgba(0, 0, 0, 0.78)
+            visible: root.showGraphModal
+            z: 94
+
+            property bool is120Year: false
+            property bool showRes: true
+            property bool showCom: true
+            property bool showInd: true
+            property bool showMoney: true
+            property bool showCrime: false
+            property bool showPollution: false
+
+            onVisibleChanged: {
+                if (visible) graphCanvas.requestPaint();
+            }
+
+            Connections {
+                target: cityEngine
+                function onStatsChanged() {
+                    if (root.showGraphModal) graphCanvas.requestPaint();
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: root.showGraphModal = false
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: Math.min(680, parent.width - 24)
+                height: Math.min(500, parent.height - 30)
+                radius: 12
+                color: root.themeCardBg
+                border.color: root.themeBorder
+                border.width: 1
+                clip: true
+
+                MouseArea { anchors.fill: parent; onClicked: {} } // Block click-through
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 18
+                    spacing: 10
+
+                    // Header Row: Title, 10/120 Year toggle, Close button
+                    Row {
+                        width: parent.width
+                        spacing: 10
+
+                        Column {
+                            width: parent.width - 210
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 2
+                            Row {
+                                spacing: 8
+                                Text { text: "📈"; font.pixelSize: 18; anchors.verticalCenter: parent.verticalCenter }
+                                Text {
+                                    text: "City History & Demographics"
+                                    font.pixelSize: 16
+                                    font.bold: true
+                                    color: root.themeAccent
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+                            Text {
+                                text: graphModal.is120Year ? "120-Year Historical Evaluation (Annual Census)" : "10-Year Municipal Trends (Monthly Census)"
+                                font.pixelSize: 11
+                                color: root.themeSubtext
+                            }
+                        }
+
+                        // Time span toggle: [ 10 Yrs ] [ 120 Yrs ]
+                        Row {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 4
+
+                            Rectangle {
+                                width: 68; height: 28; radius: 6
+                                color: !graphModal.is120Year ? root.themeAccent : root.themeBoardBg
+                                border.color: root.themeBorder; border.width: 1
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "10 Years"
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    color: !graphModal.is120Year ? root.themeBtnFg : root.themeFg
+                                }
+                                MouseArea {
+                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        graphModal.is120Year = false;
+                                        graphCanvas.requestPaint();
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                width: 72; height: 28; radius: 6
+                                color: graphModal.is120Year ? root.themeAccent : root.themeBoardBg
+                                border.color: root.themeBorder; border.width: 1
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "120 Years"
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    color: graphModal.is120Year ? root.themeBtnFg : root.themeFg
+                                }
+                                MouseArea {
+                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        graphModal.is120Year = true;
+                                        graphCanvas.requestPaint();
+                                    }
+                                }
+                            }
+                        }
+
+                        // Close Button
+                        Rectangle {
+                            width: 28; height: 28; radius: 14
+                            color: graphCloseMouse.containsMouse ? root.themeBorder : "transparent"
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✕"
+                                font.pixelSize: 12
+                                color: root.themeSubtext
+                            }
+                            MouseArea {
+                                id: graphCloseMouse
+                                anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                onClicked: root.showGraphModal = false
+                            }
+                        }
+                    }
+
+                    Rectangle { width: parent.width; height: 1; color: root.themeBorder }
+
+                    // Series Filter Chips (R, C, I, Funds, Crime, Pollution)
+                    Flow {
+                        width: parent.width
+                        spacing: 8
+
+                        // 1. Residential
+                        Rectangle {
+                            height: 26; width: 104; radius: 6
+                            color: graphModal.showRes ? Qt.rgba(0.13, 0.77, 0.37, 0.2) : root.themeBoardBg
+                            border.color: graphModal.showRes ? "#22c55e" : root.themeBorder
+                            border.width: 1
+                            Row {
+                                anchors.centerIn: parent; spacing: 6
+                                Rectangle { width: 10; height: 10; radius: 2; color: "#22c55e" }
+                                Text { text: "Residential"; font.pixelSize: 11; font.bold: graphModal.showRes; color: graphModal.showRes ? "#22c55e" : root.themeSubtext }
+                            }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: { graphModal.showRes = !graphModal.showRes; graphCanvas.requestPaint(); }
+                            }
+                        }
+
+                        // 2. Commercial
+                        Rectangle {
+                            height: 26; width: 106; radius: 6
+                            color: graphModal.showCom ? Qt.rgba(0.23, 0.51, 0.96, 0.2) : root.themeBoardBg
+                            border.color: graphModal.showCom ? "#3b82f6" : root.themeBorder
+                            border.width: 1
+                            Row {
+                                anchors.centerIn: parent; spacing: 6
+                                Rectangle { width: 10; height: 10; radius: 2; color: "#3b82f6" }
+                                Text { text: "Commercial"; font.pixelSize: 11; font.bold: graphModal.showCom; color: graphModal.showCom ? "#3b82f6" : root.themeSubtext }
+                            }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: { graphModal.showCom = !graphModal.showCom; graphCanvas.requestPaint(); }
+                            }
+                        }
+
+                        // 3. Industrial
+                        Rectangle {
+                            height: 26; width: 98; radius: 6
+                            color: graphModal.showInd ? Qt.rgba(0.96, 0.62, 0.07, 0.2) : root.themeBoardBg
+                            border.color: graphModal.showInd ? "#f59e0b" : root.themeBorder
+                            border.width: 1
+                            Row {
+                                anchors.centerIn: parent; spacing: 6
+                                Rectangle { width: 10; height: 10; radius: 2; color: "#f59e0b" }
+                                Text { text: "Industrial"; font.pixelSize: 11; font.bold: graphModal.showInd; color: graphModal.showInd ? "#f59e0b" : root.themeSubtext }
+                            }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: { graphModal.showInd = !graphModal.showInd; graphCanvas.requestPaint(); }
+                            }
+                        }
+
+                        // 4. Money / Funds
+                        Rectangle {
+                            height: 26; width: 88; radius: 6
+                            color: graphModal.showMoney ? Qt.rgba(0.06, 0.73, 0.51, 0.2) : root.themeBoardBg
+                            border.color: graphModal.showMoney ? "#10b981" : root.themeBorder
+                            border.width: 1
+                            Row {
+                                anchors.centerIn: parent; spacing: 6
+                                Rectangle { width: 10; height: 10; radius: 2; color: "#10b981" }
+                                Text { text: "Funds ($)"; font.pixelSize: 11; font.bold: graphModal.showMoney; color: graphModal.showMoney ? "#10b981" : root.themeSubtext }
+                            }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: { graphModal.showMoney = !graphModal.showMoney; graphCanvas.requestPaint(); }
+                            }
+                        }
+
+                        // 5. Crime
+                        Rectangle {
+                            height: 26; width: 80; radius: 6
+                            color: graphModal.showCrime ? Qt.rgba(0.94, 0.27, 0.27, 0.2) : root.themeBoardBg
+                            border.color: graphModal.showCrime ? "#ef4444" : root.themeBorder
+                            border.width: 1
+                            Row {
+                                anchors.centerIn: parent; spacing: 6
+                                Rectangle { width: 10; height: 10; radius: 2; color: "#ef4444" }
+                                Text { text: "Crime"; font.pixelSize: 11; font.bold: graphModal.showCrime; color: graphModal.showCrime ? "#ef4444" : root.themeSubtext }
+                            }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: { graphModal.showCrime = !graphModal.showCrime; graphCanvas.requestPaint(); }
+                            }
+                        }
+
+                        // 6. Pollution
+                        Rectangle {
+                            height: 26; width: 90; radius: 6
+                            color: graphModal.showPollution ? Qt.rgba(0.66, 0.33, 0.97, 0.2) : root.themeBoardBg
+                            border.color: graphModal.showPollution ? "#a855f7" : root.themeBorder
+                            border.width: 1
+                            Row {
+                                anchors.centerIn: parent; spacing: 6
+                                Rectangle { width: 10; height: 10; radius: 2; color: "#a855f7" }
+                                Text { text: "Pollution"; font.pixelSize: 11; font.bold: graphModal.showPollution; color: graphModal.showPollution ? "#a855f7" : root.themeSubtext }
+                            }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: { graphModal.showPollution = !graphModal.showPollution; graphCanvas.requestPaint(); }
+                            }
+                        }
+                    }
+
+                    // Main Chart Area Canvas
+                    Rectangle {
+                        width: parent.width
+                        height: parent.height - 180
+                        radius: 8
+                        color: root.themeBoardBg
+                        border.color: root.themeBorder
+                        border.width: 1
+                        clip: true
+
+                        Canvas {
+                            id: graphCanvas
+                            anchors.fill: parent
+                            anchors.margins: 10
+                            antialiasing: true
+
+                            onPaint: {
+                                var ctx = getContext("2d");
+                                ctx.clearRect(0, 0, width, height);
+
+                                var w = width;
+                                var h = height;
+                                var padL = 46;
+                                var padR = 20;
+                                var padT = 16;
+                                var padB = 28;
+                                var plotW = Math.max(10, w - padL - padR);
+                                var plotH = Math.max(10, h - padT - padB);
+
+                                // Grid lines
+                                ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
+                                ctx.lineWidth = 1;
+
+                                for (var i = 0; i <= 4; i++) {
+                                    var y = padT + (plotH / 4) * i;
+                                    ctx.beginPath();
+                                    ctx.moveTo(padL, y);
+                                    ctx.lineTo(w - padR, y);
+                                    ctx.stroke();
+                                }
+
+                                for (var j = 0; j <= 5; j++) {
+                                    var x = padL + (plotW / 5) * j;
+                                    ctx.beginPath();
+                                    ctx.moveTo(x, padT);
+                                    ctx.lineTo(x, padT + plotH);
+                                    ctx.stroke();
+                                }
+
+                                // X-axis labels
+                                ctx.fillStyle = "#8892b0";
+                                ctx.font = "10px sans-serif";
+                                ctx.textAlign = "center";
+                                var xLabels = graphModal.is120Year ?
+                                    ["-120y", "-100y", "-80y", "-60y", "-40y", "Now"] :
+                                    ["-10y", "-8y", "-6y", "-4y", "-2y", "Now"];
+                                for (var k = 0; k <= 5; k++) {
+                                    var lx = padL + (plotW / 5) * k;
+                                    ctx.fillText(xLabels[k], lx, h - 8);
+                                }
+
+                                if (!cityEngine) return;
+
+                                var seriesConfigs = [
+                                    { id: "res", enabled: graphModal.showRes, color: "#22c55e" },
+                                    { id: "com", enabled: graphModal.showCom, color: "#3b82f6" },
+                                    { id: "ind", enabled: graphModal.showInd, color: "#f59e0b" },
+                                    { id: "money", enabled: graphModal.showMoney, color: "#10b981" },
+                                    { id: "crime", enabled: graphModal.showCrime, color: "#ef4444" },
+                                    { id: "pollution", enabled: graphModal.showPollution, color: "#a855f7" }
+                                ];
+
+                                var maxVal = 100;
+                                var activeSeries = [];
+                                for (var s = 0; s < seriesConfigs.length; s++) {
+                                    var cfg = seriesConfigs[s];
+                                    if (!cfg.enabled) continue;
+                                    var data = cityEngine.getHistory(cfg.id, graphModal.is120Year);
+                                    if (data && data.length > 0) {
+                                        for (var d = 0; d < data.length; d++) {
+                                            if (data[d] > maxVal) maxVal = data[d];
+                                        }
+                                        activeSeries.push({ cfg: cfg, data: data });
+                                    }
+                                }
+
+                                // Y-axis labels
+                                ctx.textAlign = "right";
+                                ctx.fillText(Math.round(maxVal).toLocaleString(), padL - 6, padT + 8);
+                                ctx.fillText(Math.round(maxVal / 2).toLocaleString(), padL - 6, padT + plotH / 2 + 4);
+                                ctx.fillText("0", padL - 6, padT + plotH + 4);
+
+                                // Plot active curves
+                                for (var a = 0; a < activeSeries.length; a++) {
+                                    var item = activeSeries[a];
+                                    var pts = item.data;
+                                    var col = item.cfg.color;
+                                    var n = pts.length;
+                                    if (n < 2) continue;
+
+                                    ctx.strokeStyle = col;
+                                    ctx.lineWidth = 2.2;
+                                    ctx.beginPath();
+
+                                    for (var p = 0; p < n; p++) {
+                                        var px = padL + (p / (n - 1)) * plotW;
+                                        var valNorm = Math.max(0, Math.min(1.0, pts[p] / maxVal));
+                                        var py = padT + plotH - (valNorm * plotH);
+
+                                        if (p === 0) {
+                                            ctx.moveTo(px, py);
+                                        } else {
+                                            ctx.lineTo(px, py);
+                                        }
+                                    }
+                                    ctx.stroke();
+
+                                    var lastVal = pts[n - 1];
+                                    var lastY = padT + plotH - (Math.max(0, Math.min(1.0, lastVal / maxVal)) * plotH);
+                                    var lastX = padL + plotW;
+
+                                    ctx.fillStyle = col;
+                                    ctx.beginPath();
+                                    ctx.arc(lastX, lastY, 3.5, 0, Math.PI * 2);
+                                    ctx.fill();
+                                }
+                            }
+                        }
+                    }
+
+                    // Bottom status tip
+                    Row {
+                        width: parent.width
+                        spacing: 8
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "💡 Tip: Balanced RCI growth sustains healthy municipal cash flow with low crime & pollution."
+                            font.pixelSize: 11
+                            color: root.themeSubtext
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // HELP OVERLAY MODAL (Standard Omarchy Arcade Template)
         // =====================================================================
         Rectangle {
             id: helpModal
             anchors.fill: parent
-            color: Qt.rgba(0, 0, 0, 0.7)
+            color: Qt.rgba(0, 0, 0, 0.75)
             visible: root.showHelp
             z: 95
 
@@ -1627,60 +2058,130 @@ Window {
 
             Rectangle {
                 anchors.centerIn: parent
-                width: Math.min(480, parent.width - 40)
-                height: 380
+                width: Math.min(500, parent.width - 32)
+                height: 440
                 radius: 12
                 color: root.themeCardBg
                 border.color: root.themeBorder
                 border.width: 1
+                clip: true
+
+                MouseArea { anchors.fill: parent; onClicked: {} } // Block click inside dialog
 
                 Column {
                     anchors.fill: parent
                     anchors.margins: 20
                     spacing: 12
 
-                    Row {
+                    // Title & Subtitle
+                    Column {
                         width: parent.width
+                        spacing: 2
                         Text {
-                            text: "OmarchyCity • Mayor's Handbook"
-                            font.pixelSize: 16
+                            text: "OmarchyCity"
+                            font.pixelSize: 18
                             font.bold: true
                             color: root.themeAccent
                         }
-                        Item { width: 20; height: 1 }
+                        Text {
+                            text: "Classic City Simulation Arcade • Built on Micropolis C++ Core"
+                            font.pixelSize: 11
+                            color: root.themeSubtext
+                        }
                     }
 
                     Rectangle { width: parent.width; height: 1; color: root.themeBorder }
 
-                    Text {
+                    // Scrollable Help / Controls Text
+                    Flickable {
                         width: parent.width
-                        wrapMode: Text.Wrap
-                        text: root.helpText
-                        font.pixelSize: 12
-                        lineHeight: 1.4
-                        color: root.themeFg
+                        height: 200
+                        contentHeight: helpContentCol.implicitHeight
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+
+                        Column {
+                            id: helpContentCol
+                            width: parent.width
+                            spacing: 8
+
+                            Text {
+                                width: parent.width
+                                wrapMode: Text.Wrap
+                                text: root.helpText
+                                font.pixelSize: 11
+                                lineHeight: 1.4
+                                color: root.themeFg
+                            }
+
+                            Rectangle { width: parent.width; height: 1; color: root.themeBorder }
+
+                            Text {
+                                width: parent.width
+                                wrapMode: Text.Wrap
+                                text: "💡 Pro-Tip: Connect power grids to all zones. Keep heavy industry downwind or separated from residential districts to keep citizens happy!"
+                                font.pixelSize: 10
+                                color: root.themeSubtext
+                            }
+                        }
                     }
 
                     Rectangle { width: parent.width; height: 1; color: root.themeBorder }
 
-                    Text {
-                        width: parent.width
-                        wrapMode: Text.Wrap
-                        text: "💡 Pro-Tip: Zones must be connected to power and roads to develop. Keep industrial zones away from residential areas to minimize pollution!"
-                        font.pixelSize: 11
-                        color: root.themeSubtext
-                    }
-
-                    Item { height: 10 }
-
+                    // Got It Button
                     Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        width: 100; height: 32; radius: 6
+                        width: 120; height: 32; radius: 6
                         color: root.themeAccent
-                        Text { anchors.centerIn: parent; text: "Got It"; font.pixelSize: 12; font.bold: true; color: root.themeBtnFg }
+                        Text { anchors.centerIn: parent; text: "GOT IT"; font.pixelSize: 11; font.bold: true; color: root.themeBtnFg }
                         MouseArea {
                             anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                             onClicked: root.showHelp = false
+                        }
+                    }
+
+                    // Author Attribution (Standard Arcade Template)
+                    Column {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 3
+
+                        Text {
+                            text: "Created by Chris Thompson (@bigcjat) with Gemini"
+                            font.pixelSize: 10
+                            color: root.themeSubtext
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            opacity: 0.85
+                        }
+
+                        Row {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            spacing: 12
+
+                            Text {
+                                text: "GitHub: github.com/bigcjat"
+                                font.pixelSize: 9
+                                color: root.themeAccent
+                                MouseArea {
+                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                    onClicked: Qt.openUrlExternally("https://github.com/bigcjat")
+                                }
+                            }
+
+                            Text {
+                                text: "•"
+                                font.pixelSize: 9
+                                color: root.themeSubtext
+                            }
+
+                            Text {
+                                text: "X: @bigcjat"
+                                font.pixelSize: 9
+                                color: root.themeAccent
+                                MouseArea {
+                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                    onClicked: Qt.openUrlExternally("https://x.com/bigcjat")
+                                }
+                            }
                         }
                     }
                 }

@@ -123,7 +123,7 @@ Residential plots evolve from vacant staked lots, to clusters of single-family J
 
 ---
 
-## 🎖️ Special Milestone Rewards (Dr. Wright Awards)
+## 🎖️ Special Milestone Rewards (Dr. DHH Awards)
 
 - [ ] **Mayor's Hillside Villa / Manor** (2,000 Population Reward)
   - Grand Japanese-Western estate with wraparound wooden veranda, manicured black pine, and koi pond garden.

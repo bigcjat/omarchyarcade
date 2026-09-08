@@ -78,6 +78,28 @@ class ByteCityEngine(QObject):
         self._auto_bulldoze = True
         self._auto_budget = False
 
+        # Historical census data buffers (120 data points each)
+        # 10-year view (monthly samples) and 120-year view (yearly samples)
+        # Categories: 'res', 'com', 'ind', 'money', 'crime', 'pollution'
+        self._history_10yr = {
+            'res': [0] * 120,
+            'com': [0] * 120,
+            'ind': [0] * 120,
+            'money': [20000] * 120,
+            'crime': [10] * 120,
+            'pollution': [5] * 120,
+        }
+        self._history_120yr = {
+            'res': [0] * 120,
+            'com': [0] * 120,
+            'ind': [0] * 120,
+            'money': [20000] * 120,
+            'crime': [10] * 120,
+            'pollution': [5] * 120,
+        }
+        self._prev_month = -1
+        self._prev_year = -1
+
         # Timer for simulation ticks
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._on_tick)
@@ -86,6 +108,7 @@ class ByteCityEngine(QObject):
 
         # Generate initial city
         self.generate_new_city(42)
+
 
     def _load_native_library(self):
         lib_dir = Path(__file__).resolve().parent / "native"
@@ -256,7 +279,78 @@ class ByteCityEngine(QObject):
 
         # Update cached stats
         self._refresh_stats()
+
+        # Update demographic census histories
+        cur_month = self._month
+        cur_year = self._year
+        if cur_month != self._prev_month:
+            self._prev_month = cur_month
+            tot_pop = self._population
+            res_val = max(10, int(tot_pop * max(0.2, (self._demand_r + 1.0) / 2.0)))
+            com_val = max(5, int(tot_pop * 0.5 * max(0.2, (self._demand_c + 1.0) / 2.0)))
+            ind_val = max(5, int(tot_pop * 0.4 * max(0.2, (self._demand_i + 1.0) / 2.0)))
+            money_val = max(0, self._funds)
+            crime_val = max(0, 100 - self._approval)
+            poll_val = int(ind_val * 0.35 + 2)
+
+            new_vals = {
+                'res': res_val,
+                'com': com_val,
+                'ind': ind_val,
+                'money': money_val,
+                'crime': crime_val,
+                'pollution': poll_val,
+            }
+
+            for k, val in new_vals.items():
+                self._history_10yr[k].pop(0)
+                self._history_10yr[k].append(val)
+
+            if cur_year != self._prev_year:
+                self._prev_year = cur_year
+                for k in self._history_120yr:
+                    self._history_120yr[k].pop(0)
+                    self._history_120yr[k].append(new_vals[k])
+
         self.mapChanged.emit()
+
+    def _seed_history(self):
+        tot_pop = self._population
+        res_val = max(10, int(tot_pop * 0.6))
+        com_val = max(5, int(tot_pop * 0.3))
+        ind_val = max(5, int(tot_pop * 0.25))
+        money_val = max(0, self._funds)
+        crime_val = max(0, 100 - self._approval)
+        poll_val = int(ind_val * 0.35 + 2)
+
+        for i in range(120):
+            frac = 0.4 + 0.6 * (i / 119.0)
+            self._history_10yr['res'][i] = int(res_val * frac)
+            self._history_10yr['com'][i] = int(com_val * frac)
+            self._history_10yr['ind'][i] = int(ind_val * frac)
+            self._history_10yr['money'][i] = int(money_val * (0.8 + 0.2 * (i / 119.0)))
+            self._history_10yr['crime'][i] = int(crime_val * (0.7 + 0.3 * (i / 119.0)))
+            self._history_10yr['pollution'][i] = int(poll_val * frac)
+
+            frac120 = 0.1 + 0.9 * ((i / 119.0) ** 1.5)
+            self._history_120yr['res'][i] = int(res_val * frac120)
+            self._history_120yr['com'][i] = int(com_val * frac120)
+            self._history_120yr['ind'][i] = int(ind_val * frac120)
+            self._history_120yr['money'][i] = int(money_val * (0.5 + 0.5 * frac120))
+            self._history_120yr['crime'][i] = int(crime_val * frac120)
+            self._history_120yr['pollution'][i] = int(poll_val * frac120)
+
+    @Slot(str, bool, result=list)
+    def getHistory(self, category: str, is_120_year: bool = False):
+        cat = category.lower()
+        hist = self._history_120yr if is_120_year else self._history_10yr
+        return hist.get(cat, [0] * 120)
+
+    @Slot(bool, result=dict)
+    def getAllHistory(self, is_120_year: bool = False):
+        hist = self._history_120yr if is_120_year else self._history_10yr
+        return {k: list(v) for k, v in hist.items()}
+
 
     def _refresh_stats(self):
         if not self._handle:
@@ -292,6 +386,7 @@ class ByteCityEngine(QObject):
         self._lib.bytecity_generate_map(self._handle, seed)
         self._current_message = f"Territory charted (Seed {seed}). Connect residential, commercial, and industrial zones with roads and power."
         self._refresh_stats()
+        self._seed_history()
         self.mapChanged.emit()
         self.advisorAlert.emit(self._current_message)
 
@@ -313,6 +408,7 @@ class ByteCityEngine(QObject):
         self._sound_manager.play("build")
         self._current_message = f"Mayor of {self._city_name} inaugurated! Treasury: ${starting_funds:,}."
         self._refresh_stats()
+        self._seed_history()
         self.mapChanged.emit()
         self.advisorAlert.emit(self._current_message)
 
@@ -356,8 +452,10 @@ class ByteCityEngine(QObject):
             self._sound_manager.play("boing")
             self._current_message = f"Scenario loaded: {title}. Good luck, Mayor!"
             self._refresh_stats()
+            self._seed_history()
             self.mapChanged.emit()
             self.advisorAlert.emit(self._current_message)
+
         else:
             self._sound_manager.play("sorry")
 
