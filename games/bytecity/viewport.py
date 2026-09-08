@@ -8,7 +8,7 @@ import sys
 import math
 from PySide6.QtCore import Qt, QPointF, QRectF, Signal, Property, Slot, QObject, QTimer
 from PySide6.QtGui import (
-    QColor, QFont, QPainter, QPainterPath, QPen, QBrush, QCursor, QRadialGradient, QLinearGradient
+    QColor, QFont, QPainter, QPainterPath, QPen, QBrush, QCursor, QRadialGradient, QLinearGradient, QPolygonF
 )
 from PySide6.QtQuick import QQuickPaintedItem
 
@@ -36,13 +36,41 @@ TOOL_FOOTPRINTS = {
 # Linear tools that support continuous drag-to-build
 DRAGGABLE_TOOLS = {6, 7, 8, 9, 11}
 
-# Palette colors for 2D map
-COLOR_WATER = QColor("#1e5799")
-COLOR_WATER_DEEP = QColor("#164275")
-COLOR_DIRT = QColor("#8d734a")
-COLOR_DIRT_DARK = QColor("#7a633e")
-COLOR_TREES = QColor("#2d6a4f")
-COLOR_TREES_DARK = QColor("#1b4332")
+# Studio Ghibli Watercolor Nature Palette
+COLOR_MEADOW_BASE   = QColor("#a4cb74")
+COLOR_MEADOW_LIGHT  = QColor("#bde082")
+COLOR_MEADOW_WARM   = QColor("#dfcb96")
+COLOR_MEADOW_SHADOW = QColor("#8ab35b")
+
+COLOR_SAND_BANK     = QColor("#decca0")
+COLOR_SAND_DARK     = QColor("#ab956b")
+COLOR_CLIFF_EDGE    = QColor("#4a3b2c")
+
+COLOR_WATER_DEEP    = QColor("#1e568c")
+COLOR_WATER_MID     = QColor("#2a79af")
+COLOR_WATER_SHALLOW = QColor("#4ec0d9")
+COLOR_WATER_FOAM    = QColor(255, 255, 255, 215)
+COLOR_WAVE_CREST    = QColor(255, 255, 255, 175)
+
+COLOR_PINE_DEEP     = QColor("#1b4324")
+COLOR_PINE_MID      = QColor("#2d6a36")
+COLOR_PINE_LIGHT    = QColor("#489643")
+COLOR_PINE_TIP      = QColor("#70ba54")
+
+COLOR_DECID_DEEP    = QColor("#1d4a25")
+COLOR_DECID_MID     = QColor("#367533")
+COLOR_DECID_LIGHT   = QColor("#5ca545")
+COLOR_DECID_CROWN   = QColor("#8ecf5a")
+
+COLOR_TRUNK         = QColor("#4a3320")
+COLOR_SOOT_SPRITE   = QColor("#111111")
+
+# Aliases for backwards compatibility with infrastructure
+COLOR_WATER = COLOR_WATER_DEEP
+COLOR_DIRT = COLOR_MEADOW_BASE
+COLOR_DIRT_DARK = COLOR_MEADOW_SHADOW
+COLOR_TREES = COLOR_DECID_MID
+COLOR_TREES_DARK = COLOR_DECID_DEEP
 COLOR_RUBBLE = QColor("#404040")
 COLOR_FIRE = QColor("#e63946")
 
@@ -456,27 +484,19 @@ class CityViewport(QQuickPaintedItem):
         t = raw & 0x03FF  # Low mask for tile type
         rect = QRectF(sx, sy, ts + 0.5, ts + 0.5)
 
-        # 1. DIRT / LAND (0, 1)
+        # 1. MEADOW / LAND (0, 1)
         if t <= 1:
-            painter.fillRect(rect, COLOR_DIRT)
-            if ts >= 16 and (tx + ty) % 3 == 0:
-                painter.fillRect(QRectF(sx + ts * 0.3, sy + ts * 0.3, ts * 0.4, ts * 0.4), COLOR_DIRT_DARK)
+            self._draw_ghibli_land(painter, sx, sy, ts, tx, ty)
             return
 
-        # 2. WATER (2..20)
+        # 2. WATER & COASTLINE (2..20)
         if 2 <= t <= 20:
-            painter.fillRect(rect, COLOR_WATER)
-            if ts >= 14 and (tx + ty) % 2 == 0:
-                painter.fillRect(QRectF(sx + ts * 0.2, sy + ts * 0.4, ts * 0.6, ts * 0.15), COLOR_WATER_DEEP)
+            self._draw_ghibli_water(painter, sx, sy, ts, tx, ty)
             return
 
-        # 3. TREES / WOODS (21..43)
+        # 3. LUSH WOODS & FORESTS (21..43)
         if 21 <= t <= 43:
-            painter.fillRect(rect, COLOR_TREES)
-            if ts >= 14:
-                painter.setPen(Qt.NoPen)
-                painter.setBrush(COLOR_TREES_DARK)
-                painter.drawEllipse(QRectF(sx + ts * 0.15, sy + ts * 0.15, ts * 0.7, ts * 0.7))
+            self._draw_ghibli_forest(painter, sx, sy, ts, tx, ty)
             return
 
         # 4. RUBBLE (44..47)
@@ -634,6 +654,243 @@ class CityViewport(QQuickPaintedItem):
 
         # Fallback tile rendering
         painter.fillRect(rect, COLOR_DIRT)
+
+    # --- Studio Ghibli Watercolor Nature Renderers ---
+
+    def _is_water_tile(self, tx: int, ty: int) -> bool:
+        if not (0 <= tx < 120 and 0 <= ty < 100) or not self._engine:
+            return True
+        raw = self._engine.fast_get_tile(tx, ty)
+        t = raw & 0x03FF
+        return (2 <= t <= 20) or (t in (64, 65, 79, 224, 225, 208, 209))
+
+    def _is_land_tile(self, tx: int, ty: int) -> bool:
+        return not self._is_water_tile(tx, ty)
+
+    def _draw_ghibli_land(self, painter: QPainter, sx: float, sy: float, ts: float, tx: int, ty: int):
+        rect = QRectF(sx, sy, ts + 0.5, ts + 0.5)
+        # 1. Unified soft Ghibli meadow base (NO per-tile checkerboard)
+        painter.fillRect(rect, COLOR_MEADOW_BASE)
+
+        # 2. Large organic rolling hill sunlight variation (continuous spatial field)
+        hill_val = math.sin(tx * 0.08 + ty * 0.06) + math.cos(tx * 0.05 - ty * 0.07)
+        if hill_val > 0.4:
+            painter.fillRect(rect, QColor(190, 224, 130, int(min(65, (hill_val - 0.4) * 80))))
+        elif hill_val < -0.6:
+            painter.fillRect(rect, QColor(138, 179, 91, int(min(50, (-hill_val - 0.6) * 70))))
+
+        # 3. Dynamic wind wave sheen rolling across grass (animated breeze)
+        wind = math.sin(self._anim_tick * 0.04 + tx * 0.28 + ty * 0.16)
+        if wind > 0.35:
+            alpha = int(min(65, (wind - 0.35) * 100))
+            painter.fillRect(rect, QColor(255, 255, 220, alpha))
+
+        # 4. Occasional delicate wildflowers or weathered stone paver
+        if ts >= 14:
+            f_hash = (tx * 19 + ty * 23) % 17
+            if f_hash == 0:
+                fx = sx + ts * 0.45
+                fy = sy + ts * 0.55
+                painter.setPen(Qt.NoPen)
+                painter.setBrush(QColor("#f4a261") if (tx + ty) % 2 == 0 else QColor("#ffffff"))
+                painter.drawEllipse(QPointF(fx, fy), max(1.5, ts * 0.06), max(1.5, ts * 0.06))
+                painter.setBrush(QColor("#e9c46a"))
+                painter.drawEllipse(QPointF(fx + 2, fy - 2), max(1.2, ts * 0.05), max(1.2, ts * 0.05))
+            elif f_hash == 1:
+                painter.setPen(QPen(COLOR_SAND_DARK, max(0.8, ts * 0.03)))
+                painter.setBrush(QColor("#f4ece1"))
+                painter.drawRoundedRect(QRectF(sx + ts * 0.28, sy + ts * 0.38, ts * 0.36, ts * 0.22), 2.0, 2.0)
+
+    def _draw_ghibli_water(self, painter: QPainter, sx: float, sy: float, ts: float, tx: int, ty: int):
+        rect = QRectF(sx, sy, ts + 0.5, ts + 0.5)
+
+        # Check adjacent land neighbors
+        n = self._is_land_tile(tx, ty - 1)
+        s = self._is_land_tile(tx, ty + 1)
+        w = self._is_land_tile(tx - 1, ty)
+        e = self._is_land_tile(tx + 1, ty)
+        nw = self._is_land_tile(tx - 1, ty - 1)
+        ne = self._is_land_tile(tx + 1, ty - 1)
+        sw = self._is_land_tile(tx - 1, ty + 1)
+        se = self._is_land_tile(tx + 1, ty + 1)
+        has_land = n or s or w or e or nw or ne or sw or se
+
+        if not has_land:
+            # Deep open ocean
+            painter.fillRect(rect, COLOR_WATER_DEEP)
+
+            # Rare charming rocky islet with lighthouse
+            if (tx * 31 + ty * 47) % 89 == 0 and ts >= 20:
+                self._draw_rocky_islet(painter, sx, sy, ts)
+                return
+
+            # Gentle animated wave crests
+            drift = math.sin(self._anim_tick * 0.06 + tx * 0.5 + ty * 0.3)
+            if (tx * 7 + ty * 13) % 3 == 0:
+                wx = sx + ts * 0.25 + drift * (ts * 0.08)
+                wy = sy + ts * 0.45
+                painter.setPen(QPen(COLOR_WAVE_CREST, max(1.2, ts * 0.035), Qt.SolidLine, Qt.RoundCap))
+                painter.setBrush(Qt.NoBrush)
+                painter.drawLine(QPointF(wx, wy), QPointF(wx + ts * 0.16, wy - 1.5))
+                painter.drawLine(QPointF(wx + ts * 0.16, wy - 1.5), QPointF(wx + ts * 0.35, wy + 1.0))
+            return
+
+        # Shoreline tile:
+        # 1. Translucent turquoise coastal shallow shelf
+        painter.fillRect(rect, COLOR_WATER_SHALLOW)
+
+        # 2. Sandy shoreline cliff & foam lap hugging the land
+        sand_pen = QPen(COLOR_SAND_BANK, max(3.0, ts * 0.12), Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+        foam_pen = QPen(COLOR_WATER_FOAM, max(1.6, ts * 0.07), Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+
+        painter.setBrush(Qt.NoBrush)
+        if w and not n and not s:
+            painter.setPen(sand_pen)
+            painter.drawLine(QPointF(sx, sy), QPointF(sx, sy + ts))
+            painter.setPen(foam_pen)
+            painter.drawLine(QPointF(sx + max(2.0, ts * 0.08), sy), QPointF(sx + max(2.0, ts * 0.08), sy + ts))
+        elif e and not n and not s:
+            painter.setPen(sand_pen)
+            painter.drawLine(QPointF(sx + ts, sy), QPointF(sx + ts, sy + ts))
+            painter.setPen(foam_pen)
+            painter.drawLine(QPointF(sx + ts - max(2.0, ts * 0.08), sy), QPointF(sx + ts - max(2.0, ts * 0.08), sy + ts))
+        elif n and not w and not e:
+            painter.setPen(sand_pen)
+            painter.drawLine(QPointF(sx, sy), QPointF(sx + ts, sy))
+            painter.setPen(foam_pen)
+            painter.drawLine(QPointF(sx, sy + max(2.0, ts * 0.08)), QPointF(sx + ts, sy + max(2.0, ts * 0.08)))
+        elif s and not w and not e:
+            painter.setPen(sand_pen)
+            painter.drawLine(QPointF(sx, sy + ts), QPointF(sx + ts, sy + ts))
+            painter.setPen(foam_pen)
+            painter.drawLine(QPointF(sx, sy + ts - max(2.0, ts * 0.08)), QPointF(sx + ts, sy + ts - max(2.0, ts * 0.08)))
+        else:
+            path = QPainterPath()
+            if nw or (n and w):
+                path.moveTo(sx + ts * 0.5, sy)
+                path.quadTo(sx + ts * 0.15, sy + ts * 0.15, sx, sy + ts * 0.5)
+            elif ne or (n and e):
+                path.moveTo(sx + ts * 0.5, sy)
+                path.quadTo(sx + ts * 0.85, sy + ts * 0.15, sx + ts, sy + ts * 0.5)
+            elif sw or (s and w):
+                path.moveTo(sx, sy + ts * 0.5)
+                path.quadTo(sx + ts * 0.15, sy + ts * 0.85, sx + ts * 0.5, sy + ts)
+            elif se or (s and e):
+                path.moveTo(sx + ts * 0.5, sy + ts)
+                path.quadTo(sx + ts * 0.85, sy + ts * 0.85, sx + ts, sy + ts * 0.5)
+            else:
+                path.addRect(QRectF(sx + ts * 0.2, sy + ts * 0.2, ts * 0.6, ts * 0.6))
+
+            painter.setPen(sand_pen)
+            painter.drawPath(path)
+            painter.setPen(foam_pen)
+            painter.drawPath(path)
+
+    def _draw_rocky_islet(self, painter: QPainter, sx: float, sy: float, ts: float):
+        ix = sx + ts * 0.5
+        iy = sy + ts * 0.5
+        # Rock base
+        painter.setPen(QPen(COLOR_CLIFF_EDGE, max(1.2, ts * 0.05)))
+        painter.setBrush(QColor("#8f7956"))
+        painter.drawEllipse(QPointF(ix, iy), ts * 0.35, ts * 0.24)
+        # Grass cap
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(COLOR_MEADOW_BASE)
+        painter.drawEllipse(QPointF(ix - 1, iy - 1), ts * 0.22, ts * 0.14)
+        # Tiny lighthouse
+        painter.setPen(QPen(COLOR_CLIFF_EDGE, max(1.0, ts * 0.04)))
+        painter.setBrush(QColor("#ffffff"))
+        lh_w = max(3.0, ts * 0.10)
+        lh_h = max(7.0, ts * 0.35)
+        painter.drawRect(QRectF(ix - lh_w * 0.5, iy - lh_h, lh_w, lh_h))
+        # Red band
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor("#d90429"))
+        painter.drawRect(QRectF(ix - lh_w * 0.5, iy - lh_h * 0.65, lh_w, lh_h * 0.3))
+        # Red roof
+        painter.drawPolygon(QPolygonF([
+            QPointF(ix - lh_w * 0.7, iy - lh_h),
+            QPointF(ix + lh_w * 0.7, iy - lh_h),
+            QPointF(ix, iy - lh_h - max(3.0, ts * 0.12))
+        ]))
+
+    def _draw_ghibli_forest(self, painter: QPainter, sx: float, sy: float, ts: float, tx: int, ty: int):
+        # Forest floor deep under-shadow
+        painter.fillRect(QRectF(sx, sy, ts + 0.5, ts + 0.5), QColor("#1e4222"))
+
+        # Wind sway
+        sway_x = math.sin(self._anim_tick * 0.06 + tx * 0.7 + ty * 0.5) * (ts * 0.05)
+
+        # Style: pine on western flank or deciduous in interior
+        is_pine = (tx < 16)
+        if is_pine:
+            self._draw_ghibli_pine_tree(painter, sx + ts * 0.3 + sway_x, sy + ts * 0.45, ts * 0.75)
+            self._draw_ghibli_pine_tree(painter, sx + ts * 0.75 + sway_x, sy + ts * 0.6, ts * 0.8)
+            self._draw_ghibli_pine_tree(painter, sx + ts * 0.45 + sway_x, sy + ts * 0.95, ts * 0.85)
+        else:
+            self._draw_ghibli_decid_tree(painter, sx + ts * 0.35 + sway_x, sy + ts * 0.5, ts * 0.42)
+            self._draw_ghibli_decid_tree(painter, sx + ts * 0.7 + sway_x, sy + ts * 0.85, ts * 0.46)
+
+        # Occasional soot sprite (susuwatari) peeking from forest edge
+        if (tx * 13 + ty * 19) % 17 == 0 and ts >= 16:
+            self._draw_soot_sprite(painter, sx + ts * 0.85, sy + ts * 0.85, max(4.0, ts * 0.18))
+
+    def _draw_ghibli_pine_tree(self, painter: QPainter, bx: float, by: float, h_val: float):
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(COLOR_TRUNK)
+        painter.drawRect(QRectF(bx - 1.5, by - 4, 3, 5))
+
+        bw = h_val * 0.72
+        painter.setPen(QPen(COLOR_CLIFF_EDGE, max(0.8, h_val * 0.03)))
+        painter.setBrush(COLOR_PINE_DEEP)
+        painter.drawPolygon(QPolygonF([
+            QPointF(bx - bw * 0.5, by - 3), QPointF(bx + bw * 0.5, by - 3),
+            QPointF(bx, by - h_val * 0.45)
+        ]))
+        painter.setBrush(COLOR_PINE_MID)
+        painter.drawPolygon(QPolygonF([
+            QPointF(bx - bw * 0.4, by - h_val * 0.35), QPointF(bx + bw * 0.4, by - h_val * 0.35),
+            QPointF(bx, by - h_val * 0.72)
+        ]))
+        painter.setBrush(COLOR_PINE_LIGHT)
+        painter.drawPolygon(QPolygonF([
+            QPointF(bx - bw * 0.28, by - h_val * 0.62), QPointF(bx + bw * 0.28, by - h_val * 0.62),
+            QPointF(bx, by - h_val)
+        ]))
+
+    def _draw_ghibli_decid_tree(self, painter: QPainter, bx: float, by: float, rad: float):
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(COLOR_TRUNK)
+        painter.drawRect(QRectF(bx - 2, by - 6, 4, 8))
+
+        cy = by - rad - 2
+        painter.setPen(QPen(COLOR_CLIFF_EDGE, max(0.8, rad * 0.05)))
+        painter.setBrush(COLOR_DECID_DEEP)
+        painter.drawEllipse(QPointF(bx, cy + rad * 0.2), rad * 1.05, rad * 0.95)
+
+        painter.setBrush(COLOR_DECID_MID)
+        painter.drawEllipse(QPointF(bx - rad * 0.38, cy), rad * 0.75, rad * 0.75)
+        painter.drawEllipse(QPointF(bx + rad * 0.38, cy), rad * 0.75, rad * 0.75)
+        painter.drawEllipse(QPointF(bx, cy - rad * 0.28), rad * 0.85, rad * 0.85)
+
+        painter.setBrush(COLOR_DECID_LIGHT)
+        painter.drawEllipse(QPointF(bx - rad * 0.18, cy - rad * 0.38), rad * 0.58, rad * 0.52)
+        painter.drawEllipse(QPointF(bx + rad * 0.22, cy - rad * 0.25), rad * 0.48, rad * 0.42)
+
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(COLOR_DECID_CROWN)
+        painter.drawEllipse(QPointF(bx - rad * 0.1, cy - rad * 0.52), rad * 0.32, rad * 0.26)
+
+    def _draw_soot_sprite(self, painter: QPainter, sx: float, sy: float, s: float):
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(COLOR_SOOT_SPRITE)
+        painter.drawEllipse(QPointF(sx, sy), s, s)
+        painter.setBrush(QColor("#ffffff"))
+        painter.drawEllipse(QPointF(sx - s * 0.3, sy - s * 0.15), s * 0.3, s * 0.3)
+        painter.drawEllipse(QPointF(sx + s * 0.3, sy - s * 0.15), s * 0.3, s * 0.3)
+        painter.setBrush(QColor("#000000"))
+        painter.drawEllipse(QPointF(sx - s * 0.25, sy - s * 0.15), s * 0.14, s * 0.14)
+        painter.drawEllipse(QPointF(sx + s * 0.35, sy - s * 0.15), s * 0.14, s * 0.14)
 
     # --- Procedural Road & Bridge Renderer ---
 
