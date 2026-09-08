@@ -41,9 +41,11 @@ Window {
     property bool splashEnabled: true
     property bool isMuted: true
     property bool showHelp: false
+    property bool fullPlayfield: false
+    readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Move: Arrows, WASD, or Vim H / J / K / L\n• Action: Space\n• Restart: R\n• Sound: M\n• Help: ? or Esc"
+    property string helpText: "• Move: Arrows, WASD, or Vim H / J / K / L\n• Action: Space\n• Full/Compact View: F\n• Restart: R\n• Sound: M\n• Help: ? or Esc"
 
     // =========================================================================
     // THEME & SOUND CONTROLLERS
@@ -170,6 +172,13 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_F) {
+                root.fullPlayfield = !root.fullPlayfield;
+                soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_R) {
                 root.restartGame();
                 event.accepted = true;
@@ -206,13 +215,14 @@ Window {
         // =====================================================================
         Item {
             id: headerItem
+            visible: !root.isTiledDesktopMode
             anchors.top: parent.top
-            anchors.topMargin: 16
+            anchors.topMargin: visible ? 16 : 0
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
-            height: Math.max(titleCol.height, scoreRow.height)
+            height: visible ? Math.max(titleCol.height, scoreRow.height) : 0
 
             Column {
                 id: titleCol
@@ -315,13 +325,14 @@ Window {
         // =====================================================================
         Item {
             id: subheaderItem
+            visible: !root.isTiledDesktopMode
             anchors.top: headerItem.bottom
-            anchors.topMargin: 10
+            anchors.topMargin: visible ? 10 : 0
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
-            height: 34
+            height: visible ? 34 : 0
 
             readonly property bool isCrowded: subheaderItem.width < 450
 
@@ -419,6 +430,49 @@ Window {
                     }
                 }
 
+                // View Mode Pill (Windowed vs Full Field)
+                Rectangle {
+                    id: viewModeBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (viewModeRow.implicitWidth + 18)
+                    radius: 8
+                    color: root.fullPlayfield ? root.themeCardBg : (viewModeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
+                    border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        id: viewModeRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: root.fullPlayfield ? "🔲" : "⛶"
+                            font.pixelSize: 13
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: root.fullPlayfield ? "Standard (F)" : "Full (F)"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.fullPlayfield ? root.themeAccent : root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: viewModeMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.fullPlayfield = !root.fullPlayfield;
+                            soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Windowed View");
+                        }
+                    }
+                }
+
                 // Primary Action Button (Restart / New Game)
                 Rectangle {
                     id: restartBtn
@@ -460,18 +514,119 @@ Window {
         }
 
         // =====================================================================
+        // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
+        // =====================================================================
+        Rectangle {
+            id: floatingTiledHUD
+            visible: root.isTiledDesktopMode
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.topMargin: 8
+            anchors.leftMargin: 12
+            anchors.rightMargin: 12
+            height: 38
+            radius: 8
+            z: 90
+            color: root.themeCardBg
+            border.color: root.themeBorder
+            border.width: 1
+
+            Row {
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
+
+                Text {
+                    text: root.title
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeAccent
+                }
+
+                Text {
+                    text: "• SCORE: " + root.score
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeFg
+                }
+
+                Text {
+                    text: "(BEST: " + root.bestScore + ")"
+                    font.pixelSize: 10
+                    color: root.themeSubtext
+                }
+            }
+
+            Row {
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 6
+
+                // Full Window Toggle
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "🔲"; font.pixelSize: 10; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.fullPlayfield = false;
+                            soundToast.show("🔲 Standard Windowed View");
+                        }
+                    }
+                }
+
+                // Help
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "?"; font.pixelSize: 11; font.bold: true; color: root.themeAccent; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showHelp = !root.showHelp
+                    }
+                }
+
+                // Mute
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
+                }
+
+                // Restart
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "↺"; font.pixelSize: 12; font.bold: true; color: root.themeAccent; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.restartGame()
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
         // TIER 3: PLAYFIELD BOARD CONTAINER
         // =====================================================================
         Item {
             id: playArea
-            anchors.top: subheaderItem.bottom
-            anchors.topMargin: 12
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 8 : 12
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 16
+            anchors.bottomMargin: root.isTiledDesktopMode ? 10 : 16
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
+            anchors.leftMargin: root.isTiledDesktopMode ? 10 : 16
+            anchors.rightMargin: root.isTiledDesktopMode ? 10 : 16
 
             Rectangle {
                 id: boardContainer

@@ -65,7 +65,8 @@ Window {
         "• [SPACE] / [ENTER]: Deal / Draw / Table Action\n" +
         "• [1] - [5]: Toggle Hold on cards 1 through 5\n" +
         "• [B]: Increase coin bet (1 to 5)\n" +
-        "• [M]: Bet Max (5 coins) and deal\n" +
+        "• [X]: Bet Max (5 coins) and deal\n" +
+        "• [M]: Toggle Mute audio\n" +
         "• [G]: Open Game Selection menu (navigate with Arrows)\n" +
         "• [D]: Double-Up High-Card Gamble after any win\n" +
         "• [C]: Collect Double-Up pot / Cash out free credits\n" +
@@ -1032,8 +1033,11 @@ Window {
             } else if (event.key === Qt.Key_B) {
                 increaseBet();
                 event.accepted = true;
-            } else if (event.key === Qt.Key_M) {
+            } else if (event.key === Qt.Key_X) {
                 setMaxBet();
+                event.accepted = true;
+            } else if (event.key === Qt.Key_M) {
+                root.toggleMute();
                 event.accepted = true;
             } else if (event.key === Qt.Key_V) {
                 root.visualMode = (root.visualMode === "cyber" ? "crt" : "cyber");
@@ -2074,7 +2078,7 @@ Window {
 
                         Text {
                             anchors.centerIn: parent
-                            text: "MAX [M]"
+                            text: "MAX [X]"
                             font.family: root.monoFontFamily
                             font.pixelSize: 10
                             font.bold: true

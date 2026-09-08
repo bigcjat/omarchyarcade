@@ -36,7 +36,7 @@ Window {
     // DECLARATIVE STATE
     // =========================================================================
     property bool splashEnabled: true
-    property bool isMuted: false
+    property bool isMuted: true
     property bool showHelp: false
     property bool showInaugurationModal: true
     property bool showGraphModal: false

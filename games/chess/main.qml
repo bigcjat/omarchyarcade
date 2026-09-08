@@ -70,7 +70,7 @@ Window {
 
     // UI & System State
     property bool splashEnabled: true
-    property bool isMuted: false
+    property bool isMuted: true
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 

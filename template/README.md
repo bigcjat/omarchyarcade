@@ -7,6 +7,7 @@ Welcome to the **Omarchy Arcade Game Template**! This template provides a comple
 - ✈️ **100% True Offline Play:** Zero network sockets, zero cloud accounts, zero telemetry, and zero ads. Games are completely self-contained and play 100% offline forever.
 - 🎨 **Desktop Theme Synchronization:** Automatic live hot-reloading from Omarchy's `~/.config/omarchy/current/theme/colors.toml`.
 - 🕹️ **Arcade Header Layout:** Two stat cards (Score, Best/High Score), "How to Play" modal trigger, Mute/Unmute audio toggle, and Restart button with responsive emoji collapse on narrow splits.
+- ⛶ **Responsive Tiling & Full-Playfield View (`F`):** Hotkey and subheader pill that collapses the full header into a sleek 38px floating micro-HUD for split-screen Hyprland tiling and focused edge-to-edge play.
 - 📺 **Retro Console Startup Screen:** ~1.0-second retro arcade boot sequence with CRT scanlines, vector badge, animated color stripes, and glint sheen (skips instantly on any key or click).
 - 🔊 **Zero-Latency Audio Engine:** Low-latency hardware audio via PipeWire (`pw-play`), PulseAudio (`paplay`), or ALSA (`aplay`), defaulted to muted with 0% CPU overhead when silent.
 - 💾 **Persistent Settings:** Local high-score and preference tracking powered by `QSettings`.
@@ -64,7 +65,7 @@ In `games/mygame/main.qml`:
    ```
 2. Update the `helpText` string with your game's rules and controls:
    ```qml
-   property string helpText: "• Move: Arrow Keys or WASD\n• Jump: Space\n• Restart: R\n• Sound: M"
+   property string helpText: "• Move: Arrow Keys or WASD\n• Jump: Space\n• Full/Compact View: F\n• Restart: R\n• Sound: M"
    ```
 
 In `games/mygame/main.py`:

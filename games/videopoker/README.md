@@ -42,7 +42,7 @@ Authentic multi-game casino video terminal built natively with hardware accelera
 | **Deal / Draw / Next** | `Space` | `Enter` | Click "DEAL [SPACE]" button |
 | **Hold Cards 1–5** | `1`, `2`, `3`, `4`, `5` | — | Click card or bottom "HOLD 1-5" buttons |
 | **Bet 1 Coin** | `B` | — | Click "BET 1 [B]" button |
-| **Bet Max (5 Coins)** | `M` | — | Click "MAX [M]" button |
+| **Bet Max (5 Coins)** | `X` | — | Click "MAX [X]" button |
 | **Switch Visual Era** | `V` | — | Click "Classic [V]" / "Cyber [V]" in toolbar |
 | **Open Game Menu** | `G` | — | Click "Games (G)" in subheader or console |
 | **Navigate Game Menu** | `↑` `↓` `←` `→` | — | Click game card tile |
@@ -50,7 +50,7 @@ Authentic multi-game casino video terminal built natively with hardware accelera
 | **Double-Up Gamble** | `D` | — | Click "DOUBLE [D]" button after any win |
 | **Collect / Cash Out**| `C` | `Esc` | Click "COLLECT" or press `C` / `Esc` |
 | **Rules & Instructions** | `?` | `H` | Click "?" button in toolbar |
-| **Mute Audio** | — | Click Icon | Click speaker icon in toolbar |
+| **Mute Audio** | `M` | — | Click "🔇" / "🔊" speaker button in toolbar |
 
 ---
 

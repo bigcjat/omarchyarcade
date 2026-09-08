@@ -49,7 +49,7 @@ Window {
 
     // UI & System State
     property bool splashEnabled: true
-    property bool isMuted: false
+    property bool isMuted: true
     property bool showHelp: false
 
     property string helpText: "• Klondike Solitaire Rules:\n  - Build 4 Foundations from Ace up to King by suit (♠ ♥ ♦ ♣)\n  - Build 7 Tableau columns downward in alternating colors (Red / Black)\n  - Empty tableau spaces can only be filled by Kings\n• Controls:\n  - Click card(s) to select, then click destination column or foundation\n  - Drag & Drop card(s) directly to any valid column or foundation\n  - Double-click a card to send it straight to Foundation\n  - Click Stock (or Space) to draw cards (1 or 3)\n  - D to toggle Draw-1 / Draw-3\n  - K to cycle Deck Style\n  - H for Hint\n  - U to Undo\n  - N for New Game\n  - M to Mute, ? for Help"
