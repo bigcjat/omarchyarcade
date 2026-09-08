@@ -821,6 +821,35 @@
       "size": "1.0 MB",
       "size_bytes": 1067007,
       "download_size": "1.0 MB"
+    },
+    {
+      "id": "starframe",
+      "title": "Starframe",
+      "ref": "OA-030",
+      "category": "Action Arcade",
+      "floppy_color": "#232328",
+      "grid_color": "#00E5FF",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Tactical Neon Vector Starfighter Combat & Kinetic Ramming",
+      "description": "A high-octane neon vector space shooter featuring 3 selectable starfighter classes, glowing CRT bloom physics, color-coded energy pickups, 200% Super Shield kinetic ramming, and relentless enemy squadrons across 4 challenging sectors.",
+      "instructions": [
+        "Steer your starfighter across the combat grid using Mouse, WASD, Arrow keys, or Vim (HJKL).",
+        "Left click or press Space to fire all 4 synchronized gun systems simultaneously.",
+        "Collect color-coded power-ups: Machine Gun (Gold), Plasma (Green), EMP Arc (Purple), Hull Repair (Red), and Shields (Cyan).",
+        "Overcharge kinetic shields with yellow starburst capsules to 1000 HP and ram through enemy waves!",
+        "Zero-Pass Penalty: Do not let hostile craft slip past the bottom defense perimeter, or lose 1 Life."
+      ],
+      "controls": {
+        "keyboard": "WASD / Arrows / Vim (HJKL) to fly, Space/Enter to fire, B for Super Bomb, F for Full Field",
+        "shortcuts": "R to restart, P/Esc to pause, ? for help, M to mute"
+      },
+      "folder": "games/starframe",
+      "entrypoint": "games/starframe/main.py",
+      "cover_image": "assets/covers/starframe.png",
+      "size": "1.0 MB",
+      "size_bytes": 1056768,
+      "download_size": "1.0 MB"
     }
   ]
 }
