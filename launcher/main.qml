@@ -23,7 +23,7 @@ ApplicationWindow {
     property color themeAccentAlt: "#e6458e"
 
     property bool splashEnabled: true
-    property string selectedCategory: "ALL"
+    property string selectedCategory: "LIBRARY"
     property string searchQuery: ""
     property var catalogData: []
     property var filteredGames: []
@@ -66,6 +66,8 @@ ApplicationWindow {
                 detailSheet.isDownloading = false;
                 detailSheet.isInstalled = true;
             }
+            root.refreshCategories();
+            root.updateFilter();
             root.launchGame(gameId);
         }
         function onGameInstallFailed(gameId, errorMsg) {
@@ -147,16 +149,37 @@ ApplicationWindow {
         updateFocusedGameTitle();
     }
 
+    function isInstalled(gameId) {
+        if (!gameId) return false;
+        if (typeof arcadeBackend !== "undefined" && arcadeBackend.isGameInstalled) {
+            return arcadeBackend.isGameInstalled(gameId);
+        }
+        return true;
+    }
+
+    function getLibraryCount() {
+        var n = 0;
+        for (var i = 0; i < catalogData.length; i++) {
+            var g = catalogData[i];
+            if (g.status === "unreleased") continue;
+            if (isInstalled(g.id)) {
+                n++;
+            }
+        }
+        return n;
+    }
+
     property var categoryList: [
-        { name: "ALL", label: "🎮 All Games (27)" },
-        { name: "ACTION ARCADE", label: "⚡ Action (9)" },
+        { name: "LIBRARY", label: "💾 My Library (31)" },
+        { name: "ALL", label: "🎮 All Games (31)" },
+        { name: "ACTION ARCADE", label: "⚡ Action (10)" },
         { name: "PUZZLES & GRID LOGIC", label: "🧩 Puzzles (4)" },
         { name: "BLOCKS & MERGING", label: "🧱 Blocks (2)" },
-        { name: "BOARD & TABLETOP", label: "♟️ Tabletop (6)" },
+        { name: "BOARD & TABLETOP", label: "♟️ Tabletop (7)" },
         { name: "CARDS & CASINO", label: "🃏 Cards (3)" },
         { name: "CASUAL AIM & PHYSICS", label: "🫧 Casual (2)" },
         { name: "WORD & TRIVIA", label: "🔤 Word (1)" },
-        { name: "UNRELEASED", label: "⏳ Coming Soon (1)" }
+        { name: "UNRELEASED", label: "⏳ Coming Soon (0)" }
     ]
 
     onSelectedCategoryChanged: updateFilter()
@@ -191,6 +214,7 @@ ApplicationWindow {
 
     function refreshCategories() {
         categoryList = [
+            { name: "LIBRARY", label: "💾 My Library (" + getLibraryCount() + ")" },
             { name: "ALL", label: "🎮 All Games (" + getPlayableCount("ALL") + ")" },
             { name: "ACTION ARCADE", label: "⚡ Action (" + getPlayableCount("ACTION ARCADE") + ")" },
             { name: "PUZZLES & GRID LOGIC", label: "🧩 Puzzles (" + getPlayableCount("PUZZLES & GRID LOGIC") + ")" },
@@ -254,7 +278,9 @@ ApplicationWindow {
             var isUnrel = (g.status === "unreleased");
 
             var matchesCat = false;
-            if (cat === "ALL") {
+            if (cat === "LIBRARY") {
+                matchesCat = !isUnrel && root.isInstalled(g.id);
+            } else if (cat === "ALL") {
                 // "ALL" displays released playable games (unreleased games are in COMING SOON)
                 matchesCat = !isUnrel;
             } else if (cat === "UNRELEASED") {
@@ -592,12 +618,14 @@ ApplicationWindow {
                 visible: root.filteredGames.length === 0
 
                 Text {
-                    text: "🔍"
+                    text: root.searchQuery.trim() !== "" ? "🔍" : (root.selectedCategory === "LIBRARY" ? "💾" : "🎮")
                     font.pixelSize: 36
                     Layout.alignment: Qt.AlignHCenter
                 }
                 Text {
-                    text: "No games found matching '" + root.searchQuery + "'"
+                    text: root.searchQuery.trim() !== "" ? 
+                          ("No games found matching '" + root.searchQuery + "'") : 
+                          (root.selectedCategory === "LIBRARY" ? "No games installed in your library yet" : "No games found in this category")
                     font.pixelSize: 15
                     font.bold: true
                     color: "#94a3b8"
@@ -605,7 +633,7 @@ ApplicationWindow {
                 }
                 Button {
                     Layout.alignment: Qt.AlignHCenter
-                    text: "Clear Search"
+                    text: root.searchQuery.trim() !== "" ? "Clear Search" : "Browse All Games"
                     onClicked: {
                         searchInput.text = "";
                         root.selectedCategory = "ALL";
