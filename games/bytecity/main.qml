@@ -10,7 +10,7 @@ Window {
     height: 720
     minimumWidth: 640
     minimumHeight: 480
-    title: "ByteCity • Classic Metropolis Simulation"
+    title: "OmarchyCity • Classic Metropolis Simulation"
 
     // =========================================================================
     // OMARCHY THEME TOKENS
@@ -38,13 +38,17 @@ Window {
     property bool splashEnabled: true
     property bool isMuted: false
     property bool showHelp: false
-    property bool showNewCityDialog: false
+    property bool showInaugurationModal: true
+    property bool showAdvisorModal: false
+    property int selectedSetupTab: 0
+    property int currentSeed: 42
+    property int selectedLevel: 0
     property int currentTool: 9
     property string cheatBuffer: ""
     property int fundCheatCount: 0
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Pan View: Drag with Right Mouse, Middle Mouse, or WASD / Arrows\n• Zoom View: Mouse Wheel or + / -\n• Build: Left-click with active tool (Road, Wire, Rail, Bulldozer support drag)\n• Speed: Space (Pause), 1 (Normal), 2 (Fast), 3 (Ultra)\n• Sound: M | Help: ? or Esc\n\nBuild power plants, connect roads and wires, and balance Residential, Commercial, and Industrial zones to grow your metropolis!"
+    property string helpText: "• Pan View: Drag with Right Mouse, Middle Mouse, or WASD / Arrows\n• Zoom View: Mouse Wheel or + / -\n• Build: Left-click with active tool (Road, Wire, Rail, Bulldozer support drag)\n• Speed: Space (Pause), 1 (Normal), 2 (Fast), 3 (Ultra)\n• Sound: M | Help: ? or Esc\n• Advisor: Click Dr. Wright in the bottom status bar for municipal counsel!\n\nBuild power plants, connect roads and wires, and balance Residential, Commercial, and Industrial zones to grow your metropolis!"
 
     function applyTheme(data, name) {
         if (!data || typeof data !== "object") return;
@@ -102,10 +106,18 @@ Window {
                 return;
             }
 
-            if (root.showHelp || root.showNewCityDialog) {
+            if (root.showHelp || root.showAdvisorModal) {
                 if (event.key === Qt.Key_Escape) {
                     root.showHelp = false;
-                    root.showNewCityDialog = false;
+                    root.showAdvisorModal = false;
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            if (root.showInaugurationModal) {
+                if (event.key === Qt.Key_Escape) {
+                    root.showInaugurationModal = false;
                     event.accepted = true;
                     return;
                 }
@@ -224,7 +236,7 @@ Window {
                 Text {
                     width: parent.width
                     elide: Text.ElideRight
-                    text: "ByteCity"
+                    text: "OmarchyCity"
                     font.pixelSize: 24
                     font.bold: true
                     color: root.themeAccent
@@ -232,7 +244,7 @@ Window {
                 Text {
                     width: parent.width
                     elide: Text.ElideRight
-                    text: (cityEngine ? cityEngine.cityName : "Metropolis") + " • Classic Simulation"
+                    text: (cityEngine ? cityEngine.cityName : "OmarchyCity") + " • Classic Simulation"
                     font.pixelSize: 12
                     color: root.themeSubtext
                 }
@@ -542,18 +554,59 @@ Window {
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.showHelp = !root.showHelp }
                 }
 
-                // New City
+                // Advisor Button
                 Rectangle {
                     height: 28; width: 84; radius: 6
+                    color: root.themeCardBg; border.color: root.themeAccent; border.width: 1
+                    Row {
+                        anchors.centerIn: parent; spacing: 4
+                        Image {
+                            source: "assets/dr_wright.svg"
+                            width: 16; height: 16
+                            anchors.verticalCenter: parent.verticalCenter
+                            smooth: true
+                        }
+                        Text { text: "Advisor"; font.pixelSize: 11; font.bold: true; color: root.themeAccent; anchors.verticalCenter: parent.verticalCenter }
+                    }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showAdvisorModal = true
+                    }
+                }
+
+                // Scenarios Button
+                Rectangle {
+                    height: 28; width: 90; radius: 6
+                    color: root.themeCardBg; border.color: root.themeBorder; border.width: 1
+                    Row {
+                        anchors.centerIn: parent; spacing: 4
+                        Text { text: "📜"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
+                        Text { text: "Scenarios"; font.pixelSize: 11; font.bold: true; color: root.themeFg; anchors.verticalCenter: parent.verticalCenter }
+                    }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.selectedSetupTab = 1;
+                            root.showInaugurationModal = true;
+                        }
+                    }
+                }
+
+                // New City
+                Rectangle {
+                    height: 28; width: 90; radius: 6
                     color: root.themeAccent
                     Row {
                         anchors.centerIn: parent; spacing: 4
-                        Text { text: "🔄"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
+                        Text { text: "🏛️"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
                         Text { text: "New City"; font.pixelSize: 11; font.bold: true; color: root.themeBtnFg; anchors.verticalCenter: parent.verticalCenter }
                     }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                        onClicked: root.showNewCityDialog = true
+                        onClicked: {
+                            root.selectedSetupTab = 0;
+                            root.showInaugurationModal = true;
+                        }
                     }
                 }
             }
@@ -699,7 +752,7 @@ Window {
             anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
-            height: 28
+            height: 32
             radius: 6
             color: root.themeCardBg
             border.color: root.themeBorder
@@ -707,27 +760,60 @@ Window {
 
             Row {
                 anchors.fill: parent
-                anchors.leftMargin: 12
+                anchors.leftMargin: 8
                 anchors.rightMargin: 12
                 spacing: 8
 
-                Text {
-                    text: "📰"
-                    font.pixelSize: 12
+                // Dr. Wright interactive avatar badge
+                Rectangle {
+                    id: drWrightStatusBadge
+                    height: 24
+                    width: drWrightStatusRow.implicitWidth + 14
+                    radius: 12
                     anchors.verticalCenter: parent.verticalCenter
+                    color: drWrightStatusMouse.containsMouse ? root.themeAccent : Qt.rgba(Qt.color(root.themeAccent).r, Qt.color(root.themeAccent).g, Qt.color(root.themeAccent).b, 0.15)
+                    border.color: root.themeAccent
+                    border.width: 1
+
+                    Row {
+                        id: drWrightStatusRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Image {
+                            source: "assets/dr_wright.svg"
+                            width: 18; height: 18
+                            anchors.verticalCenter: parent.verticalCenter
+                            smooth: true
+                        }
+                        Text {
+                            text: "Dr. Wright"
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: drWrightStatusMouse.containsMouse ? root.themeBtnFg : root.themeAccent
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    MouseArea {
+                        id: drWrightStatusMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showAdvisorModal = true
+                    }
                 }
 
                 Text {
                     id: advisorText
                     anchors.verticalCenter: parent.verticalCenter
-                    text: cityEngine ? cityEngine.advisorMessage : "Welcome to ByteCity! Build roads, power, and zones."
+                    text: cityEngine ? cityEngine.advisorMessage : "Welcome to OmarchyCity! Click Dr. Wright or build zones to begin."
                     font.pixelSize: 11
                     color: root.themeFg
                     elide: Text.ElideRight
-                    width: parent.width - 240
+                    width: Math.max(100, parent.width - drWrightStatusBadge.width - 240)
                 }
 
-                Item { width: 20; height: 1 }
+                Item { width: 10; height: 1 }
 
                 // Hover Coordinate Display
                 Text {
@@ -741,90 +827,756 @@ Window {
         }
 
         // =====================================================================
-        // NEW CITY DIALOG MODAL
+        // MAYORAL INAUGURATION & SETUP WIZARD (Dr. Wright)
         // =====================================================================
         Rectangle {
-            id: newCityModal
+            id: inaugurationModal
             anchors.fill: parent
-            color: Qt.rgba(0, 0, 0, 0.7)
-            visible: root.showNewCityDialog
+            color: Qt.rgba(0, 0, 0, 0.75)
+            visible: root.showInaugurationModal
             z: 90
 
-            MouseArea { anchors.fill: parent; onClicked: {} } // Block clicks
+            MouseArea { anchors.fill: parent; onClicked: {} } // Block clicks through scrim
 
             Rectangle {
+                id: modalBox
                 anchors.centerIn: parent
-                width: 380
-                height: 280
+                width: Math.min(620, parent.width - 24)
+                height: Math.min(520, parent.height - 24)
                 radius: 12
                 color: root.themeCardBg
                 border.color: root.themeBorder
                 border.width: 1
+                clip: true
 
                 Column {
                     anchors.fill: parent
-                    anchors.margins: 20
-                    spacing: 14
+                    anchors.margins: 16
+                    spacing: 12
 
-                    Text {
-                        text: "Inaugurate New City"
-                        font.pixelSize: 18
-                        font.bold: true
-                        color: root.themeAccent
-                    }
-
-                    // City Name Input
-                    Column {
+                    // Modal Header
+                    Row {
                         width: parent.width
-                        spacing: 4
-                        Text { text: "City Name:"; font.pixelSize: 11; color: root.themeSubtext }
+                        spacing: 12
+
+                        Image {
+                            source: "assets/dr_wright.svg"
+                            width: 36
+                            height: 36
+                            smooth: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 2
+                            width: parent.width - 80
+
+                            Text {
+                                text: "Mayoral Inauguration Chamber"
+                                font.pixelSize: 17
+                                font.bold: true
+                                color: root.themeAccent
+                            }
+                            Text {
+                                text: "Executive Municipal Administration • OmarchyCity"
+                                font.pixelSize: 11
+                                color: root.themeSubtext
+                            }
+                        }
+
+                        // Close button
                         Rectangle {
-                            width: parent.width; height: 32; radius: 6
-                            color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
-                            TextInput {
-                                id: cityNameInput
-                                anchors.fill: parent; anchors.margins: 6
-                                text: "ByteCity"
-                                font.pixelSize: 13; color: root.themeFg
+                            width: 28; height: 28; radius: 14
+                            color: closeMouse.containsMouse ? root.themeBorder : "transparent"
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✕"
+                                font.pixelSize: 12
+                                color: root.themeSubtext
+                            }
+                            MouseArea {
+                                id: closeMouse
+                                anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                onClicked: root.showInaugurationModal = false
                             }
                         }
                     }
 
-                    // Difficulty Level
-                    Column {
+                    // Tab Selector Bar
+                    Row {
                         width: parent.width
-                        spacing: 4
-                        Text { text: "Difficulty / Starting Funds:"; font.pixelSize: 11; color: root.themeSubtext }
-                        Row {
-                            spacing: 8
-                            Repeater {
-                                model: [
-                                    { level: 0, label: "Easy ($20k)" },
-                                    { level: 1, label: "Medium ($10k)" },
-                                    { level: 2, label: "Hard ($5k)" }
-                                ]
-                                Rectangle {
-                                    width: 104; height: 28; radius: 6
-                                    property int lvl: modelData.level
-                                    color: (newCityModal.selectedLevel === lvl) ? root.themeAccent : root.themeBoardBg
-                                    border.color: root.themeBorder; border.width: 1
+                        spacing: 6
+
+                        Repeater {
+                            model: [
+                                { idx: 0, label: "🏛️ New Territory" },
+                                { idx: 1, label: "📜 Historic Scenarios (8)" },
+                                { idx: 2, label: "💡 Dr. Wright's Briefing" }
+                            ]
+                            Rectangle {
+                                width: (modalBox.width - 32 - 12) / 3
+                                height: 30
+                                radius: 6
+                                color: (root.selectedSetupTab === modelData.idx) ? root.themeAccent : root.themeBoardBg
+                                border.color: (root.selectedSetupTab === modelData.idx) ? root.themeAccent : root.themeBorder
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: modelData.label
+                                    font.pixelSize: 11
+                                    font.bold: root.selectedSetupTab === modelData.idx
+                                    color: (root.selectedSetupTab === modelData.idx) ? root.themeBtnFg : root.themeFg
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.selectedSetupTab = modelData.idx
+                                }
+                            }
+                        }
+                    }
+
+                    // Divider
+                    Rectangle { width: parent.width; height: 1; color: root.themeBorder }
+
+                    // TAB 0: NEW TERRITORY
+                    Item {
+                        id: tabNewCity
+                        width: parent.width
+                        height: parent.height - 130
+                        visible: root.selectedSetupTab === 0
+
+                        Column {
+                            anchors.fill: parent
+                            spacing: 10
+
+                            // Speech Bubble from Dr. Wright
+                            Rectangle {
+                                width: parent.width
+                                height: 46
+                                radius: 8
+                                color: root.themeBoardBg
+                                border.color: root.themeBorder
+                                border.width: 1
+
+                                Row {
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    spacing: 8
                                     Text {
+                                        text: "🗣️"
+                                        font.pixelSize: 16
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    Text {
+                                        width: parent.width - 36
+                                        wrapMode: Text.Wrap
+                                        text: "Greetings, your Honor! I am Dr. Wright, your Senior Advisor. Name your city, allocate our starting funds, and prepare to govern!"
+                                        font.pixelSize: 11
+                                        color: root.themeFg
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+                            }
+
+                            // City Name Input
+                            Column {
+                                width: parent.width
+                                spacing: 4
+                                Text { text: "City Name:"; font.pixelSize: 11; font.bold: true; color: root.themeSubtext }
+                                Rectangle {
+                                    width: parent.width; height: 32; radius: 6
+                                    color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
+                                    TextInput {
+                                        id: inaugCityNameInput
+                                        anchors.fill: parent; anchors.margins: 6
+                                        text: "OmarchyCity"
+                                        font.pixelSize: 13; color: root.themeFg
+                                    }
+                                }
+                            }
+
+                            // Difficulty Level / Starting Treasury
+                            Column {
+                                width: parent.width
+                                spacing: 4
+                                Text { text: "Starting Municipal Treasury & Difficulty:"; font.pixelSize: 11; font.bold: true; color: root.themeSubtext }
+                                Row {
+                                    width: parent.width
+                                    spacing: 8
+                                    Repeater {
+                                        model: [
+                                            { level: 0, title: "Easy", funds: "$20,000", desc: "Ambitious Expansion" },
+                                            { level: 1, title: "Medium", funds: "$10,000", desc: "Balanced Economy" },
+                                            { level: 2, title: "Hard", funds: "$5,000", desc: "Fiscal Austerity" }
+                                        ]
+                                        Rectangle {
+                                            width: (parent.width - 16) / 3
+                                            height: 52
+                                            radius: 8
+                                            property int lvl: modelData.level
+                                            color: (root.selectedLevel === lvl) ? Qt.rgba(Qt.color(root.themeAccent).r, Qt.color(root.themeAccent).g, Qt.color(root.themeAccent).b, 0.2) : root.themeBoardBg
+                                            border.color: (root.selectedLevel === lvl) ? root.themeAccent : root.themeBorder
+                                            border.width: (root.selectedLevel === lvl) ? 2 : 1
+
+                                            Column {
+                                                anchors.centerIn: parent
+                                                spacing: 2
+                                                Text {
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    text: modelData.title + " (" + modelData.funds + ")"
+                                                    font.pixelSize: 11
+                                                    font.bold: true
+                                                    color: (root.selectedLevel === lvl) ? root.themeAccent : root.themeFg
+                                                }
+                                                Text {
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    text: modelData.desc
+                                                    font.pixelSize: 9
+                                                    color: root.themeSubtext
+                                                }
+                                            }
+
+                                            MouseArea {
+                                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                                onClicked: root.selectedLevel = lvl
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Map Seed Rerolling
+                            Column {
+                                width: parent.width
+                                spacing: 4
+                                Text { text: "Geographic Territory Map Seed:"; font.pixelSize: 11; font.bold: true; color: root.themeSubtext }
+                                Row {
+                                    width: parent.width
+                                    spacing: 8
+
+                                    Rectangle {
+                                        width: parent.width - 140
+                                        height: 32
+                                        radius: 6
+                                        color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 6
+                                            Text { text: "🗺️ Territory Seed:"; font.pixelSize: 11; color: root.themeSubtext }
+                                            Text { text: "#" + root.currentSeed; font.pixelSize: 12; font.bold: true; font.family: root.monoFontFamily; color: root.themeAccent }
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        width: 132
+                                        height: 32
+                                        radius: 6
+                                        color: root.themeCardBg; border.color: root.themeBorder; border.width: 1
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 4
+                                            Text { text: "🎲"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
+                                            Text { text: "Reroll Seed"; font.pixelSize: 11; font.bold: true; color: root.themeFg; anchors.verticalCenter: parent.verticalCenter }
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                root.currentSeed = Math.floor(Math.random() * 90000) + 1000;
+                                                cityEngine.generate_new_city(root.currentSeed);
+                                                viewport.resetView();
+                                                soundToast.show("🎲 Rerolled Territory: Seed #" + root.currentSeed);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Item { height: 4 }
+
+                            // Action Buttons
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 12
+
+                                Rectangle {
+                                    width: 120; height: 36; radius: 8
+                                    color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
+                                    Text { anchors.centerIn: parent; text: "⚡ Quick Play"; font.pixelSize: 12; color: root.themeFg }
+                                    MouseArea {
+                                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            cityEngine.start_new_city("OmarchyCity", 0, 42);
+                                            viewport.resetView();
+                                            root.showInaugurationModal = false;
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    width: 220; height: 36; radius: 8
+                                    color: root.themeAccent
+                                    Row {
                                         anchors.centerIn: parent
-                                        text: modelData.label
-                                        font.pixelSize: 10
-                                        font.bold: true
-                                        color: (newCityModal.selectedLevel === lvl) ? root.themeBtnFg : root.themeFg
+                                        spacing: 6
+                                        Text { text: "✂️"; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                        Text { text: "Inaugurate Metropolis"; font.pixelSize: 12; font.bold: true; color: root.themeBtnFg; anchors.verticalCenter: parent.verticalCenter }
                                     }
                                     MouseArea {
                                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                                        onClicked: newCityModal.selectedLevel = lvl
+                                        onClicked: {
+                                            var cname = (inaugCityNameInput.text.trim().length > 0) ? inaugCityNameInput.text.trim() : "OmarchyCity";
+                                            cityEngine.start_new_city(cname, root.selectedLevel, root.currentSeed);
+                                            viewport.resetView();
+                                            root.showInaugurationModal = false;
+                                            soundToast.show("🏛️ " + cname + " Inaugurated!");
+                                        }
                                     }
                                 }
                             }
                         }
                     }
 
-                    Item { height: 8 }
+                    // TAB 1: HISTORIC MAXIS SCENARIOS
+                    Item {
+                        id: tabScenarios
+                        width: parent.width
+                        height: parent.height - 130
+                        visible: root.selectedSetupTab === 1
+
+                        Column {
+                            anchors.fill: parent
+                            spacing: 8
+
+                            Text {
+                                text: "Select a historic Maxis crisis to test your emergency leadership, Mayor!"
+                                font.pixelSize: 11
+                                color: root.themeSubtext
+                            }
+
+                            Flickable {
+                                width: parent.width
+                                height: parent.height - 24
+                                contentHeight: scenarioGrid.implicitHeight
+                                clip: true
+                                boundsBehavior: Flickable.StopAtBounds
+
+                                Grid {
+                                    id: scenarioGrid
+                                    columns: 2
+                                    spacing: 8
+                                    width: parent.width
+
+                                    Repeater {
+                                        model: [
+                                            { id: "san_francisco", name: "San Francisco", year: "1906", icon: "🌊", desc: "Major Earthquake & Firestorm" },
+                                            { id: "tokyo", name: "Tokyo", year: "1961", icon: "💥", desc: "Monster Attack & Coastal Devastation" },
+                                            { id: "dullsville", name: "Dullsville", year: "1910", icon: "😴", desc: "Economic Stagnation & Apathy" },
+                                            { id: "bern", name: "Bern", year: "1965", icon: "🚦", desc: "Total Traffic Gridlock Congestion" },
+                                            { id: "detroit", name: "Detroit", year: "1972", icon: "🏭", desc: "Industrial Crime Wave & Civil Decay" },
+                                            { id: "hamburg", name: "Hamburg", year: "1944", icon: "☢️", desc: "Firebombing Reconstruction" },
+                                            { id: "boston", name: "Boston", year: "2010", icon: "💣", desc: "Nuclear Meltdown Crisis" },
+                                            { id: "rio", name: "Rio de Janeiro", year: "2047", icon: "🌊", desc: "Coastal Sea-Level Flooding" }
+                                        ]
+
+                                        Rectangle {
+                                            width: (scenarioGrid.width - 8) / 2
+                                            height: 54
+                                            radius: 8
+                                            color: scenMouse.containsMouse ? Qt.rgba(Qt.color(root.themeAccent).r, Qt.color(root.themeAccent).g, Qt.color(root.themeAccent).b, 0.2) : root.themeBoardBg
+                                            border.color: scenMouse.containsMouse ? root.themeAccent : root.themeBorder
+                                            border.width: 1
+
+                                            Row {
+                                                anchors.fill: parent
+                                                anchors.margins: 8
+                                                spacing: 8
+
+                                                Text {
+                                                    text: modelData.icon
+                                                    font.pixelSize: 22
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+
+                                                Column {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: parent.width - 40
+                                                    spacing: 2
+
+                                                    Row {
+                                                        spacing: 4
+                                                        Text {
+                                                            text: modelData.name
+                                                            font.pixelSize: 11
+                                                            font.bold: true
+                                                            color: root.themeFg
+                                                        }
+                                                        Text {
+                                                            text: "(" + modelData.year + ")"
+                                                            font.pixelSize: 10
+                                                            color: root.themeAccent
+                                                        }
+                                                    }
+                                                    Text {
+                                                        text: modelData.desc
+                                                        font.pixelSize: 9
+                                                        color: root.themeSubtext
+                                                        elide: Text.ElideRight
+                                                        width: parent.width
+                                                    }
+                                                }
+                                            }
+
+                                            MouseArea {
+                                                id: scenMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: {
+                                                    cityEngine.load_scenario(modelData.id);
+                                                    viewport.resetView();
+                                                    root.showInaugurationModal = false;
+                                                    soundToast.show("📜 Loaded " + modelData.name + " (" + modelData.year + ")");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // TAB 2: DR. WRIGHT'S BRIEFING
+                    Item {
+                        id: tabBriefing
+                        width: parent.width
+                        height: parent.height - 130
+                        visible: root.selectedSetupTab === 2
+
+                        Flickable {
+                            anchors.fill: parent
+                            contentHeight: briefingCol.implicitHeight
+                            clip: true
+                            boundsBehavior: Flickable.StopAtBounds
+
+                            Column {
+                                id: briefingCol
+                                width: parent.width
+                                spacing: 10
+
+                                Row {
+                                    spacing: 12
+                                    width: parent.width
+                                    Image {
+                                        source: "assets/dr_wright.svg"
+                                        width: 54
+                                        height: 54
+                                        smooth: true
+                                    }
+                                    Rectangle {
+                                        width: parent.width - 66
+                                        height: 54
+                                        radius: 8
+                                        color: root.themeBoardBg
+                                        border.color: root.themeBorder
+                                        border.width: 1
+                                        Text {
+                                            anchors.fill: parent
+                                            anchors.margins: 8
+                                            wrapMode: Text.Wrap
+                                            text: "\"Listen closely, Mayor! A thriving city requires foresight, zone balance, and steady municipal power. Here are my top principles for governing OmarchyCity:\""
+                                            font.pixelSize: 11
+                                            font.italic: true
+                                            color: root.themeFg
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    width: parent.width
+                                    height: briefingGrid.implicitHeight + 16
+                                    radius: 8
+                                    color: root.themeBoardBg
+                                    border.color: root.themeBorder
+                                    border.width: 1
+
+                                    Column {
+                                        id: briefingGrid
+                                        anchors.fill: parent
+                                        anchors.margins: 8
+                                        spacing: 8
+
+                                        Text {
+                                            width: parent.width
+                                            wrapMode: Text.Wrap
+                                            text: "1. ⚡ Power Grids: Zones require continuous power to develop. Build Coal or Nuclear plants and connect wires. Unpowered buildings flash ⚡."
+                                            font.pixelSize: 11; color: root.themeFg
+                                        }
+                                        Text {
+                                            width: parent.width
+                                            wrapMode: Text.Wrap
+                                            text: "2. 🚗 Transportation: Every zone needs road access to connect workers to jobs. Connect roads into networks to avoid traffic bottlenecks."
+                                            font.pixelSize: 11; color: root.themeFg
+                                        }
+                                        Text {
+                                            width: parent.width
+                                            wrapMode: Text.Wrap
+                                            text: "3. ⚖️ Zone Balance: Keep R, C, and I balanced. Residential houses citizens, Commercial provides commerce, and Industrial creates goods."
+                                            font.pixelSize: 11; color: root.themeFg
+                                        }
+                                        Text {
+                                            width: parent.width
+                                            wrapMode: Text.Wrap
+                                            text: "4. 🛡️ Municipal Services: Police stations curb crime, and Fire stations protect against blazes. Keep dirty Industry away from leafy homes!"
+                                            font.pixelSize: 11; color: root.themeFg
+                                        }
+                                        Text {
+                                            width: parent.width
+                                            wrapMode: Text.Wrap
+                                            text: "5. 💰 Treasury & Taxes: Taxes are collected every December. Keep taxes around 6-8% to encourage steady population influx."
+                                            font.pixelSize: 11; color: root.themeFg
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: 160; height: 34; radius: 8
+                                    color: root.themeAccent
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "🏛️ Ready to Govern"
+                                        font.pixelSize: 12
+                                        font.bold: true
+                                        color: root.themeBtnFg
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.selectedSetupTab = 0
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // DR. WRIGHT ADVISOR CONSULTATION MODAL
+        // =====================================================================
+        Rectangle {
+            id: advisorModal
+            anchors.fill: parent
+            color: Qt.rgba(0, 0, 0, 0.75)
+            visible: root.showAdvisorModal
+            z: 92
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: root.showAdvisorModal = false
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: Math.min(500, parent.width - 32)
+                height: 380
+                radius: 12
+                color: root.themeCardBg
+                border.color: root.themeBorder
+                border.width: 1
+                clip: true
+
+                MouseArea { anchors.fill: parent; onClicked: {} } // Block click inside dialog
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 18
+                    spacing: 12
+
+                    // Advisor Header
+                    Row {
+                        width: parent.width
+                        spacing: 12
+
+                        Image {
+                            source: "assets/dr_wright.svg"
+                            width: 52
+                            height: 52
+                            smooth: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 2
+                            width: parent.width - 96
+
+                            Text {
+                                text: "Dr. Wright"
+                                font.pixelSize: 18
+                                font.bold: true
+                                color: root.themeAccent
+                            }
+                            Text {
+                                text: "Senior Municipal Advisor & City Planner"
+                                font.pixelSize: 11
+                                color: root.themeSubtext
+                            }
+                        }
+
+                        Rectangle {
+                            width: 28; height: 28; radius: 14
+                            color: advCloseMouse.containsMouse ? root.themeBorder : "transparent"
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✕"
+                                font.pixelSize: 12
+                                color: root.themeSubtext
+                            }
+                            MouseArea {
+                                id: advCloseMouse
+                                anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                onClicked: root.showAdvisorModal = false
+                            }
+                        }
+                    }
+
+                    Rectangle { width: parent.width; height: 1; color: root.themeBorder }
+
+                    // Advisor Dynamic Speech Box
+                    Rectangle {
+                        width: parent.width
+                        height: 90
+                        radius: 8
+                        color: root.themeBoardBg
+                        border.color: root.themeBorder
+                        border.width: 1
+
+                        Text {
+                            anchors.fill: parent
+                            anchors.margins: 12
+                            wrapMode: Text.Wrap
+                            font.pixelSize: 12
+                            lineHeight: 1.3
+                            color: root.themeFg
+                            text: {
+                                if (!cityEngine) return "Welcome to OmarchyCity, your Honor!";
+                                if (cityEngine.population === 0) return "Our territory is untouched virgin wilderness! Begin by constructing a power plant, zoning residential, commercial, and industrial plots, and connecting them with roads!";
+                                if (cityEngine.funds < 1500) return "Warning, Mayor! Our city treasury is running critically low ($" + cityEngine.funds.toLocaleString() + "). Consider adjusting taxes or holding off on large infrastructure!";
+                                if (cityEngine.demandRes > 0.4) return "Citizens are flocking to our borders! Demand for Residential housing is soaring—zone more residential neighborhoods immediately!";
+                                if (cityEngine.demandCom > 0.4) return "Commercial enterprise is booming! Local businesses need more Commercial zoning near active thoroughfares!";
+                                if (cityEngine.demandInd > 0.4) return "Factory owners and manufacturers are requesting land! Expand Industrial zoning near railway corridors.";
+                                return cityEngine.advisorMessage || "OmarchyCity is running smoothly, Mayor! Keep maintaining power networks and monitoring zone demands!";
+                            }
+                        }
+                    }
+
+                    // Municipal Status 4-Card Grid
+                    Grid {
+                        width: parent.width
+                        columns: 2
+                        spacing: 8
+
+                        // Approval Rating
+                        Rectangle {
+                            width: (parent.width - 8) / 2
+                            height: 48
+                            radius: 6
+                            color: root.themeBoardBg
+                            border.color: root.themeBorder
+                            border.width: 1
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                Text { text: "Public Approval"; font.pixelSize: 10; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
+                                Text {
+                                    text: (cityEngine ? cityEngine.approvalRating : 75) + "%"
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                    color: "#22c55e"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                            }
+                        }
+
+                        // Population
+                        Rectangle {
+                            width: (parent.width - 8) / 2
+                            height: 48
+                            radius: 6
+                            color: root.themeBoardBg
+                            border.color: root.themeBorder
+                            border.width: 1
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                Text { text: "City Population"; font.pixelSize: 10; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
+                                Text {
+                                    text: (cityEngine ? cityEngine.population.toLocaleString() : "0") + " citizens"
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                    color: root.themeAccent
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                            }
+                        }
+
+                        // Treasury
+                        Rectangle {
+                            width: (parent.width - 8) / 2
+                            height: 48
+                            radius: 6
+                            color: root.themeBoardBg
+                            border.color: root.themeBorder
+                            border.width: 1
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                Text { text: "City Treasury"; font.pixelSize: 10; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
+                                Text {
+                                    text: "$" + (cityEngine ? cityEngine.funds.toLocaleString() : "20,000")
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                    color: "#eab308"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                            }
+                        }
+
+                        // Tax Rate
+                        Rectangle {
+                            width: (parent.width - 8) / 2
+                            height: 48
+                            radius: 6
+                            color: root.themeBoardBg
+                            border.color: root.themeBorder
+                            border.width: 1
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                Text { text: "Annual Tax Rate"; font.pixelSize: 10; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
+                                Text {
+                                    text: (cityEngine ? cityEngine.taxRate : 7) + "%"
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                    color: root.themeFg
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                            }
+                        }
+                    }
+
+                    Item { height: 4 }
 
                     // Action Buttons
                     Row {
@@ -832,32 +1584,29 @@ Window {
                         spacing: 12
 
                         Rectangle {
-                            width: 100; height: 32; radius: 6
+                            width: 140; height: 32; radius: 6
                             color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
-                            Text { anchors.centerIn: parent; text: "Cancel"; font.pixelSize: 12; color: root.themeFg }
+                            Text { anchors.centerIn: parent; text: "🏛️ Setup / Scenarios"; font.pixelSize: 11; color: root.themeFg }
                             MouseArea {
                                 anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                                onClicked: root.showNewCityDialog = false
+                                onClicked: {
+                                    root.showAdvisorModal = false;
+                                    root.showInaugurationModal = true;
+                                }
                             }
                         }
 
                         Rectangle {
-                            width: 120; height: 32; radius: 6
+                            width: 130; height: 32; radius: 6
                             color: root.themeAccent
-                            Text { anchors.centerIn: parent; text: "Start City"; font.pixelSize: 12; font.bold: true; color: root.themeBtnFg }
+                            Text { anchors.centerIn: parent; text: "Dismiss Advisor"; font.pixelSize: 11; font.bold: true; color: root.themeBtnFg }
                             MouseArea {
                                 anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    var seed = Math.floor(Math.random() * 10000);
-                                    cityEngine.start_new_city(cityNameInput.text, newCityModal.selectedLevel, seed);
-                                    viewport.resetView();
-                                    root.showNewCityDialog = false;
-                                }
+                                onClicked: root.showAdvisorModal = false
                             }
                         }
                     }
                 }
-                property int selectedLevel: 0
             }
         }
 
@@ -893,7 +1642,7 @@ Window {
                     Row {
                         width: parent.width
                         Text {
-                            text: "ByteCity • Mayor's Handbook"
+                            text: "OmarchyCity • Mayor's Handbook"
                             font.pixelSize: 16
                             font.bold: true
                             color: root.themeAccent

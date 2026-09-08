@@ -52,8 +52,8 @@ class ByteCityEngine(QObject):
         self._power_data = None
         self._bind_memory_buffers()
         self._speed = 1
-        self._city_name = "ByteCity"
-        self._current_message = "Welcome to ByteCity! Zone Residential, Commercial, and Industrial areas to begin."
+        self._city_name = "OmarchyCity"
+        self._current_message = "Welcome to OmarchyCity! Zone Residential, Commercial, and Industrial areas to begin."
         
         # Internal state cache
         self._funds = 20000
@@ -271,7 +271,7 @@ class ByteCityEngine(QObject):
     def start_new_city(self, name, level, seed):
         if not self._handle:
             return
-        self._city_name = name or "ByteCity"
+        self._city_name = name or "OmarchyCity"
         self._lib.bytecity_set_city_name(self._handle, self._city_name.encode("utf-8"))
         self._game_level = max(0, min(2, level))
         self._lib.bytecity_set_game_level(self._handle, self._game_level)

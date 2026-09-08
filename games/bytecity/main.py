@@ -130,10 +130,11 @@ def main():
 
     # Register 2D City Viewport
     qmlRegisterType(CityViewport, "ByteCity", 1, 0, "CityViewport")
+    qmlRegisterType(CityViewport, "OmarchyCity", 1, 0, "CityViewport")
 
     # Initialize Engine & Settings
     engine_obj = ByteCityEngine()
-    settings_mgr = SettingsManager("ByteCity")
+    settings_mgr = SettingsManager("OmarchyCity")
 
     qml_engine = QQmlApplicationEngine()
     qml_engine.rootContext().setContextProperty("cityEngine", engine_obj)

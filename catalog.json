@@ -398,15 +398,15 @@
     },
     {
       "id": "bytecity",
-      "title": "ByteCity",
+      "title": "OmarchyCity",
       "ref": "OA-015",
       "category": "Simulation & City",
       "floppy_color": "#0891B2",
       "grid_color": "#06B6D4",
       "version": "1.0.0",
       "status": "released",
-      "tagline": "Classic 1989 Micropolis City Simulation Homage",
-      "description": "Authentic 1989 Will Wright Micropolis C++ simulation engine in a responsive 2D arcade viewport. Manage RCI zoning, power grids, city budget, traffic, and municipal safety.",
+      "tagline": "Classic 1989 Metropolis Simulation Homage",
+      "description": "Authentic 1989 Will Wright Micropolis C++ simulation engine with Dr. Wright in a responsive 2D arcade viewport. Manage RCI zoning, power grids, city budget, traffic, and municipal safety.",
       "instructions": [
         "Zone Residential (Green), Commercial (Blue), and Industrial (Yellow) plots.",
         "Connect infrastructure with power plants, power lines, and roads.",
@@ -419,9 +419,9 @@
       "folder": "games/bytecity",
       "entrypoint": "games/bytecity/main.qml",
       "cover_image": "assets/covers/bytecity.png",
-      "size": "1.2 MB",
-      "size_bytes": 1274929,
-      "download_size": "1.2 MB"
+      "size": "1.1 MB",
+      "size_bytes": 1150128,
+      "download_size": "1.1 MB"
     },
     {
       "id": "galacticswarm",

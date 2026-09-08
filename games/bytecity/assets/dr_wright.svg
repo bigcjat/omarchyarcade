@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="hairGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ade80"/>
+      <stop offset="50%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </linearGradient>
+    <linearGradient id="skinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffedd5"/>
+      <stop offset="100%" stop-color="#fed7aa"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle Badge -->
+  <circle cx="60" cy="60" r="56" fill="url(#bgGrad)" stroke="#38bdf8" stroke-width="3"/>
+
+  <!-- Wild Green Hair Behind Head -->
+  <path d="M 22 55 C 15 35, 25 15, 60 14 C 95 15, 105 35, 98 55 C 108 50, 112 30, 95 10 C 65 2, 45 4, 25 10 C 8 30, 12 50, 22 55 Z" fill="url(#hairGrad)"/>
+  
+  <!-- Hair spikes left & right -->
+  <path d="M 16 42 Q 6 30 18 20 Q 14 32 24 38 Z" fill="#22c55e"/>
+  <path d="M 104 42 Q 114 30 102 20 Q 106 32 96 38 Z" fill="#16a34a"/>
+  <path d="M 35 15 Q 42 2 55 8 Q 45 10 38 18 Z" fill="#4ade80"/>
+  <path d="M 85 15 Q 78 2 65 8 Q 75 10 82 18 Z" fill="#4ade80"/>
+
+  <!-- Suit & Shoulders -->
+  <path d="M 24 112 C 28 88, 45 84, 60 84 C 75 84, 92 88, 96 112 Z" fill="#1e3a8a" stroke="#0f172a" stroke-width="2"/>
+  <!-- White Dress Shirt Collar -->
+  <polygon points="60,84 50,96 70,96" fill="#f8fafc"/>
+  <polygon points="50,84 60,94 44,90" fill="#e2e8f0"/>
+  <polygon points="70,84 60,94 76,90" fill="#e2e8f0"/>
+  <!-- Red Bowtie -->
+  <polygon points="52,91 42,86 42,98 52,93" fill="#ef4444"/>
+  <polygon points="68,91 78,86 78,98 68,93" fill="#ef4444"/>
+  <circle cx="60" cy="92" r="4" fill="#dc2626"/>
+
+  <!-- Head / Face -->
+  <ellipse cx="60" cy="58" rx="28" ry="30" fill="url(#skinGrad)" stroke="#f97316" stroke-width="0.5"/>
+  <!-- Ears -->
+  <circle cx="31" cy="58" r="6" fill="#fed7aa"/>
+  <circle cx="89" cy="58" r="6" fill="#fed7aa"/>
+
+  <!-- Front Hair Tuft (Wild Will Wright Part) -->
+  <path d="M 32 42 C 38 25, 60 22, 75 28 C 88 33, 90 42, 86 46 C 78 35, 65 32, 52 35 C 42 37, 36 44, 32 42 Z" fill="#4ade80"/>
+  <path d="M 46 32 C 55 20, 72 20, 80 26 C 70 24, 58 26, 46 32 Z" fill="#86efac"/>
+
+  <!-- Iconic Round Glasses -->
+  <!-- Left Lens -->
+  <circle cx="47" cy="55" r="11" fill="#e0f2fe" fill-opacity="0.8" stroke="#1e293b" stroke-width="3"/>
+  <circle cx="47" cy="55" r="11" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+  <!-- Right Lens -->
+  <circle cx="73" cy="55" r="11" fill="#e0f2fe" fill-opacity="0.8" stroke="#1e293b" stroke-width="3"/>
+  <circle cx="73" cy="55" r="11" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+  <!-- Glasses Bridge -->
+  <path d="M 58 55 Q 60 52 62 55" fill="none" stroke="#1e293b" stroke-width="3"/>
+  <!-- Glasses Arms -->
+  <line x1="36" y1="55" x2="31" y2="54" stroke="#1e293b" stroke-width="2.5"/>
+  <line x1="84" y1="55" x2="89" y2="54" stroke="#1e293b" stroke-width="2.5"/>
+
+  <!-- Eyes behind glasses -->
+  <ellipse cx="48" cy="55" rx="3.5" ry="4" fill="#0f172a"/>
+  <circle cx="49" cy="53.5" r="1.2" fill="#ffffff"/>
+  <ellipse cx="74" cy="55" rx="3.5" ry="4" fill="#0f172a"/>
+  <circle cx="75" cy="53.5" r="1.2" fill="#ffffff"/>
+
+  <!-- Eyebrows (Surprised / Enthusiastic) -->
+  <path d="M 38 43 Q 48 38 56 42" fill="none" stroke="#166534" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M 82 43 Q 72 38 64 42" fill="none" stroke="#166534" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Nose -->
+  <path d="M 60 56 Q 62 64 57 66 L 63 66" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Cheerful Smile -->
+  <path d="M 48 72 Q 60 81 72 72" fill="none" stroke="#991b1b" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M 52 73 Q 60 78 68 73" fill="#ffffff"/>
+
+  <!-- Rosy Cheeks -->
+  <ellipse cx="40" cy="65" rx="4" ry="2.5" fill="#f87171" fill-opacity="0.4"/>
+  <ellipse cx="80" cy="65" rx="4" ry="2.5" fill="#f87171" fill-opacity="0.4"/>
+</svg>

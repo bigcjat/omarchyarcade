@@ -1,8 +1,8 @@
-# ByteCity • Omarchy Arcade
+# OmarchyCity • Omarchy Arcade
 
-An authentic, legally safe, uncompromised city builder for the Omarchy Linux desktop arcade suite, powered by Will Wright's open-source 1989 **Micropolis (GPLv3)** C++ simulation core paired with a responsive **2D top-down arcade viewport** adhering to the Omarchy Arcade template design.
+An authentic, legally safe, uncompromised city builder for the Omarchy Linux desktop arcade suite, powered by Will Wright's open-source 1989 **Micropolis (GPLv3)** C++ simulation core and guided by **Dr. Wright**, paired with a responsive **2D top-down arcade viewport** adhering to the Omarchy Arcade template design.
 
-![ByteCity Gameplay](screenshot.png)
+![OmarchyCity Gameplay](screenshot.png)
 
 ---
 
