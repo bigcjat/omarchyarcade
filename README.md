@@ -117,35 +117,35 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 
 | Game | Category | Install Size | Highlight | Documentation |
 | :--- | :--- | :--- | :--- | :--- |
-| **2048** | Blocks & Merging | **590 KB** | Harmonic pentatonic pitch chimes & smooth tile slides. | [Manual](games/2048/README.md) |
-| **TetraBlocks** | Blocks & Merging | **402 KB** | Guideline falling block puzzle with SRS kicks & ghost piece. | [Manual](games/tetrablocks/README.md) |
-| **ByteSnake** | Puzzles & Logic | **323 KB** | Sub-frame input buffering and progressive speed ramping. | [Manual](games/bytesnake/README.md) |
-| **VectorPong** | Tabletop & Board | **310 KB** | Ball spin slicing and adaptive AI paddle physics. | [Manual](games/vectorpong/README.md) |
-| **CyberSweeper** | Puzzles & Logic | **360 KB** | Deduction puzzle with guaranteed safe first click. | [Manual](games/cybersweeper/README.md) |
-| **DropFour** | Tabletop & Board | **327 KB** | Tactile 4-in-a-row with heuristic lookahead AI. | [Manual](games/dropfour/README.md) |
-| **BrickBash** | Action Arcade | **347 KB** | High-energy breakout with segmented paddle deflections. | [Manual](games/brickbash/README.md) |
-| **VoidInvaders** | Action Arcade | **426 KB** | Descending alien armadas with destructible bunkers. | [Manual](games/voidinvaders/README.md) |
-| **CyberFlap** | Action Arcade | **345 KB** | Airborne reflex runner with dynamic pitch aerodynamics. | [Manual](games/cyberflap/README.md) |
-| **DinoRunner** | Action Arcade | **489 KB** | Endless prehistoric runner with day/night lighting. | [Manual](games/dinorunner/README.md) |
-| **VectorDrift** | Action Arcade | **562 KB** | Vector wireframe space combat with Newtonian momentum. | [Manual](games/vectordrift/README.md) |
-| **CyberHop** | Action Arcade | **510 KB** | Traffic and river hazard navigation with grid-snapped leaps. | [Manual](games/cyberhop/README.md) |
-| **ByteMan** | Action Arcade | **598 KB** | Classic 28×31 maze with 4 pursuit ghost algorithms. | [Manual](games/byteman/README.md) |
-| **WordGuess** | Word & Deduction | **388 KB** | 5-letter deduction word puzzle with 3D tile flips. | [Manual](games/wordguess/README.md) |
-| **CratePusher** | Puzzles & Logic | **462 KB** | Warehouse crate-pushing with verified solvable levels. | [Manual](games/cratepusher/README.md) |
-| **OrbPop** | Action Arcade | **651 KB** | Hexagonal bubble shooter with laser ricochet guide. | [Manual](games/orbpop/README.md) |
-| **GemSwap** | Puzzles & Logic | **678 KB** | Match-3 cascades with Flame, Star, and Hyper power gems. | [Manual](games/gemswap/README.md) |
-| **GalacticSwarm** | Action Arcade | **1.4 MB** | Alien flight waves with Boss Galaga tractor beam rescue. | [Manual](games/galacticswarm/README.md) |
-| **ByteCity** | Simulation | **5.0 MB** | 2.5D isometric city builder powered by the genuine Micropolis C++ core. | [Manual](games/bytecity/README.md) |
-| **KeiRacer** | Action Arcade | **1.3 MB** | Pseudo-3D highway racer starring the Slow Car Racing League with authentic multi-car drivetrain physics. | [Manual](games/keiracer/README.md) |
-| **Blackjack 21** | Cards & Casino | **750 KB** | Authentic casino 21 with custom vector decks, probability engine, and dealer AI. | [Manual](games/blackjack/README.md) |
-| **Chess** | Board Strategy & Chess | **676 KB** | Calibrated multi-tier AI (Novice to Expert) with glowing vector pieces. | [Manual](games/chess/README.md) |
-| **Checkers** | Board Strategy & Checkers | **610 KB** | Multi-tier AI with mandatory jump chains and king coronation. | [Manual](games/checkers/README.md) |
-| **Solitaire** | Cards & Casino | **710 KB** | Klondike with 3D card flips, vector decks, Draw 1/3, and auto-foundation. | [Manual](games/solitaire/README.md) |
-| **Video Poker** | Cards & Casino | **824 KB** | 8-Game Casino Video Terminal with Dual-Era CRT switcher and Double-Up gamble. | [Manual](games/videopoker/README.md) |
-| **Backgammon** | Tabletop & Board | **442 KB** | Tactile classic board strategy with doubling cube, multiple themes, and lookahead AI. | [Manual](games/backgammon/README.md) |
-| **Reversi** | Tabletop & Board | **513 KB** | Timeless 8×8 disc-flipping strategy with valid move projections and multi-tier AI. | [Manual](games/reversi/README.md) |
-| **Bīdama** | Casual Aim & Physics | **620 KB** | Japanese tatami marbles tribute to Lose Your Marbles with urushi pitch line and dual gravity collapse. | [Manual](games/bidama/README.md) |
-| **OmarchyBolo II** | Action Arcade | **1.1 MB** | Classic tactical armored tank warfare inspired by Stuart Cheshire's Bolo with P2P WebRTC. | [Manual](games/omarchybolo/README.md) |
+| **2048** | Blocks & Merging | **455 KB** | Harmonic pentatonic pitch chimes & smooth tile slides. | [Manual](games/2048/README.md) |
+| **TetraBlocks** | Blocks & Merging | **287 KB** | Guideline falling block puzzle with SRS kicks & ghost piece. | [Manual](games/tetrablocks/README.md) |
+| **ByteSnake** | Puzzles & Logic | **203 KB** | Sub-frame input buffering and progressive speed ramping. | [Manual](games/bytesnake/README.md) |
+| **VectorPong** | Tabletop & Board | **209 KB** | Ball spin slicing and adaptive AI paddle physics. | [Manual](games/vectorpong/README.md) |
+| **CyberSweeper** | Puzzles & Logic | **250 KB** | Deduction puzzle with guaranteed safe first click. | [Manual](games/cybersweeper/README.md) |
+| **DropFour** | Tabletop & Board | **220 KB** | Tactile 4-in-a-row with heuristic lookahead AI. | [Manual](games/dropfour/README.md) |
+| **BrickBash** | Action Arcade | **238 KB** | High-energy breakout with segmented paddle deflections. | [Manual](games/brickbash/README.md) |
+| **VoidInvaders** | Action Arcade | **304 KB** | Descending alien armadas with destructible bunkers. | [Manual](games/voidinvaders/README.md) |
+| **CyberFlap** | Action Arcade | **224 KB** | Airborne reflex runner with dynamic pitch aerodynamics. | [Manual](games/cyberflap/README.md) |
+| **DinoRunner** | Action Arcade | **380 KB** | Endless prehistoric runner with day/night lighting. | [Manual](games/dinorunner/README.md) |
+| **VectorDrift** | Action Arcade | **457 KB** | Vector wireframe space combat with Newtonian momentum. | [Manual](games/vectordrift/README.md) |
+| **CyberHop** | Action Arcade | **393 KB** | Traffic and river hazard navigation with grid-snapped leaps. | [Manual](games/cyberhop/README.md) |
+| **ByteMan** | Action Arcade | **488 KB** | Classic 28×31 maze with 4 pursuit ghost algorithms. | [Manual](games/byteman/README.md) |
+| **WordGuess** | Word & Deduction | **291 KB** | 5-letter deduction word puzzle with 3D tile flips. | [Manual](games/wordguess/README.md) |
+| **CratePusher** | Puzzles & Logic | **363 KB** | Warehouse crate-pushing with verified solvable levels. | [Manual](games/cratepusher/README.md) |
+| **OrbPop** | Action Arcade | **522 KB** | Hexagonal bubble shooter with laser ricochet guide. | [Manual](games/orbpop/README.md) |
+| **GemSwap** | Puzzles & Logic | **561 KB** | Match-3 cascades with Flame, Star, and Hyper power gems. | [Manual](games/gemswap/README.md) |
+| **GalacticSwarm** | Action Arcade | **1.3 MB** | Alien flight waves with Boss Galaga tractor beam rescue. | [Manual](games/galacticswarm/README.md) |
+| **ByteCity** | Simulation | **4.9 MB** | 2.5D isometric city builder powered by the genuine Micropolis C++ core. | [Manual](games/bytecity/README.md) |
+| **KeiRacer** | Action Arcade | **1.2 MB** | Pseudo-3D highway racer starring the Slow Car Racing League with authentic multi-car drivetrain physics. | [Manual](games/keiracer/README.md) |
+| **Blackjack 21** | Cards & Casino | **659 KB** | Authentic casino 21 with custom vector decks, probability engine, and dealer AI. | [Manual](games/blackjack/README.md) |
+| **Chess** | Board Strategy & Chess | **588 KB** | Calibrated multi-tier AI (Novice to Expert) with glowing vector pieces. | [Manual](games/chess/README.md) |
+| **Checkers** | Board Strategy & Checkers | **511 KB** | Multi-tier AI with mandatory jump chains and king coronation. | [Manual](games/checkers/README.md) |
+| **Solitaire** | Cards & Casino | **602 KB** | Klondike with 3D card flips, vector decks, Draw 1/3, and auto-foundation. | [Manual](games/solitaire/README.md) |
+| **Video Poker** | Cards & Casino | **721 KB** | 8-Game Casino Video Terminal with Dual-Era CRT switcher and Double-Up gamble. | [Manual](games/videopoker/README.md) |
+| **Backgammon** | Tabletop & Board | **355 KB** | Tactile classic board strategy with doubling cube, multiple themes, and lookahead AI. | [Manual](games/backgammon/README.md) |
+| **Reversi** | Tabletop & Board | **427 KB** | Timeless 8×8 disc-flipping strategy with valid move projections and multi-tier AI. | [Manual](games/reversi/README.md) |
+| **Bīdama** | Casual Aim & Physics | **492 KB** | Japanese tatami marbles tribute to Lose Your Marbles with urushi pitch line and dual gravity collapse. | [Manual](games/bidama/README.md) |
+| **OmarchyBolo II** | Action Arcade | **1.0 MB** | Classic tactical armored tank warfare inspired by Stuart Cheshire's Bolo with P2P WebRTC. | [Manual](games/omarchybolo/README.md) |
 
 ---
 

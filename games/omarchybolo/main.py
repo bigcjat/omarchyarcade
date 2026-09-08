@@ -31,12 +31,32 @@ DISK_ICON = ASSETS_DIR / "disk_icon.png"
 
 APP_TITLE = "OmarchyBolo II"
 APP_REF = "OA-029"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 
 class QuietHandler(SimpleHTTPRequestHandler):
-    """Quiet handler that serves files from DIST_DIR with no console spam."""
+    """Quiet handler that serves files from DIST_DIR with explicit CORS and MIME types."""
+    extensions_map = {
+        **SimpleHTTPRequestHandler.extensions_map,
+        ".css": "text/css; charset=utf-8",
+        ".js": "text/javascript; charset=utf-8",
+        ".mjs": "text/javascript; charset=utf-8",
+        ".html": "text/html; charset=utf-8",
+        ".json": "application/json",
+        ".png": "image/png",
+        ".svg": "image/svg+xml",
+        ".woff2": "font/woff2",
+        ".wasm": "application/wasm",
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(DIST_DIR), **kwargs)
+
+    def end_headers(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        super().end_headers()
 
     def log_message(self, format, *args):
         # Suppress standard HTTP request logging
