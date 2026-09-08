@@ -303,6 +303,14 @@ Item {
                                 }
                                 return "../" + activeGame.folder + "/screenshot.png";
                             }
+                            onStatusChanged: {
+                                if (status === AnimatedImage.Error && source.toString().indexOf("http") === 0) {
+                                    if (typeof arcadeBackend !== "undefined" && arcadeBackend.getFallbackScreenshotUrl) {
+                                        var fb = arcadeBackend.getFallbackScreenshotUrl(activeGame ? activeGame.folder : "");
+                                        if (fb) source = fb;
+                                    }
+                                }
+                            }
 
                             // Vignette / Scanline shader effect
                             Rectangle {

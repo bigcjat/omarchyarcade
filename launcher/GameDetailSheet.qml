@@ -448,6 +448,14 @@ Rectangle {
                                         }
                                         return gameData ? ("../" + gameData.folder + "/screenshot.png") : "";
                                     }
+                                    onStatusChanged: {
+                                        if (status === AnimatedImage.Error && source.toString().indexOf("http") === 0) {
+                                            if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getFallbackScreenshotUrl) {
+                                                var fb = arcadeBackend.getFallbackScreenshotUrl(gameData ? gameData.folder : "");
+                                                if (fb) source = fb;
+                                            }
+                                        }
+                                    }
 
                                     Rectangle {
                                         anchors.fill: parent
