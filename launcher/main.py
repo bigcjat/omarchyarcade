@@ -139,6 +139,9 @@ class ArcadeBackend(QObject):
     @Slot(str, str, result=bool)
     def hasGameUpdate(self, game_id: str, catalog_version: str) -> bool:
         """Checks if an installed game has an update available compared to catalog.json."""
+        # Only skip update checking if running directly inside a development git clone
+        if (BASE_DIR / ".git").is_dir():
+            return False
         if not game_id or not catalog_version:
             return False
         game_dir = GAMES_DIR / game_id
