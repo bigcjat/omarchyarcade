@@ -181,8 +181,6 @@ function findPitchMatches(grid) {
         var p = (c < COLS) ? pitchRow[c] : null;
         var pType = p ? p.type : null;
 
-        if (pType === "basalt") pType = null;
-
         if (pType && pType === runType) {
             runLen++;
         } else {
@@ -196,6 +194,22 @@ function findPitchMatches(grid) {
             runStart = c;
             runType = pType;
             runLen = 1;
+        }
+    }
+
+    // Basalt obstacle clearing: when a match occurs on the pitch line,
+    // adjacent basalt stones on the pitch line are shattered and cleared as well
+    if (matches.length > 0) {
+        for (var c = 0; c < COLS; c++) {
+            var p = pitchRow[c];
+            if (p && p.type === "basalt" && matches.indexOf(c) === -1) {
+                for (var m = 0; m < matches.length; m++) {
+                    if (Math.abs(matches[m] - c) === 1) {
+                        matches.push(c);
+                        break;
+                    }
+                }
+            }
         }
     }
 
