@@ -76,39 +76,46 @@ COLOR_TREES_DARK = COLOR_DECID_DEEP
 COLOR_RUBBLE = QColor("#404040")
 COLOR_FIRE = QColor("#e63946")
 
-# Roads & Bridges
-COLOR_ROAD = QColor("#2b2f3a")
-COLOR_ROAD_CURB = QColor("#1b1e26")
-COLOR_ROAD_LANE = QColor("#f4a261")
-COLOR_ROAD_STOP = QColor("#ffffff")
-COLOR_BRIDGE_CONCRETE = QColor("#546e7a")
-COLOR_BRIDGE_BARRIER = QColor("#cfd8dc")
+# Roads & Bridges (Studio Ghibli Softened Pavement)
+COLOR_ROAD = QColor("#464d52")            # Soft warm weathered slate asphalt
+COLOR_ROAD_CURB = QColor("#383f43")       # Muted earthy stone curb border
+COLOR_ROAD_LANE = QColor(238, 216, 142, 210) # Soft warm cream-gold dashed lane
+COLOR_ROAD_STOP = QColor(242, 238, 226, 210) # Soft chalk off-white crosswalk
+COLOR_BRIDGE_CONCRETE = QColor("#5c666c") # Weathered river bridge pier
+COLOR_BRIDGE_BARRIER = QColor("#b8c2c6")  # Soft stone / zinc railing
 
-# Railroads & Crossings
-COLOR_RAIL_BALLAST = QColor("#3e3733")
-COLOR_RAIL_TIE = QColor("#5d4037")
-COLOR_RAIL_STEEL = QColor("#cfd8dc")
-COLOR_RAIL_STEEL_DARK = QColor("#37474f")
-COLOR_RAIL_CROSS_WOOD = QColor("#795548")
+# Railroads & Crossings (Rural Countryside Rail)
+COLOR_RAIL_BALLAST = QColor("#544e45")    # Soft gravel ballast & river pebbles
+COLOR_RAIL_TIE = QColor("#6b5442")        # Weathered dark cedar sleepers
+COLOR_RAIL_STEEL = QColor("#95a1a7")      # Burnished iron rail head highlight
+COLOR_RAIL_STEEL_DARK = QColor("#4a5358") # Shaded iron base
+COLOR_RAIL_CROSS_WOOD = QColor("#7a614e") # Rustic timber crossing planks
 
-# Powerlines
-COLOR_WIRE_POLE = QColor("#8d6e63")
-COLOR_WIRE_ARM = QColor("#5d4037")
-COLOR_WIRE_INSULATOR = QColor("#e0e1dd")
-COLOR_WIRE_CABLE = QColor("#1a1a1a")
-COLOR_WIRE_PYLON = QColor("#78909c")
+# Powerlines (Delicate Japanese Showa Wire Network)
+COLOR_WIRE_POLE = QColor("#7b614e")       # Natural aged cedar wood pole
+COLOR_WIRE_ARM = QColor("#594334")        # Timber crossarm
+COLOR_WIRE_INSULATOR = QColor("#eae2d4")  # Glazed ceramic insulator
+COLOR_WIRE_CABLE = QColor(58, 68, 74, 185)# Soft semi-transparent slate charcoal wire
+COLOR_WIRE_PYLON = QColor("#66747c")      # Weathered steel transmission lattice
 
-# Traffic & Vehicles
+# Traffic & Vehicles (Vintage Showa / Ghibli Palette)
 CAR_PALETTE = [
-    QColor("#e63946"), QColor("#ffb703"), QColor("#219ebc"),
-    QColor("#f8f9fa"), QColor("#8338ec"), QColor("#fb8500")
+    QColor("#c55342"),  # Warm terracotta red
+    QColor("#e5b342"),  # Soft mustard yellow
+    QColor("#5c8a74"),  # Celadon / sage green
+    QColor("#588b9e"),  # Nostalgic sky blue
+    QColor("#f5f2e8"),  # Warm cream / linen white
+    QColor("#3d566e"),  # Deep indigo slate
+    QColor("#d47a5b"),  # Warm persimmon orange
+    QColor("#7b6a82"),  # Dusty wisteria purple
 ]
 
-# Trolley / Streetcar
-COLOR_TROLLEY_BODY = QColor("#c1121f")
-COLOR_TROLLEY_CREAM = QColor("#fefae0")
-COLOR_TROLLEY_WINDOW = QColor("#1d3557")
-COLOR_TROLLEY_LIGHT = QColor("#ffea00")
+# Trolley / Streetcar (Vintage Japanese Nostalgic Tram)
+COLOR_TROLLEY_BODY = QColor("#852932")    # Rich lacquer burgundy
+COLOR_TROLLEY_CREAM = QColor("#fbf6e8")   # Warm ivory cream roof & stripe
+COLOR_TROLLEY_WINDOW = QColor("#283b48")  # Soft slate-tinted glass
+COLOR_TROLLEY_LIGHT = QColor(255, 230, 130, 90) # Warm golden lantern glow
+
 
 # Zones & Buildings
 COLOR_RES_BASE = QColor("#2a9d8f")
@@ -1389,7 +1396,7 @@ class CityViewport(QQuickPaintedItem):
         painter.drawRoundedRect(QRectF(cx - w / 2.0, cy - h / 2.0, w, h), 1.0, 1.0)
 
         # Windshield
-        painter.setBrush(QColor("#11111b"))
+        painter.setBrush(QColor("#24333e"))
         if dx != 0:
             # Horizontal car windshield
             fx = cx + (w * 0.15 if dx > 0 else -w * 0.15)
@@ -1401,7 +1408,8 @@ class CityViewport(QQuickPaintedItem):
 
         # Tiny warm headlights if zoomed in
         if ts >= 18:
-            painter.setBrush(QColor("#fff3b0"))
+            painter.setBrush(QColor("#fff5cc"))
+
             if dx > 0:
                 painter.drawRect(QRectF(cx + w / 2.0 - 1, cy - h * 0.4, 1.5, 1.5))
                 painter.drawRect(QRectF(cx + w / 2.0 - 1, cy + h * 0.4 - 1.5, 1.5, 1.5))
@@ -2100,19 +2108,20 @@ class CityViewport(QQuickPaintedItem):
         light_path.closeSubpath()
 
         light_grad = QLinearGradient(trolley_len * 0.5, 0, trolley_len * 0.5 + light_len, 0)
-        light_grad.setColorAt(0.0, QColor(255, 234, 0, 110))
-        light_grad.setColorAt(1.0, QColor(255, 234, 0, 0))
+        light_grad.setColorAt(0.0, QColor(255, 230, 130, 85))
+        light_grad.setColorAt(1.0, QColor(255, 230, 130, 0))
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(light_grad))
         painter.drawPath(light_path)
 
         # 2. Trolley Red Body (Classic Streetcar)
         painter.setBrush(COLOR_TROLLEY_BODY)
-        painter.setPen(QPen(QColor("#780000"), max(0.8, ts * 0.04)))
+        painter.setPen(QPen(QColor("#611820"), max(0.8, ts * 0.04)))
         painter.drawRoundedRect(
             QRectF(-trolley_len * 0.5, -trolley_wid * 0.5, trolley_len, trolley_wid),
             trolley_wid * 0.3, trolley_wid * 0.3
         )
+
 
         # 3. Cream Accent Stripe & Roof
         painter.setPen(Qt.NoPen)
