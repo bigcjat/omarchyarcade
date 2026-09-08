@@ -234,5 +234,23 @@ Clean line art, flat vector icon aesthetic, solid vibrant colors, sticker graphi
 * **Illustration:** Glowing retro video poker arcade cabinet displaying a Royal Flush hand on a cobalt-blue CRT screen with HELD stamps and arcade push buttons.
 * **Bottom Text:** `CARDS & CASINO • OA-025`
 
+### 26. `Backgammon` (Ref: `OA-026`)
+* **Category:** Board & Tabletop
+* **Floppy Color:** Classic Vintage Cream (`#E6DFD3`) with flat silver shutter
+* **Grid Color:** Cyan (`#06B6D4`)
+* **Illustration:** Dual point triangles with contrasting black and white checkers, pair of tumbling wooden dice, and a brass doubling cube on a polished mahogany board.
+* **Bottom Text:** `BOARD & TABLETOP • OA-026`
 
+### 27. `Reversi` (Ref: `OA-027`)
+* **Category:** Board & Tabletop
+* **Floppy Color:** Classic Vintage Cream (`#E6DFD3`) with flat silver shutter
+* **Grid Color:** Emerald Green (`#059669`)
+* **Illustration:** An 8×8 baize green game grid with circular black and white stones flipping in mid-air along glowing valid move crosshairs.
+* **Bottom Text:** `BOARD & TABLETOP • OA-027`
 
+### 28. `Bīdama` (Ref: `OA-028`)
+* **Category:** Casual Aim & Physics
+* **Floppy Color:** Vibrant Violet (`#7C3AED`) with flat silver shutter
+* **Grid Color:** Gold (`#D4AF37`)
+* **Illustration:** Serene Japanese veranda on woven tatami matting with handcrafted hinoki chutes and luminous glass bīdama marbles aligning on a black urushi lacquer pitch line with gold kintsugi trim.
+* **Bottom Text:** `CASUAL PHYSICS • OA-028`

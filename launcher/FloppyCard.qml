@@ -364,6 +364,10 @@ Item {
             case "checkers": return compCheckers;
             case "solitaire": return compSolitaire;
             case "videopoker": return compVideoPoker;
+            case "omarchycadet": return compCadet;
+            case "backgammon": return compBackgammon;
+            case "reversi": return compReversi;
+            case "bidama": return compBidama;
             default: return compDefault;
         }
     }
@@ -1692,6 +1696,235 @@ Item {
                 ctx.fillRect(startX + cardW + 8, btnY, cardW, 7);
                 ctx.fillStyle = "#16A34A";
                 ctx.fillRect(startX + (cardW + 8) * 2, btnY, cardW, 7);
+            }
+        }
+    }
+
+    // 26. Omarchy Cadet Badge (Synthwave Pinball)
+    Component {
+        id: compCadet
+        Canvas {
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                // Deep space obsidian background
+                ctx.fillStyle = "#0D0B18";
+                ctx.fillRect(0, 0, width, height);
+
+                // Neon cyan playfield arch
+                ctx.strokeStyle = "#00F0FF";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(16, height);
+                ctx.lineTo(16, 26);
+                ctx.bezierCurveTo(24, 8, width - 24, 8, width - 16, 26);
+                ctx.lineTo(width - 16, height);
+                ctx.stroke();
+
+                // 3 Glowing Synthwave Bumpers
+                function drawBmp(bx, by, col, label) {
+                    ctx.fillStyle = col;
+                    ctx.beginPath();
+                    ctx.arc(bx, by, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = "#ffffff";
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.fillStyle = "#0D0B18";
+                    ctx.font = "bold 8px monospace";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(label, bx, by);
+                }
+                drawBmp(width * 0.5, 24, "#00F0FF", "α");
+                drawBmp(width * 0.35, 42, "#FF2A85", "β");
+                drawBmp(width * 0.65, 42, "#FFE600", "γ");
+
+                // Dual Neon Flippers
+                ctx.strokeStyle = "#00F0FF";
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(34, height - 16); ctx.lineTo(54, height - 24);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(width - 34, height - 16); ctx.lineTo(width - 54, height - 24);
+                ctx.stroke();
+
+                // Steel Pinball
+                ctx.fillStyle = "#E0D8FF";
+                ctx.beginPath();
+                ctx.arc(width * 0.52, height - 36, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+    }
+
+    // 27. Backgammon Badge
+    Component {
+        id: compBackgammon
+        Canvas {
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                // Mahogany table
+                ctx.fillStyle = "#26150D";
+                ctx.fillRect(0, 0, width, height);
+
+                // Felt interior
+                ctx.fillStyle = "#1E293B";
+                ctx.fillRect(8, 6, width - 16, height - 12);
+
+                // Point triangles
+                var numPts = 6;
+                var ptW = (width - 24) / numPts;
+                for (var i = 0; i < numPts; i++) {
+                    ctx.fillStyle = (i % 2 === 0) ? "#DC2626" : "#FEF08A";
+                    ctx.beginPath();
+                    ctx.moveTo(12 + i * ptW, height - 6);
+                    ctx.lineTo(12 + (i + 0.5) * ptW, height - 36);
+                    ctx.lineTo(12 + (i + 1) * ptW, height - 6);
+                    ctx.fill();
+
+                    ctx.fillStyle = (i % 2 === 1) ? "#DC2626" : "#FEF08A";
+                    ctx.beginPath();
+                    ctx.moveTo(12 + i * ptW, 6);
+                    ctx.lineTo(12 + (i + 0.5) * ptW, 36);
+                    ctx.lineTo(12 + (i + 1) * ptW, 6);
+                    ctx.fill();
+                }
+
+                // Checkers
+                function drawCh(cx, cy, col) {
+                    ctx.fillStyle = col;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = Qt.darker(col, 1.4);
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+                drawCh(width * 0.35, height * 0.5 - 6, "#FFFFFF");
+                drawCh(width * 0.35, height * 0.5 + 8, "#FFFFFF");
+                drawCh(width * 0.65, height * 0.5, "#18181B");
+
+                // Pair of dice
+                ctx.fillStyle = "#F8FAFC";
+                ctx.fillRect(width * 0.48 - 6, height * 0.5 - 6, 12, 12);
+                ctx.fillStyle = "#DC2626";
+                ctx.beginPath();
+                ctx.arc(width * 0.48, height * 0.5, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+    }
+
+    // 28. Reversi / Othello Badge
+    Component {
+        id: compReversi
+        Canvas {
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                // Green felt board
+                ctx.fillStyle = "#15803D";
+                ctx.fillRect(0, 0, width, height);
+
+                // Grid lines
+                ctx.strokeStyle = "#14532D";
+                ctx.lineWidth = 1.5;
+                var step = width / 6;
+                for (var x = step; x < width; x += step) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+                }
+                for (var y = step; y < height; y += step) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+                }
+
+                // Four center discs
+                function drawDisc(cx, cy, col, borderCol) {
+                    ctx.fillStyle = col;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = borderCol;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+                var mx = width * 0.5;
+                var my = height * 0.5;
+                drawDisc(mx - 10, my - 10, "#FFFFFF", "#CBD5E1");
+                drawDisc(mx + 10, my + 10, "#FFFFFF", "#CBD5E1");
+                drawDisc(mx + 10, my - 10, "#0F172A", "#334155");
+                drawDisc(mx - 10, my + 10, "#0F172A", "#334155");
+
+                // Move projection glow indicator
+                ctx.strokeStyle = "#4ADE80";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(mx - 10, my - 28, 5, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+    }
+
+    // 29. Bīdama (ビー玉) Japanese Tatami Marbles Badge
+    Component {
+        id: compBidama
+        Canvas {
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                // Tatami mat textured warm green background
+                ctx.fillStyle = "#74855D";
+                ctx.fillRect(0, 0, width, height);
+
+                // Tatami subtle weave lines
+                ctx.strokeStyle = "#65764E";
+                ctx.lineWidth = 1;
+                for (var y = 4; y < height; y += 4) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+                }
+
+                // Black Urushi Lacquer Pitch Line (Center Row)
+                ctx.fillStyle = "#121016";
+                ctx.fillRect(0, height * 0.5 - 14, width, 28);
+                // Gold Kintsugi Trim Lines
+                ctx.strokeStyle = "#D4AF37";
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(0, height * 0.5 - 14); ctx.lineTo(width, height * 0.5 - 14);
+                ctx.moveTo(0, height * 0.5 + 14); ctx.lineTo(width, height * 0.5 + 14);
+                ctx.stroke();
+
+                // 5 Glowing Artisanal Glass Bīdama
+                function drawMarble(bx, by, r, col, glowCol) {
+                    var grad = ctx.createRadialGradient(bx - 2, by - 2, 1, bx, by, r);
+                    grad.addColorStop(0, "#FFFFFF");
+                    grad.addColorStop(0.35, glowCol);
+                    grad.addColorStop(1, col);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(bx, by, r, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = Qt.darker(col, 1.3);
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+
+                var cy = height * 0.5;
+                drawMarble(width * 0.16, cy, 9, "#0284C7", "#7DD3FC"); // Ramune
+                drawMarble(width * 0.33, cy, 9, "#16A34A", "#86EFAC"); // Matcha
+                drawMarble(width * 0.50, cy, 10, "#D97706", "#FDE68A"); // Yuzu (Center)
+                drawMarble(width * 0.67, cy, 9, "#DB2777", "#FBCFE8"); // Sakura
+                drawMarble(width * 0.84, cy, 9, "#7C3AED", "#DDD6FE"); // Asagao
             }
         }
     }

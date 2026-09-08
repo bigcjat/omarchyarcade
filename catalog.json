@@ -709,6 +709,90 @@
       "size": "1.3 MB",
       "size_bytes": 1348144,
       "download_size": "1.3 MB"
+    },
+    {
+      "id": "backgammon",
+      "title": "Backgammon",
+      "ref": "OA-026",
+      "category": "Board & Tabletop",
+      "floppy_color": "#E6DFD3",
+      "grid_color": "#06B6D4",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Classic 2-Player Point-To-Point Board Strategy",
+      "description": "An authentic, tactile implementation of Backgammon, one of the oldest board games in human history. Features doubling cube, bearing off, bar re-entry, multiple custom board themes, and heuristic lookahead AI.",
+      "instructions": [
+        "Roll the dice to move your checkers around the 24 points towards your home board.",
+        "Hit exposed lone opposing checkers (blots) to send them to the center bar.",
+        "Bear off all 15 checkers from your home board before your opponent to win.",
+        "Use the Doubling Cube to raise stakes when you hold a strategic advantage."
+      ],
+      "controls": {
+        "keyboard": "Click / Space to roll dice, click checker to select and move",
+        "shortcuts": "R to restart, M to mute, Esc to back"
+      },
+      "folder": "games/backgammon",
+      "entrypoint": "games/backgammon/main.py",
+      "cover_image": "assets/covers/backgammon.png",
+      "size": "2.8 MB",
+      "size_bytes": 2962580,
+      "download_size": "2.8 MB"
+    },
+    {
+      "id": "reversi",
+      "title": "Reversi",
+      "ref": "OA-027",
+      "category": "Board & Tabletop",
+      "floppy_color": "#E6DFD3",
+      "grid_color": "#059669",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Timeless 8×8 Territorial Disc-Flipping Strategy",
+      "description": "A polished, tactile implementation of Reversi (Othello). Outflank and trap opposing discs between your own to flip them to your color. A minute to learn, a lifetime to master!",
+      "instructions": [
+        "Place a disc on an empty square to bracket one or more opponent discs in any line (horizontal, vertical, or diagonal).",
+        "All opponent discs trapped between your newly placed disc and another of your color flip over.",
+        "If a player has no valid outflanking moves, their turn is passed.",
+        "The game ends when the board is full or neither player can move. The player with the most discs wins."
+      ],
+      "controls": {
+        "keyboard": "Click / Space to place disc on valid highlighted move indicators",
+        "shortcuts": "R to restart, M to mute, Esc to back"
+      },
+      "folder": "games/reversi",
+      "entrypoint": "games/reversi/main.py",
+      "cover_image": "assets/covers/reversi.png",
+      "size": "1.2 MB",
+      "size_bytes": 1217686,
+      "download_size": "1.2 MB"
+    },
+    {
+      "id": "bidama",
+      "title": "Bīdama",
+      "ref": "OA-028",
+      "category": "Casual Aim & Physics",
+      "floppy_color": "#7C3AED",
+      "grid_color": "#D4AF37",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Artisanal Japanese Tatami Glass Marbles & Pitch Line Cascades",
+      "description": "A serene yet thrilling summer tabletop tribute to Lose Your Marbles, played on woven tatami matting with handcrafted Japanese glass bīdama, hinoki cypress chutes, urushi pitch line, and dual inward gravity collapse.",
+      "instructions": [
+        "Select horizontal rows and slide them left or right to align 3 or more matching glass bīdama on the center black urushi pitch line.",
+        "Shattered pitch line marbles trigger dual inward gravity collapse, pulling upper columns down and lower columns up for chain reaction cascades.",
+        "Utilize special Hanabi bombs to blast 3×3 clusters and Wild Opal iridescent marbles that match any color.",
+        "Clear incoming marble waves before the tatami chutes overflow!"
+      ],
+      "controls": {
+        "keyboard": "W/S or Up/Down (or Vim J/K) to select row, A/D or Left/Right (or Vim H/L) to slide row, Space to send wave",
+        "shortcuts": "R to restart, M to mute, Esc to back"
+      },
+      "folder": "games/bidama",
+      "entrypoint": "games/bidama/main.py",
+      "cover_image": "assets/covers/bidama.png",
+      "size": "3.6 MB",
+      "size_bytes": 3780173,
+      "download_size": "3.6 MB"
     }
   ]
 }

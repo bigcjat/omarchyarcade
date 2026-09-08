@@ -148,14 +148,14 @@ ApplicationWindow {
     }
 
     property var categoryList: [
-        { name: "ALL", label: "🎮 All Games (18)" },
-        { name: "ACTION ARCADE", label: "⚡ Action (8)" },
+        { name: "ALL", label: "🎮 All Games (27)" },
+        { name: "ACTION ARCADE", label: "⚡ Action (9)" },
         { name: "PUZZLES & GRID LOGIC", label: "🧩 Puzzles (4)" },
         { name: "BLOCKS & MERGING", label: "🧱 Blocks (2)" },
-        { name: "BOARD & TABLETOP", label: "♟️ Tabletop (2)" },
+        { name: "BOARD & TABLETOP", label: "♟️ Tabletop (6)" },
+        { name: "CARDS & CASINO", label: "🃏 Cards (3)" },
+        { name: "CASUAL AIM & PHYSICS", label: "🫧 Casual (2)" },
         { name: "WORD & TRIVIA", label: "🔤 Word (1)" },
-        { name: "CASUAL AIM & PHYSICS", label: "🫧 Casual (1)" },
-        { name: "SIMULATION & CITY", label: "🏙️ Sim (0)" },
         { name: "UNRELEASED", label: "⏳ Coming Soon (1)" }
     ]
 
@@ -170,7 +170,11 @@ ApplicationWindow {
         for (var i = 0; i < catalogData.length; i++) {
             var g = catalogData[i];
             if (g.status === "unreleased") continue;
-            if (catName === "ALL" || g.category.toUpperCase() === catName) {
+            if (catName === "ALL") {
+                n++;
+            } else if (catName === "BOARD & TABLETOP" && (g.category.toUpperCase().indexOf("BOARD") !== -1 || g.category.toUpperCase().indexOf("TABLETOP") !== -1)) {
+                n++;
+            } else if (g.category.toUpperCase() === catName) {
                 n++;
             }
         }
@@ -192,9 +196,9 @@ ApplicationWindow {
             { name: "PUZZLES & GRID LOGIC", label: "🧩 Puzzles (" + getPlayableCount("PUZZLES & GRID LOGIC") + ")" },
             { name: "BLOCKS & MERGING", label: "🧱 Blocks (" + getPlayableCount("BLOCKS & MERGING") + ")" },
             { name: "BOARD & TABLETOP", label: "♟️ Tabletop (" + getPlayableCount("BOARD & TABLETOP") + ")" },
-            { name: "WORD & TRIVIA", label: "🔤 Word (" + getPlayableCount("WORD & TRIVIA") + ")" },
+            { name: "CARDS & CASINO", label: "🃏 Cards (" + getPlayableCount("CARDS & CASINO") + ")" },
             { name: "CASUAL AIM & PHYSICS", label: "🫧 Casual (" + getPlayableCount("CASUAL AIM & PHYSICS") + ")" },
-            { name: "SIMULATION & CITY", label: "🏙️ Sim (" + getPlayableCount("SIMULATION & CITY") + ")" },
+            { name: "WORD & TRIVIA", label: "🔤 Word (" + getPlayableCount("WORD & TRIVIA") + ")" },
             { name: "UNRELEASED", label: "⏳ Coming Soon (" + getUnreleasedCount() + ")" }
         ];
     }
@@ -255,6 +259,8 @@ ApplicationWindow {
                 matchesCat = !isUnrel;
             } else if (cat === "UNRELEASED") {
                 matchesCat = isUnrel;
+            } else if (cat === "BOARD & TABLETOP") {
+                matchesCat = !isUnrel && (g.category.toUpperCase().indexOf("BOARD") !== -1 || g.category.toUpperCase().indexOf("TABLETOP") !== -1);
             } else if (g.category.toUpperCase() === cat) {
                 matchesCat = true;
             }
