@@ -331,6 +331,98 @@ int bytecity_do_tool(ByteCityHandle handle, int tool_id, int x, int y) {
 
     int res = (int)ctx->sim->doTool((EditingTool)tool_id, targetX, targetY);
 
+    // Fallback: If standard tool failed on existing infrastructure, handle crossing overlay
+    if (res == 0) {
+        uint16_t raw = ctx->sim->map[targetX][targetY];
+        uint16_t t = raw & LOMASK;
+
+        // Tool 6: Wire crossing over road or rail
+        if (tool_id == 6) { // BC_TOOL_WIRE
+            // Road tile (64..207)
+            if (t >= 64 && t <= 207 && t != 77 && t != 78 && t != 239) {
+                int cost = 5;
+                if (ctx->sim->totalFunds < cost) return BYTECITY_TOOL_NO_MONEY;
+                ctx->sim->totalFunds -= cost;
+                uint16_t new_t = (t == 67) ? (VROADPOWER | CONDBIT | BURNBIT | BULLBIT)
+                                           : (HROADPOWER | CONDBIT | BURNBIT | BULLBIT);
+                ctx->sim->map[targetX][targetY] = new_t;
+                ToolEffects effects(ctx->sim);
+                ctx->sim->fixZone(targetX, targetY, &effects);
+                bytecity_refresh_power(handle);
+                return BYTECITY_TOOL_OK;
+            }
+            // Rail tile (224..238)
+            if (t >= 224 && t <= 238 && t != 221 && t != 222) {
+                int cost = 5;
+                if (ctx->sim->totalFunds < cost) return BYTECITY_TOOL_NO_MONEY;
+                ctx->sim->totalFunds -= cost;
+                uint16_t new_t = (t == 227) ? (RAILVPOWERH | CONDBIT | BURNBIT | BULLBIT)
+                                            : (RAILHPOWERV | CONDBIT | BURNBIT | BULLBIT);
+                ctx->sim->map[targetX][targetY] = new_t;
+                ToolEffects effects(ctx->sim);
+                ctx->sim->fixZone(targetX, targetY, &effects);
+                bytecity_refresh_power(handle);
+                return BYTECITY_TOOL_OK;
+            }
+        }
+        // Tool 9: Road crossing over wire or rail
+        else if (tool_id == 9) { // BC_TOOL_ROAD
+            // Wire tile (208..222)
+            if (t >= 208 && t <= 222 && t != 77 && t != 78 && t != 239) {
+                int cost = 10;
+                if (ctx->sim->totalFunds < cost) return BYTECITY_TOOL_NO_MONEY;
+                ctx->sim->totalFunds -= cost;
+                uint16_t new_t = (t == 211) ? (HROADPOWER | CONDBIT | BURNBIT | BULLBIT)
+                                            : (VROADPOWER | CONDBIT | BURNBIT | BULLBIT);
+                ctx->sim->map[targetX][targetY] = new_t;
+                ToolEffects effects(ctx->sim);
+                ctx->sim->fixZone(targetX, targetY, &effects);
+                bytecity_refresh_power(handle);
+                return BYTECITY_TOOL_OK;
+            }
+            // Rail tile (224..238)
+            if (t >= 224 && t <= 238 && t != 237 && t != 238) {
+                int cost = 10;
+                if (ctx->sim->totalFunds < cost) return BYTECITY_TOOL_NO_MONEY;
+                ctx->sim->totalFunds -= cost;
+                uint16_t new_t = (t == 227) ? (VRAILROAD | BURNBIT | BULLBIT)
+                                            : (HRAILROAD | BURNBIT | BULLBIT);
+                ctx->sim->map[targetX][targetY] = new_t;
+                ToolEffects effects(ctx->sim);
+                ctx->sim->fixZone(targetX, targetY, &effects);
+                return BYTECITY_TOOL_OK;
+            }
+        }
+        // Tool 8: Rail crossing over wire or road
+        else if (tool_id == 8) { // BC_TOOL_RAILROAD
+            // Wire tile (208..222)
+            if (t >= 208 && t <= 222 && t != 221 && t != 222) {
+                int cost = 20;
+                if (ctx->sim->totalFunds < cost) return BYTECITY_TOOL_NO_MONEY;
+                ctx->sim->totalFunds -= cost;
+                uint16_t new_t = (t == 211) ? (RAILHPOWERV | CONDBIT | BURNBIT | BULLBIT)
+                                            : (RAILVPOWERH | CONDBIT | BURNBIT | BULLBIT);
+                ctx->sim->map[targetX][targetY] = new_t;
+                ToolEffects effects(ctx->sim);
+                ctx->sim->fixZone(targetX, targetY, &effects);
+                bytecity_refresh_power(handle);
+                return BYTECITY_TOOL_OK;
+            }
+            // Road tile (64..207)
+            if (t >= 64 && t <= 207 && t != 237 && t != 238) {
+                int cost = 20;
+                if (ctx->sim->totalFunds < cost) return BYTECITY_TOOL_NO_MONEY;
+                ctx->sim->totalFunds -= cost;
+                uint16_t new_t = (t == 67) ? (HRAILROAD | BURNBIT | BULLBIT)
+                                           : (VRAILROAD | BURNBIT | BULLBIT);
+                ctx->sim->map[targetX][targetY] = new_t;
+                ToolEffects effects(ctx->sim);
+                ctx->sim->fixZone(targetX, targetY, &effects);
+                return BYTECITY_TOOL_OK;
+            }
+        }
+    }
+
     if (res == 1) {
         bytecity_refresh_power(handle);
     }
@@ -598,6 +690,24 @@ const char* bytecity_get_city_name(ByteCityHandle handle) {
         g_city_name = ctx->sim->cityName;
     }
     return g_city_name.c_str();
+}
+
+int bytecity_get_sprites(ByteCityHandle handle, ByteCitySprite* out_sprites, int max_sprites) {
+    if (!handle || !out_sprites || max_sprites <= 0) return 0;
+    ByteCityContext* ctx = (ByteCityContext*)handle;
+    if (!ctx->sim) return 0;
+    int count = 0;
+    for (SimSprite* s = ctx->sim->spriteList; s != nullptr && count < max_sprites; s = s->next) {
+        if (s->frame != 0) {
+            out_sprites[count].type = (int)s->type;
+            out_sprites[count].frame = s->frame;
+            out_sprites[count].x = s->x;
+            out_sprites[count].y = s->y;
+            out_sprites[count].dir = s->dir;
+            count++;
+        }
+    }
+    return count;
 }
 
 } // extern "C"

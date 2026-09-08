@@ -114,6 +114,17 @@ bool bytecity_get_auto_budget(ByteCityHandle handle);
 void bytecity_set_city_name(ByteCityHandle handle, const char* name);
 const char* bytecity_get_city_name(ByteCityHandle handle);
 
+// Active Simulation Sprites (Trains, Helicopters, Ships, Disasters)
+typedef struct {
+    int type;      // 1=TRAIN, 2=HELICOPTER, 3=AIRPLANE, 4=SHIP, 5=MONSTER, 6=TORNADO, 7=EXPLOSION
+    int frame;
+    int x;         // pixel coordinate (x / 16 gives tile coordinate)
+    int y;
+    int dir;
+} ByteCitySprite;
+
+int bytecity_get_sprites(ByteCityHandle handle, ByteCitySprite* out_sprites, int max_sprites);
+
 #ifdef __cplusplus
 }
 #endif

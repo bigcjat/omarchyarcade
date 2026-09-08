@@ -36,6 +36,15 @@ TOOL_SOUNDS = {
     15: "build",     # Airport
 }
 
+class ByteCitySprite(ctypes.Structure):
+    _fields_ = [
+        ("type", ctypes.c_int),
+        ("frame", ctypes.c_int),
+        ("x", ctypes.c_int),
+        ("y", ctypes.c_int),
+        ("dir", ctypes.c_int),
+    ]
+
 class ByteCityEngine(QObject):
     statsChanged = Signal()
     mapChanged = Signal()
@@ -197,6 +206,25 @@ class ByteCityEngine(QObject):
 
         self._lib.bytecity_get_city_name.restype = ctypes.c_char_p
         self._lib.bytecity_get_city_name.argtypes = [ctypes.c_void_p]
+
+        self._lib.bytecity_get_sprites.restype = ctypes.c_int
+        self._lib.bytecity_get_sprites.argtypes = [ctypes.c_void_p, ctypes.POINTER(ByteCitySprite), ctypes.c_int]
+
+    def get_sprites(self):
+        if not self._handle:
+            return []
+        arr = (ByteCitySprite * 32)()
+        count = self._lib.bytecity_get_sprites(self._handle, arr, 32)
+        res = []
+        for i in range(count):
+            res.append({
+                "type": arr[i].type,
+                "frame": arr[i].frame,
+                "x": arr[i].x,
+                "y": arr[i].y,
+                "dir": arr[i].dir,
+            })
+        return res
 
     def _update_timer_interval(self):
         if self._speed == 0:
