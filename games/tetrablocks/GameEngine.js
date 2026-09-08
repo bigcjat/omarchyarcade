@@ -394,11 +394,13 @@ function lockCurrentPiece() {
 
 function collapseRows(clearedRows) {
     if (clearedRows && clearedRows.length > 0) {
-        // Sort descending so splicing doesn't affect subsequent indices
+        // 1. Sort descending so splicing from bottom to top preserves remaining row indices
         var sorted = clearedRows.slice().sort(function(a, b) { return b - a; });
         for (var idx = 0; idx < sorted.length; idx++) {
-            var rowIdx = sorted[idx];
-            grid.splice(rowIdx, 1);
+            grid.splice(sorted[idx], 1);
+        }
+        // 2. Add empty rows at the top AFTER all cleared rows have been removed
+        for (var i = 0; i < sorted.length; i++) {
             var emptyRow = [];
             for (var c2 = 0; c2 < COLS; c2++) emptyRow.push(0);
             grid.unshift(emptyRow);
