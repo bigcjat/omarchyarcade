@@ -763,7 +763,7 @@ Window {
                 Text {
                     width: parent.width
                     wrapMode: Text.Wrap
-                    text: "• Steer: W/A/S/D, Arrows, or Vim H/J/K/L\n• Chomp all dots in the circuit maze\n• Grab flashing Energizers to turn ghosts blue and hunt them down for cascading combo scores!\n• Red gives chase, Pink ambushes, Cyan flanks, and Orange wanders.\n• R to Restart, M to toggle sound."
+                    text: "• Steer: W/A/S/D, Arrows, or Vim H/J/K/L\n• Chomp all dots in the circuit maze\n• Grab flashing Energizers to turn ghosts blue and hunt them down for cascading combo scores!\n• Aka (Red) gives chase, Momo (Pink) ambushes, Mizu (Cyan) flanks, and Daidai (Orange) wanders.\n• R to Restart, M to toggle sound."
                     font.family: root.monoFontFamily
                     font.pixelSize: 12
                     color: root.themeFg

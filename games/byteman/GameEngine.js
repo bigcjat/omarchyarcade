@@ -131,10 +131,10 @@ function resetPositions() {
     };
 
     ghosts = [
-        { id: "red",    name: "Red",    color: "#FF3333", x: 13.5, y: 11, dir: DIR.LEFT, state: "chase", targetX: 0, targetY: 0, speed: 0.10, homeX: 25, homeY: 0, inHouse: false },
-        { id: "pink",   name: "Pink",   color: "#FFB8DE", x: 13.5, y: 14, dir: DIR.UP,   state: "house", targetX: 0, targetY: 0, speed: 0.09, homeX: 2,  homeY: 0, inHouse: true, exitTimer: 60 },
-        { id: "cyan",   name: "Cyan",   color: "#00FFFF", x: 11.5, y: 14, dir: DIR.UP,   state: "house", targetX: 0, targetY: 0, speed: 0.09, homeX: 27, homeY: 30, inHouse: true, exitTimer: 180 },
-        { id: "orange", name: "Orange", color: "#FFB847", x: 15.5, y: 14, dir: DIR.UP,   state: "house", targetX: 0, targetY: 0, speed: 0.09, homeX: 0,  homeY: 30, inHouse: true, exitTimer: 300 }
+        { id: "red",    name: "Aka",    color: "#FF3333", x: 13.5, y: 11, dir: DIR.LEFT, state: "chase", targetX: 0, targetY: 0, speed: 0.10, homeX: 25, homeY: 0, inHouse: false },
+        { id: "pink",   name: "Momo",   color: "#FFB8DE", x: 13.5, y: 14, dir: DIR.UP,   state: "house", targetX: 0, targetY: 0, speed: 0.09, homeX: 2,  homeY: 0, inHouse: true, exitTimer: 60 },
+        { id: "cyan",   name: "Mizu",   color: "#00FFFF", x: 11.5, y: 14, dir: DIR.UP,   state: "house", targetX: 0, targetY: 0, speed: 0.09, homeX: 27, homeY: 30, inHouse: true, exitTimer: 180 },
+        { id: "orange", name: "Daidai", color: "#FFB847", x: 15.5, y: 14, dir: DIR.UP,   state: "house", targetX: 0, targetY: 0, speed: 0.09, homeX: 0,  homeY: 30, inHouse: true, exitTimer: 300 }
     ];
 
     frightenedTimer = 0;

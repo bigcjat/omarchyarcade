@@ -12,10 +12,10 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 
 * **Authentic Maze Topology:** Faithful 28×31 labyrinth featuring side warp tunnels, ghost pen house, and corner power energizers.
 * **4 Distinct Ghost AIs:**
-  * **Red:** Direct pursuer targeting ByteMan's current location.
-  * **Pink:** Ambush strategist targeting 4 tiles ahead of ByteMan's trajectory.
-  * **Cyan:** Flanking tactician using vector mirror targeting based on Red's offset.
-  * **Orange:** Timid wanderer that approaches ByteMan then retreats to his corner.
+  * **Aka (Red):** Direct pursuer targeting ByteMan's current location.
+  * **Momo (Pink):** Ambush strategist targeting 4 tiles ahead of ByteMan's trajectory.
+  * **Mizu (Cyan):** Flanking tactician using vector mirror targeting based on Aka's offset.
+  * **Daidai (Orange):** Timid wanderer that approaches ByteMan then retreats to his corner.
 * **Frightened Blue Mode:** Chomp power energizers to invert ghosts into edible frightened blue entities for combo points (200, 400, 800, 1600).
 * **Pre-Turn Input Buffering:** Smooth cornering with responsive keyboard buffering so ByteMan never misses an intersection.
 * **Vector Aesthetic:** Smooth anti-aliased Canvas rendering adapting directly to the active desktop theme.

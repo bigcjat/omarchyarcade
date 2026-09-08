@@ -461,10 +461,10 @@
       "version": "1.0.0",
       "status": "released",
       "tagline": "Authentic 28\u00d731 Labyrinth with 4 Ghost AI Routines",
-      "description": "Navigate a classic 28\u00d731 maze pursued by Blinky, Pinky, Inky, and Clyde. Eat dots, grab Power Pellets to turn the tables, and trigger combo multipliers!",
+      "description": "Navigate a classic 28\u00d731 maze pursued by Aka, Momo, Mizu, and Daidai. Eat dots, grab Power Pellets to turn the tables, and trigger combo multipliers!",
       "instructions": [
         "Guide ByteMan through the maze, consuming all dots to advance.",
-        "Each ghost has a unique pursuit personality: Blinky chases, Pinky ambushes, Inky flanks, Clyde wanders.",
+        "Each ghost has a unique pursuit personality: Aka (Red) chases, Momo (Pink) ambushes, Mizu (Cyan) flanks, Daidai (Orange) wanders.",
         "Chomp corner Power Pellets to turn ghosts blue and edible for bonus points.",
         "Use the side escape tunnels to wrap around the board."
       ],
