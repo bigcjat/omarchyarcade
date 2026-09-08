@@ -33,8 +33,28 @@ An authentic, legally safe, uncompromised city builder for the Omarchy Linux des
    - **Police ($500) & Fire ($500) Departments:** Maintain law, order, and safety.
    - **Parks ($10):** Beautify land and raise surrounding property values.
 
-4. **Municipal Guidance by Dr. DHH:**
+4. **Annual Budget Audits & Municipal Loans:**
+   - Automatic year-end financial audit popup in December (with optional auto-budgeting).
+   - Adjustable city tax rate ($0\% - 20\%$) and dedicated departmental maintenance sliders for Roads, Police, and Fire.
+   - Consequences for underfunding: pothole decay, rising crime waves, and uncontrolled conflagrations.
+   - Municipal bank credit line ($10,000 loan, 21-year debt service @ $500/yr, and early payoff).
+   - Bankruptcy game-over state if deficit exceeds -$5,000 without loan credit.
+
+5. **Disaster Control Center & Animated Sprites:**
+   - Trigger authentic SimCity disasters on demand: Firestorms, Flooding, Kaiju Rampage, Tornadoes, Earthquakes, and Nuclear Meltdowns.
+   - Animated procedural sprites rendered live in the simulation: Kaiju monsters, Tornadoes, Ships, Airplanes, Helicopters, Trains, and Explosions.
+
+6. **Tile Query Inspector & Diagnostic Overlays:**
+   - Tile Query tool (`?`) inspecting zone classification, building name, powered status, road access, land value, crime rate, and pollution levels with golden/cyan target brackets.
+   - Diagnostic visual overlay heatmaps: `🏙️ Normal`, `⚡ Power`, `🟣 Smog`, `🔴 Crime`, `🟢 Land Value`, and `🚗 Traffic`.
+
+7. **Population Milestones & Civic Rewards:**
+   - Golden trophy popup celebrations for reaching Town (2,000), City (10,000), Capital (50,000), Metropolis (100,000), and Megalopolis (500,000).
+   - Unlocks civic reward monuments including the Mayor's Estate and Megalopolis Statue.
+
+8. **Municipal Guidance by Dr. DHH:**
    - Real-time counsel from Chief Municipal Architect Dr. DHH on budget sanity, power connectivity, and zone balance.
+   - Proactive emergency slide-in alerts during critical crises (treasury depletion, power grid failure, active disasters).
 
 ---
 
@@ -49,8 +69,12 @@ An authentic, legally safe, uncompromised city builder for the Omarchy Linux des
 | **Simulation Speed** | `Space` (Pause/Resume), `1` (Normal), `2` (Fast), `3` (Ultra) |
 | **Audio Mute** | `M` key or click Speaker icon |
 | **City Graphs** | Click `RCI` Demand Gauge or `📈 Graphs` button |
+| **Annual Budget** | Click `🏛️ Budget` button or wait for December year-end audit |
+| **Disasters Menu** | Click `🌪️ Disasters` button |
+| **Diagnostic Overlays** | Click overlay pills (`Normal`, `Power`, `Smog`, `Crime`, `Value`, `Traffic`) |
+| **Tile Query Inspector** | Select `?` tool and click any city tile |
 | **Advisor Briefing** | Click `Dr. DHH` badge or `Advisor` button |
-| **Help / Handbook** | `?` key or click Question icon |
+| **Help / Handbook** | Click Question icon |
 | **Inaugurate New City** | Click `New City` button in header |
 
 ---

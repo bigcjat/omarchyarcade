@@ -135,7 +135,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **OrbPop** | Action Arcade | **522 KB** | Hexagonal bubble shooter with laser ricochet guide. | [Manual](games/orbpop/README.md) |
 | **GemSwap** | Puzzles & Logic | **561 KB** | Match-3 cascades with Flame, Star, and Hyper power gems. | [Manual](games/gemswap/README.md) |
 | **GalacticSwarm** | Action Arcade | **1.3 MB** | Alien flight waves with Boss Galaga tractor beam rescue. | [Manual](games/galacticswarm/README.md) |
-| **ByteCity** | Simulation | **4.9 MB** | 2.5D isometric city builder powered by the genuine Micropolis C++ core. | [Manual](games/bytecity/README.md) |
+| **ByteCity** | Simulation | **4.9 MB** | Authentic 1989 Micropolis C++ city simulation with Dr. DHH, Studio Ghibli visuals, annual budgets, loans, disasters, and overlays. | [Manual](games/bytecity/README.md) |
 | **KeiRacer** | Action Arcade | **1.2 MB** | Pseudo-3D highway racer starring the Slow Car Racing League with authentic multi-car drivetrain physics. | [Manual](games/keiracer/README.md) |
 | **Blackjack 21** | Cards & Casino | **659 KB** | Authentic casino 21 with custom vector decks, probability engine, and dealer AI. | [Manual](games/blackjack/README.md) |
 | **Chess** | Board Strategy & Chess | **588 KB** | Calibrated multi-tier AI (Novice to Expert) with glowing vector pieces. | [Manual](games/chess/README.md) |
