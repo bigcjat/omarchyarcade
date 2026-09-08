@@ -1,7 +1,7 @@
 {
   "version": 2,
   "app_name": "Omarchy Arcade",
-  "updated_at": "2026-09-08T02:10:00Z",
+  "updated_at": "2026-09-09T03:54:00Z",
   "games": [
     {
       "id": "2048",
@@ -10,7 +10,7 @@
       "category": "Blocks & Merging",
       "floppy_color": "#EA580C",
       "grid_color": "#1E3A8A",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "status": "released",
       "tagline": "Classic 4\u00d74 Sliding Number Tile Merge Puzzle",
       "description": "Slide numbered tiles across a 4\u00d74 grid using arrow keys or Vim. When two tiles with the same number touch, they merge into one with double the value! Can you reach the elusive 2048 tile?",
@@ -773,7 +773,7 @@
       "category": "Casual Aim & Physics",
       "floppy_color": "#7C3AED",
       "grid_color": "#D4AF37",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "status": "released",
       "tagline": "Artisanal Japanese Tatami Glass Marbles & Pitch Line Cascades",
       "description": "A serene yet thrilling summer tabletop tribute to Lose Your Marbles, played on woven tatami matting with handcrafted Japanese glass b\u012bdama, hinoki cypress chutes, urushi pitch line, and dual inward gravity collapse.",
