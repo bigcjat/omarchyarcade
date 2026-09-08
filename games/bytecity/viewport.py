@@ -211,6 +211,26 @@ class CityViewport(QQuickPaintedItem):
                 if os.path.exists(p):
                     self._com_sprites_3x3[(r, c)] = QImage(p)
 
+        # Load municipal special building sprites
+        self._spec_sprites = {}
+        for k in ["fire", "police", "coal", "nuke", "port", "stadium", "airport"]:
+            p = os.path.join(base_dir, f"spec_{k}.png")
+            if os.path.exists(p):
+                self._spec_sprites[k] = QImage(p)
+
+        # Load civic & park building sprites
+        self._civic_sprites = {}
+        for k in ["mayor", "temple", "shrine", "cathedral", "pavilion"]:
+            p = os.path.join(base_dir, f"civic_{k}.png")
+            if os.path.exists(p):
+                self._civic_sprites[k] = QImage(p)
+
+        self._park_sprites = []
+        for i in range(4):
+            p = os.path.join(base_dir, f"park_{i}.png")
+            if os.path.exists(p):
+                self._park_sprites.append(QImage(p))
+
 
 
     # --- Properties ---
@@ -612,68 +632,90 @@ class CityViewport(QQuickPaintedItem):
             return
 
 
-        # 12. SEAPORT (693..708)
+        # 12. SEAPORT (693..708, 4x4, center 698)
         if 693 <= t <= 708:
-            painter.fillRect(rect, COLOR_PORT)
-            if raw & 0x0400:
-                painter.setPen(QColor("#ffffff"))
-                painter.drawText(rect, Qt.AlignCenter, "PORT")
+            if t == 698 or (raw & 0x0400):
+                sp = self._spec_sprites.get("port")
+                if sp:
+                    painter.drawImage(QRectF(sx - ts, sy - ts, 4 * ts, 4 * ts), sp)
+                else:
+                    painter.fillRect(QRectF(sx - ts, sy - ts, 4 * ts, 4 * ts), COLOR_PORT)
+                self._check_unpowered(painter, raw, has_power, rect)
             return
 
-        # 13. AIRPORT (709..744)
+        # 13. AIRPORT (709..744, 6x6, center 716)
         if 709 <= t <= 744:
-            painter.fillRect(rect, COLOR_AIRPORT)
-            if raw & 0x0400:
-                painter.setPen(QColor("#ffffff"))
-                painter.drawText(rect, Qt.AlignCenter, "AIR")
+            if t == 716 or (raw & 0x0400):
+                sp = self._spec_sprites.get("airport")
+                if sp:
+                    painter.drawImage(QRectF(sx - ts, sy - ts, 6 * ts, 6 * ts), sp)
+                else:
+                    painter.fillRect(QRectF(sx - ts, sy - ts, 6 * ts, 6 * ts), COLOR_AIRPORT)
+                self._check_unpowered(painter, raw, has_power, rect)
             return
 
-        # 14. COAL POWER PLANT (745..760)
+        # 14. COAL POWER PLANT (745..760, 4x4, center 750)
         if 745 <= t <= 760:
-            painter.fillRect(rect, COLOR_COAL)
-            if raw & 0x0400 or t == 750:
-                painter.setPen(QColor("#ffba08"))
-                painter.drawText(rect, Qt.AlignCenter, "COAL")
+            if t == 750 or (raw & 0x0400):
+                sp = self._spec_sprites.get("coal")
+                if sp:
+                    painter.drawImage(QRectF(sx - ts, sy - ts, 4 * ts, 4 * ts), sp)
+                else:
+                    painter.fillRect(QRectF(sx - ts, sy - ts, 4 * ts, 4 * ts), COLOR_COAL)
             return
 
-        # 15. FIRE STATION (761..769)
+        # 15. FIRE STATION (761..769, 3x3, center 765)
         if 761 <= t <= 769:
-            painter.fillRect(rect, COLOR_FIRE_DEPT)
-            if raw & 0x0400 or t == 765:
-                painter.setPen(QColor("#ffffff"))
-                painter.drawText(rect, Qt.AlignCenter, "FIRE")
-            self._check_unpowered(painter, raw, has_power, rect)
+            if t == 765 or (raw & 0x0400):
+                sp = self._spec_sprites.get("fire")
+                if sp:
+                    painter.drawImage(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), sp)
+                else:
+                    painter.fillRect(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), COLOR_FIRE_DEPT)
+                self._check_unpowered(painter, raw, has_power, rect)
             return
 
-        # 16. POLICE STATION (770..778)
+        # 16. POLICE STATION (770..778, 3x3, center 774)
         if 770 <= t <= 778:
-            painter.fillRect(rect, COLOR_POLICE_DEPT)
-            if raw & 0x0400 or t == 774:
-                painter.setPen(QColor("#ffffff"))
-                painter.drawText(rect, Qt.AlignCenter, "POL")
-            self._check_unpowered(painter, raw, has_power, rect)
+            if t == 774 or (raw & 0x0400):
+                sp = self._spec_sprites.get("police")
+                if sp:
+                    painter.drawImage(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), sp)
+                else:
+                    painter.fillRect(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), COLOR_POLICE_DEPT)
+                self._check_unpowered(painter, raw, has_power, rect)
             return
 
-        # 17. STADIUM (779..810)
+        # 17. STADIUM (779..810, 4x4, center 784, 800)
         if 779 <= t <= 810:
-            painter.fillRect(rect, COLOR_STADIUM)
-            if raw & 0x0400 or t == 784:
-                painter.setPen(QColor("#ffffff"))
-                painter.drawText(rect, Qt.AlignCenter, "STAD")
+            if t in (784, 800) or (raw & 0x0400):
+                sp = self._spec_sprites.get("stadium")
+                if sp:
+                    painter.drawImage(QRectF(sx - ts, sy - ts, 4 * ts, 4 * ts), sp)
+                else:
+                    painter.fillRect(QRectF(sx - ts, sy - ts, 4 * ts, 4 * ts), COLOR_STADIUM)
+                self._check_unpowered(painter, raw, has_power, rect)
             return
 
-        # 18. NUCLEAR POWER PLANT (811..826)
+        # 18. NUCLEAR POWER PLANT (811..826, 4x4, center 816)
         if 811 <= t <= 826:
-            painter.fillRect(rect, COLOR_NUCLEAR)
-            if raw & 0x0400 or t == 816:
-                painter.setPen(QColor("#000000"))
-                painter.drawText(rect, Qt.AlignCenter, "NUKE")
+            if t == 816 or (raw & 0x0400):
+                sp = self._spec_sprites.get("nuke")
+                if sp:
+                    painter.drawImage(QRectF(sx - ts, sy - ts, 4 * ts, 4 * ts), sp)
+                else:
+                    painter.fillRect(QRectF(sx - ts, sy - ts, 4 * ts, 4 * ts), COLOR_NUCLEAR)
             return
 
-        # 19. PARK / FOUNTAIN (840..843)
+
+        # 19. PARK / FOUNTAIN (840..843, Animated Japanese Zen Garden & Basin)
         if 840 <= t <= 843:
-            painter.fillRect(rect, COLOR_PARK)
-            painter.fillRect(QRectF(sx + ts * 0.3, sy + ts * 0.3, ts * 0.4, ts * 0.4), COLOR_WATER)
+            f_idx = (t - 840) % len(self._park_sprites) if self._park_sprites else 0
+            if self._park_sprites:
+                painter.drawImage(rect, self._park_sprites[f_idx])
+            else:
+                painter.fillRect(rect, COLOR_PARK)
+                painter.fillRect(QRectF(sx + ts * 0.3, sy + ts * 0.3, ts * 0.4, ts * 0.4), COLOR_WATER)
             return
 
         # Fallback tile rendering
@@ -2137,7 +2179,11 @@ class CityViewport(QQuickPaintedItem):
             if sub_idx == 4 or (raw & 0x0400):
                 r = min(3, bld_idx // 4)  # Land value: 0..3 (Low, Med, High, Lux)
                 c = min(3, bld_idx % 4)   # Density: 0..3 (Stage 2, 3, 4, 5)
-                sprite = self._res_sprites_3x3.get((r, c))
+                # If Stage 2 Luxury compound (r=3, c=0): draw the Mayor's Walled Estate!
+                if r == 3 and c == 0 and "mayor" in self._civic_sprites:
+                    sprite = self._civic_sprites["mayor"]
+                else:
+                    sprite = self._res_sprites_3x3.get((r, c))
                 if sprite:
                     painter.drawImage(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), sprite)
                 else:
@@ -2145,10 +2191,10 @@ class CityViewport(QQuickPaintedItem):
                 self._check_unpowered(painter, raw, has_power, rect)
             return
 
-        # 4. Hospital (tiles 405..413, center 409)
+        # 4. Hospital / Temple (Otera) (tiles 405..413, center 409)
         if 405 <= t <= 413:
             if t == 409 or (raw & 0x0400):
-                sprite = self._res_sprites_3x3.get((4, 0))
+                sprite = self._civic_sprites.get("temple") or self._res_sprites_3x3.get((4, 0))
                 if sprite:
                     painter.drawImage(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), sprite)
                 else:
@@ -2156,10 +2202,10 @@ class CityViewport(QQuickPaintedItem):
                 self._check_unpowered(painter, raw, has_power, rect)
             return
 
-        # 5. Church / Shinto Temple (tiles 414..422, center 418)
+        # 5. Traditional Church / Shinto Shrine (tiles 414..422, center 418)
         if 414 <= t <= 422:
             if t == 418 or (raw & 0x0400):
-                sprite = self._res_sprites_3x3.get((4, 2))
+                sprite = self._civic_sprites.get("shrine") or self._res_sprites_3x3.get((4, 2))
                 if sprite:
                     painter.drawImage(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), sprite)
                 else:
@@ -2167,14 +2213,25 @@ class CityViewport(QQuickPaintedItem):
                 self._check_unpowered(painter, raw, has_power, rect)
             return
 
-        # 6. Extended Churches / Shrines (tiles 956..1018)
+        # 6. Extended Churches / Shrines / Pavilions (tiles 956..1018)
         if 956 <= t <= 1018:
-            if (t - 956) % 9 == 4 or (raw & 0x0400):
-                sprite = self._res_sprites_3x3.get((4, 3))
+            sub_t = t - 956
+            if sub_t % 9 == 4 or (raw & 0x0400):
+                bld_var = sub_t // 9
+                if bld_var == 0:
+                    sprite = self._civic_sprites.get("pavilion")
+                elif bld_var == 1:
+                    sprite = self._civic_sprites.get("cathedral")
+                elif bld_var % 2 == 0:
+                    sprite = self._civic_sprites.get("shrine")
+                else:
+                    sprite = self._civic_sprites.get("temple")
+
                 if sprite:
                     painter.drawImage(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), sprite)
                 self._check_unpowered(painter, raw, has_power, rect)
             return
+
 
     def _draw_industrial_zone(self, painter: QPainter, raw: int, t: int, has_power: bool, sx: float, sy: float, ts: float, tx: int, ty: int):
         rect = QRectF(sx, sy, ts + 0.5, ts + 0.5)
