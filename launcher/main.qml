@@ -210,8 +210,29 @@ ApplicationWindow {
         { name: "UNRELEASED", label: "⏳ Coming Soon (0)" }
     ]
 
-    onSelectedCategoryChanged: updateFilter()
+    onSelectedCategoryChanged: {
+        root.updateFilter();
+        for (var i = 0; i < root.categoryList.length; i++) {
+            if (root.categoryList[i].name === root.selectedCategory) {
+                root.ensureCategoryVisible(i);
+                break;
+            }
+        }
+    }
     onSearchQueryChanged: updateFilter()
+
+    function ensureCategoryVisible(index) {
+        if (typeof categoryRepeater === "undefined" || !categoryRepeater || index < 0 || index >= categoryRepeater.count) return;
+        var item = categoryRepeater.itemAt(index);
+        if (!item || typeof categoryFlickable === "undefined" || !categoryFlickable) return;
+        var itemLeft = item.x;
+        var itemRight = item.x + item.width;
+        if (itemLeft < categoryFlickable.contentX) {
+            categoryFlickable.contentX = Math.max(0, itemLeft - 20);
+        } else if (itemRight > categoryFlickable.contentX + categoryFlickable.width) {
+            categoryFlickable.contentX = Math.min(categoryFlickable.contentWidth - categoryFlickable.width, itemRight - categoryFlickable.width + 20);
+        }
+    }
 
     // Responsive collapse breakpoint
     readonly property bool isCompact: width < 760
@@ -603,19 +624,24 @@ ApplicationWindow {
             border.width: 1
             z: 10
 
-            ScrollView {
+            Flickable {
+                id: categoryFlickable
                 anchors.fill: parent
                 anchors.leftMargin: 16
                 anchors.rightMargin: 16
+                contentWidth: categoryRow.width
                 contentHeight: parent.height
-                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+                flickableDirection: Flickable.HorizontalFlick
+                boundsBehavior: Flickable.StopAtBounds
+                clip: true
 
                 Row {
+                    id: categoryRow
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 8
 
                     Repeater {
+                        id: categoryRepeater
                         model: root.categoryList
 
                         Rectangle {
@@ -648,6 +674,76 @@ ApplicationWindow {
                             }
                         }
                     }
+                }
+
+                WheelHandler {
+                    target: categoryFlickable
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                    onWheel: function(event) {
+                        var delta = event.angleDelta.x !== 0 ? event.angleDelta.x : event.angleDelta.y;
+                        categoryFlickable.contentX = Math.max(0, Math.min(categoryFlickable.contentWidth - categoryFlickable.width, categoryFlickable.contentX - delta));
+                        event.accepted = true;
+                    }
+                }
+            }
+
+            // Left scroll arrow indicator
+            Rectangle {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: 32
+                visible: categoryFlickable.contentX > 4
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: "#14141c" }
+                    GradientStop { position: 0.7; color: "#14141c" }
+                    GradientStop { position: 1.0; color: "transparent" }
+                }
+                Text {
+                    anchors.centerIn: parent
+                    anchors.horizontalCenterOffset: -3
+                    text: "‹"
+                    font.pixelSize: 20
+                    font.bold: true
+                    color: scrollLeftMouse.containsMouse ? themeAccent : "#94a3b8"
+                }
+                MouseArea {
+                    id: scrollLeftMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: categoryFlickable.contentX = Math.max(0, categoryFlickable.contentX - 200)
+                }
+            }
+
+            // Right scroll arrow indicator
+            Rectangle {
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: 32
+                visible: categoryFlickable.contentWidth > categoryFlickable.width && categoryFlickable.contentX < (categoryFlickable.contentWidth - categoryFlickable.width - 4)
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: "transparent" }
+                    GradientStop { position: 0.3; color: "#14141c" }
+                    GradientStop { position: 1.0; color: "#14141c" }
+                }
+                Text {
+                    anchors.centerIn: parent
+                    anchors.horizontalCenterOffset: 3
+                    text: "›"
+                    font.pixelSize: 20
+                    font.bold: true
+                    color: scrollRightMouse.containsMouse ? themeAccent : "#94a3b8"
+                }
+                MouseArea {
+                    id: scrollRightMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: categoryFlickable.contentX = Math.min(categoryFlickable.contentWidth - categoryFlickable.width, categoryFlickable.contentX + 200)
                 }
             }
         }
