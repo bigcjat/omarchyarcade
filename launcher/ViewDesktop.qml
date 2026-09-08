@@ -1,0 +1,312 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+
+Item {
+    id: desktopView
+    anchors.fill: parent
+
+    property var games: []
+    property int selectedIndex: 0
+    property var activeGame: (games && selectedIndex >= 0 && selectedIndex < games.length) ? games[selectedIndex] : null
+
+    signal gameSelected(int index)
+    signal gameLaunched(string gameId)
+    signal detailRequested(var gameData)
+
+    onSelectedIndexChanged: {
+        if (selectedIndex >= 0 && selectedIndex < games.length) {
+            ensureVisible(selectedIndex);
+        }
+    }
+
+    function ensureVisible(index) {
+        var cols = Math.max(1, Math.floor(desktopGrid.width / 108));
+        var row = Math.floor(index / cols);
+        var itemTop = row * 128;
+        var itemBottom = itemTop + 128;
+        var viewTop = desktopScroll.contentItem.contentY;
+        var viewHeight = desktopScroll.height;
+
+        if (itemTop < viewTop) {
+            desktopScroll.contentItem.contentY = Math.max(0, itemTop - 16);
+        } else if (itemBottom > (viewTop + viewHeight)) {
+            desktopScroll.contentItem.contentY = Math.max(0, itemBottom - viewHeight + 16);
+        }
+    }
+
+    // --- Retro OS Desktop Wallpaper Surface ---
+    Rectangle {
+        anchors.fill: parent
+        color: "#0d0f17"
+
+        // Authentic CRT / Desktop Dot-Matrix Pattern
+        Canvas {
+            anchors.fill: parent
+            opacity: 0.12
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.fillStyle = "#ffffff";
+                for (var x = 8; x < width; x += 16) {
+                    for (var y = 8; y < height; y += 16) {
+                        ctx.fillRect(x, y, 1.5, 1.5);
+                    }
+                }
+            }
+        }
+    }
+
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: 0
+
+        // =====================================================================
+        // 1. DESKTOP ICON CANVAS
+        // =====================================================================
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            ScrollView {
+                id: desktopScroll
+                anchors.fill: parent
+                clip: true
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+
+                // Dismiss selection on background click
+                MouseArea {
+                    anchors.fill: parent
+                    z: -1
+                    onClicked: {
+                        if (typeof root !== "undefined" && root.restoreKeyboardFocus) {
+                            root.restoreKeyboardFocus();
+                        }
+                    }
+                }
+
+                Flow {
+                    id: desktopGrid
+                    anchors.fill: parent
+                    anchors.margins: 24
+                    spacing: 16
+
+                    Repeater {
+                        model: desktopView.games
+
+                        Item {
+                            id: iconItem
+                            width: 104
+                            height: 120
+
+                            readonly property bool isSelected: index === desktopView.selectedIndex
+                            readonly property bool isHovered: iconMouse.containsMouse
+                            readonly property bool installed: modelData ? (typeof root !== "undefined" && root.isInstalled ? root.isInstalled(modelData.id) : true) : true
+
+                            // Selection Box Highlight
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 6
+                                color: iconItem.isSelected ? "#1e293b" : (iconItem.isHovered ? "#151b28" : "transparent")
+                                border.color: iconItem.isSelected ? themeAccent : (iconItem.isHovered ? "#334155" : "transparent")
+                                border.width: 1
+                                opacity: iconItem.isSelected ? 0.95 : (iconItem.isHovered ? 0.6 : 0)
+                            }
+
+                            ColumnLayout {
+                                anchors.centerIn: parent
+                                spacing: 6
+                                width: parent.width - 12
+
+                                // Icon Graphic
+                                Item {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    width: 58
+                                    height: 58
+
+                                    // Icon Image
+                                    Image {
+                                        id: appIcon
+                                        anchors.centerIn: parent
+                                        width: 52
+                                        height: 52
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: false // Pixel crisp retro icons
+                                        source: {
+                                            if (!modelData) return "";
+                                            if (typeof arcadeBackend !== "undefined" && arcadeBackend.getDiskIconUrl) {
+                                                return arcadeBackend.getDiskIconUrl(modelData.id);
+                                            }
+                                            return "../games/" + modelData.id + "/assets/disk_icon.png";
+                                        }
+                                    }
+
+                                    // Installed Dot Indicator
+                                    Rectangle {
+                                        anchors.bottom: parent.bottom
+                                        anchors.right: parent.right
+                                        anchors.margins: 2
+                                        width: 10
+                                        height: 10
+                                        radius: 5
+                                        color: iconItem.installed ? "#22c55e" : "#f59e0b"
+                                        border.color: "#0a0a0f"
+                                        border.width: 1.5
+                                    }
+                                }
+
+                                // Desktop Icon Label
+                                Rectangle {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: labelText.implicitHeight + 4
+                                    radius: 3
+                                    color: iconItem.isSelected ? themeAccent : "transparent"
+
+                                    Text {
+                                        id: labelText
+                                        anchors.centerIn: parent
+                                        width: parent.width - 4
+                                        text: modelData ? modelData.title : ""
+                                        font.pixelSize: 11
+                                        font.bold: iconItem.isSelected
+                                        color: iconItem.isSelected ? "#09090e" : (iconItem.isHovered ? "#FFFFFF" : "#e2e8f0")
+                                        horizontalAlignment: Text.AlignHCenter
+                                        elide: Text.ElideRight
+                                        maximumLineCount: 2
+                                        wrapMode: Text.Wrap
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                id: iconMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    desktopView.gameSelected(index);
+                                    if (typeof root !== "undefined" && root.restoreKeyboardFocus) {
+                                        root.restoreKeyboardFocus();
+                                    }
+                                }
+                                onDoubleClicked: {
+                                    desktopView.gameSelected(index);
+                                    if (modelData) {
+                                        desktopView.gameLaunched(modelData.id);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // 2. DESKTOP STATUS & PREVIEW DOCK (Bottom Bar)
+        // =====================================================================
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 44
+            color: "#111420"
+            border.color: "#222738"
+            border.width: 1
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 20
+                anchors.rightMargin: 20
+                spacing: 16
+
+                // Mini thumbnail of active game
+                Rectangle {
+                    width: 30
+                    height: 30
+                    radius: 4
+                    color: "#1a1f2e"
+                    clip: true
+                    visible: !!activeGame
+
+                    Image {
+                        anchors.fill: parent
+                        fillMode: Image.PreserveAspectFit
+                        source: {
+                            if (!activeGame) return "";
+                            if (typeof arcadeBackend !== "undefined" && arcadeBackend.getDiskIconUrl) {
+                                return arcadeBackend.getDiskIconUrl(activeGame.id);
+                            }
+                            return "../games/" + activeGame.id + "/assets/disk_icon.png";
+                        }
+                    }
+                }
+
+                // Active Game Summary
+                Text {
+                    text: activeGame ? (activeGame.title + " • " + activeGame.category + " • " + (activeGame.size || "")) : "Select an icon"
+                    font.family: "monospace"
+                    font.pixelSize: 12
+                    font.bold: true
+                    color: "#f1f5f9"
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
+                }
+
+                // Quick Launch & Info Action Buttons
+                RowLayout {
+                    spacing: 8
+                    visible: !!activeGame
+
+                    Rectangle {
+                        height: 28
+                        width: 74
+                        radius: 4
+                        color: "#1c2235"
+                        border.color: "#353f5c"
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Details [Space]"
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: "#94a3b8"
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (activeGame) desktopView.detailRequested(activeGame);
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 28
+                        width: 90
+                        radius: 4
+                        color: themeAccent
+                        border.color: Qt.lighter(themeAccent, 1.3)
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "▶ Play [Enter]"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: "#09090e"
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (activeGame) desktopView.gameLaunched(activeGame.id);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -167,6 +167,58 @@ class ArcadeBackend(QObject):
             return QUrl.fromLocalFile(str(local_path)).toString()
         return f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/{folder}/screenshot.png"
 
+    @Slot(str, result=str)
+    def getDiskIconUrl(self, game_id: str) -> str:
+        """Returns the file URL for a game's 3.5" disk icon."""
+        if not game_id:
+            return ""
+        local_path = GAMES_DIR / game_id / "assets" / "disk_icon.png"
+        if not local_path.exists():
+            local_path = BASE_DIR / "games" / game_id / "assets" / "disk_icon.png"
+        if not local_path.exists():
+            local_path = Path.home() / ".local" / "share" / "omarchy-arcade" / "games" / game_id / "assets" / "disk_icon.png"
+        if local_path.exists():
+            return QUrl.fromLocalFile(str(local_path)).toString()
+        return self.getCoverUrl(game_id)
+
+    def _get_settings_path(self) -> Path:
+        if (BASE_DIR / ".git").exists():
+            return LAUNCHER_DIR / ".launcher_settings.json"
+        return Path.home() / ".config" / "omarchy" / "arcade_settings.json"
+
+    @Slot(result=str)
+    def getViewMode(self) -> str:
+        """Reads persisted view mode preference ('grid', 'carousel', 'desktop', 'sidebar')."""
+        settings_file = self._get_settings_path()
+        if settings_file.exists():
+            try:
+                data = json.loads(settings_file.read_text(encoding="utf-8"))
+                mode = data.get("view_mode", "grid")
+                if mode in ("grid", "carousel", "desktop", "sidebar"):
+                    return mode
+            except Exception:
+                pass
+        return "grid"
+
+    @Slot(str)
+    def setViewMode(self, mode: str):
+        """Persists view mode preference."""
+        if mode not in ("grid", "carousel", "desktop", "sidebar"):
+            return
+        settings_file = self._get_settings_path()
+        data = {}
+        if settings_file.exists():
+            try:
+                data = json.loads(settings_file.read_text(encoding="utf-8"))
+            except Exception:
+                data = {}
+        data["view_mode"] = mode
+        try:
+            settings_file.parent.mkdir(parents=True, exist_ok=True)
+            settings_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        except Exception as e:
+            print(f"[Arcade] Error saving view mode: {e}")
+
     @Slot(str)
     def installGame(self, game_id: str):
         """Downloads and installs only the requested game from GitHub in the background."""

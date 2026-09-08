@@ -25,6 +25,7 @@ ApplicationWindow {
     property bool splashEnabled: true
     property string selectedCategory: "LIBRARY"
     property string searchQuery: ""
+    property string viewMode: "grid" // "grid", "carousel", "desktop", "sidebar"
     property var catalogData: []
     property var filteredGames: []
     property int focusedIndex: 0
@@ -124,19 +125,38 @@ ApplicationWindow {
         ensureFocusedVisible();
     }
 
+    function cycleViewMode() {
+        var modes = ["grid", "carousel", "desktop", "sidebar"];
+        var idx = modes.indexOf(viewMode);
+        var next = (idx + 1) % modes.length;
+        setViewMode(modes[next]);
+    }
+
+    function setViewMode(mode) {
+        if (mode === viewMode) return;
+        viewMode = mode;
+        if (typeof arcadeBackend !== "undefined" && arcadeBackend.setViewMode) {
+            arcadeBackend.setViewMode(mode);
+        }
+        ensureFocusedVisible();
+        restoreKeyboardFocus();
+    }
+
     function ensureFocusedVisible() {
         if (focusedIndex < 0 || focusedIndex >= filteredGames.length) return;
-        var cols = Math.max(1, gridScroll.numCols);
-        var row = Math.floor(focusedIndex / cols);
-        var cardTop = 20 + row * (286 + 22);
-        var cardBottom = cardTop + 286;
-        var viewTop = gridScroll.contentItem.contentY;
-        var viewHeight = gridScroll.height;
+        if (viewMode === "grid") {
+            var cols = Math.max(1, gridScroll.numCols);
+            var row = Math.floor(focusedIndex / cols);
+            var cardTop = 20 + row * (286 + 22);
+            var cardBottom = cardTop + 286;
+            var viewTop = gridScroll.contentItem.contentY;
+            var viewHeight = gridScroll.height;
 
-        if (cardTop < viewTop) {
-            gridScroll.contentItem.contentY = Math.max(0, cardTop - 20);
-        } else if (cardBottom > (viewTop + viewHeight)) {
-            gridScroll.contentItem.contentY = Math.max(0, cardBottom - viewHeight + 20);
+            if (cardTop < viewTop) {
+                gridScroll.contentItem.contentY = Math.max(0, cardTop - 20);
+            } else if (cardBottom > (viewTop + viewHeight)) {
+                gridScroll.contentItem.contentY = Math.max(0, cardBottom - viewHeight + 20);
+            }
         }
     }
 
@@ -229,6 +249,10 @@ ApplicationWindow {
 
     // Load Catalog Data on Startup
     Component.onCompleted: {
+        if (typeof arcadeBackend !== "undefined" && arcadeBackend.getViewMode) {
+            var savedMode = arcadeBackend.getViewMode();
+            if (savedMode) root.viewMode = savedMode;
+        }
         loadCatalog();
         keyboardController.forceActiveFocus();
     }
@@ -382,6 +406,70 @@ ApplicationWindow {
                 }
 
                 Item { Layout.fillWidth: true }
+
+                // View Mode Switcher [Grid | Carousel | Desktop | Sidebar]
+                Rectangle {
+                    Layout.preferredHeight: 36
+                    Layout.preferredWidth: viewSwitcherRow.implicitWidth + 8
+                    radius: 8
+                    color: themeBackground
+                    border.color: themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: viewSwitcherRow
+                        anchors.centerIn: parent
+                        spacing: 2
+
+                        Repeater {
+                            model: [
+                                { id: "grid", icon: "⊞", label: "Grid", tooltip: "Floppy Grid (F1)" },
+                                { id: "carousel", icon: "🎡", label: "Carousel", tooltip: "Stage & Carousel (F2)" },
+                                { id: "desktop", icon: "🖥️", label: "Desktop", tooltip: "Desktop Icons (F3)" },
+                                { id: "sidebar", icon: "📑", label: "Sidebar", tooltip: "Library List (F4)" }
+                            ]
+
+                            Rectangle {
+                                width: root.isCompact ? 32 : (viewModeBtnText.implicitWidth + 26)
+                                height: 28
+                                radius: 6
+                                color: root.viewMode === modelData.id ? themeAccent : (viewBtnMouse.containsMouse ? "#232332" : "transparent")
+                                border.color: root.viewMode === modelData.id ? themeAccent : "transparent"
+                                border.width: 1
+
+                                RowLayout {
+                                    anchors.centerIn: parent
+                                    spacing: 5
+
+                                    Text {
+                                        text: modelData.icon
+                                        font.pixelSize: 12
+                                        color: root.viewMode === modelData.id ? "#09090e" : (viewBtnMouse.containsMouse ? "#FFFFFF" : "#94a3b8")
+                                    }
+
+                                    Text {
+                                        id: viewModeBtnText
+                                        text: modelData.label
+                                        font.pixelSize: 11
+                                        font.bold: root.viewMode === modelData.id
+                                        color: root.viewMode === modelData.id ? "#09090e" : (viewBtnMouse.containsMouse ? "#FFFFFF" : "#94a3b8")
+                                        visible: !root.isCompact
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: viewBtnMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        root.setViewMode(modelData.id);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Search Box (Instant Type-to-Filter)
                 Rectangle {
@@ -557,16 +645,18 @@ ApplicationWindow {
         }
 
         // =====================================================================
-        // MAIN FLOPPY GRID VIEW
+        // MAIN CONTENT VIEWS (Grid / Carousel / Desktop / Sidebar)
         // =====================================================================
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
+            // 1. Grid View (Floppy Wall)
             ScrollView {
                 id: gridScroll
                 anchors.fill: parent
                 clip: true
+                visible: root.viewMode === "grid"
                 contentWidth: gridScroll.width
                 contentHeight: flowGrid.height + 60
                 ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
@@ -611,11 +701,66 @@ ApplicationWindow {
                 }
             }
 
+            // 2. Carousel / Stage View (Disks on bottom, details on top)
+            ViewCarousel {
+                id: carouselView
+                anchors.fill: parent
+                visible: root.viewMode === "carousel"
+                games: root.filteredGames
+                selectedIndex: root.focusedIndex
+                onGameSelected: function(idx) {
+                    root.focusedIndex = idx;
+                }
+                onGameLaunched: function(gameId) {
+                    root.launchGame(gameId);
+                }
+                onDetailRequested: function(data) {
+                    detailSheet.open(data);
+                }
+            }
+
+            // 3. Retro Desktop Icons View
+            ViewDesktop {
+                id: desktopView
+                anchors.fill: parent
+                visible: root.viewMode === "desktop"
+                games: root.filteredGames
+                selectedIndex: root.focusedIndex
+                onGameSelected: function(idx) {
+                    root.focusedIndex = idx;
+                }
+                onGameLaunched: function(gameId) {
+                    root.launchGame(gameId);
+                }
+                onDetailRequested: function(data) {
+                    detailSheet.open(data);
+                }
+            }
+
+            // 4. Sidebar Library List View
+            ViewSidebar {
+                id: sidebarView
+                anchors.fill: parent
+                visible: root.viewMode === "sidebar"
+                games: root.filteredGames
+                selectedIndex: root.focusedIndex
+                onGameSelected: function(idx) {
+                    root.focusedIndex = idx;
+                }
+                onGameLaunched: function(gameId) {
+                    root.launchGame(gameId);
+                }
+                onDetailRequested: function(data) {
+                    detailSheet.open(data);
+                }
+            }
+
             // Empty Search State
             ColumnLayout {
                 anchors.centerIn: parent
                 spacing: 12
                 visible: root.filteredGames.length === 0
+                z: 50
 
                 Text {
                     text: root.searchQuery.trim() !== "" ? "🔍" : (root.selectedCategory === "LIBRARY" ? "💾" : "🎮")
@@ -704,6 +849,18 @@ ApplicationWindow {
                         Text { anchors.centerIn: parent; text: "/"; font.family: "monospace"; font.pixelSize: 10; font.bold: true; color: themeAccent }
                     }
                     Text { text: "Search"; font.pixelSize: 11; font.bold: true; color: "#94a3b8" }
+                }
+
+                Text { text: "•"; font.pixelSize: 11; color: "#2d2d3d" }
+
+                RowLayout {
+                    spacing: 5
+                    Rectangle {
+                        width: 18; height: 18; radius: 4
+                        color: "#1c1c28"; border.color: "#333348"; border.width: 1
+                        Text { anchors.centerIn: parent; text: "V"; font.family: "monospace"; font.pixelSize: 10; font.bold: true; color: themeAccent }
+                    }
+                    Text { text: "View Mode"; font.pixelSize: 11; font.bold: true; color: "#94a3b8" }
                 }
 
                 Item { Layout.fillWidth: true }
@@ -918,28 +1075,111 @@ ApplicationWindow {
                 return;
             }
 
-            var cols = Math.max(1, gridScroll.numCols);
+            // V key cycles view modes
+            if (event.key === Qt.Key_V) {
+                root.cycleViewMode();
+                event.accepted = true;
+                return;
+            }
+
+            // F1-F4 jump directly to view modes
+            if (event.key === Qt.Key_F1) {
+                root.setViewMode("grid");
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_F2) {
+                root.setViewMode("carousel");
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_F3) {
+                root.setViewMode("desktop");
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_F4) {
+                root.setViewMode("sidebar");
+                event.accepted = true;
+                return;
+            }
+
             var total = root.filteredGames.length;
             if (total === 0) return;
 
-            // Vim (HJKL) & Arrow Keys for Floppy Grid Navigation
-            if (event.key === Qt.Key_Left || event.key === Qt.Key_H) {
-                root.focusedIndex = Math.max(0, root.focusedIndex - 1);
-                root.ensureFocusedVisible();
-                event.accepted = true;
-            } else if (event.key === Qt.Key_Right || event.key === Qt.Key_L) {
-                root.focusedIndex = Math.min(total - 1, root.focusedIndex + 1);
-                root.ensureFocusedVisible();
-                event.accepted = true;
-            } else if (event.key === Qt.Key_Up || event.key === Qt.Key_K) {
-                root.focusedIndex = Math.max(0, root.focusedIndex - cols);
-                root.ensureFocusedVisible();
-                event.accepted = true;
-            } else if (event.key === Qt.Key_Down || event.key === Qt.Key_J) {
-                root.focusedIndex = Math.min(total - 1, root.focusedIndex + cols);
-                root.ensureFocusedVisible();
-                event.accepted = true;
-            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+            // View-specific arrow & HJKL navigation
+            if (root.viewMode === "sidebar") {
+                if (event.key === Qt.Key_Up || event.key === Qt.Key_K) {
+                    root.focusedIndex = Math.max(0, root.focusedIndex - 1);
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_Down || event.key === Qt.Key_J) {
+                    root.focusedIndex = Math.min(total - 1, root.focusedIndex + 1);
+                    event.accepted = true;
+                    return;
+                }
+            } else if (root.viewMode === "carousel") {
+                if (event.key === Qt.Key_Left || event.key === Qt.Key_H) {
+                    root.focusedIndex = Math.max(0, root.focusedIndex - 1);
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_Right || event.key === Qt.Key_L) {
+                    root.focusedIndex = Math.min(total - 1, root.focusedIndex + 1);
+                    event.accepted = true;
+                    return;
+                }
+            } else if (root.viewMode === "desktop") {
+                var dCols = Math.max(1, Math.floor((root.width - 48) / 120));
+                if (event.key === Qt.Key_Left || event.key === Qt.Key_H) {
+                    root.focusedIndex = Math.max(0, root.focusedIndex - 1);
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_Right || event.key === Qt.Key_L) {
+                    root.focusedIndex = Math.min(total - 1, root.focusedIndex + 1);
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_Up || event.key === Qt.Key_K) {
+                    root.focusedIndex = Math.max(0, root.focusedIndex - dCols);
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_Down || event.key === Qt.Key_J) {
+                    root.focusedIndex = Math.min(total - 1, root.focusedIndex + dCols);
+                    event.accepted = true;
+                    return;
+                }
+            } else {
+                var cols = Math.max(1, gridScroll.numCols);
+                if (event.key === Qt.Key_Left || event.key === Qt.Key_H) {
+                    root.focusedIndex = Math.max(0, root.focusedIndex - 1);
+                    root.ensureFocusedVisible();
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_Right || event.key === Qt.Key_L) {
+                    root.focusedIndex = Math.min(total - 1, root.focusedIndex + 1);
+                    root.ensureFocusedVisible();
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_Up || event.key === Qt.Key_K) {
+                    root.focusedIndex = Math.max(0, root.focusedIndex - cols);
+                    root.ensureFocusedVisible();
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_Down || event.key === Qt.Key_J) {
+                    root.focusedIndex = Math.min(total - 1, root.focusedIndex + cols);
+                    root.ensureFocusedVisible();
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                if (root.focusedIndex >= 0 && root.focusedIndex < total) {
+                    var targetGame = root.filteredGames[root.focusedIndex];
+                    if (root.viewMode === "carousel" || root.viewMode === "desktop" || root.viewMode === "sidebar") {
+                        root.launchGame(targetGame.id);
+                    } else {
+                        detailSheet.open(targetGame);
+                    }
+                    event.accepted = true;
+                }
+            } else if (event.key === Qt.Key_Space) {
                 if (root.focusedIndex >= 0 && root.focusedIndex < total) {
                     detailSheet.open(root.filteredGames[root.focusedIndex]);
                     event.accepted = true;
@@ -953,7 +1193,7 @@ ApplicationWindow {
                     searchInput.selectAll();
                 });
                 event.accepted = true;
-            } else if (event.key === Qt.Key_Question || event.key === Qt.Key_F1) {
+            } else if (event.key === Qt.Key_Question) {
                 aboutModal.visible = true;
                 event.accepted = true;
             }

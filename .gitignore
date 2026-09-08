@@ -14,3 +14,5 @@ test_*.png
 # User-requested exclusions
 WISHLIST.md
 wishlist*
+.launcher_settings.json
+*.launcher_settings.json
