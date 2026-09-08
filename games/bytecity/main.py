@@ -118,15 +118,9 @@ def main():
 
     # Set application icon to game floppy disk
     script_dir = Path(__file__).resolve().parent
-    disk_candidates = [
-        script_dir / "assets" / "disk_icon.png",
-        script_dir.parent.parent / "assets" / "covers" / "bytecity_disk.png",
-        Path.home() / ".local" / "share" / "omarchy-arcade" / "assets" / "covers" / "bytecity_disk.png",
-    ]
-    for cp in disk_candidates:
-        if cp.exists():
-            app.setWindowIcon(QIcon(str(cp)))
-            break
+    disk_icon = script_dir / "assets" / "disk_icon.png"
+    if disk_icon.exists():
+        app.setWindowIcon(QIcon(str(disk_icon)))
 
     # Register 2D City Viewport
     qmlRegisterType(CityViewport, "ByteCity", 1, 0, "CityViewport")

@@ -3,14 +3,15 @@
 A standardized guide for the **Omarchy Arcade Cover Art & Floppy Disk Pipeline**.
 
 > [!IMPORTANT]
-> **THE LAUNCHER DRAWS FLOPPY DISKS PROCEDURALLY:**
+> **HOW FLOPPY DISKS WORK IN OMARCHY ARCADE:**
 > 1. The launcher (`launcher/main.qml`) dynamically renders all 3.5" floppy disks using [`launcher/FloppyCard.qml`](file:///Users/christhompson/arcade/launcher/FloppyCard.qml).
 > 2. Chassis colors, grid header colors, titles, and reference codes are driven from [`catalog.json`](file:///Users/christhompson/arcade/catalog.json).
 > 3. `assets/covers/<game_id>.png` is the **4:3 painted retro box art** (1200×896) loaded *inside* the floppy disk label's art window.
-> 4. Static disk icons (`assets/covers/<id>_disk.png` and `games/<id>/assets/disk_icon.png`) are **never AI-generated**; they are rendered directly from `FloppyCard.qml` using:
+> 4. **THERE IS ONLY ONE DISK IMAGE IN THE SYSTEM:** The small 256×256 app icon at `games/<game_id>/assets/disk_icon.png` used for the game window icon (`app.setWindowIcon()`). It is rendered via:
 >    ```bash
 >    .venv/bin/python tools/render_disk.py <game_id>
 >    ```
+>    Do NOT create any second disk in `assets/covers/`.
 
 ---
 
@@ -57,21 +58,19 @@ Pure full-bleed game scene artwork in 4:3 aspect ratio.
 
 ---
 
-## 4. Exporting Static Diskette Icons (`tools/render_disk.py`)
+## 4. Exporting the App Icon (`tools/render_disk.py`)
 
 After adding or updating a game in `catalog.json` with its cover art in `assets/covers/<game_id>.png`:
 
 ```bash
-# Render a single game's disk
+# Render the single 256x256 app icon for a game
 .venv/bin/python tools/render_disk.py <game_id>
 
-# Or render all games in the catalog
+# Or render disk icons for all games in the catalog
 .venv/bin/python tools/render_disk.py --all
 ```
 
-This updates:
-1. `assets/covers/<game_id>_disk.png` (1024×1024 RGBA transparent)
-2. `games/<game_id>/assets/disk_icon.png` (256×256 RGBA transparent)
+This generates `games/<game_id>/assets/disk_icon.png` (256×256 RGBA transparent, ~13 KB).
 
 ### 1. `2048` (Ref: `OA-001`)
 * **Category:** Blocks & Merging
