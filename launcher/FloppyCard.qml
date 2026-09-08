@@ -368,6 +368,7 @@ Item {
             case "backgammon": return compBackgammon;
             case "reversi": return compReversi;
             case "bidama": return compBidama;
+            case "omarchybolo": return compOmarchyBolo;
             default: return compDefault;
         }
     }
@@ -1925,6 +1926,94 @@ Item {
                 drawMarble(width * 0.50, cy, 10, "#D97706", "#FDE68A"); // Yuzu (Center)
                 drawMarble(width * 0.67, cy, 9, "#DB2777", "#FBCFE8"); // Sakura
                 drawMarble(width * 0.84, cy, 9, "#7C3AED", "#DDD6FE"); // Asagao
+            }
+        }
+    }
+
+    // 30. OmarchyBolo II Tactical Radar & Tank Badge
+    Component {
+        id: compOmarchyBolo
+        Canvas {
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                // Tactical military dark slate background
+                ctx.fillStyle = "#141c16";
+                ctx.fillRect(0, 0, width, height);
+
+                // Tactical coordinate grid
+                ctx.strokeStyle = "#1e2e22";
+                ctx.lineWidth = 1;
+                for (var x = 12; x < width; x += 16) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+                }
+                for (var y = 8; y < height; y += 14) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+                }
+
+                // Radar circular sweep & range rings on right
+                var rx = width * 0.72;
+                var ry = height * 0.50;
+                ctx.strokeStyle = "#22c55e44";
+                ctx.lineWidth = 1.2;
+                ctx.beginPath(); ctx.arc(rx, ry, 24, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(rx, ry, 14, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(rx, ry, 4, 0, Math.PI * 2); ctx.stroke();
+                // Crosshairs
+                ctx.beginPath();
+                ctx.moveTo(rx - 28, ry); ctx.lineTo(rx + 28, ry);
+                ctx.moveTo(rx, ry - 28); ctx.lineTo(rx, ry + 28);
+                ctx.stroke();
+
+                // Blip on radar
+                ctx.fillStyle = "#ef4444";
+                ctx.beginPath(); ctx.arc(rx + 10, ry - 8, 3, 0, Math.PI * 2); ctx.fill();
+
+                // Classic Top-Down M4 Tank on left
+                var tx = width * 0.28;
+                var ty = height * 0.50;
+
+                // Treads
+                ctx.fillStyle = "#1e293b";
+                ctx.fillRect(tx - 18, ty - 15, 36, 7);
+                ctx.fillRect(tx - 18, ty + 8, 36, 7);
+
+                // Tread notches
+                ctx.fillStyle = "#334155";
+                for (var i = -16; i <= 14; i += 6) {
+                    ctx.fillRect(tx + i, ty - 15, 2, 7);
+                    ctx.fillRect(tx + i, ty + 8, 2, 7);
+                }
+
+                // Tank Hull
+                ctx.fillStyle = "#3f6212"; // Olive drab armor
+                ctx.fillRect(tx - 14, ty - 9, 28, 18);
+
+                // Tank Turret
+                ctx.fillStyle = "#4d7c0f";
+                ctx.beginPath();
+                ctx.arc(tx - 1, ty, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = "#65a30d";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Cannon Barrel pointing right towards radar
+                ctx.fillStyle = "#15803d";
+                ctx.fillRect(tx + 4, ty - 2.5, 18, 5);
+                // Muzzle brake
+                ctx.fillStyle = "#eab308";
+                ctx.fillRect(tx + 21, ty - 3.5, 3, 7);
+
+                // Small pillbox bunker with gun slit in upper right
+                ctx.fillStyle = "#374151";
+                ctx.beginPath();
+                ctx.arc(width * 0.88, height * 0.22, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = "#ef4444";
+                ctx.fillRect(width * 0.88 - 3, height * 0.22 - 1, 6, 2);
             }
         }
     }

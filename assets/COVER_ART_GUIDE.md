@@ -254,3 +254,11 @@ Clean line art, flat vector icon aesthetic, solid vibrant colors, sticker graphi
 * **Grid Color:** Gold (`#D4AF37`)
 * **Illustration:** Serene Japanese veranda on woven tatami matting with handcrafted hinoki chutes and luminous glass bīdama marbles aligning on a black urushi lacquer pitch line with gold kintsugi trim.
 * **Bottom Text:** `CASUAL PHYSICS • OA-028`
+
+### 29. `OmarchyBolo II` (Ref: `OA-029`)
+* **Category:** Action Arcade
+* **Floppy Color:** Tactical Armor Slate (`#222A22`) with flat silver shutter
+* **Grid Color:** Radar Green (`#22C55E`)
+* **Illustration:** Island archipelago battlefield painted in classic 1980s computer box art style: M4 battle tank maneuvering through pine forests, tactical pillbox bunkers firing defensive salvos, naval aircraft carrier on ocean waterways, and tactical radar rings.
+* **Bottom Text:** `ACTION ARCADE • OA-029`
+

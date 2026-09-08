@@ -793,6 +793,34 @@
       "size": "3.6 MB",
       "size_bytes": 3780173,
       "download_size": "3.6 MB"
+    },
+    {
+      "id": "omarchybolo",
+      "title": "OmarchyBolo II",
+      "ref": "OA-029",
+      "category": "Action Arcade",
+      "floppy_color": "#222a22",
+      "grid_color": "#22C55E",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Tactical Armored Combat, Combat Engineering & WebRTC Warfare",
+      "description": "A faithful tactical tank warfare simulation inspired by Stuart Cheshire's 1987 Macintosh classic Bolo. Command M4 tanks, armed humvees, and aircraft carriers; harvest timber, lay defensive pillbox bunkers, place mines, build bridges, and clash against autonomous AI or live WebRTC players.",
+      "instructions": [
+        "Steer your armored vehicle across island archipelagos capturing neutral bases and pillbox bunkers.",
+        "Harvest trees for building materials to repair damaged hulls, bridges, and defensive fortifications.",
+        "Deploy anti-tank mines to protect choke points and supply depots.",
+        "Engage enemy armor and naval carriers with high-explosive cannon artillery."
+      ],
+      "controls": {
+        "keyboard": "W/S to drive, A/D to steer, Mouse to aim turret, Space/Click to fire cannon, M to lay mine, E/H for engineering",
+        "shortcuts": "Esc for mission configuration dialog"
+      },
+      "folder": "games/omarchybolo",
+      "entrypoint": "games/omarchybolo/main.py",
+      "cover_image": "assets/covers/omarchybolo.png",
+      "size": "1.6 MB",
+      "size_bytes": 1649111,
+      "download_size": "1.6 MB"
     }
   ]
 }

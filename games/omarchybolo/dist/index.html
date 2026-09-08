@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>OmarchyBolo II — Classic Tactical Tank Warfare</title>
+  <meta name="description" content="A faithful online multiplayer remake of Stuart Cheshire's 1987 Macintosh classic Bolo with pure vector graphics, WebRTC P2P matchmaking, and AI tanks.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Orbitron:wght@600;900&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231a2216'/%3E%3Crect x='6' y='6' width='20' height='20' rx='3' fill='%234a6e38'/%3E%3Crect x='13' y='3' width='6' height='12' rx='1' fill='%23a1c97a'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%232d4422'/%3E%3C/svg%3E">
+  <script type="module" crossorigin src="./assets/index-C8Le33sl.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BitWRrxI.css">
+</head>
+<body>
+  <!-- Full Screen Canvas -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Authentic Macintosh System 7 Setup Dialog -->
+  <div id="lobby-overlay">
+    <div class="lobby-card">
+      <div class="mac-titlebar">
+        <div class="mac-close-box"></div>
+        <div class="mac-pinstripes"></div>
+        <div class="mac-title">BOLO II — MISSION CONFIGURATION</div>
+        <div class="mac-pinstripes"></div>
+      </div>
+      <div class="lobby-body">
+        <div class="lobby-header">
+          <h1 class="game-title">BOLO II</h1>
+          <p class="subtitle">THE UNOFFICIAL SEQUEL</p>
+        </div>
+
+        <!-- Step Progress Indicator -->
+        <div id="lobby-step-indicator" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div id="step-dot-1" class="step-badge active">1. COMMANDER</div>
+            <div style="color: #475569; font-size: 11px;">→</div>
+            <div id="step-dot-2" class="step-badge">2. MODE</div>
+            <div style="color: #475569; font-size: 11px;">→</div>
+            <div id="step-dot-3" class="step-badge">3. MISSION & SETTINGS</div>
+          </div>
+        </div>
+
+        <!-- ================= STEP 1: COMMANDER PROFILE (Callsign, Color, Vehicle) ================= -->
+        <div id="lobby-step-1" class="lobby-step-pane">
+          <!-- Commander Identity Bar -->
+          <div class="commander-bar" style="margin-bottom: 12px;">
+            <div class="commander-field">
+              <label for="input-player-name" class="compact-label">CALLSIGN</label>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <input type="text" id="input-player-name" value="" placeholder="Callsign" maxlength="16" spellcheck="false" style="flex: 1; min-width: 0;">
+                <button type="button" id="btn-reroll-callsign" title="Roll random rugged callsign" style="width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; border: 1px solid #334155; background: #1e293b; color: #94a3b8; cursor: pointer; border-radius: 4px; flex-shrink: 0; transition: background 0.15s;">🎲</button>
+              </div>
+            </div>
+            <div class="commander-color-field">
+              <label class="compact-label">COMMANDER HERALDRY</label>
+              <div id="color-picker-container" class="color-picker"></div>
+            </div>
+          </div>
+
+          <!-- Vehicle Class Selector -->
+          <div class="vehicle-picker-box" style="margin-bottom: 16px;">
+            <div class="vehicle-picker-heading">DEPLOYMENT VEHICLE CLASS</div>
+            <div class="vehicle-cards-container">
+              <div class="vehicle-card selected" data-vehicle="TANK">
+                <canvas id="canvas-preview-tank" width="48" height="48" class="vehicle-preview-canvas"></canvas>
+                <div class="vehicle-card-info">
+                  <div class="vehicle-card-name">M4 TANK</div>
+                  <div class="vehicle-card-desc">All-Rounder • 155mm Heavy Artillery Shells • LGM Engineer</div>
+                </div>
+              </div>
+              <div class="vehicle-card" data-vehicle="HUMVEE">
+                <canvas id="canvas-preview-humvee" width="48" height="48" class="vehicle-preview-canvas"></canvas>
+                <div class="vehicle-card-info">
+                  <div class="vehicle-card-name">M998 HUMVEE</div>
+                  <div class="vehicle-card-desc">High Speed • Paved Roads • River Snorkel • SAM Missiles</div>
+                </div>
+              </div>
+              <div class="vehicle-card" data-vehicle="CARRIER">
+                <canvas id="canvas-preview-carrier" width="48" height="48" class="vehicle-preview-canvas"></canvas>
+                <div class="vehicle-card-info">
+                  <div class="vehicle-card-name">AIRCRAFT CARRIER</div>
+                  <div class="vehicle-card-desc">Deep Sea Warship • Attack Chopper • 6-min Supply Airdrops</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-step1-next" class="btn btn-primary btn-launch">CONTINUE TO GAME MODE →</button>
+        </div>
+
+        <!-- ================= STEP 2: CHOOSE GAME MODE ================= -->
+        <div id="lobby-step-2" class="lobby-step-pane" style="display: none;">
+          <div style="font-size: 11px; font-weight: 800; color: #38bdf8; letter-spacing: 1.5px; text-align: center; margin-bottom: 8px; text-transform: uppercase;">
+            SELECT OPERATIONAL THEATER
+          </div>
+
+          <!-- Real-Time Network Battlefield Telemetry -->
+          <div id="lobby-network-telemetry" style="display: flex; justify-content: center; align-items: center; gap: 14px; margin-bottom: 14px; padding: 6px 16px; background: rgba(7, 10, 16, 0.85); border: 1px solid #1e293b; border-radius: 20px; box-shadow: inset 0 1px 4px rgba(0,0,0,0.5);">
+            <!-- Open Lobbies We Can Join -->
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="telemetry-live-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #38bdf8; box-shadow: 0 0 6px #38bdf8;"></span>
+              <span style="font-size: 9.5px; font-weight: 800; color: #94a3b8; letter-spacing: 0.5px;">OPEN LOBBIES:</span>
+              <span id="telemetry-open-lobbies" style="font-size: 11.5px; font-weight: 800; color: #38bdf8; font-family: monospace;">0</span>
+            </div>
+            <span style="color: #334155; font-size: 11px;">•</span>
+            <!-- Active Games Playing -->
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 11px;">⚔️</span>
+              <span style="font-size: 9.5px; font-weight: 800; color: #94a3b8; letter-spacing: 0.5px;">ACTIVE GAMES:</span>
+              <span id="telemetry-active-games" style="font-size: 11.5px; font-weight: 800; color: #fbbf24; font-family: monospace;">0</span>
+            </div>
+            <span style="color: #334155; font-size: 11px;">•</span>
+            <!-- Players Online -->
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="telemetry-live-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 6px #34d399;"></span>
+              <span style="font-size: 9.5px; font-weight: 800; color: #94a3b8; letter-spacing: 0.5px;">PLAYERS ONLINE:</span>
+              <span id="telemetry-players-online" style="font-size: 11.5px; font-weight: 800; color: #34d399; font-family: monospace;">1</span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; align-items: stretch; margin-bottom: 16px;">
+            <!-- Option 1: Create Battle (Solo / Co-op / Public Host) -->
+            <div id="btn-choose-host" class="mode-select-card" style="cursor: pointer; background: #0c1017; border: 1.5px solid #334155; border-radius: 6px; padding: 24px 20px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; align-items: center; transition: all 0.15s ease;">
+              <div style="font-size: 38px; margin-bottom: 10px;">⚡</div>
+              <div>
+                <div style="font-size: 15px; font-weight: 800; color: #34d399; letter-spacing: 1px; margin-bottom: 8px;">CREATE BATTLE</div>
+                <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">Host a battle room. Play solo against AI bots, invite friends via direct link, or host a public match.</div>
+              </div>
+              <div style="margin-top: 16px; font-size: 10.5px; font-weight: 800; color: #34d399; letter-spacing: 1px;">SETUP WAR ROOM →</div>
+            </div>
+
+            <!-- Option 2: Join Battle -->
+            <div id="btn-choose-join" class="mode-select-card" style="cursor: pointer; background: #0c1017; border: 1.5px solid #334155; border-radius: 6px; padding: 24px 20px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; align-items: center; transition: all 0.15s ease;">
+              <div style="font-size: 38px; margin-bottom: 10px;">🔗</div>
+              <div>
+                <div style="font-size: 15px; font-weight: 800; color: #38bdf8; letter-spacing: 1px; margin-bottom: 8px;">JOIN BATTLE</div>
+                <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">Browse open public battlefields or connect directly to a commander using their Room Code.</div>
+              </div>
+              <div style="margin-top: 16px; font-size: 10.5px; font-weight: 800; color: #38bdf8; letter-spacing: 1px;">FIND BATTLE →</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button id="btn-step2-back" class="btn btn-secondary" style="flex: 0 0 140px; padding: 12px; font-size: 11px;">← BACK</button>
+          </div>
+        </div>
+
+        <!-- ================= STEP 3B: MULTIPLAYER JOIN ROOM ================= -->
+        <div id="lobby-step-3-mp-join" class="lobby-step-pane" style="display: none;">
+          <!-- Public Lobbies Section -->
+          <div class="tab-content-box" style="margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="section-title" style="margin-bottom: 0;">PUBLIC BATTLEFIELDS</div>
+                <span id="join-pane-stats" style="font-size: 9.5px; font-weight: 700; color: #94a3b8; font-family: monospace; letter-spacing: 0.5px;"></span>
+              </div>
+              <button id="btn-refresh-lobbies" class="btn btn-secondary" style="padding: 4px 10px; font-size: 10px; display: inline-flex; align-items: center; gap: 4px;">
+                🔄 REFRESH
+              </button>
+            </div>
+            <p class="mp-hint" style="margin-bottom: 10px;">Select an open battlefield to join immediately via direct P2P mesh.</p>
+            
+            <div id="public-lobbies-container" style="max-height: 180px; overflow-y: auto; background: #070a10; border: 1px solid #1e293b; border-radius: 6px; padding: 6px; margin-bottom: 12px;">
+              <div id="public-lobbies-empty" style="text-align: center; padding: 24px 12px; color: #64748b; font-size: 11px; font-weight: 600;">
+                No open public battles found. Create one or join via direct room code below!
+              </div>
+              <div id="public-lobbies-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+            </div>
+
+            <!-- Manual Room Code Divider -->
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+              <div style="flex: 1; height: 1px; background: #1e293b;"></div>
+              <span style="font-size: 9.5px; font-weight: 800; color: #64748b; letter-spacing: 1px;">OR ENTER DIRECT ROOM CODE</span>
+              <div style="flex: 1; height: 1px; background: #1e293b;"></div>
+            </div>
+
+            <div class="multiplayer-row">
+              <input type="text" id="input-room-code" placeholder="Enter Room Code (e.g. ALPHA, PACIFIC)" maxlength="20" style="font-size: 14px; text-transform: uppercase;">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button id="btn-join-back" class="btn btn-secondary" style="flex: 0 0 120px;">← BACK</button>
+            <button id="btn-join-room" class="btn btn-primary btn-launch" style="flex: 1;">JOIN ROOM & CONNECT</button>
+          </div>
+        </div>
+
+        <!-- ================= STEP 3C: MULTIPLAYER HOST CONFIGURATION (Map & Settings) ================= -->
+        <div id="lobby-step-3-mp-host" class="lobby-step-pane" style="display: none;">
+          <div style="display: grid; grid-template-columns: 240px 1fr; gap: 20px; margin-bottom: 20px; align-items: stretch;">
+            <!-- Left Column: Map Preview + Seed for Host -->
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: #0c1017; border: 1px solid #1e293b; border-radius: 6px; padding: 14px; box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);">
+              <div style="font-size: 11px; font-weight: 800; color: #38bdf8; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">BATTLEFIELD MAP SURVEY</div>
+              <div style="position: relative; padding: 3px; background: #070e1a; border: 1px solid #0284c7; border-radius: 4px; box-shadow: 0 0 10px rgba(2, 132, 199, 0.25);">
+                <canvas id="canvas-island-preview-mp" width="200" height="200" style="width: 200px; height: 200px; display: block; image-rendering: pixelated; border-radius: 2px;"></canvas>
+              </div>
+              <div style="width: 100%; margin-top: 12px;">
+                <label for="input-island-seed-mp" style="display: block; font-size: 9.5px; font-weight: 800; color: #64748b; margin-bottom: 5px; text-align: center; letter-spacing: 1px;">ISLAND SEED</label>
+                <div style="display: flex; gap: 6px;">
+                  <input type="text" id="input-island-seed-mp" value="42819" maxlength="6" style="flex: 1; text-align: center; padding: 7px; font-size: 13px; font-weight: 700; letter-spacing: 1px; background: #070a10; border: 1px solid #334155; border-radius: 4px; color: #f8fafc;">
+                  <button type="button" id="btn-random-seed-mp" class="btn btn-secondary" style="width: auto; padding: 7px 12px; font-size: 14px;" title="Roll Random Island Seed">🎲</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Host Match Parameters -->
+            <div style="display: flex; flex-direction: column; justify-content: space-between; background: #0c1017; border: 1px solid #1e293b; border-radius: 6px; padding: 16px; box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);">
+              <div style="font-size: 11px; font-weight: 800; color: #94a3b8; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 6px;">
+                BATTLEFIELD SETUP
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: space-around;">
+                <div class="control-group">
+                  <label for="staging-team-mode" style="font-size: 10px; font-weight: 800; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 4px;">FACTION TEAMS</label>
+                  <select id="staging-team-mode" style="padding: 8px 10px; font-size: 11.5px; background: #070a10; border-color: #334155; border-radius: 4px;">
+                    <option value="ffa" selected>Free-For-All (Open Diplomacy)</option>
+                    <option value="2teams">2 Teams (Alpha vs Bravo)</option>
+                    <option value="4teams">4 Factions (N, E, S, W)</option>
+                  </select>
+                </div>
+                <div class="control-group">
+                  <label for="staging-win-condition" style="font-size: 10px; font-weight: 800; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 4px;">VICTORY GOAL</label>
+                  <select id="staging-win-condition" style="padding: 8px 10px; font-size: 11.5px; background: #070a10; border-color: #334155; border-radius: 4px;">
+                    <option value="bases_pills" selected>Bases & Pillboxes (Checkmate)</option>
+                    <option value="bases_only">Capture All 16 Bases</option>
+                    <option value="none">Endless Match (No End)</option>
+                  </select>
+                </div>
+
+                <div class="control-group" style="margin-top: 4px; padding-top: 8px; border-top: 1px solid #1e293b;">
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 11px; font-weight: 700; color: #38bdf8;">
+                    <input type="checkbox" id="check-host-public-lobby" checked style="accent-color: #0284c7; width: 15px; height: 15px; cursor: pointer;">
+                    <span>LIST IN PUBLIC LOBBY BROWSER</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <button id="btn-host-config-back" class="btn btn-secondary" style="flex: 0 0 140px; padding: 12px; font-size: 11px;">← BACK</button>
+            <button id="btn-create-lobby-room" class="btn btn-accent btn-launch" style="flex: 1; padding: 12px; font-size: 12px; letter-spacing: 1.5px;">ENTER WAR ROOM →</button>
+          </div>
+        </div>
+
+        <!-- ================= STEP 4: MULTIPLAYER STAGING ROOM (Connected Players & Launch) ================= -->
+        <div id="lobby-step-3-mp-staging" class="lobby-step-pane" style="display: none;">
+          <div style="display: flex; flex-direction: column; justify-content: space-between; flex: 1;">
+            <div>
+              <!-- Tactical Room Code & Action Bar -->
+              <div style="display: flex; justify-content: space-between; align-items: center; background: #070a10; border: 1px solid #1e293b; border-radius: 6px; padding: 10px 16px; margin-bottom: 12px; height: 50px; box-sizing: border-box;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div>
+                    <div style="font-size: 9px; color: #64748b; letter-spacing: 1px; font-weight: 800;">TACTICAL ROOM CODE</div>
+                    <div id="staging-room-code" style="font-size: 18px; font-weight: 800; color: #38bdf8; font-family: monospace; letter-spacing: 2px;">BOLO-ROOM</div>
+                  </div>
+                  <div id="staging-match-badge" style="display: flex; gap: 6px; align-items: center;">
+                    <span id="staging-mode-pill" style="background: #162032; border: 1px solid #334155; border-radius: 4px; padding: 2px 7px; font-size: 9.5px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px;">FFA</span>
+                    <span id="staging-diff-pill" style="background: #162032; border: 1px solid #334155; border-radius: 4px; padding: 2px 7px; font-size: 9.5px; font-weight: 700; color: #facc15; letter-spacing: 0.5px;">🟡 VETERAN</span>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <button id="btn-copy-room-link" style="display: inline-flex; align-items: center; gap: 6px; background: #162032; border: 1px solid #334155; border-radius: 4px; color: #cbd5e1; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; padding: 7px 14px; cursor: pointer; transition: all 0.15s ease; white-space: nowrap;">
+                    <span>📋</span> COPY CODE
+                  </button>
+                  <button id="btn-leave-staging" style="display: inline-flex; align-items: center; gap: 6px; background: #1f1418; border: 1px solid #4a1d24; border-radius: 4px; color: #f87171; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; padding: 7px 14px; cursor: pointer; transition: all 0.15s ease; white-space: nowrap;">
+                    <span>🚪</span> LEAVE
+                  </button>
+                  <button id="btn-launch-multiplayer" style="display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; border-radius: 4px; color: #ffffff; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; padding: 7px 16px; cursor: pointer; transition: all 0.15s ease; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4); white-space: nowrap;">
+                    <span>⚡</span> LAUNCH BATTLE
+                  </button>
+                </div>
+              </div>
+
+              <!-- Dynamic Staging Roster Container (Adapts to FFA, 2 Teams, or 4 Factions) -->
+              <div style="margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-size: 10.5px; font-weight: 800; color: #94a3b8; letter-spacing: 1px;">
+                      DEPLOYED FORCES (<span id="staging-player-count">1</span>)
+                    </div>
+                    <div id="staging-cap-indicator" style="font-size: 9.5px; font-weight: 800; color: #38bdf8; background: #0c1c33; border: 1px solid #0284c7; padding: 2px 7px; border-radius: 4px; display: inline-flex; gap: 8px;">
+                      <span>LAND: <strong id="cap-land-count" style="color: #ffffff;">1</strong>/16</span>
+                      <span style="color: #64748b;">|</span>
+                      <span>SHIPS: <strong id="cap-sea-count" style="color: #ffffff;">0</strong>/<strong id="cap-sea-max" style="color: #38bdf8;">2</strong></span>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div id="staging-roster-hint" style="font-size: 9.5px; color: #64748b; font-weight: 700;">
+                      HOST CAN REASSIGN PLAYERS & SQUADS
+                    </div>
+                    <button id="btn-open-add-bot" style="display: inline-flex; align-items: center; gap: 6px; background: #064e3b; border: 1px solid #10b981; border-radius: 4px; color: #6ee7b7; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; padding: 5px 12px; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);">
+                      <span>🤖</span> + ADD AI BOT
+                    </button>
+                  </div>
+                </div>
+
+                <div id="staging-roster-container">
+                  <!-- Injected dynamically by LobbyUI based on match teamMode -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Permanent Bottom Status Bar (Never causes reflow or layout shift) -->
+            <div id="staging-bottom-bar" style="background: #070a10; border: 1px solid #1e293b; border-radius: 6px; padding: 8px 16px; height: 44px; display: flex; align-items: center; justify-content: space-between; box-sizing: border-box;">
+              <!-- Waiting Message State -->
+              <div id="staging-client-status" style="font-size: 11px; color: #64748b; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <span>⏳</span> Waiting for Host commander to initiate battle launch...
+              </div>
+
+              <!-- Live Countdown Display State -->
+              <div id="staging-countdown-banner" style="display: none; width: 100%; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span id="staging-countdown-icon" style="font-size: 16px;">⏱️</span>
+                  <div>
+                    <span style="font-size: 9px; font-weight: 800; color: #a5b4fc; letter-spacing: 0.5px;">COUNTDOWN ACTIVE: </span>
+                    <span id="staging-countdown-text" style="font-size: 13px; font-weight: 800; color: #38bdf8; font-family: monospace; letter-spacing: 1px;">
+                      LAUNCH IN 00:30
+                    </span>
+                  </div>
+                </div>
+                <button id="btn-cancel-countdown" style="display: none; background: #271318; border: 1px solid #ef4444; border-radius: 3px; color: #fca5a5; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; padding: 5px 12px; cursor: pointer; white-space: nowrap;">
+                  ❌ ABORT LAUNCH
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= ADD AI BOT MODAL ================= -->
+        <div id="modal-add-bot" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 8, 15, 0.88); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+          <div style="background: #0d121d; border: 1.5px solid #10b981; border-radius: 8px; width: 460px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 25px rgba(16, 185, 129, 0.25); font-family: 'JetBrains Mono', monospace;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; border-bottom: 1px solid #1e293b; padding-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">🤖</span>
+                <span style="font-size: 13px; font-weight: 800; color: #6ee7b7; letter-spacing: 1px;">DEPLOY AI COMMANDER</span>
+              </div>
+              <button type="button" id="btn-close-add-bot" style="background: none; border: none; color: #64748b; font-size: 16px; cursor: pointer; padding: 0 4px;">✕</button>
+            </div>
+
+            <!-- Vehicle Class Selection -->
+            <div style="margin-bottom: 14px;">
+              <label style="display: block; font-size: 9.5px; font-weight: 800; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 6px;">VEHICLE CHASSIS & DOCTRINE</label>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                <button type="button" class="btn-bot-vehicle selected" data-vehicle="TANK" id="bot-opt-tank" style="background: #070a10; border: 1.5px solid #0284c7; border-radius: 5px; padding: 8px 6px; color: #f8fafc; cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+                  <span style="font-size: 16px;">🛡️</span>
+                  <span style="font-size: 11px; font-weight: 800;">TANK</span>
+                  <span style="font-size: 8.5px; color: #94a3b8;">Island Base</span>
+                </button>
+                <button type="button" class="btn-bot-vehicle" data-vehicle="HUMVEE" id="bot-opt-humvee" style="background: #070a10; border: 1.5px solid #334155; border-radius: 5px; padding: 8px 6px; color: #f8fafc; cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+                  <span style="font-size: 16px;">⚡</span>
+                  <span style="font-size: 11px; font-weight: 800;">HUMVEE</span>
+                  <span style="font-size: 8.5px; color: #94a3b8;">Island Base</span>
+                </button>
+                <button type="button" class="btn-bot-vehicle" data-vehicle="CARRIER" id="bot-opt-carrier" style="background: #070a10; border: 1.5px solid #334155; border-radius: 5px; padding: 8px 6px; color: #f8fafc; cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+                  <span style="font-size: 16px;">🚢</span>
+                  <span style="font-size: 11px; font-weight: 800;">CARRIER</span>
+                  <span style="font-size: 8.5px; color: #94a3b8;">Deep Sea Berth</span>
+                </button>
+              </div>
+              <div id="bot-vehicle-cap-msg" style="display: none; margin-top: 5px; font-size: 9px; color: #f87171; font-weight: 700;"></div>
+            </div>
+
+            <!-- Parameters Grid (Team, Difficulty, Brain) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+              <div class="control-group" id="group-bot-team">
+                <label for="bot-team-select" style="font-size: 9.5px; font-weight: 800; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 3px;">TEAM / FACTION</label>
+                <select id="bot-team-select" style="padding: 7px 8px; font-size: 11px; background: #070a10; border-color: #334155; border-radius: 4px; color: #f8fafc;">
+                  <option value="0">Team Alpha (Cyan)</option>
+                  <option value="1">Team Bravo (Crimson)</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label for="bot-difficulty-select" style="font-size: 9.5px; font-weight: 800; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 3px;">COMBAT DIFFICULTY</label>
+                <select id="bot-difficulty-select" style="padding: 7px 8px; font-size: 11px; background: #070a10; border-color: #334155; border-radius: 4px; color: #f8fafc;">
+                  <option value="RECRUIT">🟢 Recruit (Cadet)</option>
+                  <option value="VETERAN" selected>🟡 Veteran (Tactical)</option>
+                  <option value="ELITE">🔴 Elite (Ruthless)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="control-group" style="margin-bottom: 14px;">
+              <label for="bot-brain-select" style="font-size: 9.5px; font-weight: 800; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 3px;">TACTICAL BRAIN DOCTRINE</label>
+              <select id="bot-brain-select" style="padding: 7px 8px; font-size: 11px; background: #070a10; border-color: #334155; border-radius: 4px; color: #f8fafc;">
+                <option value="HUNTER" selected>🎯 Hunter (Lead Assault & Breach)</option>
+                <option value="SENTRY">🛡️ Sentry (Base & Pillbox Defense)</option>
+                <option value="ENGINEER">🔧 Engineer (Build, Refuel & Repair)</option>
+                <option value="GUERILLA">🥷 Guerilla (Mines, Ambush & Harass)</option>
+              </select>
+            </div>
+
+            <!-- Quantity / Batch Deployment -->
+            <div class="control-group" id="group-bot-quantity" style="margin-bottom: 18px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <label for="bot-count-input" style="font-size: 9.5px; font-weight: 800; color: #94a3b8; letter-spacing: 0.5px;">QUANTITY TO DEPLOY</label>
+                <span id="bot-count-max-hint" style="font-size: 9px; color: #6ee7b7; font-weight: 700;">Max available: 15</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="number" id="bot-count-input" min="1" max="16" value="1" style="width: 75px; padding: 7px 8px; font-size: 13px; font-weight: 800; background: #070a10; border: 1px solid #334155; border-radius: 4px; color: #f8fafc; font-family: 'JetBrains Mono', monospace; text-align: center;">
+                <div style="display: flex; gap: 6px; flex: 1;">
+                  <button type="button" class="btn btn-secondary btn-bot-qty-preset" data-qty="1" style="flex: 1; padding: 6px 0; font-size: 10px; font-weight: 800;">+1</button>
+                  <button type="button" class="btn btn-secondary btn-bot-qty-preset" data-qty="2" style="flex: 1; padding: 6px 0; font-size: 10px; font-weight: 800;">+2</button>
+                  <button type="button" class="btn btn-secondary btn-bot-qty-preset" data-qty="4" style="flex: 1; padding: 6px 0; font-size: 10px; font-weight: 800;">+4</button>
+                  <button type="button" class="btn btn-secondary btn-bot-qty-preset" data-qty="max" style="flex: 1.2; padding: 6px 0; font-size: 10px; font-weight: 800; color: #38bdf8; border-color: #0284c7;">MAX FILL</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+              <button type="button" id="btn-cancel-add-bot" class="btn btn-secondary" style="padding: 9px 16px; font-size: 11px;">CANCEL</button>
+              <button type="button" id="btn-confirm-add-bot" class="btn btn-accent" style="padding: 9px 20px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;">DEPLOY COMMANDER ↵</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= LAUNCH COUNTDOWN PROMPT MODAL ================= -->
+        <div id="modal-launch-countdown" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 8, 15, 0.88); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+          <div style="background: #0d121d; border: 1.5px solid #0284c7; border-radius: 8px; width: 440px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(2, 132, 199, 0.3); font-family: 'JetBrains Mono', monospace;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 8px;">
+              <span style="font-size: 18px;">⏱️</span>
+              <span style="font-size: 13px; font-weight: 800; color: #38bdf8; letter-spacing: 1px;">SCHEDULE MATCH LAUNCH</span>
+            </div>
+
+            <div style="font-size: 11px; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
+              Set the preparation countdown timer. All commanders will see the live countdown, players can still join, and you can organize teams until T-0.
+            </div>
+
+            <!-- Preset Buttons -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px;">
+              <button type="button" class="btn-preset-time" data-sec="10" style="background: #162032; border: 1px solid #334155; border-radius: 4px; color: #f8fafc; font-weight: 800; font-size: 11px; padding: 8px 4px; cursor: pointer;">10s</button>
+              <button type="button" class="btn-preset-time" data-sec="30" style="background: #162032; border: 1px solid #0284c7; border-radius: 4px; color: #38bdf8; font-weight: 800; font-size: 11px; padding: 8px 4px; cursor: pointer;">30s</button>
+              <button type="button" class="btn-preset-time" data-sec="60" style="background: #162032; border: 1px solid #334155; border-radius: 4px; color: #f8fafc; font-weight: 800; font-size: 11px; padding: 8px 4px; cursor: pointer;">1m</button>
+              <button type="button" class="btn-preset-time" data-sec="120" style="background: #162032; border: 1px solid #334155; border-radius: 4px; color: #f8fafc; font-weight: 800; font-size: 11px; padding: 8px 4px; cursor: pointer;">2m</button>
+            </div>
+
+            <!-- Custom Minutes & Seconds Inputs -->
+            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; background: #070a10; border: 1px solid #1e293b; border-radius: 6px; padding: 12px; margin-bottom: 20px;">
+              <div style="display: flex; flex-direction: column; align-items: center;">
+                <label for="input-countdown-min" style="font-size: 9px; font-weight: 800; color: #64748b; margin-bottom: 4px;">MINUTES</label>
+                <input type="number" id="input-countdown-min" min="0" max="10" value="0" style="width: 60px; text-align: center; font-size: 18px; font-weight: 800; padding: 6px; background: #0c1017; border: 1px solid #334155; border-radius: 4px; color: #38bdf8;">
+              </div>
+              <span style="font-size: 20px; font-weight: 800; color: #64748b; margin-top: 14px;">:</span>
+              <div style="display: flex; flex-direction: column; align-items: center;">
+                <label for="input-countdown-sec" style="font-size: 9px; font-weight: 800; color: #64748b; margin-bottom: 4px;">SECONDS</label>
+                <input type="number" id="input-countdown-sec" min="0" max="59" value="30" style="width: 60px; text-align: center; font-size: 18px; font-weight: 800; padding: 6px; background: #0c1017; border: 1px solid #334155; border-radius: 4px; color: #38bdf8;">
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+              <button type="button" id="btn-cancel-launch-modal" style="flex: 1; background: #1e293b; border: 1px solid #475569; border-radius: 4px; color: #cbd5e1; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 10px; cursor: pointer;">
+                CANCEL
+              </button>
+              <button type="button" id="btn-confirm-start-countdown" style="flex: 2; background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; border-radius: 4px; color: #ffffff; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; padding: 10px; cursor: pointer; letter-spacing: 0.5px;">
+                START COUNTDOWN ⏱️
+              </button>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+  <!-- Classic Macintosh Alliances & Diplomacy Modal -->
+  <div id="alliances-overlay" style="display: none;">
+    <div class="mac-window">
+      <div class="mac-titlebar">
+        <div class="mac-close-box" id="btn-close-alliances" title="Close"></div>
+        <div class="mac-pinstripes"></div>
+        <div class="mac-title">Alliances & Diplomacy</div>
+        <div class="mac-pinstripes"></div>
+      </div>
+      <div class="mac-content">
+        <p class="mac-desc">
+          Treaties require mutual consent. Active allies share pillbox protection and base refuelling.<br>
+          <span class="warning-text">⚠ Breaking a treaty severs the alliance immediately!</span>
+        </p>
+        <div id="alliances-player-list" class="alliances-table"></div>
+        <div class="mac-actions">
+          <button id="btn-go-rogue" class="mac-btn mac-btn-danger">Abandon All Treaties (Go Rogue)</button>
+          <button id="btn-done-alliances" class="mac-btn mac-btn-primary">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Classic Macintosh Bolo Message / Telegram Transmission Modal & Bar -->
+  <div id="chat-overlay" style="display: none;">
+    <div class="mac-window chat-window">
+      <div class="mac-titlebar">
+        <div class="mac-close-box" id="btn-close-chat" title="Close (ESC)"></div>
+        <div class="mac-pinstripes"></div>
+        <div class="mac-title">Send Message (Telegram)</div>
+        <div class="mac-pinstripes"></div>
+      </div>
+      <div class="mac-content">
+        <div class="chat-dest-row">
+          <label for="select-chat-recipient">Transmit To:</label>
+          <select id="select-chat-recipient">
+            <option value="ALL">Everyone (Public Broadcast)</option>
+            <option value="TEAM">My Team Only</option>
+          </select>
+        </div>
+        <div class="chat-input-box">
+          <input type="text" id="input-chat-text" placeholder="Type tactical message... (Press Enter to transmit)" maxlength="80" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="mac-actions">
+          <button id="btn-send-chat" class="mac-btn mac-btn-primary">Transmit (Enter)</button>
+          <button id="btn-cancel-chat" class="mac-btn">Cancel (Esc)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Classic Macintosh About Bolo 2 Modal -->
+  <div id="about-overlay" style="display: none;">
+    <div class="mac-window" style="max-width: 620px; width: 95vw;">
+      <div class="mac-titlebar">
+        <div class="mac-close-box" id="btn-close-about" title="Close (ESC)"></div>
+        <div class="mac-pinstripes"></div>
+        <div class="mac-title">About Bolo 2</div>
+        <div class="mac-pinstripes"></div>
+      </div>
+      <div class="mac-content" style="padding: 18px 22px; gap: 14px;">
+        <div style="text-align: center;">
+          <h2 style="font-family: 'JetBrains Mono', monospace; font-weight: 800; color: #38bdf8; margin: 0 0 4px 0; font-size: 22px; letter-spacing: 3px;">BOLO II</h2>
+          <p style="color: #94a3b8; font-size: 11px; margin-bottom: 0; font-weight: 700; letter-spacing: 1px;">THE UNOFFICIAL SEQUEL</p>
+        </div>
+
+        <!-- Historical Attribution Card -->
+        <div style="background: #090d16; border: 1px solid #334155; border-radius: 4px; padding: 12px 14px; font-size: 11px; color: #cbd5e1; line-height: 1.6;">
+          <div style="font-weight: 800; color: #facc15; margin-bottom: 4px; letter-spacing: 0.5px;">HISTORICAL ATTRIBUTION & HERITAGE</div>
+          Bolo was originally conceived and coded in 68000 assembly by <strong style="color: #ffffff;">Stuart Cheshire</strong> at Cambridge University between 1987 and 1992. As one of the earliest pioneer networked multiplayer games on AppleTalk and the Internet, it invented the genre of real-time top-down tactical tank combat, combat engineering with the "Little Green Man", and open alliance diplomacy.
+        </div>
+
+        <!-- Special Dedication Card -->
+        <div style="background: #090d16; border: 1px solid #334155; border-radius: 4px; padding: 12px 14px; font-size: 11px; color: #cbd5e1; line-height: 1.6;">
+          <div style="font-weight: 800; color: #38bdf8; margin-bottom: 4px; letter-spacing: 0.5px;">SPECIAL DEDICATION & 1997 SEQUEL VISION</div>
+          Dedicated with gratitude to <strong style="color: #ffffff;">Mr. Stobo</strong>, the junior high teacher who first introduced us to the magic of LAN Bolo on classroom Macintosh computers. Those hours spent learning teamwork, stealth tactics, and intense tank warfare across school local networks inspired this recreation. <strong>This is what we imagine the official Bolo sequel would have looked like in 1997 if we had gotten one</strong>: expanding the legendary formula with combined-arms warfare, naval carriers, amphibious reconnaissance, heavy artillery, and automated supply logistics while preserving the authentic 40 Hz deterministic heartbeat and Macintosh System 7 aesthetic.
+        </div>
+
+        <!-- Bolo 2 Evolution -->
+        <div style="background: #090d16; border: 1px solid #334155; border-radius: 4px; padding: 12px 14px; font-size: 10.5px; color: #cbd5e1; line-height: 1.6;">
+          <div style="font-weight: 800; color: #4ade80; margin-bottom: 6px; letter-spacing: 0.5px;">THE BOLO II COMBINED-ARMS EVOLUTION</div>
+          • <strong>Combined-Arms Vehicle Classes:</strong> Command the classic M4 Tank (heavy 155mm howitzer artillery shell, LGM engineer, tree harvesting), the M998 Humvee (high-speed paved road cruiser, river snorkel, SAM anti-air missiles), or the 100,000-ton Deep Ocean Aircraft Carrier (dual rotary naval gatling autocannons with realistic hydrodynamic momentum, scrambled coastal attack helicopter with door railgun, and 6-minute automated cargo supply parachute drops).<br>
+          • <strong>Heavy 155mm Artillery System:</strong> 4-shot howitzer battery on standard tanks with a 2s reload, delivering 80% direct damage to enemy tanks, instant one-shot destruction against Humvees, and 4x bullet damage against carriers.<br>
+          • <strong>Airborne Logistics & Combat Engineering:</strong> Timed parachute supply drops refilling ammo, armor, mines, timber, and scrap metal at friendly bases; Little Green Man engineer building roads, walls, pillboxes, military foundries, aegis pylons, radar uplinks, and naval shipyards.<br>
+          • <strong>Tactical AI Personalities & Full Multiplayer:</strong> Adaptive AI bot commanders (Hunters, Sentries, Engineers, Guerillas) that engage in anti-air defense and shore bombardment, with serverless WebRTC P2P mesh networking.
+        </div>
+
+        <div class="mac-actions" style="justify-content: center; margin-top: 4px;">
+          <button id="btn-done-about" class="mac-btn mac-btn-primary" style="max-width: 140px;">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Classic Macintosh Bolo 2 Field Operations Manual Modal -->
+  <div id="controls-overlay" style="display: none;">
+    <div class="mac-window" style="max-width: 680px; width: 95vw; max-height: 88vh;">
+      <div class="mac-titlebar">
+        <div class="mac-close-box" id="btn-close-controls" title="Close (ESC)"></div>
+        <div class="mac-pinstripes"></div>
+        <div class="mac-title">Bolo 2 — Tactical Operations Manual</div>
+        <div class="mac-pinstripes"></div>
+      </div>
+      <div class="mac-content" style="padding: 14px 18px; gap: 10px;">
+        <!-- Manual Section Tabs -->
+        <div class="manual-tabs">
+          <button type="button" class="manual-tab active" data-manual-tab="new-features">★ BOLO 2 NEW TECH</button>
+          <button type="button" class="manual-tab" data-manual-tab="controls">CONTROLS & COMBAT</button>
+          <button type="button" class="manual-tab" data-manual-tab="engineering">ENGINEER & LOGISTICS</button>
+          <button type="button" class="manual-tab" data-manual-tab="bases-pills">BASES & PILLBOXES</button>
+        </div>
+
+        <!-- Tab 1: Bolo 2 New Tech & Systems -->
+        <div id="manual-tab-new-features" class="manual-pane active">
+          <div class="manual-card-grid">
+            <div class="manual-card">
+              <div class="manual-card-title" style="color: #38bdf8;">🛰️ UAV RECON DRONE (<span class="key">6</span> / <span class="key">U</span>)</div>
+              <div class="manual-card-body">
+                Deploy an aerial reconnaissance drone directly from your tank hull. Scans a 40-tile radius through the fog of war, detecting hidden enemy tanks, concealed mines, and defensive structures.
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title" style="color: #facc15;">🏭 MILITARY FOUNDRIES (<span class="key">7</span> / <span class="key">F</span>)</div>
+              <div class="manual-card-body">
+                Construct heavy manufacturing facilities using harvested timber. Foundries convert wood stocks into advanced ordnance, automated defense turrets, and high-velocity sabot shells.
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title" style="color: #4ade80;">🛡️ AEGIS DEFLECTOR SHIELD (<span class="key">7</span> / <span class="key">G</span>)</div>
+              <div class="manual-card-body">
+                Fortified military tech structure that radiates an energized forcefield. Deflects incoming enemy tank shells and absorbs artillery blast pressure, shielding nearby friendly bases and pillboxes.
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title" style="color: #c084fc;">📡 SATELLITE RADAR UPLINK (<span class="key">7</span> / <span class="key">V</span>)</div>
+              <div class="manual-card-body">
+                Synchronizes battlefield telemetry across all allied commanders. Grants real-time tactical radar coverage across the entire map, tracking hostile movements and territory capture.
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title" style="color: #38bdf8;">⚓ NAVAL DOCKYARDS (<span class="key">7</span> / <span class="key">N</span>)</div>
+              <div class="manual-card-body">
+                Construct coastal shipyards to automate amphibious combat. Repairs waterborne boats and deploys naval combat craft along riverways and island shorelines.
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title" style="color: #fb923c;">🪖 COMBAT BARRACKS (<span class="key">7</span> / <span class="key">C</span>)</div>
+              <div class="manual-card-body">
+                Field garrison that trains and deploys automated combat engineers. Autonomous infantry reinforce frontlines, build defensive roads, repair damaged walls, and plant perimeter pillboxes.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Controls & Tank Locomotion -->
+        <div id="manual-tab-controls" class="manual-pane">
+          <div class="manual-card-grid">
+            <div class="manual-card">
+              <div class="manual-card-title">TANK DRIVING & HULL</div>
+              <div class="manual-card-body">
+                • <span class="key">W / Up</span>: Accelerate forward<br>
+                • <span class="key">S / Down</span>: Brake, neutral, reverse<br>
+                • <span class="key">A / D</span>: Turn tank hull Left / Right<br>
+                • Tanks travel fastest along roads and concrete. Travel over deep forest, swamp, and craters is slowed down.
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title">TURRET, GUNSIGHT & ZOOM</div>
+              <div class="manual-card-body">
+                • <span class="key">Mouse Aim</span>: Independent 360° turret gunsight<br>
+                • <span class="key">Scroll Wheel / [ ]</span>: Adjust shell elevation & range<br>
+                • <span class="key">⌘+ / ⌘- / ⌘0</span>: Zoom In (Classic Close-up), Zoom Out, or Reset Zoom<br>
+                • <span class="key">Space / F</span>: Fire primary tank cannon<br>
+                • <span class="key">X / M</span>: Lay naval or land mine (arms after 2s)
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title">TELEGRAMS & DIPLOMACY</div>
+              <div class="manual-card-body">
+                • <span class="key">Y / ⌘M</span>: Open Telegram radio dispatch<br>
+                • <span class="key">⌘A</span>: Open System 7 Treaties & Alliances window<br>
+                • <span class="key">Tab</span>: Live tactical match leaderboard & scores<br>
+                • <span class="key">⌘N</span>: Open mission setup / game lobby
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title">AMPHIBIOUS WARFARE</div>
+              <div class="manual-card-body">
+                • Driving into open water automatically switches your tank into a patrol boat.<br>
+                • Boats have different momentum and firing recoil on water.<br>
+                • Land back onto any grass shoreline or beach to return to tank treads.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Combat Engineering & Logistics -->
+        <div id="manual-tab-engineering" class="manual-pane">
+          <div class="manual-card-grid">
+            <div class="manual-card">
+              <div class="manual-card-title">THE LITTLE GREEN MAN (ENGINEER)</div>
+              <div class="manual-card-body">
+                • Press <span class="key">E / Click</span> or number keys <span class="key">1-5</span> to deploy your engineer.<br>
+                • Your engineer disembarks and carries out tactical construction on foot.<br>
+                • <span class="warning-text">VULNERABILITY</span>: Your tank is motionless and vulnerable while operating the aerial link! Press <span class="key">K</span> to immediately recall the engineer.
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title">WOOD HARVESTING (<span class="key">1</span> / <span class="key">T</span>)</div>
+              <div class="manual-card-body">
+                • Order your engineer to chop forest trees.<br>
+                • Each fallen tree yields <span style="color: #4ade80; font-weight: 700;">+4 Wood</span>.<br>
+                • Timber is the universal construction resource required for roads, walls, pillboxes, and military tech.
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title">ROADS (<span class="key">2</span> / <span class="key">R</span>) & BRIDGES</div>
+              <div class="manual-card-body">
+                • Costs <span style="color: #facc15; font-weight: 700;">2 Wood</span> per tile.<br>
+                • Roads dramatically boost tank acceleration and speed.<br>
+                • Paving over shallow water or rivers automatically constructs heavy concrete bridges for convoy crossings.
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title">WALLS (<span class="key">3</span> / <span class="key">B</span>) & FORTIFICATIONS</div>
+              <div class="manual-card-body">
+                • Costs <span style="color: #facc15; font-weight: 700;">2 Wood</span> per tile.<br>
+                • Blocks enemy tank movements and absorbs shell impacts.<br>
+                • Use walls to funnel enemy tanks into minefields or protect delicate refueling bases.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 4: Bases & Pillboxes -->
+        <div id="manual-tab-bases-pills" class="manual-pane">
+          <div class="manual-card-grid">
+            <div class="manual-card">
+              <div class="manual-card-title">FORTIFIED BASES (16 ON ISLAND)</div>
+              <div class="manual-card-body">
+                • Bases provide infinite replenishment of Armor, Shells, and Mines.<br>
+                • Drive onto a base to automatically dock and reload.<br>
+                • Neutral bases (Yellow) are claimed upon arrival. Hostile bases must be neutralized with cannon fire or engineer capture.
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title">PILLBOX TURRETS (16 ON ISLAND)</div>
+              <div class="manual-card-body">
+                • Automated defensive emplacements armed with high-cadence machine guns.<br>
+                • Hostile pillboxes fire on sight with lethal precision.<br>
+                • Destroy a pillbox with artillery shells, then order your engineer to retrieve the neutral pill and redeploy it anywhere (<span class="key">4</span> / <span class="key">P</span>).
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title">CONCEALED MINEFIELDS (<span class="key">5</span> / <span class="key">X</span>)</div>
+              <div class="manual-card-body">
+                • Lay land or sea mines into terrain. Mines blend seamlessly into grass, forest, and water.<br>
+                • Arm after 2 seconds. Any tank (friend or foe) detonates them on contact.<br>
+                • Clearing: Shoot suspected areas with cannon fire or send UAV recon drones.
+              </div>
+            </div>
+            <div class="manual-card">
+              <div class="manual-card-title">WIN CONDITION & VICTORY</div>
+              <div class="manual-card-body">
+                • The primary objective in Bolo is territorial and logistics supremacy.<br>
+                • Capture all 16 military bases and eliminate all hostile pillbox emplacements to secure victory for your faction.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mac-actions" style="justify-content: space-between; align-items: center; margin-top: 4px;">
+          <span style="font-size: 10px; color: #64748b;">PRESS ESC OR CLICK DISMISS TO RETURN TO COMBAT</span>
+          <button id="btn-done-controls" class="mac-btn mac-btn-primary" style="max-width: 130px;">DISMISS (ESC)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Classic Macintosh Tactical Leaderboard & Alliance Standings Modal -->
+  <div id="leaderboard-overlay" style="display: none;">
+    <div class="mac-window" style="max-width: 640px; width: 95vw;">
+      <div class="mac-titlebar">
+        <div class="mac-close-box" id="btn-close-leaderboard" title="Close (ESC / Tab)"></div>
+        <div class="mac-pinstripes"></div>
+        <div class="mac-title">Tactical Standings & Leaderboard</div>
+        <div class="mac-pinstripes"></div>
+      </div>
+      <div class="mac-content" style="padding: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 11px; color: #94a3b8;">Rankings grouped by active alliance & faction (Hold or press <span style="color: #38bdf8; font-weight: 700;">TAB</span>)</span>
+          <span id="leaderboard-match-mode" style="font-size: 10px; font-weight: 800; color: #38bdf8; background: #0f172a; border: 1px solid #334155; padding: 2px 8px; border-radius: 4px;">FREE-FOR-ALL</span>
+        </div>
+        <div id="leaderboard-table-container" class="alliances-table" style="max-height: 55vh;"></div>
+        <div class="mac-actions" style="justify-content: space-between; align-items: center; margin-top: 12px;">
+          <span style="font-size: 10px; color: #64748b;">SCORE = Kills×100 + Bases×200 + Tech×150 - Deaths×50</span>
+          <button id="btn-done-leaderboard" class="mac-btn mac-btn-primary" style="max-width: 120px;">Close (Tab)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Classic Macintosh Victory / Defeat Modal with Next Map Countdown -->
+  <div id="victory-overlay" style="display: none;">
+    <div class="mac-window" style="max-width: 540px; width: 92vw;">
+      <div class="mac-titlebar">
+        <div class="mac-close-box" id="btn-close-victory" title="Dismiss"></div>
+        <div class="mac-pinstripes"></div>
+        <div class="mac-title" id="victory-window-title">MISSION DEBRIEFING</div>
+        <div class="mac-pinstripes"></div>
+      </div>
+      <div class="mac-content" style="padding: 20px; text-align: center; gap: 14px;">
+        <div id="victory-badge" style="font-size: 32px; font-weight: 900; font-family: 'Orbitron', sans-serif; letter-spacing: 2px;">VICTORY</div>
+        <div id="victory-message" style="font-size: 13px; color: #cbd5e1; font-family: 'JetBrains Mono', monospace; line-height: 1.5;"></div>
+        <div id="victory-stats" style="background: #090d16; border: 1px solid #1e293b; border-radius: 4px; padding: 12px; font-size: 11px; text-align: left; color: #94a3b8; line-height: 1.8;"></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+          <span id="victory-countdown" style="font-size: 11px; color: #38bdf8; font-weight: 700;">Next battle in 10s...</span>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-victory-stay" class="mac-btn" style="padding: 4px 12px; font-size: 11px;">Keep Playing</button>
+            <button id="btn-victory-next" class="mac-btn mac-btn-primary" style="padding: 4px 14px; font-size: 11px;">Next Battle Now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Classic Macintosh System Diagnostics & Log Viewer Dialog -->
+  <div id="diagnostics-overlay" style="display: none;">
+    <div class="mac-window" style="max-width: 680px; width: 94vw; max-height: 85vh; display: flex; flex-direction: column;">
+      <div class="mac-titlebar">
+        <div class="mac-close-box" id="btn-close-diagnostics" title="Close Log"></div>
+        <div class="mac-pinstripes"></div>
+        <div class="mac-title">SYSTEM DIAGNOSTICS & LOG VIEWER</div>
+        <div class="mac-pinstripes"></div>
+      </div>
+      <div class="mac-content" style="padding: 14px; gap: 10px; display: flex; flex-direction: column; overflow: hidden; height: 100%;">
+        <div style="font-size: 11px; color: #94a3b8; font-family: 'JetBrains Mono', monospace;">
+          Realtime engine telemetry and uncaught errors. You can copy this log or clear it.
+        </div>
+        <textarea id="diagnostics-log-area" readonly style="flex: 1; min-height: 320px; background: #090d16; color: #38bdf8; border: 1px solid #1e293b; border-radius: 4px; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.4; resize: none; overflow-y: auto; white-space: pre-wrap;"></textarea>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+          <button id="btn-diagnostics-clear" class="mac-btn" style="padding: 4px 12px; font-size: 11px;">Clear Log</button>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-diagnostics-copy" class="mac-btn mac-btn-primary" style="padding: 4px 14px; font-size: 11px;">Copy to Clipboard</button>
+            <button id="btn-diagnostics-close" class="mac-btn" style="padding: 4px 14px; font-size: 11px;">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authentic Macintosh System 7 Modal Alert Dialog -->
+  <div id="mac-alert-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 100000; justify-content: center; align-items: center;">
+    <div class="system7-alert-box">
+      <div class="system7-alert-inner">
+        <div class="system7-alert-icon">
+          <!-- System 7 Talking Mac / Warning Icon SVG -->
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Mac Face / Computer Outline -->
+            <rect x="3" y="3" width="13" height="30" fill="#000000"/>
+            <rect x="5" y="5" width="9" height="13" fill="#ffffff"/>
+            <rect x="7" y="7" width="2" height="4" fill="#000000"/>
+            <rect x="11" y="7" width="2" height="4" fill="#000000"/>
+            <rect x="7" y="13" width="5" height="2" fill="#000000"/>
+            <!-- Disk drive slot -->
+            <rect x="6" y="24" width="7" height="2" fill="#ffffff"/>
+            <!-- Speech balloon with message lines -->
+            <path d="M19 5H33V23H23L19 27V23H19V5Z" fill="#000000"/>
+            <path d="M20 6H32V22H22L20 24V22H20V6Z" fill="#ffffff"/>
+            <rect x="22" y="9" width="8" height="2" fill="#000000"/>
+            <rect x="22" y="13" width="8" height="2" fill="#000000"/>
+            <rect x="22" y="17" width="5" height="2" fill="#000000"/>
+          </svg>
+        </div>
+        <div class="system7-alert-body">
+          <div id="mac-alert-message" class="system7-alert-text">Alert message goes here.</div>
+          <div class="system7-alert-actions">
+            <button type="button" id="btn-mac-alert-ok" class="system7-btn-default">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authentic Macintosh System 7 "Do you need a tutorial?" Prompt Modal -->
+  <div id="mac-tutorial-prompt-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.65); z-index: 100001; justify-content: center; align-items: center;">
+    <div class="system7-alert-box" style="width: 480px;">
+      <div class="system7-alert-inner">
+        <div class="system7-alert-icon">
+          <!-- System 7 Talking Mac SVG -->
+          <svg width="40" height="40" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="13" height="30" fill="#000000"/>
+            <rect x="5" y="5" width="9" height="13" fill="#ffffff"/>
+            <rect x="7" y="7" width="2" height="4" fill="#000000"/>
+            <rect x="11" y="7" width="2" height="4" fill="#000000"/>
+            <rect x="7" y="13" width="5" height="2" fill="#000000"/>
+            <rect x="6" y="24" width="7" height="2" fill="#ffffff"/>
+            <path d="M19 5H33V23H23L19 27V23H19V5Z" fill="#000000"/>
+            <path d="M20 6H32V22H22L20 24V22H20V6Z" fill="#ffffff"/>
+            <rect x="22" y="9" width="8" height="2" fill="#000000"/>
+            <rect x="22" y="13" width="8" height="2" fill="#000000"/>
+            <rect x="22" y="17" width="5" height="2" fill="#000000"/>
+          </svg>
+        </div>
+        <div class="system7-alert-body">
+          <div style="font-size: 15px; font-weight: 800; color: #000000; margin-bottom: 8px;">Do you need a tutorial?</div>
+          <div class="system7-alert-text" style="font-size: 12px; line-height: 1.4; margin-bottom: 18px; font-weight: 500; color: #333333;">
+            Learn basic tank locomotion, turret aiming and lock, gunsight distance adjustment, Little Green Man (LGM) tree harvesting, road and wall construction, refueling at bases, capturing pillboxes, and boat navigation.
+          </div>
+          <div class="system7-alert-actions">
+            <button type="button" id="btn-tutorial-prompt-no" class="system7-btn-secondary">No, Skip</button>
+            <button type="button" id="btn-tutorial-prompt-yes" class="system7-btn-default">Yes, Start Tutorial</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authentic Macintosh System 7 Interactive Mini Demo Modal -->
+  <div id="modal-tutorial-demo" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.75); z-index: 100002; justify-content: center; align-items: center;">
+    <div class="system7-alert-box" style="width: 860px; max-width: 96vw; max-height: 94vh; display: flex; flex-direction: column; padding: 3px;">
+      <!-- Title Bar -->
+      <div class="mac-titlebar" style="background: #ffffff; border-bottom: 2px solid #000000; height: 26px; padding: 0 8px; display: flex; align-items: center; user-select: none;">
+        <div class="mac-close-box" id="btn-tutorial-demo-close" title="Close Tutorial" style="width: 12px; height: 12px; border: 1px solid #000; background: #fff; margin-right: 8px;"></div>
+        <div class="mac-pinstripes" style="height: 8px; background: repeating-linear-gradient(to bottom, #000, #000 1px, transparent 1px, transparent 2px);"></div>
+        <div style="font-size: 11px; font-weight: 800; color: #000; padding: 0 10px; letter-spacing: 1.5px; white-space: nowrap;">TACTICAL TRAINING — MICRO PROVING GROUND</div>
+        <div class="mac-pinstripes" style="height: 8px; background: repeating-linear-gradient(to bottom, #000, #000 1px, transparent 1px, transparent 2px);"></div>
+      </div>
+
+      <!-- Modal Body (Two-Column Layout) -->
+      <div style="padding: 12px; background: #ffffff; display: flex; gap: 14px; overflow-y: auto; align-items: flex-start;">
+        <!-- Left Column: Compact Micro Arena & Mini HUD -->
+        <div style="width: 454px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;">
+          <!-- Compact Playing Field Canvas (18x14 tiles strictly bounded) -->
+          <div style="position: relative; display: flex; justify-content: center; background: #070a10; border: 2px solid #000000; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);">
+            <canvas id="tutorial-mini-canvas" width="450" height="350" style="display: block; width: 450px; height: 350px; image-rendering: pixelated;"></canvas>
+          </div>
+
+          <!-- Mini HUD: Real Authentic Bolo Tactical Instrument Panel -->
+          <div style="background: #e2e8f0; border: 2px solid #000000; border-radius: 4px; padding: 6px 8px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">
+            <!-- Top Row: Gauges & States -->
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 4px 6px;">
+              <!-- Health Gauge -->
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 10px; font-weight: 800; color: #0f172a;">ARMOUR</span>
+                <div style="width: 70px; height: 9px; background: #cbd5e1; border: 1px solid #000; border-radius: 2px; overflow: hidden; position: relative;">
+                  <div id="tut-hud-armour-bar" style="width: 100%; height: 100%; background: #16a34a; transition: width 0.2s;"></div>
+                </div>
+                <span id="tut-hud-armour" style="font-size: 10px; font-weight: 800; font-family: monospace; color: #16a34a;">60</span>
+              </div>
+
+              <!-- Turret Aim Lock Badge -->
+              <div id="tut-hud-turret-state" title="Click or Double-tap ↑ to toggle gun lock" style="font-size: 9.5px; font-weight: 800; color: #0369a1; background: #f0f9ff; border: 1px solid #bae6fd; padding: 1px 5px; border-radius: 2px; cursor: pointer; user-select: none;">
+                🔒 Gun: Locked (Double-tap ↑)
+              </div>
+
+              <!-- Locomotion Mode Badge -->
+              <div id="tut-hud-boat" style="font-size: 9.5px; font-weight: 800; color: #0f172a; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 1px 5px; border-radius: 2px;">
+                🚜 Ground Tank
+              </div>
+            </div>
+
+            <!-- Middle Row: Cargo & Range Telemetry Boxes -->
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;">
+              <div style="background: #ffffff; border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 4px; text-align: center;">
+                <div style="font-size: 8.5px; font-weight: 800; color: #64748b;">SHELLS</div>
+                <div style="font-size: 11px; font-weight: 800; color: #0f172a;">🐚 <span id="tut-hud-shells">30</span></div>
+              </div>
+              <div style="background: #ffffff; border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 4px; text-align: center;">
+                <div style="font-size: 8.5px; font-weight: 800; color: #64748b;">MINES</div>
+                <div style="font-size: 11px; font-weight: 800; color: #0f172a;">💣 <span id="tut-hud-mines">10</span></div>
+              </div>
+              <div style="background: #ffffff; border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 4px; text-align: center;">
+                <div style="font-size: 8.5px; font-weight: 800; color: #64748b;">WOOD</div>
+                <div style="font-size: 11px; font-weight: 800; color: #0f172a;">🪵 <span id="tut-hud-wood">0</span></div>
+              </div>
+              <div style="background: #ffffff; border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 4px; text-align: center;">
+                <div style="font-size: 8.5px; font-weight: 800; color: #64748b;">TURRET</div>
+                <div style="font-size: 11px; font-weight: 800; color: #0f172a;">📦 <span id="tut-hud-pill">0</span></div>
+              </div>
+              <div style="background: #ffffff; border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 4px; text-align: center;">
+                <div style="font-size: 8.5px; font-weight: 800; color: #64748b;">GUNSIGHT</div>
+                <div style="font-size: 10px; font-weight: 800; color: #0284c7; display: flex; align-items: center; justify-content: center; gap: 2px;">
+                  <button type="button" id="btn-tut-range-minus" title="Retract Range ( [ or - )" style="cursor: pointer; border: 1px solid #000; background: #f8fafc; font-weight: 900; font-size: 9px; line-height: 12px; padding: 0 3px; border-radius: 2px;">−</button>
+                  <span id="tut-hud-range">6</span>t
+                  <button type="button" id="btn-tut-range-plus" title="Extend Range ( ] or + )" style="cursor: pointer; border: 1px solid #000; background: #f8fafc; font-weight: 900; font-size: 9px; line-height: 12px; padding: 0 3px; border-radius: 2px;">+</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tactical Teletype Message Line -->
+            <div id="tut-hud-feedback" style="font-size: 9.5px; font-weight: 800; color: #0369a1; background: #ffffff; border: 1px solid #0284c7; padding: 3px 6px; border-radius: 2px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              Tactical Training Proving Grounds Online
+            </div>
+
+            <!-- Engineer Command & Tool Dock -->
+            <div style="display: flex; gap: 4px; align-items: center; justify-content: space-between; border-top: 1px solid #cbd5e1; padding-top: 4px;">
+              <div style="display: flex; gap: 3px;">
+                <button type="button" class="tut-tool-btn active" data-tool="TREES" style="font-size: 9.5px; padding: 3px 6px; font-weight: 700; cursor: pointer; border: 1px solid #000; background: #000; color: #fff; border-radius: 2px;">1: 🪓 Axe</button>
+                <button type="button" class="tut-tool-btn" data-tool="ROAD" style="font-size: 9.5px; padding: 3px 6px; font-weight: 700; cursor: pointer; border: 1px solid #000; background: #fff; color: #000; border-radius: 2px;">2: 🛣️ Road</button>
+                <button type="button" class="tut-tool-btn" data-tool="BUILDING" style="font-size: 9.5px; padding: 3px 6px; font-weight: 700; cursor: pointer; border: 1px solid #000; background: #fff; color: #000; border-radius: 2px;">3: 🧱 Wall</button>
+                <button type="button" class="tut-tool-btn" data-tool="PILLBOX" style="font-size: 9.5px; padding: 3px 6px; font-weight: 700; cursor: pointer; border: 1px solid #000; background: #fff; color: #000; border-radius: 2px;">4: 📦 Turret</button>
+              </div>
+              <button type="button" id="btn-tut-recall-lgm" title="Recall Engineer to Tank (C)" style="font-size: 9.5px; padding: 3px 7px; font-weight: 800; cursor: pointer; border: 1px solid #000; background: #ffffff; color: #000; border-radius: 2px;">C: Recall</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Objectives Checklist & Detailed Instructions -->
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0;">
+          <!-- Checklist Panel -->
+          <div style="background: #ffffff; border: 1px solid #000000; border-radius: 3px; padding: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px solid #000; padding-bottom: 4px;">
+              <span style="font-size: 11px; font-weight: 800; color: #000; letter-spacing: 0.5px;">TRAINING CHECKLIST</span>
+              <span id="tut-check-count-badge" style="font-size: 9.5px; font-weight: 800; background: #000; color: #fff; padding: 1px 6px; border-radius: 2px;"><span id="tut-completed-count">0</span> / 10 DONE</span>
+            </div>
+
+            <div id="tut-checklist-container" style="display: flex; flex-direction: column; gap: 2px;">
+              <div class="system7-checklist-item active-target" data-idx="0">
+                <span class="system7-chk-box" id="chk-box-0"></span>
+                <span class="item-label">1. Move Tank (Drive & Steer)</span>
+              </div>
+              <div class="system7-checklist-item" data-idx="1">
+                <span class="system7-chk-box" id="chk-box-1"></span>
+                <span class="item-label">2. Move Gun (Double-Tap ↑, Aim with Mouse)</span>
+              </div>
+              <div class="system7-checklist-item" data-idx="2">
+                <span class="system7-chk-box" id="chk-box-2"></span>
+                <span class="item-label">3. Fire Cannon at Wall/Tree (Space/F)</span>
+              </div>
+              <div class="system7-checklist-item" data-idx="3">
+                <span class="system7-chk-box" id="chk-box-3"></span>
+                <span class="item-label">4. Adjust Gunsight Range (Wheel or −/+)</span>
+              </div>
+              <div class="system7-checklist-item" data-idx="4">
+                <span class="system7-chk-box" id="chk-box-4"></span>
+                <span class="item-label">5. Harvest Timber with LGM (Axe 1)</span>
+              </div>
+              <div class="system7-checklist-item" data-idx="5">
+                <span class="system7-chk-box" id="chk-box-5"></span>
+                <span class="item-label">6. Build Road or Wall with Wood (2/3)</span>
+              </div>
+              <div class="system7-checklist-item" data-idx="6">
+                <span class="system7-chk-box" id="chk-box-6"></span>
+                <span class="item-label">7. Refuel at Neutral Base (3, 3)</span>
+              </div>
+              <div class="system7-checklist-item" data-idx="7">
+                <span class="system7-chk-box" id="chk-box-7"></span>
+                <span class="item-label">8. Cross River by Boat (12, 7)</span>
+              </div>
+              <div class="system7-checklist-item" data-idx="8">
+                <span class="system7-chk-box" id="chk-box-8"></span>
+                <span class="item-label">9. Capture Turret in Corner (15, 1)</span>
+              </div>
+              <div class="system7-checklist-item" data-idx="9">
+                <span class="system7-chk-box" id="chk-box-9"></span>
+                <span class="item-label">10. Destroy Enemy Tank (2 Hits)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- "HOW TO DO IT" Guide Card -->
+          <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 9px; font-weight: 800; color: #64748b; letter-spacing: 0.5px;">HOW TO DO IT:</span>
+              <span id="tut-guide-step-tag" style="font-size: 9px; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 1px 5px; border-radius: 2px;">STEP 1</span>
+            </div>
+            <div id="tut-guide-title" style="font-size: 12px; font-weight: 800; color: #0f172a;">TANK LOCOMOTION</div>
+            <div id="tut-guide-text" style="font-size: 11px; color: #334155; line-height: 1.4;">
+              Drive forward using <b>W</b> (or Up Arrow) and reverse using <b>S</b> (Down Arrow). Steer left/right using <b>A</b> and <b>D</b> (Left/Right Arrows).
+            </div>
+            <div style="margin-top: 4px;">
+              <span style="font-size: 9px; font-weight: 800; color: #64748b;">KEYS / ACTIONS:</span>
+              <div id="tut-guide-keys" style="font-size: 10.5px; font-weight: 800; font-family: monospace; color: #0369a1; background: #f0f9ff; border: 1px solid #bae6fd; padding: 3px 6px; border-radius: 3px; margin-top: 2px;">
+                [W / S / A / D] or [↑ / ↓ / ← / →]
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Action Buttons -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 6px;">
+            <button type="button" id="btn-tutorial-demo-reset" class="system7-btn-secondary" style="font-size: 10.5px; padding: 4px 12px;">🔄 Reset Arena</button>
+            <button type="button" id="btn-tutorial-demo-close-btn" class="system7-btn-default" style="font-size: 11px; padding: 4px 18px;">Close Tutorial</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
