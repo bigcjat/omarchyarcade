@@ -177,6 +177,14 @@ ApplicationWindow {
         return true;
     }
 
+    function hasGameUpdate(gameId, version) {
+        if (!gameId) return false;
+        if (typeof arcadeBackend !== "undefined" && arcadeBackend.hasGameUpdate) {
+            return arcadeBackend.hasGameUpdate(gameId, version || "");
+        }
+        return false;
+    }
+
     function getLibraryCount() {
         var n = 0;
         for (var i = 0; i < catalogData.length; i++) {

@@ -139,8 +139,8 @@ class ArcadeBackend(QObject):
     @Slot(str, str, result=bool)
     def hasGameUpdate(self, game_id: str, catalog_version: str) -> bool:
         """Checks if an installed game has an update available compared to catalog.json."""
-        # If running from source repository, local files are the source of truth
-        if (BASE_DIR / ".git").exists() or (BASE_DIR / "games").is_dir():
+        # Only skip update checking if running directly inside a development git clone
+        if (BASE_DIR / ".git").is_dir():
             return False
         if not game_id or not catalog_version:
             return False
@@ -149,11 +149,12 @@ class ArcadeBackend(QObject):
             return False
         version_file = game_dir / ".version"
         if not version_file.exists():
-            return False
+            return True  # Installed prior to version stamping -> outdated!
         try:
-            return version_file.read_text(encoding="utf-8").strip() != str(catalog_version).strip()
+            installed_v = version_file.read_text(encoding="utf-8").strip()
+            return installed_v != str(catalog_version).strip()
         except Exception:
-            return False
+            return True
 
     @Slot(str, result=str)
     def getScreenshotUrl(self, folder: str) -> str:
