@@ -48,7 +48,7 @@ Window {
     property int fundCheatCount: 0
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Pan View: Drag with Right Mouse, Middle Mouse, or WASD / Arrows\n• Zoom View: Mouse Wheel or + / -\n• Build: Left-click with active tool (Road, Wire, Rail, Bulldozer support drag)\n• Speed: Space (Pause), 1 (Normal), 2 (Fast), 3 (Ultra)\n• Sound: M | Help: ? or Esc\n• Advisor: Click Dr. Wright in the bottom status bar for municipal counsel!\n\nBuild power plants, connect roads and wires, and balance Residential, Commercial, and Industrial zones to grow your metropolis!"
+    property string helpText: "• Pan View: Drag with Right/Middle Mouse, Shift + Trackpad Scroll, or WASD / Arrows\n• Zoom View: Mouse Wheel or + / -\n• Build: Left-click with active tool (Road, Wire, Rail, Bulldozer support drag)\n• Speed: Space (Pause), 1 (Normal), 2 (Fast), 3 (Ultra)\n• Sound: M | Help: ? or Esc\n• Advisor: Click Dr. Wright in the bottom status bar for municipal counsel!\n\nBuild power plants, connect roads and wires, and balance Residential, Commercial, and Industrial zones to grow your metropolis!"
 
     function applyTheme(data, name) {
         if (!data || typeof data !== "object") return;

@@ -364,6 +364,22 @@ class CityViewport(QQuickPaintedItem):
         super().mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
+        if event.modifiers() & Qt.ShiftModifier:
+            # Shift held: move the world / pan camera like grab tool or arrow keys
+            p_delta = event.pixelDelta()
+            if not p_delta.isNull() and (p_delta.x() != 0 or p_delta.y() != 0):
+                dx = float(p_delta.x())
+                dy = float(p_delta.y())
+            else:
+                a_delta = event.angleDelta()
+                dx = float(a_delta.x()) / 2.0
+                dy = float(a_delta.y()) / 2.0
+
+            if dx != 0 or dy != 0:
+                self.panBy(dx, dy)
+            event.accept()
+            return
+
         delta = event.angleDelta().y()
         if delta > 0:
             self.zoomIn()
