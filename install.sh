@@ -59,7 +59,7 @@ if ! python3 -c "import PySide6" 2>/dev/null; then
     if command -v pacman >/dev/null 2>&1; then
         if pacman -Si python-pyside6 >/dev/null 2>&1; then
             echo -e "${GREEN}==>${RESET} Found python-pyside6 in pacman. Installing..."
-            sudo pacman -S --needed --noconfirm python-pyside6 qt6-declarative qt6-imageformats 2>/dev/null && INSTALLED_VIA_PACMAN=1 || true
+            sudo pacman -S --needed --noconfirm python-pyside6 qt6-declarative 2>/dev/null && INSTALLED_VIA_PACMAN=1 || true
         fi
     fi
 
