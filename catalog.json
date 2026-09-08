@@ -27,9 +27,9 @@
       "folder": "games/2048",
       "entrypoint": "games/2048/main.qml",
       "cover_image": "assets/covers/2048.png",
-      "size": "590 KB",
-      "size_bytes": 604439,
-      "download_size": "590 KB"
+      "size": "455 KB",
+      "size_bytes": 465839,
+      "download_size": "455 KB"
     },
     {
       "id": "tetrablocks",
@@ -55,9 +55,9 @@
       "folder": "games/tetrablocks",
       "entrypoint": "games/tetrablocks/main.qml",
       "cover_image": "assets/covers/tetrablocks.png",
-      "size": "402 KB",
-      "size_bytes": 411591,
-      "download_size": "402 KB"
+      "size": "287 KB",
+      "size_bytes": 294340,
+      "download_size": "287 KB"
     },
     {
       "id": "bytesnake",
@@ -83,9 +83,9 @@
       "folder": "games/bytesnake",
       "entrypoint": "games/bytesnake/main.qml",
       "cover_image": "assets/covers/bytesnake.png",
-      "size": "323 KB",
-      "size_bytes": 330688,
-      "download_size": "323 KB"
+      "size": "203 KB",
+      "size_bytes": 208179,
+      "download_size": "203 KB"
     },
     {
       "id": "vectorpong",
@@ -111,9 +111,9 @@
       "folder": "games/vectorpong",
       "entrypoint": "games/vectorpong/main.qml",
       "cover_image": "assets/covers/vectorpong.png",
-      "size": "310 KB",
-      "size_bytes": 317234,
-      "download_size": "310 KB"
+      "size": "209 KB",
+      "size_bytes": 213710,
+      "download_size": "209 KB"
     },
     {
       "id": "cybersweeper",
@@ -139,9 +139,9 @@
       "folder": "games/cybersweeper",
       "entrypoint": "games/cybersweeper/main.qml",
       "cover_image": "assets/covers/cybersweeper.png",
-      "size": "360 KB",
-      "size_bytes": 368467,
-      "download_size": "360 KB"
+      "size": "250 KB",
+      "size_bytes": 256326,
+      "download_size": "250 KB"
     },
     {
       "id": "dropfour",
@@ -167,9 +167,9 @@
       "folder": "games/dropfour",
       "entrypoint": "games/dropfour/main.qml",
       "cover_image": "assets/covers/dropfour.png",
-      "size": "327 KB",
-      "size_bytes": 334927,
-      "download_size": "327 KB"
+      "size": "220 KB",
+      "size_bytes": 225466,
+      "download_size": "220 KB"
     },
     {
       "id": "brickbash",
@@ -195,9 +195,9 @@
       "folder": "games/brickbash",
       "entrypoint": "games/brickbash/main.qml",
       "cover_image": "assets/covers/brickbash.png",
-      "size": "347 KB",
-      "size_bytes": 355506,
-      "download_size": "347 KB"
+      "size": "238 KB",
+      "size_bytes": 243231,
+      "download_size": "238 KB"
     },
     {
       "id": "voidinvaders",
@@ -223,9 +223,9 @@
       "folder": "games/voidinvaders",
       "entrypoint": "games/voidinvaders/main.qml",
       "cover_image": "assets/covers/voidinvaders.png",
-      "size": "426 KB",
-      "size_bytes": 435822,
-      "download_size": "426 KB"
+      "size": "304 KB",
+      "size_bytes": 311496,
+      "download_size": "304 KB"
     },
     {
       "id": "vectordrift",
@@ -251,9 +251,9 @@
       "folder": "games/vectordrift",
       "entrypoint": "games/vectordrift/main.qml",
       "cover_image": "assets/covers/vectordrift.png",
-      "size": "562 KB",
-      "size_bytes": 575863,
-      "download_size": "562 KB"
+      "size": "457 KB",
+      "size_bytes": 468209,
+      "download_size": "457 KB"
     },
     {
       "id": "cyberflap",
@@ -279,9 +279,9 @@
       "folder": "games/cyberflap",
       "entrypoint": "games/cyberflap/main.qml",
       "cover_image": "assets/covers/cyberflap.png",
-      "size": "345 KB",
-      "size_bytes": 353559,
-      "download_size": "345 KB"
+      "size": "224 KB",
+      "size_bytes": 229424,
+      "download_size": "224 KB"
     },
     {
       "id": "cyberhop",
@@ -307,9 +307,9 @@
       "folder": "games/cyberhop",
       "entrypoint": "games/cyberhop/main.qml",
       "cover_image": "assets/covers/cyberhop.png",
-      "size": "510 KB",
-      "size_bytes": 522503,
-      "download_size": "510 KB"
+      "size": "393 KB",
+      "size_bytes": 402709,
+      "download_size": "393 KB"
     },
     {
       "id": "cratepusher",
@@ -335,9 +335,9 @@
       "folder": "games/cratepusher",
       "entrypoint": "games/cratepusher/main.qml",
       "cover_image": "assets/covers/cratepusher.png",
-      "size": "462 KB",
-      "size_bytes": 473536,
-      "download_size": "462 KB"
+      "size": "363 KB",
+      "size_bytes": 371746,
+      "download_size": "363 KB"
     },
     {
       "id": "dinorunner",
@@ -363,9 +363,9 @@
       "folder": "games/dinorunner",
       "entrypoint": "games/dinorunner/main.qml",
       "cover_image": "assets/covers/dinorunner.png",
-      "size": "489 KB",
-      "size_bytes": 501224,
-      "download_size": "489 KB"
+      "size": "380 KB",
+      "size_bytes": 389418,
+      "download_size": "380 KB"
     },
     {
       "id": "wordguess",
@@ -392,9 +392,9 @@
       "folder": "games/wordguess",
       "entrypoint": "games/wordguess/main.qml",
       "cover_image": "assets/covers/wordguess.png",
-      "size": "388 KB",
-      "size_bytes": 396840,
-      "download_size": "388 KB"
+      "size": "291 KB",
+      "size_bytes": 298417,
+      "download_size": "291 KB"
     },
     {
       "id": "bytecity",
@@ -420,9 +420,9 @@
       "folder": "games/bytecity",
       "entrypoint": "games/bytecity/main.qml",
       "cover_image": "assets/covers/bytecity.png",
-      "size": "5.0 MB",
-      "size_bytes": 5220982,
-      "download_size": "5.0 MB"
+      "size": "4.9 MB",
+      "size_bytes": 5176455,
+      "download_size": "4.9 MB"
     },
     {
       "id": "galacticswarm",
@@ -447,9 +447,9 @@
       "folder": "games/galacticswarm",
       "entrypoint": "games/galacticswarm/main.qml",
       "cover_image": "assets/covers/galacticswarm.png",
-      "size": "1.4 MB",
-      "size_bytes": 1422574,
-      "download_size": "1.4 MB"
+      "size": "1.3 MB",
+      "size_bytes": 1313235,
+      "download_size": "1.3 MB"
     },
     {
       "id": "byteman",
@@ -475,9 +475,9 @@
       "folder": "games/byteman",
       "entrypoint": "games/byteman/main.qml",
       "cover_image": "assets/covers/byteman.png",
-      "size": "598 KB",
-      "size_bytes": 612610,
-      "download_size": "598 KB"
+      "size": "488 KB",
+      "size_bytes": 500095,
+      "download_size": "488 KB"
     },
     {
       "id": "gemswap",
@@ -503,9 +503,9 @@
       "folder": "games/gemswap",
       "entrypoint": "games/gemswap/main.qml",
       "cover_image": "assets/covers/gemswap.png",
-      "size": "678 KB",
-      "size_bytes": 693789,
-      "download_size": "678 KB"
+      "size": "561 KB",
+      "size_bytes": 574091,
+      "download_size": "561 KB"
     },
     {
       "id": "orbpop",
@@ -532,9 +532,9 @@
       "folder": "games/orbpop",
       "entrypoint": "games/orbpop/main.qml",
       "cover_image": "assets/covers/orbpop.png",
-      "size": "651 KB",
-      "size_bytes": 666705,
-      "download_size": "651 KB"
+      "size": "522 KB",
+      "size_bytes": 534591,
+      "download_size": "522 KB"
     },
     {
       "id": "keiracer",
@@ -562,9 +562,9 @@
       "folder": "games/keiracer",
       "entrypoint": "games/keiracer/main.qml",
       "cover_image": "assets/covers/keiracer.png",
-      "size": "1.3 MB",
-      "size_bytes": 1398808,
-      "download_size": "1.3 MB"
+      "size": "1.2 MB",
+      "size_bytes": 1305551,
+      "download_size": "1.2 MB"
     },
     {
       "id": "blackjack",
@@ -590,9 +590,9 @@
       "folder": "games/blackjack",
       "entrypoint": "games/blackjack/main.qml",
       "cover_image": "assets/covers/blackjack.png",
-      "size": "750 KB",
-      "size_bytes": 768125,
-      "download_size": "750 KB"
+      "size": "659 KB",
+      "size_bytes": 675200,
+      "download_size": "659 KB"
     },
     {
       "id": "chess",
@@ -619,9 +619,9 @@
       "folder": "games/chess",
       "entrypoint": "games/chess/main.qml",
       "cover_image": "assets/covers/chess.png",
-      "size": "676 KB",
-      "size_bytes": 692515,
-      "download_size": "676 KB"
+      "size": "588 KB",
+      "size_bytes": 601683,
+      "download_size": "588 KB"
     },
     {
       "id": "checkers",
@@ -648,9 +648,9 @@
       "folder": "games/checkers",
       "entrypoint": "games/checkers/main.qml",
       "cover_image": "assets/covers/checkers.png",
-      "size": "610 KB",
-      "size_bytes": 625013,
-      "download_size": "610 KB"
+      "size": "511 KB",
+      "size_bytes": 523203,
+      "download_size": "511 KB"
     },
     {
       "id": "solitaire",
@@ -677,9 +677,9 @@
       "folder": "games/solitaire",
       "entrypoint": "games/solitaire/main.qml",
       "cover_image": "assets/covers/solitaire.png",
-      "size": "710 KB",
-      "size_bytes": 726838,
-      "download_size": "710 KB"
+      "size": "602 KB",
+      "size_bytes": 615948,
+      "download_size": "602 KB"
     },
     {
       "id": "videopoker",
@@ -706,9 +706,9 @@
       "folder": "games/videopoker",
       "entrypoint": "games/videopoker/main.qml",
       "cover_image": "assets/covers/videopoker.png",
-      "size": "824 KB",
-      "size_bytes": 843940,
-      "download_size": "824 KB"
+      "size": "721 KB",
+      "size_bytes": 738630,
+      "download_size": "721 KB"
     },
     {
       "id": "backgammon",
@@ -734,9 +734,9 @@
       "folder": "games/backgammon",
       "entrypoint": "games/backgammon/main.py",
       "cover_image": "assets/covers/backgammon.png",
-      "size": "442 KB",
-      "size_bytes": 452103,
-      "download_size": "442 KB"
+      "size": "355 KB",
+      "size_bytes": 364012,
+      "download_size": "355 KB"
     },
     {
       "id": "reversi",
@@ -762,9 +762,9 @@
       "folder": "games/reversi",
       "entrypoint": "games/reversi/main.py",
       "cover_image": "assets/covers/reversi.png",
-      "size": "513 KB",
-      "size_bytes": 525168,
-      "download_size": "513 KB"
+      "size": "427 KB",
+      "size_bytes": 437164,
+      "download_size": "427 KB"
     },
     {
       "id": "bidama",
@@ -790,9 +790,9 @@
       "folder": "games/bidama",
       "entrypoint": "games/bidama/main.py",
       "cover_image": "assets/covers/bidama.png",
-      "size": "620 KB",
-      "size_bytes": 634639,
-      "download_size": "620 KB"
+      "size": "492 KB",
+      "size_bytes": 503402,
+      "download_size": "492 KB"
     },
     {
       "id": "omarchybolo",
@@ -801,7 +801,7 @@
       "category": "Action Arcade",
       "floppy_color": "#222a22",
       "grid_color": "#22C55E",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "status": "released",
       "tagline": "Tactical Armored Combat, Combat Engineering & WebRTC Warfare",
       "description": "A faithful tactical tank warfare simulation inspired by Stuart Cheshire's 1987 Macintosh classic Bolo. Command M4 tanks, armed humvees, and aircraft carriers; harvest timber, lay defensive pillbox bunkers, place mines, build bridges, and clash against autonomous AI or live WebRTC players.",
@@ -818,9 +818,9 @@
       "folder": "games/omarchybolo",
       "entrypoint": "games/omarchybolo/main.py",
       "cover_image": "assets/covers/omarchybolo.png",
-      "size": "1.1 MB",
-      "size_bytes": 1159023,
-      "download_size": "1.1 MB"
+      "size": "1.0 MB",
+      "size_bytes": 1067007,
+      "download_size": "1.0 MB"
     }
   ]
 }
