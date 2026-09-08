@@ -40,6 +40,8 @@ Window {
     property bool showHelp: false
     property bool showNewCityDialog: false
     property int currentTool: 9
+    property string cheatBuffer: ""
+    property int fundCheatCount: 0
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
     property string helpText: "• Pan View: Drag with Right Mouse, Middle Mouse, or WASD / Arrows\n• Zoom View: Mouse Wheel or + / -\n• Build: Left-click with active tool (Road, Wire, Rail, Bulldozer support drag)\n• Speed: Space (Pause), 1 (Normal), 2 (Fast), 3 (Ultra)\n• Sound: M | Help: ? or Esc\n\nBuild power plants, connect roads and wires, and balance Residential, Commercial, and Industrial zones to grow your metropolis!"
@@ -91,6 +93,7 @@ Window {
         anchors.fill: parent
         color: root.themeBg
         focus: true
+        Component.onCompleted: forceActiveFocus()
 
         Keys.onPressed: function(event) {
             if (splashEnabled && splashScreen.visible && splashScreen.opacity > 0) {
@@ -103,6 +106,40 @@ Window {
                 if (event.key === Qt.Key_Escape) {
                     root.showHelp = false;
                     root.showNewCityDialog = false;
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            // Classic SimCity Cheat Codes ('fund', 'buddamus')
+            if (event.text && event.text.length > 0) {
+                root.cheatBuffer += event.text.toLowerCase();
+                if (root.cheatBuffer.length > 20) {
+                    root.cheatBuffer = root.cheatBuffer.slice(-20);
+                }
+
+                // 1989 'fund' cheat (+$10,000; 4th abuse triggers an Earthquake penalty!)
+                if (root.cheatBuffer.endsWith("fund")) {
+                    root.fundCheatCount++;
+                    if (root.fundCheatCount <= 3) {
+                        cityEngine.add_funds(10000);
+                        soundToast.show("💰 Cheat: +$10,000 Treasury! (" + root.fundCheatCount + "/4)");
+                    } else {
+                        cityEngine.add_funds(10000);
+                        cityEngine.trigger_disaster(4); // Major Earthquake!
+                        soundToast.show("💥 Greed Penalty: Major Earthquake!");
+                        root.fundCheatCount = 0;
+                    }
+                    root.cheatBuffer = "";
+                    event.accepted = true;
+                    return;
+                }
+
+                // 'buddamus' cheat (+$500,000)
+                if (root.cheatBuffer.endsWith("buddamus")) {
+                    cityEngine.add_funds(500000);
+                    soundToast.show("💰 Buddamus Cheat: +$500,000 Treasury!");
+                    root.cheatBuffer = "";
                     event.accepted = true;
                     return;
                 }

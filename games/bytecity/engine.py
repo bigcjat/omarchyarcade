@@ -288,6 +288,24 @@ class ByteCityEngine(QObject):
         self.mapChanged.emit()
         self.advisorAlert.emit(self._current_message)
 
+    @Slot(int)
+    def add_funds(self, amount):
+        if not self._handle:
+            return
+        new_funds = self._funds + amount
+        self._lib.bytecity_set_funds(self._handle, new_funds)
+        self._funds = new_funds
+        self._sound_manager.play("cash")
+        self.statsChanged.emit()
+
+    @Slot(int)
+    def set_funds(self, amount):
+        if not self._handle:
+            return
+        self._lib.bytecity_set_funds(self._handle, amount)
+        self._funds = amount
+        self.statsChanged.emit()
+
     @Slot(str)
     def load_scenario(self, scenario_id):
         if not self._handle:
