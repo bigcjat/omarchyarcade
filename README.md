@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Offline-Forever-00f0ff?style=flat-square" alt="Offline Forever"/>
   <img src="https://img.shields.io/badge/Telemetry-Zero-10b981?style=flat-square" alt="Zero Telemetry"/>
   <img src="https://img.shields.io/badge/Ads-Zero-f59e0b?style=flat-square" alt="Zero Ads"/>
-  <img src="https://img.shields.io/badge/Games-30%20Included-ec4899?style=flat-square" alt="30 Games"/>
+  <img src="https://img.shields.io/badge/Games-31%20Included-ec4899?style=flat-square" alt="31 Games"/>
   <img src="https://img.shields.io/badge/Interface-Keyboard--Primary-8b5cf6?style=flat-square" alt="Keyboard-Primary"/>
   <img src="https://img.shields.io/badge/Platform-Omarchy%20Linux%20(Hyprland)-38bdf8?style=flat-square" alt="Omarchy Linux"/>
 </p>
@@ -111,7 +111,7 @@ sudo pacman -U omarchy-arcade-1.0.0-1-any.pkg.tar.zst
 
 ---
 
-## The 30 Games Included
+## The 31 Games Included
 
 Every game includes full offline documentation, keyboard controls mappings, and standalone launch capabilities:
 
@@ -147,6 +147,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **Bīdama** | Casual Aim & Physics | **492 KB** | Japanese tatami marbles tribute to Lose Your Marbles with urushi pitch line and dual gravity collapse. | [Manual](games/bidama/README.md) |
 | **OmarchyBolo II** | Action Arcade | **1.0 MB** | Classic tactical armored tank warfare inspired by Stuart Cheshire's Bolo with P2P WebRTC. | [Manual](games/omarchybolo/README.md) |
 | **Starframe** | Action Arcade | **1.0 MB** | Tactical neon vector space shooter with 3 starfighter classes, CRT bloom, and kinetic shield ramming. | [Manual](games/starframe/README.md) |
+| **SlimeSpikes** | Action Arcade | **620 KB** | Japanese crane-game teardrop slime corridor gravity runner with organic squash & stretch. | [Manual](games/slimespikes/README.md) |
 
 ---
 
