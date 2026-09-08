@@ -182,6 +182,7 @@ class CityViewport(QQuickPaintedItem):
         self._res_sprites_3x3 = {}
         self._house_sprites = []
         self._ind_sprites_3x3 = {}
+        self._com_sprites_3x3 = {}
         self._load_building_sprites()
 
     def _load_building_sprites(self):
@@ -203,6 +204,13 @@ class CityViewport(QQuickPaintedItem):
                 p = os.path.join(base_dir, f"ind_r{r}_c{c}.png")
                 if os.path.exists(p):
                     self._ind_sprites_3x3[(r, c)] = QImage(p)
+        # Load 3x3 commercial sprites (4 rows x 5 cols)
+        for r in range(4):
+            for c in range(5):
+                p = os.path.join(base_dir, f"com_r{r}_c{c}.png")
+                if os.path.exists(p):
+                    self._com_sprites_3x3[(r, c)] = QImage(p)
+
 
 
     # --- Properties ---
@@ -594,14 +602,9 @@ class CityViewport(QQuickPaintedItem):
 
         # 10. COMMERCIAL (423..611)
         if 423 <= t <= 611:
-            painter.fillRect(rect, COLOR_COM_BASE)
-            if raw & 0x0400 or t == 427:
-                painter.setPen(QColor("#ffffff"))
-                painter.drawText(rect, Qt.AlignCenter, "C")
-            elif ts >= 16:
-                painter.fillRect(QRectF(sx + ts * 0.2, sy + ts * 0.2, ts * 0.6, ts * 0.6), QColor("#023e8a"))
-            self._check_unpowered(painter, raw, has_power, rect)
+            self._draw_commercial_zone(painter, raw, t, has_power, sx, sy, ts, tx, ty)
             return
+
 
         # 11. INDUSTRIAL (612..692)
         if 612 <= t <= 692:
@@ -2205,7 +2208,40 @@ class CityViewport(QQuickPaintedItem):
                 self._check_unpowered(painter, raw, has_power, rect)
             return
 
+    def _draw_commercial_zone(self, painter: QPainter, raw: int, t: int, has_power: bool, sx: float, sy: float, ts: float, tx: int, ty: int):
+        rect = QRectF(sx, sy, ts + 0.5, ts + 0.5)
+
+        # 1. Vacant Commercial Lot (Stage 0, tiles 423..431)
+        if 423 <= t <= 431:
+            if t == 427 or (raw & 0x0400):
+                lot_rect = QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts)
+                painter.fillRect(lot_rect, QColor("#8fa5b8"))
+                painter.setPen(QPen(QColor("#607d8b"), 1, Qt.DashLine))
+                painter.setBrush(Qt.NoBrush)
+                painter.drawRect(lot_rect)
+                painter.setPen(QPen(QColor("#1e252b"), 2))
+                painter.setFont(QFont("Arial", max(8, int(ts * 0.45)), QFont.Bold))
+                painter.drawText(rect, Qt.AlignCenter, "C")
+                self._check_unpowered(painter, raw, has_power, rect)
+            return
+
+        # 2. Stages 1 to 5: 3x3 Commercial Buildings (tiles 432..611)
+        if 432 <= t <= 611:
+            bld_idx = (t - 432) // 9
+            sub_idx = (t - 432) % 9
+            if sub_idx == 4 or (raw & 0x0400):
+                r = min(3, bld_idx // 5)  # Land value: 0..3 (Low, Med, High, Lux)
+                c = min(4, bld_idx % 5)   # Density: 0..4 (Stage 1 to 5)
+                sprite = self._com_sprites_3x3.get((r, c))
+                if sprite:
+                    painter.drawImage(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), sprite)
+                else:
+                    painter.fillRect(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), COLOR_COM_BASE)
+                self._check_unpowered(painter, raw, has_power, rect)
+            return
+
     def _check_unpowered(self, painter: QPainter, raw: int, has_power: bool, rect: QRectF):
+
 
         """Draws a warning icon on unpowered zone center tiles."""
         if (raw & 0x0400) and not has_power:
