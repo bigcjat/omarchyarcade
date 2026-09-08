@@ -803,17 +803,18 @@
       "grid_color": "#22C55E",
       "version": "1.0.3",
       "status": "released",
-      "tagline": "Tactical Armored Combat, Combat Engineering & WebRTC Warfare",
-      "description": "A faithful tactical tank warfare simulation inspired by Stuart Cheshire's 1987 Macintosh classic Bolo. Command M4 tanks, armed humvees, and aircraft carriers; harvest timber, lay defensive pillbox bunkers, place mines, build bridges, and clash against autonomous AI or live WebRTC players.",
+      "tagline": "Tactical Combined Arms, Combat Engineering & Serverless WebRTC Warfare",
+      "description": "An unofficial sequel to Stuart Cheshire's 1987 Macintosh networking classic Bolo. Features 3 asymmetric vehicle classes (M4 Battle Tank, Armed Humvee, and 100,000-ton Aircraft Carrier), 40 Hz deterministic simulation, SimCity-style combat engineering, airburst artillery, cascading crater canals, dynamic System 7 diplomacy, and serverless WebRTC peer-to-peer multiplayer.",
       "instructions": [
-        "Steer your armored vehicle across island archipelagos capturing neutral bases and pillbox bunkers.",
-        "Harvest trees for building materials to repair damaged hulls, bridges, and defensive fortifications.",
-        "Deploy anti-tank mines to protect choke points and supply depots.",
-        "Engage enemy armor and naval carriers with high-explosive cannon artillery."
+        "Command M4 Tanks, M998 Humvees, or Aircraft Carriers with momentum physics and uncoupled 360° turret aiming.",
+        "Calibrate artillery gunsight range with the mouse wheel for long-range airburst fuse detonations and splash damage.",
+        "Harvest trees (1:WOOD) to construct road networks, brick barricades, and 5 military tech structures (Munitions Foundry, Shield Aegis Pylon, Barracks, Drone Station, Shipyard).",
+        "Deploy pillboxes, lay landmines (5:MINE / X), breach craters into flowing canal waterways, and negotiate treaties via System 7 Diplomacy (⌘A)."
       ],
       "controls": {
-        "keyboard": "W/S to drive, A/D to steer, Mouse to aim turret, Space/Click to fire cannon, M to lay mine, E/H for engineering",
-        "shortcuts": "Esc for mission configuration dialog"
+        "keyboard": "WASD / Arrows to drive, Double-Tap ↑ for turret lock, Space/F to fire, E/Q for 155mm artillery / SAM / airstrikes, X to lay mine, 1-7 for engineering tools, C to recall engineer, ⌘A for diplomacy, Tab for leaderboard",
+        "mouse": "Aim turret 360°, Mouse Wheel / [ ] to calibrate gunsight range, Click or Drag to construct multi-tile roads/walls",
+        "shortcuts": "⌘A diplomacy, Y/⌘M telegram comms, ⌘+/⌘- zoom, Esc close dialog"
       },
       "folder": "games/omarchybolo",
       "entrypoint": "games/omarchybolo/main.py",

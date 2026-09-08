@@ -431,7 +431,7 @@ Rectangle {
                                 }
 
                                 // Gameplay Screenshot Image
-                                Image {
+                                AnimatedImage {
                                     id: gameImg
                                     anchors.top: screenHeader.bottom
                                     anchors.left: parent.left
@@ -440,7 +440,6 @@ Rectangle {
                                     anchors.margins: 4
                                     fillMode: Image.PreserveAspectFit
                                     asynchronous: true
-                                    mipmap: true
                                     smooth: true
                                     source: {
                                         if (typeof arcadeBackend !== "undefined" && arcadeBackend && gameData && gameData.folder) {

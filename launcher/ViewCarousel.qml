@@ -92,7 +92,7 @@ Item {
                     clip: true
 
                     // Screenshot Image
-                    Image {
+                    AnimatedImage {
                         id: heroScreenshot
                         anchors.fill: parent
                         anchors.margins: 6

@@ -147,6 +147,7 @@ def run_web_app():
             "--window-size=1280,820",
             "--window-position=center",
             f"--app-id=omarchyarcade.{APP_REF.lower()}",
+            "--user-data-dir=/tmp/omarchy_bolo_chrome_profile",
         ]
         # On Linux allow slight sandbox optimizations if needed
         if sys.platform.startswith("linux"):

@@ -158,15 +158,24 @@ class ArcadeBackend(QObject):
 
     @Slot(str, result=str)
     def getScreenshotUrl(self, folder: str) -> str:
-        """Returns the file URL for a game's screenshot, with fallback to remote URL."""
+        """Returns the file/remote URL for a game's gameplay preview WebP, falling back to screenshot.png."""
         if not folder:
             return ""
-        local_path = BASE_DIR / folder / "screenshot.png"
-        if not local_path.exists():
-            local_path = Path.home() / ".local" / "share" / "omarchy-arcade" / folder / "screenshot.png"
-        if local_path.exists():
-            return QUrl.fromLocalFile(str(local_path)).toString()
-        return f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/{folder}/screenshot.png"
+        game_id = Path(folder).name
+        # 1. Local preview WebP check
+        for base in [BASE_DIR, Path.home() / ".local" / "share" / "omarchy-arcade"]:
+            preview_path = base / "assets" / "previews" / f"{game_id}.webp"
+            if preview_path.exists():
+                return QUrl.fromLocalFile(str(preview_path)).toString()
+
+        # 2. Local screenshot.png check
+        for base in [BASE_DIR, Path.home() / ".local" / "share" / "omarchy-arcade"]:
+            local_path = base / folder / "screenshot.png"
+            if local_path.exists():
+                return QUrl.fromLocalFile(str(local_path)).toString()
+
+        # 3. Remote GitHub raw preview
+        return f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/assets/previews/{game_id}.webp"
 
     @Slot(str, result=str)
     def getDiskIconUrl(self, game_id: str) -> str:

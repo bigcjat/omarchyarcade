@@ -291,7 +291,7 @@ Item {
                         height: sidebarView.isNarrow ? 300 : 330
 
                         // Hero Screenshot / Cover background
-                        Image {
+                        AnimatedImage {
                             anchors.fill: parent
                             fillMode: Image.PreserveAspectCrop
                             smooth: true
