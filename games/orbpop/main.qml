@@ -917,7 +917,10 @@ Window {
                 Text {
                     width: parent.width
                     wrapMode: Text.WordWrap
-                    text: "• Mouse: Move cursor to aim, Click to shoot.\n• Keys: A/D or Left/Right or Vim H/L to aim.\n• Fire: Space, W, Up arrow, or Enter."
+                    text: "• Mouse: Move cursor to aim, Click to shoot.\n• Keys: A/D or Left/Right or Vim H/L to aim.\n• Fire: Space, W, Up arrow, or Enter.
+• Full/Compact View: Shift+F (⇧F)
+• Sound: Press M to toggle audio (Default: Muted)
+• Restart: Press R to restart game."
                     font.family: root.monoFontFamily
                     font.pixelSize: 12
                     color: root.themeSubtext

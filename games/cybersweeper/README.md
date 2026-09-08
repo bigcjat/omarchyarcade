@@ -26,6 +26,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Flag / Unflag Mine** | Right Click | `F` key |
 | **Chord Reveal** | Middle Click / Left+Right Click | `C` key |
 | **Navigate Grid** | Hover | `W`/`A`/`S`/`D`, Arrows, or Vim `H`/`J`/`K`/`L` |
+| **Full / Compact View** | `Shift+F` | Click `⛶` / `🔲` button |
 | **Mute Audio** | Subheader button | `M` |
 | **New Game** | Subheader "Restart" | `R` |
 

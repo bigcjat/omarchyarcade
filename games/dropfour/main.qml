@@ -1047,7 +1047,7 @@ Window {
         Rectangle {
             anchors.centerIn: parent
             width: Math.min(440, parent.width - 40)
-            height: 370
+            height: 400
             radius: 16
             color: root.themeModalBg
             border.color: root.themeBorder
@@ -1092,6 +1092,9 @@ Window {
 
                     Text { text: "Keys 1 - 7"; font.bold: true; color: root.p2Color; font.pixelSize: 12 }
                     Text { text: "Quick Drop in Column"; color: root.themeFg; font.pixelSize: 12 }
+
+                    Text { text: "Shift+F"; font.bold: true; color: root.themeAccent; font.pixelSize: 12 }
+                    Text { text: "Full / Compact View (⇧F)"; color: root.themeFg; font.pixelSize: 12 }
 
                     Text { text: "R / M / T"; font.bold: true; color: root.themeSubtext; font.pixelSize: 12 }
                     Text { text: "Restart / Mute / Next Theme"; color: root.themeFg; font.pixelSize: 12 }

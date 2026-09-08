@@ -50,6 +50,7 @@ Authentic multi-game casino video terminal built natively with hardware accelera
 | **Double-Up Gamble** | `D` | — | Click "DOUBLE [D]" button after any win |
 | **Collect / Cash Out**| `C` | `Esc` | Click "COLLECT" or press `C` / `Esc` |
 | **Rules & Instructions** | `?` | `H` | Click "?" button in toolbar |
+| **Full / Compact View** | `Shift+F` | — | Click `⛶` / `🔲` button |
 | **Mute Audio** | `M` | — | Click "🔇" / "🔊" speaker button in toolbar |
 
 ---

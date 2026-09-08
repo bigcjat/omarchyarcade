@@ -26,6 +26,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Move Down** | `S` or `↓` | Vim `J` |
 | **Move Left** | `A` or `←` | Vim `H` |
 | **Move Right** | `D` or `→` | Vim `L` |
+| **Full / Compact View** | `Shift+F` | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | Subheader Mute button |
 | **Restart Game** | `R` | Subheader "Restart" |
 

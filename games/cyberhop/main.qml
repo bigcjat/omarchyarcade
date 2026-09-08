@@ -33,7 +33,7 @@ Window {
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
-    property string helpText: "• Hop Forward: ↑, W, Space, or Vim K\n• Steer Left/Right: ← / →, A / D, or H / L\n• Hop Back: ↓, S, or Vim J\n• Dodge traffic & high-speed bullet trains\n• Ride floating logs across rivers\n• Keep moving—don't let the eagle catch you!"
+    property string helpText: "• Hop Forward: ↑, W, Space, or Vim K\n• Steer Left/Right: ← / →, A / D, or H / L\n• Hop Back: ↓, S, or Vim J\n• Dodge traffic & high-speed bullet trains\n• Ride floating logs across rivers\n• Full/Compact View: Shift+F\n• Sound: M | Restart: R | Help: ?\n• Keep moving—don't let the eagle catch you!"
 
     Behavior on themeBg { ColorAnimation { duration: 250 } }
     Behavior on themeBoardBg { ColorAnimation { duration: 250 } }

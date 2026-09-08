@@ -27,6 +27,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Drop Disc** | `Space` or `Enter` or `↓` | Click Column |
 | **Direct Drop 1–7** | Number keys `1` through `7` | Click target column directly |
 | **Toggle Mode (AI / 2P)** | `T` | Click Mode button in subheader |
+| **Full / Compact View** | `Shift+F` | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | Click Mute button |
 | **Restart Game** | `R` | Click "Restart" |
 

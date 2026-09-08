@@ -17,6 +17,8 @@ Built natively with hardware acceleration for **Omarchy Linux**.
   * **Vim Keys:** `H` (Left), `J` (Down), `K` (Up), `L` (Right)
   * **WASD:** `W` (Up), `A` (Left), `S` (Down), `D` (Right)
   * **Arrow Keys:** `←`, `↑`, `→`, `↓`
+  * **Full / Compact View:** `Shift+F` (or click `⛶` / `🔲` button)
+  * **Mute / Unmute:** `M` (Default: Muted)
   * **Restart / Help:** `R` (Restart), `?` / `Esc` (Help dialog)
 * **Dynamic Sound Effects (Zero-Overhead & Defaulted to Mute):**
   * Pitch-scaled harmonic synth chimes that ascend pentatonically based on tile value merged ($4 \rightarrow 2048$).

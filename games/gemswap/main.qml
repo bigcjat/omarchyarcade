@@ -1301,7 +1301,9 @@ Window {
                 Text {
                     width: parent.width
                     wrapMode: Text.WordWrap
-                    text: "• Mouse: Click gem to select, click neighbor to swap.\n• Keys: WASD / Arrows to navigate, Space to select.\n• Swap: Shift + Arrow or click adjacent gem.\n• Hint: Press H or click 💡 Hint for move suggestion.\n• Restart: Press R to reset board."
+                    text: "• Mouse: Click gem to select, click neighbor to swap.\n• Keys: WASD / Arrows to navigate, Space to select.\n• Swap: Shift + Arrow or click adjacent gem.\n• Hint: Press H or click 💡 Hint for move suggestion.\n• Full/Compact View: Shift+F (⇧F)
+• Sound: Press M to toggle audio (Default: Muted)
+• Restart: Press R to reset board."
                     font.family: root.monoFontFamily
                     font.pixelSize: 12
                     color: root.themeSubtext

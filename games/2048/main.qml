@@ -1404,6 +1404,34 @@ ApplicationWindow {
                             }
                         }
 
+                        // Full Playfield View Toggle
+                        Row {
+                            width: parent.width
+                            spacing: modalCard.isVeryTiny ? 6 : 10
+
+                            Rectangle {
+                                width: modalCard.isVeryTiny ? 68 : (modalCard.isCompact ? 86 : 105)
+                                height: modalCard.isVeryTiny ? 20 : (modalCard.isCompact ? 22 : 26)
+                                radius: 4
+                                color: root.themeCardBg
+                                anchors.verticalCenter: parent.verticalCenter
+                                Text { 
+                                    anchors.centerIn: parent
+                                    text: "Shift+F"
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: modalCard.isVeryTiny ? 8.5 : 10
+                                    font.bold: true
+                                    color: root.themeFg
+                                }
+                            }
+                            Text { 
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: modalCard.isVeryTiny ? "Full/Compact View" : "Full / Compact View (⇧F)"
+                                font.pixelSize: modalCard.isVeryTiny ? 10 : (modalCard.isCompact ? 11 : 12)
+                                color: root.themeSubtext
+                            }
+                        }
+
                         // Mute / Sound Toggle Shortcut
                         Row {
                             width: parent.width

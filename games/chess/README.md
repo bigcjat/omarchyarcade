@@ -43,6 +43,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Flip Board (White/Black)** | `F` | — | Click "Flip (F)" button |
 | **Cycle AI Difficulty** | `D` | — | Click "AI LEVEL" card |
 | **New Game (Restart)** | `R` | — | Click "New Game" button |
+| **Full / Compact View** | `Shift+F` | — | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | — | Click audio button in subheader |
 | **Rules & Help** | `?` or `Esc` | `/` | Click "Help" button |
 

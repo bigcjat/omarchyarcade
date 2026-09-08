@@ -33,6 +33,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 * **Hard Drop (Instant Slam):** `Space` or Double-Tap `↓` / `S`
 * **Hold Piece:** `C` or `Shift`
 * **Pause / Resume:** Click the board or press `P` / `Esc`
+* **Full / Compact View:** `Shift+F` or click `⛶` / `🔲`
 * **Toggle Sound:** `M` (Defaulted to Muted)
 * **Restart:** `R`
 * **Help:** `?` or click "How to Play"

@@ -41,6 +41,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Slide Row Right** | `D` or `→` | `L` or Drag row right |
 | **Push Next Wave** | `Space` | Click "Push Wave" in subheader |
 | **Toggle Game Mode** | `P` | Click "Zen" / "vs AI" in subheader |
+| **Full / Compact View** | `Shift+F` | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | Click audio button in subheader |
 | **Restart Game** | `R` | Click "New Game" |
 | **Rules & Help** | `?` or `Esc` | Click "?" button |

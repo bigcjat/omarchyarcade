@@ -1071,7 +1071,7 @@ Window {
         Rectangle {
             anchors.centerIn: parent
             width: Math.min(440, parent.width - 40)
-            height: 380
+            height: 410
             radius: 16
             color: root.themeModalBg
             border.color: root.themeBorder
@@ -1116,6 +1116,9 @@ Window {
 
                     Text { text: "P"; font.bold: true; color: root.themePalette.color2 || "#a6e3a1"; font.pixelSize: 12 }
                     Text { text: "Pause / Resume"; color: root.themeFg; font.pixelSize: 12 }
+
+                    Text { text: "Shift+F"; font.bold: true; color: root.themeAccent; font.pixelSize: 12 }
+                    Text { text: "Full / Compact View (⇧F)"; color: root.themeFg; font.pixelSize: 12 }
 
                     Text { text: "R / M / T"; font.bold: true; color: root.themeSubtext; font.pixelSize: 12 }
                     Text { text: "Restart / Mute / Next Theme"; color: root.themeFg; font.pixelSize: 12 }

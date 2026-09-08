@@ -25,6 +25,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Move Fighter Left** | `A` | `←` or Vim `H` | Mouse movement |
 | **Move Fighter Right** | `D` | `→` or Vim `L` | Mouse movement |
 | **Fire Lasers** | `Space` | `W` or `↑` or Vim `K` | Left Click |
+| **Full / Compact View** | `Shift+F` | — | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | — | Click Mute button |
 | **Restart Game** | `R` | — | Click "Restart" |
 

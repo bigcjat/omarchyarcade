@@ -76,6 +76,7 @@ An authentic, legally safe, uncompromised city builder for the Omarchy Linux des
 | **Advisor Briefing** | Click `Dr. DHH` badge or `Advisor` button |
 | **Help / Handbook** | Click Question icon |
 | **Inaugurate New City** | Click `New City` button in header |
+| **Full / Compact View** | `Shift+F` (or click `⛶` / `🔲` button) |
 
 ---
 

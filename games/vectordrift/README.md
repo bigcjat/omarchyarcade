@@ -28,6 +28,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Thrust Forward** | `W` | `↑` or Vim `K` | — |
 | **Fire Lasers** | `Space` | — | Left Click |
 | **Hyperspace Jump** | `Shift` or `S` | `↓` or Vim `J` | — |
+| **Full / Compact View** | `Shift+F` | — | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | — | Subheader Audio button |
 | **Restart Game** | `R` | — | Subheader "Restart" |
 | **Help / How to Play** | `?` or `Esc` | — | Subheader "How to Play" |

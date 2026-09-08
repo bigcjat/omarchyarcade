@@ -37,7 +37,7 @@ Built natively with hardware acceleration for **Omarchy Linux** and tiling windo
 | **Steer Starfighter** | `W` `A` `S` `D` | Arrows or Vim `H` `J` `K` `L` | Move Mouse |
 | **Fire All Weapons** | `Space` | `Return` / `Enter` | Left Click |
 | **EMP Super Bomb** | `B` | — | Right Click |
-| **Full Playfield Mode** | `F` | — | Click `⛶` button |
+| **Full Playfield Mode** | `Shift+F` | — | Click `⛶` button |
 | **Pause / Resume** | `P` | `Esc` | Click `⏸` button |
 | **How to Play** | `?` | `/` | Click `?` button |
 | **Mute / Unmute** | `M` | — | Click `🔊` button |

@@ -23,6 +23,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | Action | Primary Key | Secondary / Vim | Mouse / Touch |
 | :--- | :--- | :--- | :--- |
 | **Flap Wings (Jump)** | `Space` | `W` or `↑` or Vim `K` | Left Click |
+| **Full / Compact View** | `Shift+F` | — | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | — | Click Mute button |
 | **Restart Game** | `R` | — | Click "Restart" |
 | **Help** | `?` or `Esc` | — | Click "How to Play" |

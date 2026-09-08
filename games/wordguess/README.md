@@ -26,6 +26,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Delete Letter** | `Backspace` | Click `⌫` key |
 | **Submit Guess** | `Enter` / `Return` | Click `ENTER` key |
 | **New Puzzle** | `R` | Click "Restart" in subheader |
+| **Full / Compact View** | `Shift+F` | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | Click Mute button |
 
 ---

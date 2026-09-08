@@ -25,6 +25,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Move Cannon Left** | `A` | `←` or Vim `H` | Mouse move left |
 | **Move Cannon Right** | `D` | `→` or Vim `L` | Mouse move right |
 | **Fire Laser Cannon** | `Space` | `W` or `↑` or Vim `K` | Left Click |
+| **Full / Compact View** | `Shift+F` | — | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | — | Click Mute button |
 | **Restart Game** | `R` | — | Click "Restart" |
 

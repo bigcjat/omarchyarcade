@@ -38,6 +38,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Undo Move** | `U` | Click "Undo" in bottom toolbar |
 | **Cycle Difficulty** | `D` | Click Difficulty pill in bottom toolbar |
 | **Toggle Game Mode** | `P` | Click Mode toggle in subheader |
+| **Full / Compact View** | `Shift+F` | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | Click audio button in subheader |
 | **Restart Game** | `R` | Click "New Game" |
 | **How to Play** | `?` or `Esc` | Click "?" button |

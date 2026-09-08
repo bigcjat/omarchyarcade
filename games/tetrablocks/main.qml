@@ -1397,6 +1397,16 @@ Window {
                         Rectangle {
                             width: 86; height: 22; radius: 4
                             color: root.themeCardBg
+                            Text { anchors.centerIn: parent; text: "Shift+F"; font.family: root.monoFontFamily; font.pixelSize: 10; font.bold: true; color: root.themeFg }
+                        }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: "Full / Compact View (⇧F)"; font.pixelSize: 11; color: root.themeSubtext }
+                    }
+
+                    Row {
+                        spacing: 10
+                        Rectangle {
+                            width: 86; height: 22; radius: 4
+                            color: root.themeCardBg
                             Text { anchors.centerIn: parent; text: "P • Esc • M • R"; font.family: root.monoFontFamily; font.pixelSize: 9; font.bold: true; color: root.themeFg }
                         }
                         Text { anchors.verticalCenter: parent.verticalCenter; text: "Pause • Mute • Restart"; font.pixelSize: 11; color: root.themeSubtext }

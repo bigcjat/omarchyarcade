@@ -25,6 +25,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | :--- | :--- | :--- | :--- |
 | **Move Paddle** | `A` / `D` | `←` / `→` or Vim `H` / `L` | Mouse Movement / Trackpad |
 | **Launch Ball** | `Space` | `Enter` | Left Click |
+| **Full / Compact View** | `Shift+F` | — | Click `⛶` / `🔲` button |
 | **Mute Audio** | `M` | — | Click Mute button |
 | **Restart** | `R` | — | Click "Restart" |
 | **Help** | `?` or `Esc` | — | Click "How to Play" |

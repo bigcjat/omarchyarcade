@@ -40,11 +40,12 @@ else
     echo -e "${GREEN}==>${RESET} Downloading Omarchy Arcade launcher payload..."
     mkdir -p "$APP_DIR/launcher" "$APP_DIR/assets"
 
+    curl -sSL "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/catalog.json" -o "$APP_DIR/catalog.json"
     curl -sSL "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/assets/omarchy_arcade_logo.svg" -o "$ICONS_DIR/omarchy-arcade.svg"
     curl -sSL "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/assets/omarchy_arcade_logo.svg" -o "$APP_DIR/assets/omarchy_arcade_logo.svg"
     curl -sSL "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/assets/splashscreen.png" -o "$APP_DIR/assets/splashscreen.png" 2>/dev/null || true
 
-    for f in main.py main.qml FloppyCard.qml GameDetailSheet.qml SplashScreen.qml omarchy_arcade_logo.svg omarchy_arcade_text.svg; do
+    for f in main.py main.qml FloppyCard.qml GameDetailSheet.qml SplashScreen.qml ViewCarousel.qml ViewDesktop.qml ViewSidebar.qml omarchy_arcade_logo.svg omarchy_arcade_text.svg; do
         curl -sSL "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/launcher/$f" -o "$APP_DIR/launcher/$f"
     done
 fi

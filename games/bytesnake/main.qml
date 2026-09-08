@@ -859,7 +859,7 @@ Window {
 
         Rectangle {
             width: Math.min(parent.width * 0.9, 400)
-            height: 380
+            height: 410
             radius: 12
             color: root.themeModalBg
             border.color: root.themeBorder
@@ -892,6 +892,8 @@ Window {
                     Text { text: "R"; color: root.themeFg; font.pixelSize: 12 }
                     Text { text: "Cycle Theme:"; font.bold: true; color: root.themeSubtext; font.pixelSize: 12 }
                     Text { text: "T (cycles all 22 Omarchy palettes)"; color: root.themeFg; font.pixelSize: 12 }
+                    Text { text: "Full / Compact View:"; font.bold: true; color: root.themeSubtext; font.pixelSize: 12 }
+                    Text { text: "Shift+F (⇧F)"; color: root.themeFg; font.pixelSize: 12 }
                     Text { text: "Toggle Mute:"; font.bold: true; color: root.themeSubtext; font.pixelSize: 12 }
                     Text { text: "M"; color: root.themeFg; font.pixelSize: 12 }
                 }

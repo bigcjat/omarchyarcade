@@ -70,7 +70,7 @@ Window {
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Rules: Trap one or more opponent discs between your discs to flip them to your color.\n• Legal Moves: You must flip at least one disc on every turn.\n• Passing: If you have no legal moves, your turn is automatically passed.\n• Victory: The game ends when the board is full or neither player can move. The player with the most discs wins!\n\nControls:\n• Click or tap any highlighted circle to play\n• Keyboard: Arrows / WASD / Vim HJKL to navigate, Space to place\n• U: Undo Move | D: Change Difficulty | P: Toggle Mode | R: Restart | M: Sound | ?: Help"
+    property string helpText: "• Rules: Trap one or more opponent discs between your discs to flip them to your color.\n• Legal Moves: You must flip at least one disc on every turn.\n• Passing: If you have no legal moves, your turn is automatically passed.\n• Victory: The game ends when the board is full or neither player can move. The player with the most discs wins!\n\nControls:\n• Click or tap any highlighted circle to play\n• Keyboard: Arrows / WASD / Vim HJKL to navigate, Space to place\n• U: Undo Move | D: Change Difficulty | P: Toggle Mode | Shift+F: Full/Compact View | R: Restart | M: Sound | ?: Help"
 
     // =========================================================================
     // THEME & SOUND CONTROLLERS

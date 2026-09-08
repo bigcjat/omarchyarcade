@@ -29,6 +29,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Select / Swap** | `Space` or `Enter` | Mouse Click |
 | **Directional Swap** | `Shift` + `Direction` | Drag to Neighbor |
 | **How to Play** | `?` or `/` | Click "? How to Play" |
+| **Full / Compact View** | `Shift+F` | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | Click Mute button |
 | **Restart Game** | `R` | Click "Restart (R)" |
 

@@ -68,6 +68,7 @@ Window {
         "• [1] - [5]: Toggle Hold on cards 1 through 5\n" +
         "• [B]: Increase coin bet (1 to 5)\n" +
         "• [X]: Bet Max (5 coins) and deal\n" +
+        "• [Shift+F]: Toggle Full / Compact View\n" +
         "• [M]: Toggle Mute audio\n" +
         "• [G]: Open Game Selection menu (navigate with Arrows)\n" +
         "• [D]: Double-Up High-Card Gamble after any win\n" +

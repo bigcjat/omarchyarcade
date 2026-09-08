@@ -26,6 +26,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Aim Cannon** | `A` / `D` or `←` / `→` | Mouse Move / Vim `H` / `L` |
 | **Fire Orb** | `Space` or `W` or `↑` | Mouse Click / Enter / Vim `K` |
 | **How to Play** | `?` or `/` | Click "? How to Play" |
+| **Full / Compact View** | `Shift+F` | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | Click Mute button |
 | **Restart Game** | `R` | Click "Restart (R)" |
 

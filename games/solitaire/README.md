@@ -36,6 +36,7 @@ Classic Klondike Solitaire built natively with hardware acceleration for **Omarc
 | **Toggle Draw 1 / Draw 3** | `D` | — | Click "Draw 1" / "Draw 3" |
 | **Cycle Deck Style** | `K` | — | Click "Deck" button |
 | **New Game** | `N` | `R` | Click "New Game" button |
+| **Full / Compact View** | `Shift+F` | — | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | — | Click audio button in header |
 | **Rules & Cheatsheet** | `?` | `F1` | Click "?" button |
 | **Back / Exit** | `Esc` | `Q` | Close window |

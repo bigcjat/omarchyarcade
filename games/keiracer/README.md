@@ -31,6 +31,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Accelerate / Brake** | `W` / `S` | `K` / `J` or Up / Down Arrows | Throttle / Brake |
 | **Drift** | `Space` | — | Handbrake slide |
 | **Garage (Car Select)** | `C` | — | Click "Garage" in subheader |
+| **Full / Compact View** | `Shift+F` | — | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | — | Click audio button in subheader |
 | **Restart Game** | `R` | — | Click "New Game" in subheader |
 | **How to Play / Help**| `?` or `Esc` | — | Click "Help" |

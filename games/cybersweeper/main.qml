@@ -1073,7 +1073,7 @@ Window {
         Rectangle {
             anchors.centerIn: parent
             width: Math.min(440, parent.width - 40)
-            height: 380
+            height: 410
             radius: 16
             color: root.themeModalBg
             border.color: root.themeBorder
@@ -1124,6 +1124,9 @@ Window {
 
                     Text { text: "1 / 2 / 3"; font.bold: true; color: root.themePalette.color3 || "#f9e2af"; font.pixelSize: 12 }
                     Text { text: "Difficulty (9x9 / 16x16 / 30x16)"; color: root.themeFg; font.pixelSize: 12 }
+
+                    Text { text: "Shift+F"; font.bold: true; color: root.themeAccent; font.pixelSize: 12 }
+                    Text { text: "Full / Compact View (⇧F)"; color: root.themeFg; font.pixelSize: 12 }
 
                     Text { text: "R / M / T"; font.bold: true; color: root.themeSubtext; font.pixelSize: 12 }
                     Text { text: "Restart / Mute / Next Theme"; color: root.themeFg; font.pixelSize: 12 }

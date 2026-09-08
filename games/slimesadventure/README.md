@@ -44,7 +44,7 @@ Built natively with hardware acceleration for **Omarchy Linux** and tiling windo
 | :--- | :--- | :--- | :--- |
 | **Flip Gravity** | `Space` | `Return` / `W` / `S` / Arrows | Left Click |
 | **Character Select** | `1` – `6` | Press `C` to open tray | Click Character Badge |
-| **Full Playfield Mode** | `F` | — | Click `⛶` button |
+| **Full Playfield Mode** | `Shift+F` | — | Click `⛶` button |
 | **Pause / Resume** | `P` | `Esc` | Click `⏸` button |
 | **How to Play** | `?` | `/` | Click `?` button |
 | **Mute / Unmute** | `M` | — | Click `🔊` button |

@@ -32,7 +32,7 @@ Window {
     readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
-    property string helpText: "• Steer: Arrow Keys / WASD / HJKL\n• Accelerate / Brake: Up / Down or W / S\n• Drift: Spacebar at speed for lateral slide\n• Garage: Press C to switch Kei cars\n• Sound: Press M to toggle audio\n• Restart: Press R for a new run\n• Checkpoints: Cross arch gates for +30s\n• Near Miss / Pass: Draft and pass rivals for points"
+    property string helpText: "• Steer: Arrow Keys / WASD / HJKL\n• Accelerate / Brake: Up / Down or W / S\n• Drift: Spacebar at speed for lateral slide\n• Garage: Press C to switch Kei cars\n• View: Shift+F for compact/full playfield\n• Sound: Press M to toggle audio\n• Restart: Press R for a new run\n• Checkpoints: Cross arch gates for +30s\n• Near Miss / Pass: Draft and pass rivals for points"
 
     // Game & Drivetrain state properties bound to Engine
     property string selectedCar: "keitruck"

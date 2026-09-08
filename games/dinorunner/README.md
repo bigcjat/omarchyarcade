@@ -24,6 +24,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | :--- | :--- | :--- | :--- |
 | **Jump** | `Space` or `↑` | `W` or Vim `K` | Click screen |
 | **Duck / Fast Fall** | `↓` | `S` or Vim `J` | Swipe Down |
+| **Full / Compact View** | `Shift+F` | — | Click `⛶` / `🔲` button |
 | **Mute Audio** | `M` | — | Click Mute button |
 | **Restart Game** | `R` | — | Click "Restart" |
 

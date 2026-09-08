@@ -26,6 +26,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Move Down** | `S` or Vim `J` | `↓` |
 | **Serve Ball** | `Space` / `Enter` | `Space` / `Enter` |
 | **Toggle AI / 2P** | `T` key | Click mode button |
+| **Full / Compact View** | `Shift+F` | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | Subheader Audio button |
 | **Restart Game** | `R` | Subheader "Restart" |
 

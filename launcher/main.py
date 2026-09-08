@@ -380,6 +380,33 @@ def get_theme_colors():
     return colors
 
 
+def ensure_launcher_assets():
+    """Ensure all required launcher components exist locally, downloading any missing ones."""
+    if (BASE_DIR / ".git").exists() and (BASE_DIR / "games").is_dir():
+        return
+    required_files = [
+        "ViewCarousel.qml",
+        "ViewDesktop.qml",
+        "ViewSidebar.qml",
+        "FloppyCard.qml",
+        "GameDetailSheet.qml",
+        "SplashScreen.qml",
+        "omarchy_arcade_logo.svg",
+        "omarchy_arcade_text.svg",
+    ]
+    import urllib.request
+    for rf in required_files:
+        dest = LAUNCHER_DIR / rf
+        if not dest.exists():
+            print(f"[Arcade] Missing launcher component {rf}, downloading from GitHub...")
+            try:
+                url = f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/launcher/{rf}"
+                urllib.request.urlretrieve(url, str(dest))
+                print(f"[Arcade] Successfully restored {rf}")
+            except Exception as e:
+                print(f"[Arcade] Error downloading {rf}: {e}")
+
+
 def main():
     if "--help" in sys.argv or "-h" in sys.argv:
         print("""Omarchy Arcade • Desktop Game Suite Launcher
@@ -390,6 +417,7 @@ Usage:
 """)
         sys.exit(0)
 
+    ensure_launcher_assets()
     QQuickStyle.setStyle("Basic")
     app = QGuiApplication(sys.argv)
     app.setApplicationName("Omarchy Arcade")
@@ -410,6 +438,7 @@ Usage:
 
     backend = ArcadeBackend()
     engine = QQmlApplicationEngine()
+    engine.addImportPath(str(LAUNCHER_DIR))
     engine.rootContext().setContextProperty("arcadeBackend", backend)
 
     # Initial properties

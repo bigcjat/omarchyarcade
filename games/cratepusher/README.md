@@ -28,6 +28,8 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Move Right** | `D` or `→` | Vim `L` |
 | **Undo Move** | `U` or `Backspace` | `Z` |
 | **Previous / Next Level** | `[` / `]` | Header Navigation arrows |
+| **Full / Compact View** | `Shift+F` | Click `⛶` / `🔲` button |
+| **Mute / Unmute** | `M` | Subheader Audio button |
 | **Restart Level** | `R` | Subheader "Restart" |
 
 ---

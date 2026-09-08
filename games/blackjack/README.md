@@ -42,6 +42,7 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 | **Toggle Odds Advisor** | `O` | — | Click "Odds (O)" subheader button |
 | **Bet $5 / $25 / $100 / $500** | `1` / `2` / `3` / `4` | — | Click chip in tray |
 | **Clear / Double Bet** | `C` / `X` | — | Click "CLR" / "2X" |
+| **Full / Compact View** | `Shift+F` | — | Click `⛶` / `🔲` button |
 | **Mute / Unmute** | `M` | — | Click audio button in subheader |
 | **Rules & Help** | `?` or `Esc` | — | Click "Rules" button |
 
