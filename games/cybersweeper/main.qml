@@ -33,6 +33,8 @@ Window {
     // Game state
     property bool splashEnabled: true
     property bool isMuted: true
+    property bool fullPlayfield: false
+    readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
@@ -232,6 +234,14 @@ Window {
                 event.accepted = true;
                 return;
             }
+
+            if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
+                root.fullPlayfield = !root.fullPlayfield;
+                soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_T) {
                 cycleTheme();
                 event.accepted = true;
@@ -299,13 +309,14 @@ Window {
         // 2048 DESIGN STANDARD: ROW 1 (Header Item)
         Item {
             id: headerItem
+            visible: !root.isTiledDesktopMode
             anchors.top: parent.top
-            anchors.topMargin: 16
+            anchors.topMargin: root.isTiledDesktopMode ? 0 : 16
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
-            height: Math.max(titleCol.height, scoreRow.height)
+            height: root.isTiledDesktopMode ? 0 : (Math.max(titleCol.height, scoreRow.height))
 
             Column {
                 id: titleCol
@@ -408,13 +419,14 @@ Window {
         // 2048 DESIGN STANDARD: ROW 2 (Subheader Action Bar)
         Item {
             id: subheaderItem
+            visible: !root.isTiledDesktopMode
             anchors.top: headerItem.bottom
-            anchors.topMargin: 10
+            anchors.topMargin: root.isTiledDesktopMode ? 0 : 10
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
-            height: 34
+            height: root.isTiledDesktopMode ? 0 : 34
             readonly property bool isCrowded: subheaderItem.width < 460
 
             // Help button
@@ -547,7 +559,50 @@ Window {
             }
 
             // Primary Action Button (Smiley / Restart)
-            Rectangle {
+                            // View Mode Pill (Windowed vs Full Field)
+                Rectangle {
+                    id: viewModeBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (viewModeRow.implicitWidth + 18)
+                    radius: 8
+                    color: root.fullPlayfield ? root.themeCardBg : (viewModeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
+                    border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        id: viewModeRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: root.fullPlayfield ? "🔲" : "⛶"
+                            font.pixelSize: 13
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: root.fullPlayfield ? "Standard (⇧F)" : "Full (⇧F)"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.fullPlayfield ? root.themeAccent : root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: viewModeMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.fullPlayfield = !root.fullPlayfield;
+                            soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
+                        }
+                    }
+                }
+
+                Rectangle {
                 id: restartBtn
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
@@ -588,9 +643,108 @@ Window {
 
         // Playing Board Area
         Item {
-            id: boardArea
-            anchors.top: subheaderItem.bottom
-            anchors.topMargin: 12
+                    // =====================================================================
+        // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
+        // =====================================================================
+        Rectangle {
+            id: floatingTiledHUD
+            visible: root.isTiledDesktopMode
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.topMargin: 8
+            anchors.leftMargin: 12
+            anchors.rightMargin: 12
+            height: 38
+            radius: 8
+            z: 90
+            color: root.themeCardBg
+            border.color: root.themeBorder
+            border.width: 1
+
+            Row {
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
+
+                Text {
+                    text: "💣 CyberSweeper"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeAccent
+                }
+
+                Text {
+                    text: "• " + ("FLAGS: " + root.flagsRemaining)
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeFg
+                }
+                Text {
+                    text: "(" + ("TIME: " + root.timerSeconds + "s") + ")"
+                    font.pixelSize: 10
+                    color: root.themeSubtext
+                }
+            }
+
+            Row {
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 6
+
+                // Full Window Toggle
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "🔲"; font.pixelSize: 10; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.fullPlayfield = false;
+                            soundToast.show("🔲 Standard Window");
+                        }
+                    }
+                }
+
+                // Help
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "?"; font.pixelSize: 11; font.bold: true; color: root.themeAccent; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showHelp = !root.showHelp
+                    }
+                }
+
+                // Mute
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
+                }
+                // Restart
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "🔄"; font.pixelSize: 10; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.startNewGame()
+                    }
+                }
+            }
+        }
+
+        id: boardArea
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 12
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 16
             anchors.left: parent.left

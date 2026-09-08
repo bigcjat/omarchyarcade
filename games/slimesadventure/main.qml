@@ -51,7 +51,7 @@ ApplicationWindow {
     property int gameBestDistance: 0
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Flip Gravity: Space, Enter, Up, Down, W, or S\n• Avoid Hazards: Flip between floor and ceiling to dodge stalactites and stalagmites\n• Slime Characters: Press 1-6 to switch between Gooey, Cherry, Lime, Metal, Gold, and Shadow\n• Restart: R\n• Sound: M\n• Help: ? or Esc"
+    property string helpText: "• Flip Gravity: Space, Enter, Up, Down, W, or S\n• Avoid Hazards: Flip between floor and ceiling to dodge stalactites and stalagmites\n• Slime Characters: Press 1-6 to switch between Gooey, Cherry, Lime, Metal, Gold, and Shadow\n• Full/Compact View: Shift+F\n• Restart: R\n• Sound: M\n• Help: ? or Esc"
 
     signal screenshotSaved(string filePath)
 
@@ -210,7 +210,7 @@ ApplicationWindow {
                 return;
             }
 
-            if (event.key === Qt.Key_F) {
+            if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
                 root.fullPlayfield = !root.fullPlayfield;
                 soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
                 event.accepted = true;

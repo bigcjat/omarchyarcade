@@ -11,11 +11,13 @@ import sys
 import os
 import argparse
 import ctypes
+import re
+import tomllib
 from pathlib import Path
 
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
-from PySide6.QtCore import QObject, Signal, Slot, QSettings, QTimer, QUrl
+from PySide6.QtCore import QObject, Signal, Slot, QSettings, QTimer, QUrl, QFileSystemWatcher, Qt
 
 # =============================================================================
 # PERSISTENT SETTINGS MANAGER
@@ -133,6 +135,44 @@ class SoundManager(QObject):
                 except Exception:
                     pass
 
+def load_all_omarchy_themes():
+    themes_js = Path(__file__).resolve().parent / "Themes.js"
+    if not themes_js.is_file():
+        return {}
+    with open(themes_js, "r", encoding="utf-8") as f:
+        content = f.read()
+    themes = {}
+    blocks = re.findall(r"\{([^{}]+)\}", content)
+    for b in blocks:
+        t = {}
+        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", b):
+            t[k] = v
+        if "id" in t and "name" in t:
+            themes[t["id"]] = t
+    return themes
+
+ALL_THEMES = load_all_omarchy_themes()
+
+def find_omarchy_colors_file():
+    home = Path.home()
+    candidates = [
+        home / ".config" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "colors.toml",
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    return None
+
+def load_toml_colors(file_path):
+    try:
+        with open(file_path, "rb") as f:
+            data = tomllib.load(f)
+            return data.get("colors", data)
+    except Exception as e:
+        print(f"Warning: Failed to load {file_path}: {e}", file=sys.stderr)
+        return None
+
 # =============================================================================
 # APPLICATION ENTRYPOINT
 # =============================================================================
@@ -179,12 +219,45 @@ def main():
 
     root = engine.rootObjects()[0]
 
-    # CLI Overrides
+    # CLI Overrides & Theme Management
+    if args.theme:
+        clean_arg = args.theme.lower().replace("_", "-")
+        if clean_arg in ALL_THEMES:
+            t = ALL_THEMES[clean_arg]
+            root.applyTheme(t, t["name"])
+        else:
+            custom_path = Path(args.theme).expanduser().resolve()
+            if custom_path.is_file():
+                data = load_toml_colors(custom_path)
+                if data:
+                    root.applyTheme(data, custom_path.parent.name.capitalize())
+            else:
+                root.setProperty("forcedTheme", args.theme)
+    else:
+        system_colors = find_omarchy_colors_file()
+        if system_colors:
+            data = load_toml_colors(system_colors)
+            if data:
+                theme_name = system_colors.parent.name.capitalize()
+                root.applyTheme(data, theme_name)
+
+            watcher = QFileSystemWatcher(app)
+            watcher.addPath(str(system_colors))
+            if system_colors.parent.exists():
+                watcher.addPath(str(system_colors.parent))
+
+            def on_theme_updated(path):
+                colors_path = find_omarchy_colors_file()
+                if colors_path and colors_path.is_file():
+                    updated = load_toml_colors(colors_path)
+                    if updated:
+                        root.applyTheme(updated, colors_path.parent.name.capitalize())
+
+            watcher.fileChanged.connect(on_theme_updated)
+            watcher.directoryChanged.connect(on_theme_updated)
+
     if args.no_splash:
         root.setProperty("splashEnabled", False)
-
-    if args.theme:
-        root.setProperty("forcedTheme", args.theme)
 
     if args.deck:
         root.setProperty("deckStyle", args.deck)

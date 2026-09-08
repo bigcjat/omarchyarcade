@@ -37,6 +37,8 @@ Window {
     // =========================================================================
     property bool splashEnabled: true
     property bool isMuted: true
+    property bool fullPlayfield: false
+    readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
     property bool showHelp: false
     property bool showInaugurationModal: true
     property bool showGraphModal: false
@@ -68,7 +70,8 @@ Window {
     property int fundCheatCount: 0
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Pan View: Drag with Right/Middle Mouse, Shift + Trackpad Scroll, or WASD / Arrows\n• Zoom View: Mouse Wheel or + / -\n• Build: Left-click with active tool (Road, Wire, Rail, Bulldozer support drag)\n• Speed: Space (Pause), 1 (Normal), 2 (Fast), 3 (Ultra)\n• Sound: M | Help: ? or Esc\n• Advisor: Click Dr. DHH in the bottom status bar for municipal counsel!\n• Graphs: Click the RCI Demand Gauge or Graphs button to view 10-Yr & 120-Yr census data!\n\nBuild power plants, connect roads and wires, and balance Residential, Commercial, and Industrial zones to grow your metropolis!"
+    property string helpText: "• Pan View: Drag with Right/Middle Mouse, Shift + Trackpad Scroll, or WASD / Arrows\n• Zoom View: Mouse Wheel or + / -\n• Build: Left-click with active tool (Road, Wire, Rail, Bulldozer support drag)\n• Speed: Space (Pause), 1 (Normal), 2 (Fast), 3 (Ultra)\n• Full/Compact View: Shift+F
+• Sound: M | Help: ? or Esc\n• Advisor: Click Dr. DHH in the bottom status bar for municipal counsel!\n• Graphs: Click the RCI Demand Gauge or Graphs button to view 10-Yr & 120-Yr census data!\n\nBuild power plants, connect roads and wires, and balance Residential, Commercial, and Industrial zones to grow your metropolis!"
 
     function applyTheme(data, name) {
         if (!data || typeof data !== "object") return;
@@ -231,6 +234,14 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
+                root.fullPlayfield = !root.fullPlayfield;
+                soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
+                event.accepted = true;
+                return;
+            }
+
+
             if (event.key === Qt.Key_Question || event.key === Qt.Key_Slash) {
                 root.showHelp = !root.showHelp;
                 event.accepted = true;
@@ -285,13 +296,14 @@ Window {
         // =====================================================================
         Item {
             id: headerItem
+            visible: !root.isTiledDesktopMode
             anchors.top: parent.top
-            anchors.topMargin: 12
+            anchors.topMargin: root.isTiledDesktopMode ? 0 : 12
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
-            height: Math.max(titleCol.implicitHeight, scoreRow.implicitHeight)
+            height: root.isTiledDesktopMode ? 0 : (Math.max(titleCol.implicitHeight, scoreRow.implicitHeight))
 
             Column {
                 id: titleCol
@@ -502,13 +514,14 @@ Window {
         // =====================================================================
         Item {
             id: subheaderItem
+            visible: !root.isTiledDesktopMode
             anchors.top: headerItem.bottom
-            anchors.topMargin: 8
+            anchors.topMargin: root.isTiledDesktopMode ? 0 : 8
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
-            height: 32
+            height: root.isTiledDesktopMode ? 0 : 32
 
             // Speed controls on left
             Row {
@@ -778,9 +791,98 @@ Window {
         // ROW 3: PLAYFIELD CONTAINER (Tool Palette & 2D Viewport)
         // =====================================================================
         Item {
-            id: playArea
-            anchors.top: subheaderItem.bottom
+                    // =====================================================================
+        // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
+        // =====================================================================
+        Rectangle {
+            id: floatingTiledHUD
+            visible: root.isTiledDesktopMode
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
             anchors.topMargin: 8
+            anchors.leftMargin: 12
+            anchors.rightMargin: 12
+            height: 38
+            radius: 8
+            z: 90
+            color: root.themeCardBg
+            border.color: root.themeBorder
+            border.width: 1
+
+            Row {
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
+
+                Text {
+                    text: "🏙️ ByteCity"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeAccent
+                }
+
+                Text {
+                    text: "• " + ("POP: " + root.population)
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeFg
+                }
+                Text {
+                    text: "(" + ("FUNDS: §" + root.funds) + ")"
+                    font.pixelSize: 10
+                    color: root.themeSubtext
+                }
+            }
+
+            Row {
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 6
+
+                // Full Window Toggle
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "🔲"; font.pixelSize: 10; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.fullPlayfield = false;
+                            soundToast.show("🔲 Standard Window");
+                        }
+                    }
+                }
+
+                // Help
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "?"; font.pixelSize: 11; font.bold: true; color: root.themeAccent; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showHelp = !root.showHelp
+                    }
+                }
+
+                // Mute
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
+                }
+            }
+        }
+
+        id: playArea
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 8
             anchors.bottom: statusBar.top
             anchors.bottomMargin: 8
             anchors.left: parent.left

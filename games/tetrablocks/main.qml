@@ -29,6 +29,8 @@ Window {
     property string currentThemeName: ""
     property bool splashEnabled: true
     property bool isMuted: true // Defaults to MUTED as requested
+    property bool fullPlayfield: false
+    readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
     color: themeBg
@@ -355,7 +357,15 @@ Window {
                 root.toggleMute();
                 event.accepted = true;
                 return;
-            } else if (event.key === Qt.Key_R) {
+            }
+
+            if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
+                root.fullPlayfield = !root.fullPlayfield;
+                soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
+                event.accepted = true;
+                return;
+            }
+ else if (event.key === Qt.Key_R) {
                 root.startNewGame();
                 event.accepted = true;
                 return;
@@ -540,7 +550,7 @@ Window {
                 // Help Button
                 Rectangle {
                     id: helpBtn
-                    width: (parent.width - 12) / 3
+                    width: (parent.width - 12) / 4
                     height: parent.height
                     radius: 6
                     color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
@@ -574,7 +584,7 @@ Window {
                 // Sound / Mute Button
                 Rectangle {
                     id: muteBtn
-                    width: (parent.width - 12) / 3
+                    width: (parent.width - 12) / 4
                     height: parent.height
                     radius: 6
                     color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
@@ -607,9 +617,38 @@ Window {
                 }
 
                 // New Game Button
+                                // View Mode Pill (Windowed vs Full Field)
+                Rectangle {
+                    id: viewModeBtn
+                    width: (parent.width - 12) / 4
+                    height: parent.height
+                    radius: 6
+                    color: root.fullPlayfield ? root.themeCardBg : (viewModeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
+                    border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
+                    border.width: 1
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 3
+                        Text { text: root.fullPlayfield ? "🔲" : "⛶"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
+                        Text { text: "Full (⇧F)"; font.pixelSize: 10; font.bold: true; color: root.themeFg; visible: !subheaderRow.isCrowded; anchors.verticalCenter: parent.verticalCenter }
+                    }
+
+                    MouseArea {
+                        id: viewModeMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.fullPlayfield = !root.fullPlayfield;
+                            soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
+                        }
+                    }
+                }
+
                 Rectangle {
                     id: restartBtn
-                    width: (parent.width - 12) / 3
+                    width: (parent.width - 12) / 4
                     height: parent.height
                     radius: 6
                     color: restartMouse.containsMouse ? Qt.lighter(root.themeBtnBg, 1.15) : root.themeBtnBg
@@ -646,10 +685,109 @@ Window {
         }
 
         // Gameplay Arena (Hold Panel, Central Board, Next Panel)
+                // =====================================================================
+        // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
+        // =====================================================================
+        Rectangle {
+            id: floatingTiledHUD
+            visible: root.isTiledDesktopMode
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.topMargin: 8
+            anchors.leftMargin: 12
+            anchors.rightMargin: 12
+            height: 38
+            radius: 8
+            z: 90
+            color: root.themeCardBg
+            border.color: root.themeBorder
+            border.width: 1
+
+            Row {
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
+
+                Text {
+                    text: "🧱 TetraBlocks"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeAccent
+                }
+
+                Text {
+                    text: "• " + ("SCORE: " + root.score)
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeFg
+                }
+                Text {
+                    text: "(" + ("LINES: " + root.lines) + ")"
+                    font.pixelSize: 10
+                    color: root.themeSubtext
+                }
+            }
+
+            Row {
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 6
+
+                // Full Window Toggle
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "🔲"; font.pixelSize: 10; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.fullPlayfield = false;
+                            soundToast.show("🔲 Standard Window");
+                        }
+                    }
+                }
+
+                // Help
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "?"; font.pixelSize: 11; font.bold: true; color: root.themeAccent; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showHelp = !root.showHelp
+                    }
+                }
+
+                // Mute
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
+                }
+                // Restart
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "🔄"; font.pixelSize: 10; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.startNewGame()
+                    }
+                }
+            }
+        }
+
         Item {
             id: arena
-            anchors.top: subheaderRow.bottom
-            anchors.topMargin: 10
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderRow.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 10
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 8
             anchors.left: parent.left

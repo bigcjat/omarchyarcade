@@ -11,9 +11,34 @@ import sys
 import os
 import tomllib
 from pathlib import Path
-from PySide6.QtCore import QObject, Slot, QUrl, QFileSystemWatcher, QTimer
+from PySide6.QtCore import QObject, Slot, QUrl, QFileSystemWatcher, QTimer, QSettings
 from PySide6.QtGui import QIcon, QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
+
+class SettingsManager(QObject):
+    """Provides local persistence via QSettings for WordGuess statistics."""
+    def __init__(self, game_id="WordGuess", parent=None):
+        super().__init__(parent)
+        self.settings = QSettings("Arcade", game_id)
+
+    @Slot(str, str)
+    def setValue(self, key, val):
+        self.settings.setValue(key, val)
+
+    @Slot(str, str, result=str)
+    def getValue(self, key, default_val=""):
+        return str(self.settings.value(key, default_val))
+
+    @Slot(result=int)
+    def getBestScore(self):
+        try:
+            return int(self.settings.value("bestScore", 0))
+        except (ValueError, TypeError):
+            return 0
+
+    @Slot(int)
+    def setBestScore(self, score):
+        self.settings.setValue("bestScore", int(score))
 
 try:
     from AppKit import NSSound
@@ -109,9 +134,11 @@ def main():
     base_dir = Path(__file__).resolve().parent
     sounds_dir = base_dir / "sounds"
     audio_controller = AudioController(sounds_dir)
+    settings_manager = SettingsManager("WordGuess")
 
     engine = QQmlApplicationEngine()
     engine.rootContext().setContextProperty("audioController", audio_controller)
+    engine.rootContext().setContextProperty("settingsManager", settings_manager)
 
     qml_file = base_dir / "main.qml"
     engine.load(QUrl.fromLocalFile(str(qml_file)))

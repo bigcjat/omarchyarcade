@@ -45,7 +45,7 @@ Window {
     readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Move: Arrows, WASD, or Vim H / J / K / L\n• Action: Space\n• Full/Compact View: F\n• Restart: R\n• Sound: M\n• Help: ? or Esc"
+    property string helpText: "• Move: Arrows, WASD, or Vim H / J / K / L\n• Action: Space\n• Full/Compact View: Shift+F\n• Restart: R\n• Sound: M\n• Help: ? or Esc"
 
     // =========================================================================
     // THEME & SOUND CONTROLLERS
@@ -172,7 +172,7 @@ Window {
                 return;
             }
 
-            if (event.key === Qt.Key_F) {
+            if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
                 root.fullPlayfield = !root.fullPlayfield;
                 soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
                 event.accepted = true;
@@ -452,7 +452,7 @@ Window {
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
-                            text: root.fullPlayfield ? "Standard (F)" : "Full (F)"
+                            text: root.fullPlayfield ? "Standard (⇧F)" : "Full (⇧F)"
                             font.pixelSize: 11
                             font.bold: true
                             color: root.fullPlayfield ? root.themeAccent : root.themeFg

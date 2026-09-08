@@ -28,6 +28,8 @@ Window {
     property bool splashEnabled: true
     property bool showCarSelect: true
     property bool isMuted: true
+    property bool fullPlayfield: false
+    readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
     property string helpText: "• Steer: Arrow Keys / WASD / HJKL\n• Accelerate / Brake: Up / Down or W / S\n• Drift: Spacebar at speed for lateral slide\n• Garage: Press C to switch Kei cars\n• Sound: Press M to toggle audio\n• Restart: Press R for a new run\n• Checkpoints: Cross arch gates for +30s\n• Near Miss / Pass: Draft and pass rivals for points"
@@ -189,13 +191,14 @@ Window {
         // =====================================================================
         Item {
             id: headerItem
+            visible: !root.isTiledDesktopMode
             anchors.top: parent.top
-            anchors.topMargin: 14
+            anchors.topMargin: root.isTiledDesktopMode ? 0 : 14
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.leftMargin: 14
             anchors.rightMargin: 14
-            height: Math.max(titleCol.height, scoreRow.height)
+            height: root.isTiledDesktopMode ? 0 : (Math.max(titleCol.height, scoreRow.height))
 
             Column {
                 id: titleCol
@@ -304,13 +307,14 @@ Window {
         // =====================================================================
         Item {
             id: subheaderItem
+            visible: !root.isTiledDesktopMode
             anchors.top: headerItem.bottom
-            anchors.topMargin: 8
+            anchors.topMargin: root.isTiledDesktopMode ? 0 : 8
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.leftMargin: 14
             anchors.rightMargin: 14
-            height: 32
+            height: root.isTiledDesktopMode ? 0 : 32
 
             readonly property bool isCrowded: subheaderItem.width < 450
 
@@ -494,9 +498,108 @@ Window {
         // TIER 3: PLAYFIELD BOARD CONTAINER
         // =====================================================================
         Item {
-            id: playArea
-            anchors.top: subheaderItem.bottom
-            anchors.topMargin: 10
+                    // =====================================================================
+        // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
+        // =====================================================================
+        Rectangle {
+            id: floatingTiledHUD
+            visible: root.isTiledDesktopMode
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.topMargin: 8
+            anchors.leftMargin: 12
+            anchors.rightMargin: 12
+            height: 38
+            radius: 8
+            z: 90
+            color: root.themeCardBg
+            border.color: root.themeBorder
+            border.width: 1
+
+            Row {
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
+
+                Text {
+                    text: "🏎️ KeiRacer"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeAccent
+                }
+
+                Text {
+                    text: "• " + ("SCORE: " + root.score)
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeFg
+                }
+                Text {
+                    text: "(" + ("BEST: " + root.highScore) + ")"
+                    font.pixelSize: 10
+                    color: root.themeSubtext
+                }
+            }
+
+            Row {
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 6
+
+                // Full Window Toggle
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "🔲"; font.pixelSize: 10; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.fullPlayfield = false;
+                            soundToast.show("🔲 Standard Window");
+                        }
+                    }
+                }
+
+                // Help
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "?"; font.pixelSize: 11; font.bold: true; color: root.themeAccent; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showHelp = !root.showHelp
+                    }
+                }
+
+                // Mute
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
+                }
+                // Restart
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "🔄"; font.pixelSize: 10; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.startNewGame()
+                    }
+                }
+            }
+        }
+
+        id: playArea
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 10
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 14
             anchors.left: parent.left
@@ -969,6 +1072,14 @@ Window {
                 event.accepted = true;
                 return;
             }
+
+            if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
+                root.fullPlayfield = !root.fullPlayfield;
+                soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
+                event.accepted = true;
+                return;
+            }
+
 
             if (event.key === Qt.Key_C) {
                 root.showCarSelect = !root.showCarSelect;

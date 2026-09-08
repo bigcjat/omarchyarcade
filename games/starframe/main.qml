@@ -163,7 +163,7 @@ Window {
         }
     }
 
-    property string helpText: "• Flight: Move Mouse or WASD / Arrow Keys / Vim HJKL\n• Fire: Left Click or Space (Fires all 4 gun systems simultaneously!)\n• Super Bomb: Right Click or B\n• Full Playfield: F or ⛶ button\n• Pause: P or Esc\n• Kamikaze Ramming: Ram smaller enemies to vaporize them with kinetic shields!\n• Super Shield 200%: Collecting gold star capsules overcharges shields to 1000 HP for unstoppable battering ram speed!\n• Zero-Pass Penalty: Enemies escaping past the bottom border cost 1 Life!\n• 6 Drifting Power-Ups: Machine Gun [MG - Gold], Plasma [PL - Green], EMP [EMP - Purple], Hull Repair [HULL - Red (+)], Shield Recharge [SHIELDS - Cyan (○)], and 200% Super Shield [SUP - Yellow (✱)]!\n• New Game: R • Mute: M • Help: ? or Esc"
+    property string helpText: "• Flight: Move Mouse or WASD / Arrow Keys / Vim HJKL\n• Fire: Left Click or Space (Fires all 4 gun systems simultaneously!)\n• Super Bomb: Right Click or B\n• Full Playfield: Shift+F or ⛶ button\n• Pause: P or Esc\n• Kamikaze Ramming: Ram smaller enemies to vaporize them with kinetic shields!\n• Super Shield 200%: Collecting gold star capsules overcharges shields to 1000 HP for unstoppable battering ram speed!\n• Zero-Pass Penalty: Enemies escaping past the bottom border cost 1 Life!\n• 6 Drifting Power-Ups: Machine Gun [MG - Gold], Plasma [PL - Green], EMP [EMP - Purple], Hull Repair [HULL - Red (+)], Shield Recharge [SHIELDS - Cyan (○)], and 200% Super Shield [SUP - Yellow (✱)]!\n• New Game: R • Mute: M • Help: ? or Esc"
 
     // =========================================================================
     // THEME & SOUND CONTROLLERS
@@ -432,7 +432,7 @@ Window {
                 return;
             }
 
-            if (event.key === Qt.Key_F) {
+            if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
                 root.fullPlayfield = !root.fullPlayfield;
                 soundToast.show(root.fullPlayfield ? "⛶ Full Window Playfield" : "🔲 Auto-Tiling View");
                 event.accepted = true;
@@ -675,7 +675,7 @@ Window {
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
-                            text: root.fullPlayfield ? "Windowed (F)" : "Full Field (F)"
+                            text: root.fullPlayfield ? "Windowed (⇧F)" : "Full Field (⇧F)"
                             font.pixelSize: 11
                             font.bold: true
                             color: root.themeFg

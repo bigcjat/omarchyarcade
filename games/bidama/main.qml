@@ -37,6 +37,8 @@ ApplicationWindow {
     // GAME STATE (DEFAULT SOUND MUTED AS REQUESTED)
     // =========================================================================
     property bool isMuted: true             // DEFAULT MUTED
+    property bool fullPlayfield: false
+    readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
     property string gameMode: "duel"        // "duel" (Player vs AI) or "solo" (Practice for points)
     property int selectedCol: 2             // Active player column (0..4)
     property int aiSelectedCol: 2           // Current AI target column
@@ -514,6 +516,14 @@ ApplicationWindow {
                 event.accepted = true;
                 return;
             }
+
+            if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
+                root.fullPlayfield = !root.fullPlayfield;
+                soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_Question || event.key === Qt.Key_Slash || event.key === Qt.Key_F1) {
                 root.showHelp = !root.showHelp;
                 event.accepted = true;
@@ -535,11 +545,12 @@ ApplicationWindow {
         // =====================================================================
         Item {
             id: headerItem
+            visible: !root.isTiledDesktopMode
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.margins: 10
-            height: 40
+            height: root.isTiledDesktopMode ? 0 : (40)
 
             Row {
                 anchors.left: parent.left
@@ -757,8 +768,97 @@ ApplicationWindow {
         // DUAL TATAMI ARENA (LEFT: PLAYER 1, CENTER: STATUS, RIGHT: RIVAL AI)
         // =====================================================================
         Item {
-            id: dualArena
-            anchors.top: headerItem.bottom
+                    // =====================================================================
+        // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
+        // =====================================================================
+        Rectangle {
+            id: floatingTiledHUD
+            visible: root.isTiledDesktopMode
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.topMargin: 8
+            anchors.leftMargin: 12
+            anchors.rightMargin: 12
+            height: 38
+            radius: 8
+            z: 90
+            color: root.themeCardBg
+            border.color: root.themeBorder
+            border.width: 1
+
+            Row {
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
+
+                Text {
+                    text: "⚪ Bīdama"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeAccent
+                }
+
+                Text {
+                    text: "• " + (root.p1Score + " - " + root.p2Score)
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeFg
+                }
+                Text {
+                    text: "(" + ("STAGE: " + root.currentStage) + ")"
+                    font.pixelSize: 10
+                    color: root.themeSubtext
+                }
+            }
+
+            Row {
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 6
+
+                // Full Window Toggle
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "🔲"; font.pixelSize: 10; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.fullPlayfield = false;
+                            soundToast.show("🔲 Standard Window");
+                        }
+                    }
+                }
+
+                // Help
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "?"; font.pixelSize: 11; font.bold: true; color: root.themeAccent; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showHelp = !root.showHelp
+                    }
+                }
+
+                // Mute
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
+                }
+            }
+        }
+
+        id: dualArena
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
@@ -1512,7 +1612,7 @@ ApplicationWindow {
         Rectangle {
             id: soundToast
             anchors.top: headerItem.bottom
-            anchors.topMargin: 10
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 10
             anchors.horizontalCenter: parent.horizontalCenter
             height: 34
             width: toastText.implicitWidth + 32
