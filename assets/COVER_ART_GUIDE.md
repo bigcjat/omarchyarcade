@@ -1,63 +1,77 @@
 # Omarchy Arcade • Cover Art & Floppy Disk Design System
 
-A standardized prompt engineering and visual design guide for generating **Flat 2D Vector Floppy Disk Cover Art** for the Omarchy Arcade Launcher ("Mini Steam").
+A standardized guide for the **Omarchy Arcade Cover Art & Floppy Disk Pipeline**.
+
+> [!IMPORTANT]
+> **THE LAUNCHER DRAWS FLOPPY DISKS PROCEDURALLY:**
+> 1. The launcher (`launcher/main.qml`) dynamically renders all 3.5" floppy disks using [`launcher/FloppyCard.qml`](file:///Users/christhompson/arcade/launcher/FloppyCard.qml).
+> 2. Chassis colors, grid header colors, titles, and reference codes are driven from [`catalog.json`](file:///Users/christhompson/arcade/catalog.json).
+> 3. `assets/covers/<game_id>.png` is the **4:3 painted retro box art** (1200×896) loaded *inside* the floppy disk label's art window.
+> 4. Static disk icons (`assets/covers/<id>_disk.png` and `games/<id>/assets/disk_icon.png`) are **never AI-generated**; they are rendered directly from `FloppyCard.qml` using:
+>    ```bash
+>    .venv/bin/python tools/render_disk.py <game_id>
+>    ```
 
 ---
 
-## 1. Visual Standard & Style Directives
+## 1. The Cover Art Specification (`assets/covers/<game_id>.png`)
 
-All game covers must strictly follow these aesthetic guidelines to maintain complete visual cohesion across the entire arcade catalog:
+All game cover images must be pure game artwork (no floppy frames, no text overlays):
 
-1. **Format & Ratio:** **`3:4` Vertical Portrait** (Steam capsule standard).
-2. **Perspective:** Perfectly flat, 2D straight-on front orthographic vector illustration.
-3. **No 3D Realism:** Zero photographic textures, zero realistic lighting, zero 3D rendering, zero gloss/reflections, zero drop shadows.
-4. **Background:** Pure solid black (`#000000`) surrounding the isolated floppy disk silhouette.
-5. **Physical Hardware Details:**
-   * 3.5" HD floppy diskette chassis with classic beveled corners, slider track, and write-protect notch.
-   * Flat silver or gray metal sliding shutter at the top with clean rectangular window cutouts.
-6. **Sega Master System Label Layout:**
-   * **Top Banner:** Subtle vector grid pattern header with `OMARCHY ARCADE` typography.
-   * **Center Title:** Bold, clean 2D retro arcade typography.
-   * **Center Graphic Window:** Clean flat 2D geometric vector or pixel illustration showing the game's core action.
-   * **Bottom Technical Strip:** `[CATEGORY] • OA-[REF_NUMBER]` *(Never include MB sizes to avoid user confusion and keep artwork version-independent)*.
+1. **Dimensions & Aspect Ratio:** **1200 × 896** (standard `4:3` retro box art format).
+2. **Subject Matter:** The game's hero action scene, characters, or environment painted in rich retro arcade or anime aesthetic.
+3. **Typography & Borders:** **STRICTLY NO TEXT, NO LOGOS, NO FLOPPY FRAMES**. The floppy label, title, and borders are drawn automatically by `FloppyCard.qml`.
+4. **Placement:** Saved directly to `assets/covers/<game_id>.png` and referenced in `catalog.json` under `"cover_image"`.
 
 ---
 
-## 2. Category-to-Floppy Color Standard
+## 2. Category-to-Floppy Color Standard (`catalog.json`)
 
-To give players an instant visual cue across the launcher library, every game category maps to a distinct, historically authentic 3.5" diskette color:
+Every game category maps to a distinct 3.5" diskette color in `catalog.json`:
 
 | Category | Floppy Disk Body Tone | Hex Ref | Historical Inspiration | Games in Suite |
 | :--- | :--- | :--- | :--- | :--- |
-| **Action Arcade** | **Matte Black / Charcoal** | `#232328` | Standard Sony / Maxell HD arcade & console disks | *ByteMan*, *GalacticSwarm*, *VoidInvaders*, *VectorDrift*, *BrickBash*, *CyberHop*, *CyberFlap*, *DinoRunner* |
+| **Action Arcade** | **Matte Black / Charcoal** | `#232328` | Standard Sony / Maxell HD arcade & console disks | *ByteMan*, *GalacticSwarm*, *VoidInvaders*, *VectorDrift*, *BrickBash*, *CyberHop*, *CyberFlap*, *DinoRunner*, *KeiRacer*, *OmarchyBolo II* |
 | **Puzzles & Grid Logic** | **Emerald / Forest Green** | `#059669` | Verbatim Eco & Rainbow Series | *GemSwap*, *CratePusher*, *ByteSnake*, *CyberSweeper* |
 | **Blocks & Merging** | **Tangerine / Sunset Orange**| `#EA580C` | Sony Neon Floppy line | *2048*, *TetraBlocks* |
-| **Board & Tabletop** | **Classic Cream / Beige** | `#E6DFD3` | Vintage 80s IBM PC, Amiga, and Atari ST diskettes | *DropFour*, *VectorPong* *(Future: Chess, Checkers, Othello)* |
-| **Word & Trivia** | **Clean Pure White** | `#F0F0F2` | 90s Shareware & encyclopedia companion disks | *WordGuess* *(Future: WordWheel, WordGrid)* |
+| **Board & Tabletop** | **Classic Cream / Beige** | `#E6DFD3` | Vintage 80s IBM PC, Amiga, and Atari ST diskettes | *DropFour*, *VectorPong*, *Chess*, *Checkers*, *Backgammon*, *Reversi* |
+| **Word & Trivia** | **Clean Pure White** | `#F0F0F2` | 90s Shareware & encyclopedia companion disks | *WordGuess* |
 | **Simulation & City** | **Neon Teal / Cyan** | `#0891B2` | Sony Color Collection & CAD / engineering disks | *ByteCity* |
-| **Casual Aim & Physics**| **Vibrant Violet / Purple** | `#7C3AED` | Imation 90s Creative Series | *OrbPop* *(Future: NeonDrop / Peggle)* |
-| *Cards & Casino (Future)*| *Ruby / Cherry Red* | `#DC2626` | 3M Performance Series (playing card suits) | *Blackjack, Spades, Solitaire* |
-| *Memory & Sound (Future)*| *Canary Yellow* | `#EAB308` | Memorex High-Visibility Disks | *ChromaTone, PairMatch* |
-| *Roguelite / RPG (Future)*| *Cobalt / Royal Blue* | `#1D4ED8` | 90s UNIX / PC Dungeon diskettes | *TinyCrawl* |
+| **Casual Aim & Physics**| **Vibrant Violet / Purple** | `#7C3AED` | Imation 90s Creative Series | *OrbPop*, *Bīdama* |
+| **Cards & Casino** | **Ruby / Cherry Red** | `#DC2626` | 3M Performance Series (playing card suits) | *Blackjack, Solitaire, Video Poker* |
+| *Action & Pinball* | *Vibrant Violet / Purple* | `#7C3AED` | 90s Space Cadet & arcade neon | *Omarchy Cadet* |
 
 ---
 
-## 3. The Reusable Master Prompt Formula
+## 3. Box Art Prompt Formula (for `generate_image`)
+
+When creating new cover box art for `assets/covers/<game_id>.png`:
 
 ```
-A flat 2D vector graphic illustration of a 3.5-inch retro computer floppy disk, completely flat minimalist graphic design, no 3D lighting, no photographic realism, no drop shadows, no gradients. Centered isolated floppy disk on a pure solid white background (#FFFFFF). 
-The disk body is flat [FLOPPY_COLOR] plastic with clean geometric cutouts, a high-density HD notch, and a flat [SHUTTER_COLOR] metal shutter at the top. 
-On the disk is a crisp flat adhesive label in classic Sega Master System packaging style: 
-a subtle [GRID_COLOR] vector grid header with 'OMARCHY ARCADE' text, 
-bold clean 2D retro title '[GAME_TITLE]', 
-and a flat 2D geometric vector illustration showing [GAME_HERO_ILLUSTRATION]. 
-At the bottom of the label in small crisp typography: '[CATEGORY] • OA-[REF_NUMBER]'. 
-Clean line art, flat vector icon aesthetic, solid vibrant colors, sticker graphic design.
+A vibrant painted retro arcade box art illustration for [GAME_TITLE]. 
+Depicting [GAME_HERO_ACTION_SCENE] in a rich 1980s / 1990s Japanese arcade aesthetic, 
+dynamic lighting, dramatic composition, and fine detailed styling. 
+STRICTLY NO TEXT, NO LETTERS, NO TYPOGRAPHY, NO LOGOS, NO PUBLISHER BADGES, NO FLOPPY DISK FRAMES. 
+Pure full-bleed game scene artwork in 4:3 aspect ratio.
 ```
 
 ---
 
-## 4. Pre-Engineered Prompts for All 19 Shipped Games
+## 4. Exporting Static Diskette Icons (`tools/render_disk.py`)
+
+After adding or updating a game in `catalog.json` with its cover art in `assets/covers/<game_id>.png`:
+
+```bash
+# Render a single game's disk
+.venv/bin/python tools/render_disk.py <game_id>
+
+# Or render all games in the catalog
+.venv/bin/python tools/render_disk.py --all
+```
+
+This updates:
+1. `assets/covers/<game_id>_disk.png` (1024×1024 RGBA transparent)
+2. `games/<game_id>/assets/disk_icon.png` (256×256 RGBA transparent)
 
 ### 1. `2048` (Ref: `OA-001`)
 * **Category:** Blocks & Merging
