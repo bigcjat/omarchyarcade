@@ -37,8 +37,10 @@ ApplicationWindow {
     // GAME STATE (DEFAULT SOUND MUTED AS REQUESTED)
     // =========================================================================
     property bool isMuted: true             // DEFAULT MUTED
-    property bool fullPlayfield: false
-    readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
+    property bool isTiledDesktopMode: root.height < 520 || root.width < 440
+    property alias fullPlayfield: root.isTiledDesktopMode
+    property bool _spaceConstrained: root.height < 520 || root.width < 440
+    on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property string gameMode: "duel"        // "duel" (Player vs AI) or "solo" (Practice for points)
     property int selectedCol: 2             // Active player column (0..4)
     property int aiSelectedCol: 2           // Current AI target column

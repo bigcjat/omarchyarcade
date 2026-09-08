@@ -30,8 +30,10 @@ ApplicationWindow {
     property string currentThemeName: ""
     property bool splashEnabled: true
     property bool isMuted: true // Defaults to MUTED as requested
-    property bool fullPlayfield: false
-    readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
+    property bool isTiledDesktopMode: root.height < 520 || root.width < 440
+    property alias fullPlayfield: root.isTiledDesktopMode
+    property bool _spaceConstrained: root.height < 520 || root.width < 440
+    on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
     function toggleMute() {
@@ -286,7 +288,7 @@ ApplicationWindow {
         Behavior on color { ColorAnimation { duration: 250 } }
 
         // Responsive board scaling for tiling window managers (Hyprland / Omarchy)
-        property real reservedVertical: root.isTiledDesktopMode ? 54 : (gameContainer.height < 500 ? 94 : 126)
+        property real reservedVertical: root.isTiledDesktopMode ? 64 : (gameContainer.height < 500 ? 94 : 126)
         property real availableW: Math.max(160, gameContainer.width - 24)
         property real availableH: Math.max(160, gameContainer.height - reservedVertical)
         property real boardSize: Math.min(availableW, availableH)
@@ -443,7 +445,11 @@ ApplicationWindow {
         // Main Column Layout - centers dynamically in available space
         Column {
             id: mainLayout
-            anchors.centerIn: parent
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: root.isTiledDesktopMode
+               ? Math.max(floatingTiledHUD.y + floatingTiledHUD.height + 8,
+                          Math.round((floatingTiledHUD.y + floatingTiledHUD.height) + (parent.height - (floatingTiledHUD.y + floatingTiledHUD.height) - height) / 2))
+               : Math.max(8, Math.round((parent.height - height) / 2))
             spacing: Math.max(8, Math.min(14, gameContainer.boardSize * 0.028))
             width: gameContainer.boardSize
 

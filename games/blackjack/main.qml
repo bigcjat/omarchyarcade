@@ -144,8 +144,10 @@ Window {
 
     property bool splashEnabled: true
     property bool isMuted: true
-    property bool fullPlayfield: false
-    readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
+    property bool isTiledDesktopMode: root.height < 520 || root.width < 440
+    property alias fullPlayfield: root.isTiledDesktopMode
+    property bool _spaceConstrained: root.height < 520 || root.width < 440
+    on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 

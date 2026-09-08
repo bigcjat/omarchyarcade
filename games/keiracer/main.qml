@@ -28,8 +28,10 @@ Window {
     property bool splashEnabled: true
     property bool showCarSelect: true
     property bool isMuted: true
-    property bool fullPlayfield: false
-    readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
+    property bool isTiledDesktopMode: root.height < 520 || root.width < 440
+    property alias fullPlayfield: root.isTiledDesktopMode
+    property bool _spaceConstrained: root.height < 520 || root.width < 440
+    on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
     property string helpText: "• Steer: Arrow Keys / WASD / HJKL\n• Accelerate / Brake: Up / Down or W / S\n• Drift: Spacebar at speed for lateral slide\n• Garage: Press C to switch Kei cars\n• View: Shift+F for compact/full playfield\n• Sound: Press M to toggle audio\n• Restart: Press R for a new run\n• Checkpoints: Cross arch gates for +30s\n• Near Miss / Pass: Draft and pass rivals for points"

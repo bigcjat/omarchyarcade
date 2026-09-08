@@ -45,8 +45,10 @@ ApplicationWindow {
     property bool showCharPicker: false
     property bool pausedByHelp: false
     property bool isPaused: false
-    property bool fullPlayfield: false
-    readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
+    property bool isTiledDesktopMode: root.height < 520 || root.width < 440
+    property alias fullPlayfield: root.isTiledDesktopMode
+    property bool _spaceConstrained: root.height < 520 || root.width < 440
+    on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property int gameDistance: 0
     property int gameBestDistance: 0
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
@@ -613,8 +615,8 @@ ApplicationWindow {
         // =====================================================================
         Item {
             id: playArea
-            anchors.top: charSelectTray.visible ? charSelectTray.bottom : (subheaderItem.visible ? subheaderItem.bottom : parent.top)
-            anchors.topMargin: root.isTiledDesktopMode ? 0 : 12
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : (charSelectTray.visible ? charSelectTray.bottom : (subheaderItem.visible ? subheaderItem.bottom : parent.top))
+            anchors.topMargin: root.isTiledDesktopMode ? 8 : 12
             anchors.bottom: parent.bottom
             anchors.bottomMargin: root.isTiledDesktopMode ? 0 : 16
             anchors.left: parent.left

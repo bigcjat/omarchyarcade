@@ -41,8 +41,10 @@ Window {
     property bool splashEnabled: true
     property bool isMuted: true
     property bool showHelp: false
-    property bool fullPlayfield: false
-    readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
+    property bool isTiledDesktopMode: root.height < 520 || root.width < 440
+    property alias fullPlayfield: root.isTiledDesktopMode
+    property bool _spaceConstrained: root.height < 520 || root.width < 440
+    on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
     property string helpText: "• Move: Arrows, WASD, or Vim H / J / K / L\n• Action: Space\n• Full/Compact View: Shift+F\n• Restart: R\n• Sound: M\n• Help: ? or Esc"

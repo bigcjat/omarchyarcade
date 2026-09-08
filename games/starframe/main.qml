@@ -127,8 +127,10 @@ Window {
     property bool showHelp: false
     property bool pausedByHelp: false
     property bool isPaused: false
-    property bool fullPlayfield: false
-    readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 580 || root.width < 480
+    property bool isTiledDesktopMode: root.height < 580 || root.width < 480
+    property alias fullPlayfield: root.isTiledDesktopMode
+    property bool _spaceConstrained: root.height < 580 || root.width < 480
+    on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
     function openHelp() {
@@ -1075,8 +1077,8 @@ Window {
         // =====================================================================
         Item {
             id: playArea
-            anchors.top: root.isTiledDesktopMode ? parent.top : subheaderItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 0 : 12
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 12
             anchors.bottom: parent.bottom
             anchors.bottomMargin: root.isTiledDesktopMode ? 0 : 16
             anchors.left: parent.left
