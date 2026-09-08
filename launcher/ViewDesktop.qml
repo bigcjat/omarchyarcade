@@ -21,17 +21,17 @@ Item {
     }
 
     function ensureVisible(index) {
-        var cols = Math.max(1, Math.floor(desktopGrid.width / 108));
+        var cols = Math.max(1, Math.floor((desktopScroll.width - 48 + 16) / (104 + 16)));
         var row = Math.floor(index / cols);
-        var itemTop = row * 128;
-        var itemBottom = itemTop + 128;
-        var viewTop = desktopScroll.contentItem.contentY;
+        var itemTop = 24 + row * (120 + 16);
+        var itemBottom = itemTop + 120;
+        var viewTop = desktopScroll.contentY;
         var viewHeight = desktopScroll.height;
 
         if (itemTop < viewTop) {
-            desktopScroll.contentItem.contentY = Math.max(0, itemTop - 16);
+            desktopScroll.contentY = Math.max(0, itemTop - 24);
         } else if (itemBottom > (viewTop + viewHeight)) {
-            desktopScroll.contentItem.contentY = Math.max(0, itemBottom - viewHeight + 16);
+            desktopScroll.contentY = Math.max(0, itemBottom - viewHeight + 24);
         }
     }
 
@@ -67,11 +67,27 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            ScrollView {
+            Flickable {
                 id: desktopScroll
                 anchors.fill: parent
                 clip: true
-                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                contentWidth: width
+                contentHeight: desktopGrid.height + 60
+                boundsBehavior: Flickable.StopAtBounds
+
+                ScrollBar.vertical: ScrollBar {
+                    active: true
+                    policy: ScrollBar.AsNeeded
+                }
+
+                WheelHandler {
+                    target: desktopScroll
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                    onWheel: function(event) {
+                        var delta = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x;
+                        desktopScroll.flick(0, delta * 5);
+                    }
+                }
 
                 // Dismiss selection on background click
                 MouseArea {
@@ -86,8 +102,9 @@ Item {
 
                 Flow {
                     id: desktopGrid
-                    anchors.fill: parent
-                    anchors.margins: 24
+                    width: desktopScroll.width - 48
+                    x: 24
+                    y: 24
                     spacing: 16
 
                     Repeater {

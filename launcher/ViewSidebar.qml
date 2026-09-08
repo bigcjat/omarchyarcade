@@ -19,6 +19,10 @@ Item {
             sidebarList.currentIndex = selectedIndex;
             sidebarList.positionViewAtIndex(selectedIndex, ListView.Contain);
         }
+        // Reset right pane scroll to top when changing game
+        if (rightFlickable) {
+            rightFlickable.contentY = 0;
+        }
     }
 
     RowLayout {
@@ -203,41 +207,61 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             color: "#0c0d14"
+            clip: true
 
-            ScrollView {
+            // Empty state if list is empty
+            ColumnLayout {
+                anchors.centerIn: parent
+                spacing: 12
+                visible: !activeGame
+
+                Text {
+                    text: "📑"
+                    font.pixelSize: 42
+                    Layout.alignment: Qt.AlignHCenter
+                }
+                Text {
+                    text: "Select a game from the library list"
+                    font.pixelSize: 16
+                    font.bold: true
+                    color: "#94a3b8"
+                    Layout.alignment: Qt.AlignHCenter
+                }
+            }
+
+            // High-Performance Native Flickable with Vertical ScrollBar
+            Flickable {
+                id: rightFlickable
                 anchors.fill: parent
                 clip: true
-                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                visible: !!activeGame
+                contentWidth: width
+                contentHeight: contentCol.implicitHeight + 48
+                boundsBehavior: Flickable.StopAtBounds
 
-                // Empty state if list is empty
-                ColumnLayout {
-                    anchors.centerIn: parent
-                    spacing: 12
-                    visible: !activeGame
+                ScrollBar.vertical: ScrollBar {
+                    active: true
+                    policy: ScrollBar.AsNeeded
+                }
 
-                    Text {
-                        text: "📑"
-                        font.pixelSize: 42
-                        Layout.alignment: Qt.AlignHCenter
-                    }
-                    Text {
-                        text: "Select a game from the library list"
-                        font.pixelSize: 16
-                        font.bold: true
-                        color: "#94a3b8"
-                        Layout.alignment: Qt.AlignHCenter
+                WheelHandler {
+                    target: rightFlickable
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                    onWheel: function(event) {
+                        var delta = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x;
+                        rightFlickable.flick(0, delta * 5);
                     }
                 }
 
-                ColumnLayout {
-                    width: parent.width
+                Column {
+                    id: contentCol
+                    width: rightFlickable.width
                     spacing: 24
-                    visible: !!activeGame
 
                     // HERO BANNER SECTION (Top)
                     Item {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 300
+                        width: parent.width
+                        height: 330
 
                         // Hero Screenshot / Cover background
                         Image {
@@ -258,23 +282,23 @@ Item {
                                 anchors.fill: parent
                                 gradient: Gradient {
                                     orientation: Gradient.Vertical
-                                    GradientStop { position: 0.0; color: "#40000000" }
-                                    GradientStop { position: 0.6; color: "#900c0d14" }
+                                    GradientStop { position: 0.0; color: "#20000000" }
+                                    GradientStop { position: 0.5; color: "#800c0d14" }
                                     GradientStop { position: 1.0; color: "#0c0d14" }
                                 }
                             }
                         }
 
                         // Hero Overlay Content
-                        ColumnLayout {
+                        Column {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.bottom: parent.bottom
                             anchors.margins: 28
                             spacing: 12
 
-                            // Tags & Category row
-                            RowLayout {
+                            // Tags & Category row (Row ensures badges do not squish!)
+                            Row {
                                 spacing: 8
 
                                 Rectangle {
@@ -334,31 +358,31 @@ Item {
 
                             // Big Hero Title
                             Text {
+                                width: parent.width
                                 text: activeGame ? activeGame.title : ""
                                 font.pixelSize: 34
                                 font.bold: true
                                 color: "#FFFFFF"
                                 elide: Text.ElideRight
-                                Layout.fillWidth: true
                             }
 
                             // Tagline
                             Text {
+                                width: parent.width
                                 text: activeGame ? activeGame.tagline : ""
                                 font.pixelSize: 15
                                 font.italic: true
                                 color: themeAccent
                                 elide: Text.ElideRight
-                                Layout.fillWidth: true
                             }
 
                             // Big Action Buttons
-                            RowLayout {
+                            Row {
                                 spacing: 14
 
                                 Rectangle {
                                     height: 44
-                                    width: 200
+                                    width: 180
                                     radius: 8
                                     color: sidebarPlayMouse.containsMouse ? Qt.lighter(themeAccent, 1.15) : themeAccent
                                     border.color: Qt.lighter(themeAccent, 1.4)
@@ -411,23 +435,22 @@ Item {
                         }
                     }
 
-                    // PROFILE BODY DETAILS
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.leftMargin: 28
-                        Layout.rightMargin: 28
+                    // PROFILE BODY DETAILS (Cards with horizontal margins)
+                    Column {
+                        width: parent.width - 56
+                        x: 28
                         spacing: 20
 
                         // Synopsis Card
                         Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: synCol.implicitHeight + 32
+                            width: parent.width
+                            implicitHeight: synCol.implicitHeight + 32
                             radius: 10
                             color: "#12141e"
                             border.color: "#1e2232"
                             border.width: 1
 
-                            ColumnLayout {
+                            Column {
                                 id: synCol
                                 anchors.fill: parent
                                 anchors.margins: 16
@@ -442,20 +465,20 @@ Item {
                                 }
 
                                 Text {
+                                    width: parent.width
                                     text: activeGame ? activeGame.description : ""
                                     font.pixelSize: 13
                                     lineHeight: 1.45
                                     color: "#cbd5e1"
                                     wrapMode: Text.WordWrap
-                                    Layout.fillWidth: true
                                 }
                             }
                         }
 
                         // Controls & Keybindings Card
                         Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 70
+                            width: parent.width
+                            implicitHeight: 70
                             radius: 10
                             color: "#12141e"
                             border.color: "#1e2232"
@@ -486,15 +509,15 @@ Item {
                                     font.bold: true
                                     color: "#f1f5f9"
                                     Layout.fillWidth: true
+                                    wrapMode: Text.WordWrap
                                 }
                             }
                         }
 
                         // Metadata Grid Card
                         Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 64
-                            Layout.bottomMargin: 24
+                            width: parent.width
+                            implicitHeight: 64
                             radius: 10
                             color: "#12141e"
                             border.color: "#1e2232"
@@ -525,6 +548,11 @@ Item {
 
                                 Item { Layout.fillWidth: true }
                             }
+                        }
+
+                        Item {
+                            width: parent.width
+                            height: 24
                         }
                     }
                 }

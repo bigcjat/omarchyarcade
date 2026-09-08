@@ -477,6 +477,23 @@ Item {
                 model: carouselView.games
                 currentIndex: carouselView.selectedIndex
 
+                WheelHandler {
+                    target: carouselList
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                    onWheel: function(event) {
+                        var delta = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x;
+                        if (delta < 0) {
+                            if (carouselView.selectedIndex < games.length - 1) {
+                                carouselView.gameSelected(carouselView.selectedIndex + 1);
+                            }
+                        } else if (delta > 0) {
+                            if (carouselView.selectedIndex > 0) {
+                                carouselView.gameSelected(carouselView.selectedIndex - 1);
+                            }
+                        }
+                    }
+                }
+
                 delegate: Item {
                     id: diskItem
                     width: 120
