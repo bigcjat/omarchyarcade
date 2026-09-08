@@ -125,6 +125,26 @@ typedef struct {
 
 int bytecity_get_sprites(ByteCityHandle handle, ByteCitySprite* out_sprites, int max_sprites);
 
+// Budget & Funding
+void bytecity_get_budget(ByteCityHandle handle,
+                         int64_t* tax_fund,
+                         int64_t* road_fund, int64_t* road_spend,
+                         int64_t* police_fund, int64_t* police_spend,
+                         int64_t* fire_fund, int64_t* fire_spend);
+
+void bytecity_set_budget(ByteCityHandle handle, int tax_rate,
+                         float road_percent, float police_percent, float fire_percent);
+
+void bytecity_collect_tax(ByteCityHandle handle);
+
+// Query Tile Information
+void bytecity_query_tile(ByteCityHandle handle, int x, int y,
+                         int* tile_id, int* zone_type, int* land_val,
+                         int* crime_val, int* poll_val, bool* powered, bool* road_connected);
+
+// Map Overlays (0=Normal, 1=Power, 2=Pollution, 3=Crime, 4=LandValue, 5=Traffic)
+void bytecity_get_overlay_map(ByteCityHandle handle, int overlay_type, uint8_t* out_buffer);
+
 #ifdef __cplusplus
 }
 #endif

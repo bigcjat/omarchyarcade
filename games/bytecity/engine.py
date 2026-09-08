@@ -51,6 +51,13 @@ class ByteCityEngine(QObject):
     advisorAlert = Signal(str)
     soundToggled = Signal(bool)
     optionsChanged = Signal()
+    budgetRequired = Signal(int, int, int, int, int, int, int)
+    dhhAlert = Signal(str, str, str, int)  # alert_type, title, message, urgency
+    milestoneReached = Signal(int, str, str)  # threshold, title, reward_name
+    gameOver = Signal(str)
+    loanChanged = Signal()
+    overlayChanged = Signal()
+    tileQueried = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -77,6 +84,21 @@ class ByteCityEngine(QObject):
         self._game_level = 0
         self._auto_bulldoze = True
         self._auto_budget = False
+
+        # Loan state (SimCity Bank: $10,000 borrow, 21-year debt service @ $500/year)
+        self._has_active_loan = False
+        self._loan_years_remaining = 0
+        self._loan_annual_payment = 500
+
+        # Overlay Mode: 0=Normal, 1=Power, 2=Pollution, 3=Crime, 4=Land Value, 5=Traffic
+        self._overlay_mode = 0
+        self._overlay_buffer = (ctypes.c_uint8 * 12000)()
+
+        # Milestones tracking
+        self._milestones_achieved = set()
+
+        # Last alert tracking for rate-limiting
+        self._last_alert_ticks = 0
 
         # Historical census data buffers (120 data points each)
         # 10-year view (monthly samples) and 120-year view (yearly samples)
@@ -233,6 +255,39 @@ class ByteCityEngine(QObject):
         self._lib.bytecity_get_sprites.restype = ctypes.c_int
         self._lib.bytecity_get_sprites.argtypes = [ctypes.c_void_p, ctypes.POINTER(ByteCitySprite), ctypes.c_int]
 
+        # Budget & Financial Audit
+        self._lib.bytecity_get_budget.restype = None
+        self._lib.bytecity_get_budget.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_int64),
+            ctypes.POINTER(ctypes.c_int64), ctypes.POINTER(ctypes.c_int64),
+            ctypes.POINTER(ctypes.c_int64), ctypes.POINTER(ctypes.c_int64),
+            ctypes.POINTER(ctypes.c_int64), ctypes.POINTER(ctypes.c_int64),
+        ]
+
+        self._lib.bytecity_set_budget.restype = None
+        self._lib.bytecity_set_budget.argtypes = [
+            ctypes.c_void_p, ctypes.c_int, ctypes.c_float, ctypes.c_float, ctypes.c_float
+        ]
+
+        self._lib.bytecity_collect_tax.restype = None
+        self._lib.bytecity_collect_tax.argtypes = [ctypes.c_void_p]
+
+        # Tile Query Inspector
+        self._lib.bytecity_query_tile.restype = None
+        self._lib.bytecity_query_tile.argtypes = [
+            ctypes.c_void_p, ctypes.c_int, ctypes.c_int,
+            ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+            ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+            ctypes.POINTER(ctypes.c_bool), ctypes.POINTER(ctypes.c_bool)
+        ]
+
+        # Data Layer Overlays
+        self._lib.bytecity_get_overlay_map.restype = None
+        self._lib.bytecity_get_overlay_map.argtypes = [
+            ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_uint8)
+        ]
+
     def get_sprites(self):
         if not self._handle:
             return []
@@ -279,6 +334,78 @@ class ByteCityEngine(QObject):
 
         # Update cached stats
         self._refresh_stats()
+
+        cur_month = self._month
+        cur_year = self._year
+
+        # 1. Check for Annual December -> January Budget Cycle
+        if (self._prev_month == 11 and cur_month == 0) or (self._prev_year != -1 and cur_year > self._prev_year):
+            if not self._auto_budget:
+                # Pause simulation for annual budget presentation
+                self.set_speed(0)
+                tf = ctypes.c_int64()
+                rf = ctypes.c_int64()
+                rs = ctypes.c_int64()
+                pf = ctypes.c_int64()
+                ps = ctypes.c_int64()
+                ff = ctypes.c_int64()
+                fs = ctypes.c_int64()
+                self._lib.bytecity_get_budget(self._handle,
+                    ctypes.byref(tf),
+                    ctypes.byref(rf), ctypes.byref(rs),
+                    ctypes.byref(pf), ctypes.byref(ps),
+                    ctypes.byref(ff), ctypes.byref(fs))
+                self.budgetRequired.emit(int(tf.value), int(rf.value), int(rs.value),
+                                         int(pf.value), int(ps.value), int(ff.value), int(fs.value))
+                self.dhhAlert.emit("budget", "Annual Fiscal Audit",
+                                   f"Fiscal Year {cur_year} Complete! Review city revenues, department funding, and municipal loans.", 1)
+            else:
+                # Auto-Budget: collect tax at current rate and apply 100% funding
+                self._lib.bytecity_collect_tax(self._handle)
+                if self._has_active_loan:
+                    self._funds -= self._loan_annual_payment
+                    self._loan_years_remaining -= 1
+                    if self._loan_years_remaining <= 0:
+                        self._has_active_loan = False
+                        self.loanChanged.emit()
+                        self.dhhAlert.emit("info", "Municipal Loan Paid Off!", "Your $10,000 Municipal Bank Loan has been fully discharged!", 1)
+                    self._lib.bytecity_set_funds(self._handle, self._funds)
+                self._refresh_stats()
+
+        # 2. Check for Bankruptcy Game Over Condition
+        if self._funds < -5000:
+            self.set_speed(0)
+            self._sound_manager.play("sorry")
+            msg = f"City Treasury is deeply in the red (${self._funds:,}). The state legislature has declared municipal bankruptcy and assumed emergency administration."
+            self.gameOver.emit(msg)
+            self.dhhAlert.emit("danger", "BANKRUPTCY DECLARED!", msg, 3)
+
+        # 3. Check for Population Milestones & Reward Building Unlocks
+        milestones = [
+            (2000, "Town", "Mayor's Manor"),
+            (10000, "City", "City Hall & Municipal Bank"),
+            (50000, "Capital", "Metropolitan Plaza"),
+            (100000, "Metropolis", "Golden Monument Statue"),
+            (500000, "Megalopolis", "Fusion Energy Core & Grand Trophy"),
+        ]
+        for thresh, title, reward in milestones:
+            if self._population >= thresh and thresh not in self._milestones_achieved:
+                self._milestones_achieved.add(thresh)
+                self.milestoneReached.emit(thresh, title, reward)
+                self.dhhAlert.emit("milestone", f"Milestone: {title}!",
+                                   f"ByteCity has surpassed {thresh:,} citizens! As Mayor, you have unlocked the {reward}!", 2)
+                self._sound_manager.play("cash")
+
+        # 4. Proactive Dr. DHH Alerts (Rate-limited to avoid spam)
+        self._last_alert_ticks += 1
+        if self._last_alert_ticks >= 20:
+            self._last_alert_ticks = 0
+            if 0 < self._funds < 500:
+                self.dhhAlert.emit("warning", "Treasury Depleted!",
+                                   f"Mayor! City reserves have plummeted to ${self._funds:,}. Adjust your budget or apply for a bank loan!", 2)
+            elif self._population > 200 and self._approval < 35:
+                self.dhhAlert.emit("warning", "Discontent Citizens!",
+                                   "Citizen approval has dropped below 35%! Lower taxes or add parks and civic infrastructure.", 2)
 
         # Update demographic census histories
         cur_month = self._month
@@ -542,6 +669,17 @@ class ByteCityEngine(QObject):
         if not self._handle:
             return
         self._lib.bytecity_trigger_disaster(self._handle, disaster_id)
+        disaster_names = {
+            0: "Massive Firestorm",
+            1: "Raging Flood",
+            2: "Rampaging Monster",
+            3: "Violent Tornado",
+            4: "Major Earthquake",
+            5: "Nuclear Meltdown"
+        }
+        d_name = disaster_names.get(disaster_id, "Emergency Disaster")
+        self.dhhAlert.emit("emergency", "DISASTER STRIKE!",
+                           f"{d_name} has hit the metropolitan area! Deploy emergency departments immediately!", 3)
         # Play authentic disaster sounds
         if disaster_id == 2: # Monster
             self._sound_manager.play("monster")
@@ -552,6 +690,220 @@ class ByteCityEngine(QObject):
         else:
             self._sound_manager.play("siren")
         self.mapChanged.emit()
+
+    # --- Budget & Municipal Finance Slots ---
+
+    @Slot(result=dict)
+    def get_budget_details(self):
+        if not self._handle:
+            return {}
+        tf = ctypes.c_int64()
+        rf = ctypes.c_int64()
+        rs = ctypes.c_int64()
+        pf = ctypes.c_int64()
+        ps = ctypes.c_int64()
+        ff = ctypes.c_int64()
+        fs = ctypes.c_int64()
+        self._lib.bytecity_get_budget(self._handle,
+            ctypes.byref(tf),
+            ctypes.byref(rf), ctypes.byref(rs),
+            ctypes.byref(pf), ctypes.byref(ps),
+            ctypes.byref(ff), ctypes.byref(fs))
+        
+        return {
+            "tax_fund": int(tf.value),
+            "road_fund": int(rf.value),
+            "road_spend": int(rs.value),
+            "police_fund": int(pf.value),
+            "police_spend": int(ps.value),
+            "fire_fund": int(ff.value),
+            "fire_spend": int(fs.value),
+            "tax_rate": self._tax_rate,
+            "auto_budget": self._auto_budget,
+            "has_loan": self._has_active_loan,
+            "loan_years": self._loan_years_remaining,
+            "loan_payment": self._loan_annual_payment,
+            "current_funds": self._funds,
+        }
+
+    @Slot(int, float, float, float)
+    def apply_budget(self, tax_rate, road_pct, police_pct, fire_pct):
+        if not self._handle:
+            return
+        self._tax_rate = max(0, min(20, tax_rate))
+        self._lib.bytecity_set_budget(self._handle, self._tax_rate, road_pct, police_pct, fire_pct)
+        self._lib.bytecity_collect_tax(self._handle)
+
+        if self._has_active_loan:
+            self._funds -= self._loan_annual_payment
+            self._loan_years_remaining -= 1
+            if self._loan_years_remaining <= 0:
+                self._has_active_loan = False
+                self.loanChanged.emit()
+                self.dhhAlert.emit("info", "Loan Discharged!", "Your $10,000 Municipal Bank Loan has been fully paid off!", 1)
+            self._lib.bytecity_set_funds(self._handle, self._funds)
+
+        # Resume simulation
+        self.set_speed(1)
+        self._refresh_stats()
+        self._sound_manager.play("cash")
+        self.advisorAlert.emit(f"Fiscal budget enacted! Tax rate: {self._tax_rate}%. Roads: {int(road_pct*100)}%, Police: {int(police_pct*100)}%, Fire: {int(fire_pct*100)}%.")
+
+    @Slot(result=bool)
+    def take_loan(self):
+        if not self._handle or self._has_active_loan:
+            self._sound_manager.play("error")
+            return False
+        self._has_active_loan = True
+        self._loan_years_remaining = 21
+        self.add_funds(10000)
+        self.loanChanged.emit()
+        self._sound_manager.play("cash")
+        self.advisorAlert.emit("🏛️ $10,000 Municipal Bank Loan approved! Repayment: $500/yr over 21 years.")
+        return True
+
+    @Slot(result=bool)
+    def repay_loan_full(self):
+        if not self._handle or not self._has_active_loan:
+            return False
+        total_remaining = self._loan_years_remaining * self._loan_annual_payment
+        if self._funds < total_remaining:
+            self._sound_manager.play("error")
+            return False
+        self._funds -= total_remaining
+        self._lib.bytecity_set_funds(self._handle, self._funds)
+        self._has_active_loan = False
+        self._loan_years_remaining = 0
+        self.loanChanged.emit()
+        self.statsChanged.emit()
+        self._sound_manager.play("cash")
+        self.advisorAlert.emit("🎉 Municipal Bank Loan has been paid off in full!")
+        return True
+
+    # --- Tile Query Inspector Slots ---
+
+    @Slot(int, int, result=dict)
+    def query_tile(self, x, y):
+        if not self._handle or x < 0 or x >= 120 or y < 0 or y >= 100:
+            return {}
+
+        tile_id = ctypes.c_int()
+        zone_type = ctypes.c_int()
+        land_val = ctypes.c_int()
+        crime_val = ctypes.c_int()
+        poll_val = ctypes.c_int()
+        powered = ctypes.c_bool()
+        road_conn = ctypes.c_bool()
+
+        self._lib.bytecity_query_tile(
+            self._handle, x, y,
+            ctypes.byref(tile_id), ctypes.byref(zone_type), ctypes.byref(land_val),
+            ctypes.byref(crime_val), ctypes.byref(poll_val),
+            ctypes.byref(powered), ctypes.byref(road_conn)
+        )
+
+        tid = tile_id.value
+        zt = zone_type.value
+        lv = land_val.value
+        cr = crime_val.value
+        pol = poll_val.value
+        pwr = bool(powered.value)
+        rd = bool(road_conn.value)
+
+        # Human-readable classifications
+        zone_names = {
+            0: "Open Land",
+            1: "Residential District",
+            2: "Commercial District",
+            3: "Industrial District",
+            4: "Power Generation Facility",
+            5: "Police Precinct",
+            6: "Fire Headquarters",
+            7: "City Park & Nature",
+            8: "Sports Stadium",
+            9: "Cargo Seaport",
+            10: "Metropolitan Airport",
+        }
+        zone_name = zone_names.get(zt, "Unzoned Land")
+
+        # Specific structure name
+        if zt == 1:
+            name = "Luxury High-Rise Condos" if lv > 160 else ("Garden Apartments" if lv > 80 else "Suburban Cottages")
+        elif zt == 2:
+            name = "Corporate Office Tower" if lv > 160 else ("Commercial Shopping Plaza" if lv > 80 else "Local Retail Shops")
+        elif zt == 3:
+            name = "Heavy Chemical Smelter" if pol > 140 else ("Manufacturing Assembly Plant" if pol > 60 else "Light Industrial Workshop")
+        elif zt == 4:
+            name = "Nuclear Power Station" if tid >= 811 else "Coal Power Generation Station"
+        elif zt == 5:
+            name = "Municipal Police Station"
+        elif zt == 6:
+            name = "Emergency Fire Dept Headquarters"
+        elif zt == 7:
+            name = "Public City Park & Fountains"
+        elif zt == 8:
+            name = "Major League Stadium"
+        elif zt == 9:
+            name = "Deepwater Cargo Seaport"
+        elif zt == 10:
+            name = "International Municipal Airport"
+        elif tid in (0, 1):
+            name = "Open Meadow / Grassland"
+        elif 2 <= tid <= 20:
+            name = "Navigable Coastal Waterway"
+        elif 21 <= tid <= 43:
+            name = "Forested Woodlands"
+        elif 44 <= tid <= 51:
+            name = "Demolished Rubble"
+        elif 64 <= tid <= 207:
+            name = "Paved Roadway Network"
+        elif 208 <= tid <= 223:
+            name = "High-Voltage Powerlines"
+        elif 224 <= tid <= 239:
+            name = "Transit Railway Lines"
+        else:
+            name = f"Urban Infrastructure (Tile #{tid})"
+
+        # Qualitative ratings
+        lv_str = "Prime Luxury" if lv > 180 else ("High" if lv > 120 else ("Moderate" if lv > 60 else "Low"))
+        cr_str = "Dangerous / Severe" if cr > 150 else ("Elevated" if cr > 80 else ("Low" if cr > 30 else "Safe / Calm"))
+        pol_str = "Hazardous Smog" if pol > 140 else ("Moderate Haze" if pol > 60 else ("Clean Air" if pol > 15 else "Pure Mountain Air"))
+
+        info = {
+            "x": x,
+            "y": y,
+            "tile_id": tid,
+            "zone_type": zt,
+            "zone_name": zone_name,
+            "building_name": name,
+            "land_value": lv,
+            "land_value_str": lv_str,
+            "crime": cr,
+            "crime_str": cr_str,
+            "pollution": pol,
+            "pollution_str": pol_str,
+            "powered": pwr,
+            "road_connected": rd,
+        }
+
+        self.tileQueried.emit(info)
+        return info
+
+    # --- Data Layer Overlays Slots ---
+
+    @Slot(int)
+    def set_overlay_mode(self, mode):
+        self._overlay_mode = max(0, min(5, mode))
+        self.overlayChanged.emit()
+        self.mapChanged.emit()
+
+    @Slot(int, result=list)
+    def get_overlay_data(self, mode):
+        if not self._handle or mode <= 0:
+            return []
+        buf = (ctypes.c_uint8 * 12000)()
+        self._lib.bytecity_get_overlay_map(self._handle, mode, buf)
+        return list(buf)
 
     @Slot(int, int, result=int)
     def get_tile(self, x, y):
@@ -641,6 +993,26 @@ class ByteCityEngine(QObject):
     @Property(bool, notify=optionsChanged)
     def autoBudget(self):
         return self._auto_budget
+
+    @Property(bool, notify=loanChanged)
+    def hasActiveLoan(self):
+        return self._has_active_loan
+
+    @Property(int, notify=loanChanged)
+    def loanYearsRemaining(self):
+        return self._loan_years_remaining
+
+    @Property(int, notify=loanChanged)
+    def loanAnnualPayment(self):
+        return self._loan_annual_payment
+
+    @Property(bool, notify=loanChanged)
+    def canTakeLoan(self):
+        return not self._has_active_loan
+
+    @Property(int, notify=overlayChanged)
+    def overlayMode(self):
+        return self._overlay_mode
 
     def close(self):
         if self._timer:

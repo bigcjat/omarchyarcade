@@ -41,6 +41,25 @@ Window {
     property bool showInaugurationModal: true
     property bool showGraphModal: false
     property bool showAdvisorModal: false
+    property bool showBudgetModal: false
+    property bool showDisasterModal: false
+    property bool showInspectorCard: false
+    property var inspectedData: null
+    property bool showMilestoneModal: false
+    property string milestoneTitle: ""
+    property string milestoneReward: ""
+    property int milestonePop: 0
+    property bool showGameOverModal: false
+    property string gameOverReason: ""
+    property int currentOverlay: 0
+    property var budgetData: null
+    property int budgetTaxRate: 7
+    property real budgetRoadPct: 1.0
+    property real budgetPolicePct: 1.0
+    property real budgetFirePct: 1.0
+    property bool budgetAuto: false
+    property var urgentAlert: null
+    property bool showUrgentAlert: false
     property int selectedSetupTab: 0
     property int currentSeed: 42
     property int selectedLevel: 0
@@ -99,6 +118,54 @@ Window {
         color: root.themeBg
         focus: true
         Component.onCompleted: forceActiveFocus()
+
+        Connections {
+            target: (typeof cityEngine !== "undefined") ? cityEngine : null
+
+            function onBudgetRequired(tf, rf, rs, pf, ps, ff, fs) {
+                root.budgetData = cityEngine.get_budget_details();
+                root.budgetTaxRate = cityEngine.taxRate;
+                root.budgetAuto = cityEngine.autoBudget;
+                root.budgetRoadPct = (rf > 0) ? Math.min(1.0, rs / rf) : 1.0;
+                root.budgetPolicePct = (pf > 0) ? Math.min(1.0, ps / pf) : 1.0;
+                root.budgetFirePct = (ff > 0) ? Math.min(1.0, fs / ff) : 1.0;
+                root.showBudgetModal = true;
+            }
+
+            function onDhhAlert(type, title, msg, urgency) {
+                root.urgentAlert = {
+                    type: type,
+                    title: title,
+                    message: msg,
+                    urgency: urgency
+                };
+                root.showUrgentAlert = true;
+                urgentAlertTimer.restart();
+            }
+
+            function onMilestoneReached(pop, title, reward) {
+                root.milestonePop = pop;
+                root.milestoneTitle = title;
+                root.milestoneReward = reward;
+                root.showMilestoneModal = true;
+            }
+
+            function onGameOver(reason) {
+                root.gameOverReason = reason;
+                root.showGameOverModal = true;
+            }
+
+            function onTileQueried(data) {
+                root.inspectedData = data;
+                root.showInspectorCard = true;
+            }
+        }
+
+        Timer {
+            id: urgentAlertTimer
+            interval: 9000
+            onTriggered: root.showUrgentAlert = false
+        }
 
         Keys.onPressed: function(event) {
             if (splashEnabled && splashScreen.visible && splashScreen.opacity > 0) {
@@ -607,6 +674,68 @@ Window {
                     }
                 }
 
+                // Budget & Financial Audit Button
+                Rectangle {
+                    height: 28; width: 80; radius: 6
+                    color: root.showBudgetModal ? root.themeAccent : root.themeCardBg
+                    border.color: root.showBudgetModal ? root.themeAccent : root.themeBorder
+                    border.width: 1
+                    Row {
+                        anchors.centerIn: parent; spacing: 4
+                        Text { text: "🏛️"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
+                        Text {
+                            text: "Budget"
+                            font.pixelSize: 11; font.bold: true
+                            color: root.showBudgetModal ? root.themeBtnFg : root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (typeof cityEngine !== "undefined" && cityEngine) {
+                                root.budgetData = cityEngine.get_budget_details();
+                                root.budgetTaxRate = cityEngine.taxRate;
+                                root.budgetAuto = cityEngine.autoBudget;
+                                if (root.budgetData) {
+                                    var rf = root.budgetData.road_fund || 0;
+                                    var rs = root.budgetData.road_spend || 0;
+                                    root.budgetRoadPct = (rf > 0) ? Math.min(1.0, rs / rf) : 1.0;
+                                    var pf = root.budgetData.police_fund || 0;
+                                    var ps = root.budgetData.police_spend || 0;
+                                    root.budgetPolicePct = (pf > 0) ? Math.min(1.0, ps / pf) : 1.0;
+                                    var ff = root.budgetData.fire_fund || 0;
+                                    var fs = root.budgetData.fire_spend || 0;
+                                    root.budgetFirePct = (ff > 0) ? Math.min(1.0, fs / ff) : 1.0;
+                                }
+                            }
+                            root.showBudgetModal = true;
+                        }
+                    }
+                }
+
+                // Emergency Disasters Control Button
+                Rectangle {
+                    height: 28; width: 90; radius: 6
+                    color: root.showDisasterModal ? root.themeAccent : root.themeCardBg
+                    border.color: root.showDisasterModal ? root.themeAccent : root.themeBorder
+                    border.width: 1
+                    Row {
+                        anchors.centerIn: parent; spacing: 4
+                        Text { text: "🌪️"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
+                        Text {
+                            text: "Disasters"
+                            font.pixelSize: 11; font.bold: true
+                            color: root.showDisasterModal ? root.themeBtnFg : root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showDisasterModal = !root.showDisasterModal
+                    }
+                }
+
                 // Scenarios Button
                 Rectangle {
                     height: 28; width: 90; radius: 6
@@ -729,6 +858,7 @@ Window {
                         Repeater {
                             model: [
                                 { id: -1, icon: "✋", label: "Pan", cost: "Free" },
+                                { id: 5, icon: "❓", label: "Query", cost: "Inspect" },
                                 { id: 7, icon: "🚜", label: "Doze", cost: "$1" },
                                 { id: 9, icon: "🛣️", label: "Road", cost: "$10" },
                                 { id: 6, icon: "⚡", label: "Wire", cost: "$5" },
@@ -770,6 +900,318 @@ Window {
                     anchors.fill: parent
                     cityEngine: (typeof cityEngine !== "undefined") ? cityEngine : null
                     activeTool: root.currentTool
+                    overlayMode: root.currentOverlay
+                }
+
+                // Overlay Selector Bar
+                Rectangle {
+                    id: overlayBar
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.margins: 10
+                    height: 28
+                    width: overlayRow.implicitWidth + 12
+                    radius: 7
+                    color: Qt.rgba(Qt.color(root.themeCardBg).r, Qt.color(root.themeCardBg).g, Qt.color(root.themeCardBg).b, 0.88)
+                    border.color: root.themeBorder
+                    border.width: 1
+                    z: 30
+
+                    Row {
+                        id: overlayRow
+                        anchors.centerIn: parent
+                        spacing: 4
+
+                        Repeater {
+                            model: [
+                                { mode: 0, label: "🏙️ Normal" },
+                                { mode: 1, label: "⚡ Power" },
+                                { mode: 2, label: "🟣 Smog" },
+                                { mode: 3, label: "🔴 Crime" },
+                                { mode: 4, label: "🟢 Value" },
+                                { mode: 5, label: "🚗 Traffic" }
+                            ]
+                            delegate: Rectangle {
+                                width: oText.implicitWidth + 14
+                                height: 20
+                                radius: 5
+                                color: (root.currentOverlay === modelData.mode) ? root.themeAccent : (oMouse.containsMouse ? root.themeBoardBg : "transparent")
+                                border.color: (root.currentOverlay === modelData.mode) ? root.themeAccent : "transparent"
+                                border.width: 1
+
+                                Text {
+                                    id: oText
+                                    anchors.centerIn: parent
+                                    text: modelData.label
+                                    font.pixelSize: 10
+                                    font.bold: root.currentOverlay === modelData.mode
+                                    color: (root.currentOverlay === modelData.mode) ? root.themeBtnFg : root.themeFg
+                                }
+
+                                MouseArea {
+                                    id: oMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        root.currentOverlay = modelData.mode;
+                                        if (typeof cityEngine !== "undefined" && cityEngine) {
+                                            cityEngine.set_overlay_mode(modelData.mode);
+                                        }
+                                        soundToast.show("Layer: " + modelData.label);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Dr. DHH Proactive Urgent Alert Toast Card
+                Rectangle {
+                    id: urgentAlertCard
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    anchors.margins: 10
+                    width: Math.min(340, parent.width - 20)
+                    height: urgentCol.implicitHeight + 20
+                    radius: 10
+                    color: Qt.rgba(Qt.color(root.themeCardBg).r, Qt.color(root.themeCardBg).g, Qt.color(root.themeCardBg).b, 0.96)
+                    border.color: {
+                        if (!root.urgentAlert) return root.themeAccent;
+                        if (root.urgentAlert.urgency === 3) return "#f38ba8"; // Danger / Disaster
+                        if (root.urgentAlert.urgency === 2) return "#fab387"; // Warning
+                        return root.themeAccent;
+                    }
+                    border.width: 2
+                    visible: root.showUrgentAlert && root.urgentAlert !== null
+                    opacity: visible ? 1 : 0
+                    z: 50
+
+                    Behavior on opacity { NumberAnimation { duration: 200 } }
+
+                    Row {
+                        id: urgentRow
+                        anchors.fill: parent
+                        anchors.margins: 10
+                        spacing: 10
+
+                        Rectangle {
+                            width: 36; height: 36; radius: 18
+                            color: Qt.rgba(Qt.color(root.themeAccent).r, Qt.color(root.themeAccent).g, Qt.color(root.themeAccent).b, 0.2)
+                            border.color: root.themeAccent; border.width: 1
+                            anchors.verticalCenter: parent.verticalCenter
+                            Image {
+                                source: "assets/dr_dhh.svg"
+                                width: 28; height: 28
+                                anchors.centerIn: parent
+                                smooth: true
+                            }
+                        }
+
+                        Column {
+                            id: urgentCol
+                            width: parent.width - 48
+                            spacing: 4
+
+                            Row {
+                                width: parent.width
+                                spacing: 6
+                                Text {
+                                    text: root.urgentAlert ? root.urgentAlert.title : "Municipal Advisory"
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    color: (root.urgentAlert && root.urgentAlert.urgency === 3) ? "#f38ba8" : root.themeAccent
+                                    elide: Text.ElideRight
+                                    width: parent.width - 24
+                                }
+                                Text {
+                                    text: "✕"
+                                    font.pixelSize: 11
+                                    color: root.themeSubtext
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.showUrgentAlert = false
+                                    }
+                                }
+                            }
+
+                            Text {
+                                width: parent.width
+                                text: root.urgentAlert ? root.urgentAlert.message : ""
+                                font.pixelSize: 10
+                                color: root.themeFg
+                                wrapMode: Text.Wrap
+                            }
+
+                            Row {
+                                spacing: 6
+                                visible: root.urgentAlert && root.urgentAlert.type === "budget"
+                                Rectangle {
+                                    height: 20; width: 84; radius: 4
+                                    color: root.themeAccent
+                                    Text { anchors.centerIn: parent; text: "Open Budget"; font.pixelSize: 9; font.bold: true; color: root.themeBtnFg }
+                                    MouseArea {
+                                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            root.showUrgentAlert = false;
+                                            root.showBudgetModal = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Property / Tile Inspector Card (Query Tool '?')
+                Rectangle {
+                    id: tileInspectorCard
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+                    anchors.margins: 12
+                    width: 290
+                    height: inspectorCol.implicitHeight + 24
+                    radius: 12
+                    color: Qt.rgba(Qt.color(root.themeCardBg).r, Qt.color(root.themeCardBg).g, Qt.color(root.themeCardBg).b, 0.95)
+                    border.color: root.themeAccent
+                    border.width: 1.5
+                    visible: root.showInspectorCard && root.inspectedData !== null
+                    z: 45
+
+                    Column {
+                        id: inspectorCol
+                        anchors.fill: parent
+                        anchors.margins: 12
+                        spacing: 8
+
+                        // Top Header: Title & Close Button
+                        Item {
+                            width: parent.width
+                            height: 18
+                            Text {
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "🔍 Property Inspection"
+                                font.pixelSize: 12
+                                font.bold: true
+                                color: root.themeAccent
+                            }
+                            Text {
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "✕"
+                                font.pixelSize: 12
+                                font.bold: true
+                                color: root.themeSubtext
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        root.showInspectorCard = false;
+                                        viewport.clearInspection();
+                                    }
+                                }
+                            }
+                        }
+
+                        // Building Title & Zone Badge
+                        Column {
+                            width: parent.width
+                            spacing: 2
+                            Text {
+                                width: parent.width
+                                text: root.inspectedData ? root.inspectedData.building_name : "Land Parcel"
+                                font.pixelSize: 13
+                                font.bold: true
+                                color: root.themeFg
+                                elide: Text.ElideRight
+                            }
+                            Row {
+                                spacing: 6
+                                Text {
+                                    text: root.inspectedData ? (root.inspectedData.zone_name + " • (" + root.inspectedData.x + ", " + root.inspectedData.y + ")") : ""
+                                    font.pixelSize: 10
+                                    color: root.themeSubtext
+                                }
+                            }
+                        }
+
+                        // Status Pills (Power & Road Access)
+                        Row {
+                            spacing: 8
+                            // Power Pill
+                            Rectangle {
+                                height: 20
+                                width: pText.implicitWidth + 12
+                                radius: 10
+                                color: (root.inspectedData && root.inspectedData.powered) ? Qt.rgba(0.13, 0.77, 0.36, 0.2) : Qt.rgba(0.95, 0.26, 0.21, 0.2)
+                                border.color: (root.inspectedData && root.inspectedData.powered) ? "#22c55e" : "#ef4444"
+                                border.width: 1
+                                Text {
+                                    id: pText
+                                    anchors.centerIn: parent
+                                    text: (root.inspectedData && root.inspectedData.powered) ? "⚡ Powered" : "❌ Blackout"
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    color: (root.inspectedData && root.inspectedData.powered) ? "#22c55e" : "#ef4444"
+                                }
+                            }
+                            // Road Access Pill
+                            Rectangle {
+                                height: 20
+                                width: rText.implicitWidth + 12
+                                radius: 10
+                                color: (root.inspectedData && root.inspectedData.road_connected) ? Qt.rgba(0.23, 0.51, 0.96, 0.2) : Qt.rgba(0.96, 0.62, 0.07, 0.2)
+                                border.color: (root.inspectedData && root.inspectedData.road_connected) ? "#3b82f6" : "#f59e0b"
+                                border.width: 1
+                                Text {
+                                    id: rText
+                                    anchors.centerIn: parent
+                                    text: (root.inspectedData && root.inspectedData.road_connected) ? "🚗 Road Connected" : "⚠️ No Road Access"
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    color: (root.inspectedData && root.inspectedData.road_connected) ? "#3b82f6" : "#f59e0b"
+                                }
+                            }
+                        }
+
+                        // Key Metrics (Land Value, Crime, Pollution)
+                        Column {
+                            width: parent.width
+                            spacing: 4
+
+                            // Land Value Row
+                            Row {
+                                width: parent.width
+                                Text { text: "Land Value:"; font.pixelSize: 10; color: root.themeSubtext; width: 80 }
+                                Text {
+                                    text: root.inspectedData ? (root.inspectedData.land_value_str + " (" + root.inspectedData.land_value + "/255)") : "-"
+                                    font.pixelSize: 10; font.bold: true; color: "#22c55e"
+                                }
+                            }
+                            // Crime Row
+                            Row {
+                                width: parent.width
+                                Text { text: "Crime Rate:"; font.pixelSize: 10; color: root.themeSubtext; width: 80 }
+                                Text {
+                                    text: root.inspectedData ? (root.inspectedData.crime_str + " (" + root.inspectedData.crime + "/255)") : "-"
+                                    font.pixelSize: 10; font.bold: true
+                                    color: (root.inspectedData && root.inspectedData.crime > 100) ? "#ef4444" : root.themeFg
+                                }
+                            }
+                            // Pollution Row
+                            Row {
+                                width: parent.width
+                                Text { text: "Pollution:"; font.pixelSize: 10; color: root.themeSubtext; width: 80 }
+                                Text {
+                                    text: root.inspectedData ? (root.inspectedData.pollution_str + " (" + root.inspectedData.pollution + "/255)") : "-"
+                                    font.pixelSize: 10; font.bold: true
+                                    color: (root.inspectedData && root.inspectedData.pollution > 100) ? "#c084fc" : root.themeFg
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -2180,6 +2622,666 @@ Window {
                                 MouseArea {
                                     anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                                     onClicked: Qt.openUrlExternally("https://x.com/bigcjat")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // ANNUAL BUDGET & FINANCIAL AUDIT MODAL
+        // =====================================================================
+        Rectangle {
+            id: budgetModal
+            anchors.fill: parent
+            color: Qt.rgba(0, 0, 0, 0.78)
+            visible: root.showBudgetModal
+            z: 110
+
+            MouseArea { anchors.fill: parent; onClicked: {} } // Block click-through
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: Math.min(680, parent.width - 24)
+                height: Math.min(640, parent.height - 20)
+                radius: 14
+                color: root.themeCardBg
+                border.color: root.themeBorder
+                border.width: 1
+                clip: true
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 18
+                    spacing: 12
+
+                    // Modal Header
+                    Row {
+                        width: parent.width
+                        spacing: 10
+                        Rectangle {
+                            width: 38; height: 38; radius: 19
+                            color: Qt.rgba(Qt.color(root.themeAccent).r, Qt.color(root.themeAccent).g, Qt.color(root.themeAccent).b, 0.2)
+                            border.color: root.themeAccent; border.width: 1
+                            anchors.verticalCenter: parent.verticalCenter
+                            Image {
+                                source: "assets/dr_dhh.svg"
+                                width: 30; height: 30
+                                anchors.centerIn: parent
+                                smooth: true
+                            }
+                        }
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 1
+                            Text {
+                                text: "🏛️ Municipal Budget & Fiscal Audit"
+                                font.pixelSize: 17
+                                font.bold: true
+                                color: root.themeAccent
+                            }
+                            Text {
+                                text: (cityEngine ? cityEngine.cityName : "OmarchyCity") + " • Fiscal Year " + (cityEngine ? cityEngine.year : "1900") + " Balance Sheet"
+                                font.pixelSize: 11
+                                color: root.themeSubtext
+                            }
+                        }
+                    }
+
+                    // Balance Sheet Overview Strip
+                    Rectangle {
+                        width: parent.width
+                        height: 48
+                        radius: 8
+                        color: root.themeBoardBg
+                        border.color: root.themeBorder
+                        border.width: 1
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 24
+
+                            Column {
+                                anchors.verticalCenter: parent.verticalCenter
+                                Text { text: "TREASURY"; font.pixelSize: 9; font.bold: true; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
+                                Text {
+                                    text: "$" + (cityEngine ? cityEngine.funds.toLocaleString() : "20,000")
+                                    font.pixelSize: 14; font.bold: true; font.family: root.monoFontFamily
+                                    color: (cityEngine && cityEngine.funds < 0) ? "#ef4444" : "#22c55e"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                            }
+                            Rectangle { width: 1; height: 28; color: root.themeBorder; anchors.verticalCenter: parent.verticalCenter }
+
+                            Column {
+                                anchors.verticalCenter: parent.verticalCenter
+                                Text { text: "EST. TAX REVENUE"; font.pixelSize: 9; font.bold: true; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
+                                Text {
+                                    text: "+$" + (root.budgetData ? Math.round(root.budgetData.tax_fund * (root.budgetTaxRate / Math.max(1, root.budgetData.tax_rate))).toLocaleString() : "0")
+                                    font.pixelSize: 14; font.bold: true; font.family: root.monoFontFamily; color: "#22c55e"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                            }
+                            Rectangle { width: 1; height: 28; color: root.themeBorder; anchors.verticalCenter: parent.verticalCenter }
+
+                            Column {
+                                anchors.verticalCenter: parent.verticalCenter
+                                Text { text: "EXPENDITURES"; font.pixelSize: 9; font.bold: true; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
+                                Text {
+                                    text: "-$" + (root.budgetData ? Math.round((root.budgetData.road_fund * root.budgetRoadPct) + (root.budgetData.police_fund * root.budgetPolicePct) + (root.budgetData.fire_fund * root.budgetFirePct) + ((cityEngine && cityEngine.hasActiveLoan) ? 500 : 0)).toLocaleString() : "0")
+                                    font.pixelSize: 14; font.bold: true; font.family: root.monoFontFamily; color: "#ef4444"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                            }
+                        }
+                    }
+
+                    // Sliders Section (Tax, Road, Police, Fire)
+                    Column {
+                        width: parent.width
+                        spacing: 8
+
+                        // 1. Tax Rate Slider
+                        Rectangle {
+                            width: parent.width; height: 46; radius: 6; color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
+                            Column {
+                                anchors.fill: parent; anchors.margins: 6; spacing: 4
+                                Item {
+                                    width: parent.width; height: 16
+                                    Text { anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; text: "City Income Tax Rate"; font.pixelSize: 11; font.bold: true; color: root.themeFg }
+                                    Text {
+                                        anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                                        text: root.budgetTaxRate + "% (0% - 20%)"
+                                        font.pixelSize: 11; font.bold: true; font.family: root.monoFontFamily; color: root.themeAccent
+                                    }
+                                }
+                                Rectangle {
+                                    id: taxTrack
+                                    width: parent.width; height: 8; radius: 4; color: "#181825"
+                                    Rectangle {
+                                        width: taxTrack.width * (root.budgetTaxRate / 20.0)
+                                        height: parent.height; radius: 4; color: root.themeAccent
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        function updateTax(mx) {
+                                            var pct = Math.max(0, Math.min(1.0, mx / taxTrack.width));
+                                            root.budgetTaxRate = Math.round(pct * 20);
+                                        }
+                                        onPressed: updateTax(mouseX)
+                                        onPositionChanged: if (pressed) updateTax(mouseX)
+                                    }
+                                }
+                            }
+                        }
+
+                        // 2. Road Maintenance Slider
+                        Rectangle {
+                            width: parent.width; height: 46; radius: 6; color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
+                            Column {
+                                anchors.fill: parent; anchors.margins: 6; spacing: 4
+                                Item {
+                                    width: parent.width; height: 16
+                                    Text { anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; text: "🛣️ Transportation / Road Funding"; font.pixelSize: 11; font.bold: true; color: root.themeFg }
+                                    Text {
+                                        anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                                        text: Math.round(root.budgetRoadPct * 100) + "% ($" + (root.budgetData ? Math.round(root.budgetData.road_fund * root.budgetRoadPct) : 0) + " / $" + (root.budgetData ? root.budgetData.road_fund : 0) + ")"
+                                        font.pixelSize: 11; font.bold: true; font.family: root.monoFontFamily; color: "#38bdf8"
+                                    }
+                                }
+                                Rectangle {
+                                    id: roadTrack
+                                    width: parent.width; height: 8; radius: 4; color: "#181825"
+                                    Rectangle {
+                                        width: roadTrack.width * root.budgetRoadPct
+                                        height: parent.height; radius: 4; color: "#38bdf8"
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        function updateRoad(mx) {
+                                            root.budgetRoadPct = Math.max(0, Math.min(1.0, mx / roadTrack.width));
+                                        }
+                                        onPressed: updateRoad(mouseX)
+                                        onPositionChanged: if (pressed) updateRoad(mouseX)
+                                    }
+                                }
+                            }
+                        }
+
+                        // 3. Police Department Funding Slider
+                        Rectangle {
+                            width: parent.width; height: 46; radius: 6; color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
+                            Column {
+                                anchors.fill: parent; anchors.margins: 6; spacing: 4
+                                Item {
+                                    width: parent.width; height: 16
+                                    Text { anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; text: "👮 Police Department Funding"; font.pixelSize: 11; font.bold: true; color: root.themeFg }
+                                    Text {
+                                        anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                                        text: Math.round(root.budgetPolicePct * 100) + "% ($" + (root.budgetData ? Math.round(root.budgetData.police_fund * root.budgetPolicePct) : 0) + " / $" + (root.budgetData ? root.budgetData.police_fund : 0) + ")"
+                                        font.pixelSize: 11; font.bold: true; font.family: root.monoFontFamily; color: "#818cf8"
+                                    }
+                                }
+                                Rectangle {
+                                    id: policeTrack
+                                    width: parent.width; height: 8; radius: 4; color: "#181825"
+                                    Rectangle {
+                                        width: policeTrack.width * root.budgetPolicePct
+                                        height: parent.height; radius: 4; color: "#818cf8"
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        function updatePolice(mx) {
+                                            root.budgetPolicePct = Math.max(0, Math.min(1.0, mx / policeTrack.width));
+                                        }
+                                        onPressed: updatePolice(mouseX)
+                                        onPositionChanged: if (pressed) updatePolice(mouseX)
+                                    }
+                                }
+                            }
+                        }
+
+                        // 4. Fire Department Funding Slider
+                        Rectangle {
+                            width: parent.width; height: 46; radius: 6; color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
+                            Column {
+                                anchors.fill: parent; anchors.margins: 6; spacing: 4
+                                Item {
+                                    width: parent.width; height: 16
+                                    Text { anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; text: "🚒 Fire Department Funding"; font.pixelSize: 11; font.bold: true; color: root.themeFg }
+                                    Text {
+                                        anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                                        text: Math.round(root.budgetFirePct * 100) + "% ($" + (root.budgetData ? Math.round(root.budgetData.fire_fund * root.budgetFirePct) : 0) + " / $" + (root.budgetData ? root.budgetData.fire_fund : 0) + ")"
+                                        font.pixelSize: 11; font.bold: true; font.family: root.monoFontFamily; color: "#f87171"
+                                    }
+                                }
+                                Rectangle {
+                                    id: fireTrack
+                                    width: parent.width; height: 8; radius: 4; color: "#181825"
+                                    Rectangle {
+                                        width: fireTrack.width * root.budgetFirePct
+                                        height: parent.height; radius: 4; color: "#f87171"
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        function updateFire(mx) {
+                                            root.budgetFirePct = Math.max(0, Math.min(1.0, mx / fireTrack.width));
+                                        }
+                                        onPressed: updateFire(mouseX)
+                                        onPositionChanged: if (pressed) updateFire(mouseX)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Municipal Bank Loan Box
+                    Rectangle {
+                        width: parent.width
+                        height: 52
+                        radius: 8
+                        color: Qt.rgba(Qt.color(root.themeAccent).r, Qt.color(root.themeAccent).g, Qt.color(root.themeAccent).b, 0.1)
+                        border.color: root.themeAccent
+                        border.width: 1
+
+                        Row {
+                            anchors.fill: parent
+                            anchors.margins: 10
+                            spacing: 12
+
+                            Column {
+                                width: parent.width - 150
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 1
+                                Text {
+                                    text: (cityEngine && cityEngine.hasActiveLoan) ? "🏛️ Active Municipal Bank Loan ($10,000)" : "🏛️ Municipal Bank Loan Available ($10,000)"
+                                    font.pixelSize: 11; font.bold: true; color: root.themeAccent
+                                }
+                                Text {
+                                    text: (cityEngine && cityEngine.hasActiveLoan) ? ("Remaining debt: $" + (cityEngine.loanYearsRemaining * cityEngine.loanAnnualPayment).toLocaleString() + " (" + cityEngine.loanYearsRemaining + " yrs @ $500/yr)") : "Borrow $10,000 for infrastructure. Repaid over 21 years at $500/year."
+                                    font.pixelSize: 9; color: root.themeSubtext
+                                }
+                            }
+
+                            Rectangle {
+                                height: 30; width: 130; radius: 6
+                                color: (cityEngine && cityEngine.hasActiveLoan) ? "#313244" : root.themeAccent
+                                anchors.verticalCenter: parent.verticalCenter
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: (cityEngine && cityEngine.hasActiveLoan) ? "Pay Off Loan" : "Borrow $10,000"
+                                    font.pixelSize: 10; font.bold: true
+                                    color: (cityEngine && cityEngine.hasActiveLoan) ? root.themeFg : root.themeBtnFg
+                                }
+                                MouseArea {
+                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (cityEngine) {
+                                            if (cityEngine.hasActiveLoan) {
+                                                cityEngine.repay_loan_full();
+                                            } else {
+                                                cityEngine.take_loan();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Auto-Budget Checkbox & Continue Button Row
+                    Item {
+                        width: parent.width
+                        height: 36
+
+                        // Auto-Budget Checkbox
+                        Row {
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 6
+                            Rectangle {
+                                width: 16; height: 16; radius: 4
+                                color: root.budgetAuto ? root.themeAccent : root.themeBoardBg
+                                border.color: root.themeBorder; border.width: 1
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "✓"; font.pixelSize: 11; font.bold: true
+                                    color: root.themeBtnFg
+                                    visible: root.budgetAuto
+                                }
+                                MouseArea {
+                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        root.budgetAuto = !root.budgetAuto;
+                                        if (cityEngine) cityEngine.set_auto_budget(root.budgetAuto);
+                                    }
+                                }
+                            }
+                            Text {
+                                text: "Auto-Budget (Apply 100% funding annually)"
+                                font.pixelSize: 10; color: root.themeFg
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+
+                        // Apply & Resume Button
+                        Rectangle {
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            height: 36; width: 160; radius: 8
+                            color: root.themeAccent
+                            Text {
+                                anchors.centerIn: parent
+                                text: "Enact & Resume City"
+                                font.pixelSize: 11; font.bold: true; color: root.themeBtnFg
+                            }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (cityEngine) {
+                                        cityEngine.apply_budget(root.budgetTaxRate, root.budgetRoadPct, root.budgetPolicePct, root.budgetFirePct);
+                                    }
+                                    root.showBudgetModal = false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // EMERGENCY DISASTERS CONTROL MODAL
+        // =====================================================================
+        Rectangle {
+            id: disasterModal
+            anchors.fill: parent
+            color: Qt.rgba(0, 0, 0, 0.78)
+            visible: root.showDisasterModal
+            z: 110
+
+            MouseArea { anchors.fill: parent; onClicked: root.showDisasterModal = false }
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: Math.min(620, parent.width - 24)
+                height: 440
+                radius: 14
+                color: root.themeCardBg
+                border.color: root.themeBorder
+                border.width: 1
+                clip: true
+
+                MouseArea { anchors.fill: parent; onClicked: {} } // Block click inside dialog
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 18
+                    spacing: 12
+
+                    // Title
+                    Item {
+                        width: parent.width
+                        height: 24
+                        Text {
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "🌪️ Emergency Disaster Control"
+                            font.pixelSize: 17; font.bold: true; color: "#f38ba8"
+                        }
+                        Text {
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "✕"; font.pixelSize: 13; font.bold: true; color: root.themeSubtext
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.showDisasterModal = false }
+                        }
+                    }
+
+                    Text {
+                        text: "Test your municipal emergency departments, disaster contingency plans, and civil defense services."
+                        font.pixelSize: 11; color: root.themeSubtext; wrapMode: Text.Wrap; width: parent.width
+                    }
+
+                    // 6 Disaster Cards Grid
+                    Grid {
+                        width: parent.width
+                        columns: 2
+                        spacing: 10
+
+                        Repeater {
+                            model: [
+                                { id: 0, icon: "🔥", name: "Massive Firestorm", desc: "Ignites random buildings into spreading infernos.", color: "#f87171" },
+                                { id: 1, icon: "🌊", name: "Coastal Flash Flood", desc: "Water surges over riverbanks onto adjacent land.", color: "#38bdf8" },
+                                { id: 2, icon: "🦖", name: "Kaiju Monster Attack", desc: "A colossal beast emerges to stomp downtown high-rises!", color: "#4ade80" },
+                                { id: 3, icon: "🌪️", name: "Violent Tornado", desc: "Funnel cloud tears through infrastructure lines.", color: "#facc15" },
+                                { id: 4, icon: "💥", name: "Major Earthquake", desc: "Fault line slips, shattering foundations into rubble.", color: "#fb923c" },
+                                { id: 5, icon: "☢️", name: "Nuclear Meltdown", desc: "Reactor breach causes radioactive fallout zones.", color: "#c084fc" }
+                            ]
+                            delegate: Rectangle {
+                                width: (disasterModal.width > 500) ? 285 : parent.width
+                                height: 72
+                                radius: 8
+                                color: root.themeBoardBg
+                                border.color: dMouse.containsMouse ? modelData.color : root.themeBorder
+                                border.width: 1
+
+                                Row {
+                                    anchors.fill: parent
+                                    anchors.margins: 10
+                                    spacing: 10
+
+                                    Text {
+                                        text: modelData.icon
+                                        font.pixelSize: 26
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Column {
+                                        width: parent.width - 48
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 2
+                                        Text {
+                                            text: modelData.name
+                                            font.pixelSize: 12; font.bold: true; color: modelData.color
+                                        }
+                                        Text {
+                                            text: modelData.desc
+                                            font.pixelSize: 9; color: root.themeSubtext; wrapMode: Text.Wrap; width: parent.width
+                                        }
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: dMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (cityEngine) {
+                                            cityEngine.trigger_disaster(modelData.id);
+                                        }
+                                        root.showDisasterModal = false;
+                                        soundToast.show("Disaster: " + modelData.name + " triggered!");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // POPULATION MILESTONE REWARD MODAL
+        // =====================================================================
+        Rectangle {
+            id: milestoneModal
+            anchors.fill: parent
+            color: Qt.rgba(0, 0, 0, 0.80)
+            visible: root.showMilestoneModal
+            z: 120
+
+            MouseArea { anchors.fill: parent; onClicked: {} } // Block click-through
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: Math.min(520, parent.width - 32)
+                height: 360
+                radius: 16
+                color: root.themeCardBg
+                border.color: "#facc15" // Golden trophy border
+                border.width: 2
+                clip: true
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 24
+                    spacing: 14
+
+                    // Trophy Header
+                    Column {
+                        width: parent.width
+                        spacing: 6
+                        Text { text: "🏆"; font.pixelSize: 44; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text {
+                            text: "POPULATION MILESTONE REACHED!"
+                            font.pixelSize: 16; font.bold: true; color: "#facc15"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                        Text {
+                            text: "ByteCity has officially achieved " + root.milestoneTitle.toUpperCase() + " status!"
+                            font.pixelSize: 12; color: root.themeFg
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+
+                    // Reward Highlight Card
+                    Rectangle {
+                        width: parent.width; height: 60; radius: 10
+                        color: Qt.rgba(0.98, 0.8, 0.08, 0.15)
+                        border.color: "#facc15"; border.width: 1
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 12
+                            Text { text: "🎁"; font.pixelSize: 22; anchors.verticalCenter: parent.verticalCenter }
+                            Column {
+                                anchors.verticalCenter: parent.verticalCenter
+                                Text { text: "CIVIC REWARD UNLOCKED"; font.pixelSize: 9; font.bold: true; color: "#facc15" }
+                                Text { text: root.milestoneReward; font.pixelSize: 14; font.bold: true; color: root.themeFg }
+                            }
+                        }
+                    }
+
+                    // Dr. DHH Quote
+                    Row {
+                        width: parent.width; spacing: 10
+                        Image {
+                            source: "assets/dr_dhh.svg"
+                            width: 32; height: 32
+                            anchors.verticalCenter: parent.verticalCenter
+                            smooth: true
+                        }
+                        Text {
+                            width: parent.width - 44
+                            text: "“Marvelous stewardship, Mayor! The citizenry celebrates your forward-looking urban design. Onward to the next demographic tier!”"
+                            font.pixelSize: 10; font.italic: true; color: root.themeSubtext
+                            wrapMode: Text.Wrap
+                        }
+                    }
+
+                    // Accept Button
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        height: 38; width: 180; radius: 8
+                        color: "#facc15"
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Accept Honors & Continue"
+                            font.pixelSize: 11; font.bold: true; color: "#11111b"
+                        }
+                        MouseArea {
+                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                            onClicked: root.showMilestoneModal = false
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // MUNICIPAL BANKRUPTCY GAME OVER MODAL
+        // =====================================================================
+        Rectangle {
+            id: gameOverModal
+            anchors.fill: parent
+            color: Qt.rgba(0, 0, 0, 0.88)
+            visible: root.showGameOverModal
+            z: 130
+
+            MouseArea { anchors.fill: parent; onClicked: {} } // Block click-through
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: Math.min(500, parent.width - 32)
+                height: 340
+                radius: 14
+                color: root.themeCardBg
+                border.color: "#ef4444"
+                border.width: 2
+                clip: true
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 24
+                    spacing: 14
+
+                    Column {
+                        width: parent.width; spacing: 6
+                        Text { text: "🚨"; font.pixelSize: 42; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text {
+                            text: "MUNICIPAL BANKRUPTCY"
+                            font.pixelSize: 18; font.bold: true; color: "#ef4444"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+
+                    Text {
+                        width: parent.width
+                        text: root.gameOverReason || "Treasury reserves have fallen deeply into debt (-$5,000). The state legislature has declared municipal insolvency and suspended the city council."
+                        font.pixelSize: 11; color: root.themeFg; wrapMode: Text.Wrap
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 12
+
+                        Rectangle {
+                            height: 36; width: 140; radius: 8
+                            color: root.themeAccent
+                            Text { anchors.centerIn: parent; text: "Start New City"; font.pixelSize: 11; font.bold: true; color: root.themeBtnFg }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.showGameOverModal = false;
+                                    root.selectedSetupTab = 0;
+                                    root.showInaugurationModal = true;
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 36; width: 140; radius: 8
+                            color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
+                            Text { anchors.centerIn: parent; text: "Load Scenario"; font.pixelSize: 11; font.bold: true; color: root.themeFg }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.showGameOverModal = false;
+                                    root.selectedSetupTab = 1;
+                                    root.showInaugurationModal = true;
                                 }
                             }
                         }

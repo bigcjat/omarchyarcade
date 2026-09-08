@@ -137,6 +137,8 @@ class CityViewport(QQuickPaintedItem):
     cameraChanged = Signal()
     activeToolChanged = Signal(int)
     cityEngineChanged = Signal()
+    overlayModeChanged = Signal(int)
+    tileInspected = Signal(int, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -155,6 +157,12 @@ class CityViewport(QQuickPaintedItem):
 
         # Active tool (-1 = Hand/Pan, 0..15 = tools)
         self._active_tool = 9  # Default to Road
+
+        # Overlay mode: 0=Normal, 1=Power, 2=Pollution, 3=Crime, 4=Land Value, 5=Traffic
+        self._overlay_mode = 0
+
+        # Query tool inspected tile coordinates
+        self._inspected_tile = (-1, -1)
 
         # Mouse interaction state
         self._is_panning = False
@@ -318,6 +326,32 @@ class CityViewport(QQuickPaintedItem):
 
     camY = Property(float, get_cam_y, set_cam_y, notify=cameraChanged)
 
+    def get_overlay_mode(self):
+        return self._overlay_mode
+
+    def set_overlay_mode(self, mode):
+        m = max(0, min(5, int(mode)))
+        if self._overlay_mode != m:
+            self._overlay_mode = m
+            self.overlayModeChanged.emit(m)
+            self.update()
+
+    overlayMode = Property(int, get_overlay_mode, set_overlay_mode, notify=overlayModeChanged)
+
+    @Property(int, notify=tileInspected)
+    def inspectedTileX(self):
+        return self._inspected_tile[0]
+
+    @Property(int, notify=tileInspected)
+    def inspectedTileY(self):
+        return self._inspected_tile[1]
+
+    @Slot()
+    def clearInspection(self):
+        self._inspected_tile = (-1, -1)
+        self.tileInspected.emit(-1, -1)
+        self.update()
+
     # --- Public Slots for QML ---
 
     @Slot(float, float)
@@ -408,6 +442,16 @@ class CityViewport(QQuickPaintedItem):
             # Building / Action Tool
             tx, ty = self.screen_to_tile(pos.x(), pos.y())
             if 0 <= tx < 120 and 0 <= ty < 100 and self._engine:
+                if self._active_tool == 5:
+                    # Query / Inspector Tool
+                    self._inspected_tile = (tx, ty)
+                    self._engine.query_tile(tx, ty)
+                    self.tileInspected.emit(tx, ty)
+                    self._engine.play_sound("advisor")
+                    self.update()
+                    event.accept()
+                    return
+
                 self._is_drawing = True
                 self._last_placed_tile = (tx, ty)
                 res = self._engine.apply_tool(self._active_tool, tx, ty)
@@ -524,8 +568,35 @@ class CityViewport(QQuickPaintedItem):
                 has_power = self._engine.fast_has_power(tx, ty)
                 self._draw_tile(painter, raw, has_power, sx, sy, ts, tx, ty)
 
+        # Data Layer Overlays (Power, Pollution, Crime, Land Value, Traffic)
+        if self._overlay_mode > 0:
+            self._draw_overlay_layer(painter, min_tx, max_tx, min_ty, max_ty, ts, w, h)
+
         # Draw Commuter Trolley on top of rail network
         self._draw_trolley(painter, ts, w, h)
+
+        # Draw Active Simulation Sprites (Trains, Helicopters, Planes, Monster, Tornado, Explosions)
+        self._draw_sprites(painter, ts, w, h)
+
+        # Inspected Tile Glowing Target Bracket
+        if self._inspected_tile[0] >= 0 and self._inspected_tile[1] >= 0:
+            itx, ity = self._inspected_tile
+            ix, iy = self.tile_to_screen(itx, ity)
+            painter.save()
+            pulse = abs(math.sin(self._anim_tick * 0.18))
+            glow_pen = QPen(QColor(249, 226, 175, int(180 + 75 * pulse)), 2.5)
+            painter.setPen(glow_pen)
+            painter.setBrush(QBrush(QColor(249, 226, 175, 45)))
+            painter.drawRoundedRect(QRectF(ix - 1, iy - 1, ts + 2, ts + 2), 3, 3)
+
+            # Corner brackets
+            cl = max(4.0, ts * 0.35)
+            painter.setPen(QPen(QColor("#89dceb"), 2.0))
+            painter.drawLine(QPointF(ix - 2, iy - 2), QPointF(ix - 2 + cl, iy - 2))
+            painter.drawLine(QPointF(ix - 2, iy - 2), QPointF(ix - 2, iy - 2 + cl))
+            painter.drawLine(QPointF(ix + ts + 2, iy + ts + 2), QPointF(ix + ts + 2 - cl, iy + ts + 2))
+            painter.drawLine(QPointF(ix + ts + 2, iy + ts + 2), QPointF(ix + ts + 2, iy + ts + 2 - cl))
+            painter.restore()
 
         # Hovered Tool Footprint Overlay
         if 0 <= self._hover_x < 120 and 0 <= self._hover_y < 100 and self._active_tool >= 0:
@@ -544,6 +615,124 @@ class CityViewport(QQuickPaintedItem):
                 painter.setPen(QColor("#ffffff"))
                 painter.drawText(QRectF(hx, hy, fp_w, fp_h), Qt.AlignCenter, f"{footprint}x{footprint}")
 
+        painter.restore()
+
+    def _draw_overlay_layer(self, painter: QPainter, min_tx: int, max_tx: int, min_ty: int, max_ty: int, ts: float, w: float, h: float):
+        if not self._engine:
+            return
+        overlay_data = self._engine.get_overlay_data(self._overlay_mode)
+        if not overlay_data or len(overlay_data) < 12000:
+            return
+
+        painter.save()
+        mode = self._overlay_mode
+        for tx in range(min_tx, max_tx):
+            sx = (tx - self._cam_x) * ts + w / 2.0
+            col_idx = tx * 100
+            for ty in range(min_ty, max_ty):
+                sy = (ty - self._cam_y) * ts + h / 2.0
+                val = overlay_data[col_idx + ty]
+                rect = QRectF(sx, sy, ts + 0.5, ts + 0.5)
+
+                if mode == 1: # Power Grid
+                    raw = self._engine.fast_get_tile(tx, ty)
+                    t = raw & 0x03FF
+                    if val > 0:
+                        # Powered: bright electric cyan glow
+                        painter.fillRect(rect, QColor(0, 220, 255, 38))
+                    elif t >= 240: # Unpowered building
+                        # Blackout hatch
+                        painter.fillRect(rect, QColor(10, 10, 20, 175))
+                        painter.setPen(QPen(QColor(243, 139, 168, 200), 1.5))
+                        painter.drawLine(int(sx + 2), int(sy + 2), int(sx + ts - 2), int(sy + ts - 2))
+                elif mode == 2: # Pollution
+                    if val > 4:
+                        alpha = min(210, int(val * 0.8) + 25)
+                        painter.fillRect(rect, QColor(180, 80, 220, alpha))
+                elif mode == 3: # Crime
+                    if val > 4:
+                        alpha = min(210, int(val * 0.8) + 25)
+                        painter.fillRect(rect, QColor(235, 50, 60, alpha))
+                elif mode == 4: # Land Value
+                    if val > 4:
+                        alpha = min(210, int(val * 0.8) + 25)
+                        painter.fillRect(rect, QColor(46, 204, 113, alpha))
+                elif mode == 5: # Traffic
+                    if val > 4:
+                        alpha = min(210, int(val * 0.8) + 25)
+                        painter.fillRect(rect, QColor(245, 160, 20, alpha))
+        painter.restore()
+
+    def _draw_sprites(self, painter: QPainter, ts: float, w: float, h: float):
+        if not self._engine:
+            return
+        sprites = self._engine.get_sprites()
+        if not sprites:
+            return
+
+        painter.save()
+        for s in sprites:
+            # Sprite coords are in 1/16th tile units
+            stx = s['x'] / 16.0
+            sty = s['y'] / 16.0
+            sx = (stx - self._cam_x) * ts + w / 2.0
+            sy = (sty - self._cam_y) * ts + h / 2.0
+            stype = s['type']
+            frame = s['frame']
+
+            if stype == 1: # Train
+                painter.setBrush(QBrush(QColor("#a6e3a1")))
+                painter.setPen(QPen(QColor("#181825"), 1.5))
+                painter.drawRoundedRect(QRectF(sx - ts*0.4, sy - ts*0.4, ts*0.8, ts*0.8), 2, 2)
+            elif stype == 2: # Helicopter
+                painter.setBrush(QBrush(QColor("#f9e2af")))
+                painter.setPen(QPen(QColor("#11111b"), 1.5))
+                painter.drawEllipse(QRectF(sx - ts*0.5, sy - ts*0.5, ts, ts))
+                rot_ang = (self._anim_tick * 40) % 360
+                painter.setPen(QPen(QColor(255, 255, 255, 200), 2))
+                rad = ts * 0.7
+                dx = rad * math.cos(math.radians(rot_ang))
+                dy = rad * math.sin(math.radians(rot_ang))
+                painter.drawLine(QPointF(sx - dx, sy - dy), QPointF(sx + dx, sy + dy))
+            elif stype == 3: # Airplane
+                painter.setBrush(QBrush(QColor("#89dceb")))
+                painter.setPen(QPen(QColor("#11111b"), 1.5))
+                p = QPolygonF([
+                    QPointF(sx, sy - ts*0.8),
+                    QPointF(sx + ts*0.7, sy + ts*0.6),
+                    QPointF(sx, sy + ts*0.3),
+                    QPointF(sx - ts*0.7, sy + ts*0.6),
+                ])
+                painter.drawPolygon(p)
+            elif stype == 4: # Ship
+                painter.setBrush(QBrush(QColor("#cdd6f4")))
+                painter.setPen(QPen(QColor("#313244"), 1.5))
+                p = QPolygonF([
+                    QPointF(sx - ts*0.6, sy + ts*0.3),
+                    QPointF(sx + ts*0.6, sy + ts*0.3),
+                    QPointF(sx + ts*0.8, sy - ts*0.2),
+                    QPointF(sx - ts*0.8, sy - ts*0.2),
+                ])
+                painter.drawPolygon(p)
+            elif stype == 5: # Monster (Kaiju)
+                painter.setBrush(QBrush(QColor("#2d6a4f")))
+                painter.setPen(QPen(QColor("#081c15"), 2.0))
+                mw, mh = ts * 2.2, ts * 2.5
+                painter.drawEllipse(QRectF(sx - mw/2, sy - mh/2, mw, mh))
+                painter.setBrush(QBrush(QColor("#e63946")))
+                painter.setPen(Qt.NoPen)
+                painter.drawEllipse(QRectF(sx - mw*0.22, sy - mh*0.2, mw*0.14, mh*0.14))
+                painter.drawEllipse(QRectF(sx + mw*0.08, sy - mh*0.2, mw*0.14, mh*0.14))
+            elif stype == 6: # Tornado
+                painter.setBrush(QBrush(QColor(180, 190, 200, 190)))
+                painter.setPen(QPen(QColor(100, 110, 120, 220), 1.5))
+                tw, th = ts * 1.8, ts * 2.2
+                painter.drawEllipse(QRectF(sx - tw/2, sy - th/2, tw, th))
+            elif stype == 7: # Explosion
+                rad = ts * (0.8 + (frame % 4) * 0.4)
+                painter.setBrush(QBrush(QColor(255, 100, 30, 220)))
+                painter.setPen(QPen(QColor(255, 230, 80, 240), 2))
+                painter.drawEllipse(QRectF(sx - rad, sy - rad, rad * 2, rad * 2))
         painter.restore()
 
     def _draw_tile(self, painter: QPainter, raw: int, has_power: bool, sx: float, sy: float, ts: float, tx: int, ty: int):

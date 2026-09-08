@@ -710,4 +710,122 @@ int bytecity_get_sprites(ByteCityHandle handle, ByteCitySprite* out_sprites, int
     return count;
 }
 
+void bytecity_get_budget(ByteCityHandle handle,
+                         int64_t* tax_fund,
+                         int64_t* road_fund, int64_t* road_spend,
+                         int64_t* police_fund, int64_t* police_spend,
+                         int64_t* fire_fund, int64_t* fire_spend) {
+    if (!handle) return;
+    ByteCityContext* ctx = (ByteCityContext*)handle;
+    if (!ctx->sim) return;
+    if (tax_fund) *tax_fund = (int64_t)ctx->sim->taxFund;
+    if (road_fund) *road_fund = (int64_t)ctx->sim->roadFund;
+    if (road_spend) *road_spend = (int64_t)ctx->sim->roadSpend;
+    if (police_fund) *police_fund = (int64_t)ctx->sim->policeFund;
+    if (police_spend) *police_spend = (int64_t)ctx->sim->policeSpend;
+    if (fire_fund) *fire_fund = (int64_t)ctx->sim->fireFund;
+    if (fire_spend) *fire_spend = (int64_t)ctx->sim->fireSpend;
+}
+
+void bytecity_set_budget(ByteCityHandle handle, int tax_rate,
+                         float road_percent, float police_percent, float fire_percent) {
+    if (!handle) return;
+    ByteCityContext* ctx = (ByteCityContext*)handle;
+    if (!ctx->sim) return;
+    ctx->sim->cityTax = (short)std::max(0, std::min(20, tax_rate));
+    ctx->sim->roadSpend = (Quad)(ctx->sim->roadFund * std::max(0.0f, std::min(1.0f, road_percent)));
+    ctx->sim->policeSpend = (Quad)(ctx->sim->policeFund * std::max(0.0f, std::min(1.0f, police_percent)));
+    ctx->sim->fireSpend = (Quad)(ctx->sim->fireFund * std::max(0.0f, std::min(1.0f, fire_percent)));
+    ctx->sim->updateFundEffects();
+}
+
+void bytecity_collect_tax(ByteCityHandle handle) {
+    if (!handle) return;
+    ByteCityContext* ctx = (ByteCityContext*)handle;
+    if (!ctx->sim) return;
+    ctx->sim->collectTax();
+}
+
+void bytecity_query_tile(ByteCityHandle handle, int x, int y,
+                         int* tile_id, int* zone_type, int* land_val,
+                         int* crime_val, int* poll_val, bool* powered, bool* road_connected) {
+    if (!handle) return;
+    ByteCityContext* ctx = (ByteCityContext*)handle;
+    if (!ctx->sim) return;
+    if (x < 0 || x >= WORLD_W || y < 0 || y >= WORLD_H) return;
+
+    uint16_t tile = ctx->sim->map[x][y];
+    uint16_t t = tile & LOMASK;
+
+    if (tile_id) *tile_id = (int)t;
+    if (land_val) *land_val = (int)ctx->sim->landValueMap.worldGet(x, y);
+    if (crime_val) *crime_val = (int)ctx->sim->crimeRateMap.worldGet(x, y);
+    if (poll_val) *poll_val = (int)ctx->sim->pollutionDensityMap.worldGet(x, y);
+    if (powered) *powered = bytecity_has_power(handle, x, y);
+
+    int ztype = 0;
+    if ((tile & ZONEBIT) || (t >= RESBASE && t < COMBASE)) ztype = 1;
+    else if (t >= COMBASE && t < INDBASE) ztype = 2;
+    else if (t >= INDBASE && t < PORTBASE) ztype = 3;
+    else if (t >= COALBASE && t < COALBASE + 16) ztype = 4;
+    else if (t >= NUCLEARBASE && t < NUCLEARBASE + 16) ztype = 4;
+    else if (t >= POLICESTBASE && t < POLICESTBASE + 9) ztype = 5;
+    else if (t >= FIRESTBASE && t < FIRESTBASE + 9) ztype = 6;
+    else if (t >= WOODS5 && t <= FOUNTAIN) ztype = 7;
+    else if (t >= STADIUMBASE && t < STADIUMBASE + 16) ztype = 8;
+    else if (t >= PORTBASE && t < PORTBASE + 16) ztype = 9;
+    else if (t >= AIRPORTBASE && t < AIRPORTBASE + 36) ztype = 10;
+
+    if (zone_type) *zone_type = ztype;
+
+    bool has_road = false;
+    for (int dx = -1; dx <= 1; ++dx) {
+        for (int dy = -1; dy <= 1; ++dy) {
+            int cx = x + dx, cy = y + dy;
+            if (cx >= 0 && cx < WORLD_W && cy >= 0 && cy < WORLD_H) {
+                uint16_t ct = ctx->sim->map[cx][cy] & LOMASK;
+                if ((ct >= ROADBASE && ct <= LASTROAD) || (ct >= RAILBASE && ct <= LASTRAIL)) {
+                    has_road = true;
+                    break;
+                }
+            }
+        }
+        if (has_road) break;
+    }
+    if (road_connected) *road_connected = has_road;
+}
+
+void bytecity_get_overlay_map(ByteCityHandle handle, int overlay_type, uint8_t* out_buffer) {
+    if (!handle || !out_buffer) return;
+    ByteCityContext* ctx = (ByteCityContext*)handle;
+    if (!ctx->sim) return;
+
+    for (int x = 0; x < WORLD_W; ++x) {
+        for (int y = 0; y < WORLD_H; ++y) {
+            uint8_t val = 0;
+            switch (overlay_type) {
+                case 1: // Power
+                    val = bytecity_has_power(handle, x, y) ? 255 : 0;
+                    break;
+                case 2: // Pollution
+                    val = (uint8_t)std::min(255, (int)ctx->sim->pollutionDensityMap.worldGet(x, y));
+                    break;
+                case 3: // Crime
+                    val = (uint8_t)std::min(255, (int)ctx->sim->crimeRateMap.worldGet(x, y));
+                    break;
+                case 4: // Land Value
+                    val = (uint8_t)std::min(255, (int)ctx->sim->landValueMap.worldGet(x, y));
+                    break;
+                case 5: // Traffic / Terrain Density
+                    val = (uint8_t)std::min(255, (int)ctx->sim->terrainDensityMap.worldGet(x, y));
+                    break;
+                default:
+                    val = 0;
+                    break;
+            }
+            out_buffer[x * WORLD_H + y] = val;
+        }
+    }
+}
+
 } // extern "C"
