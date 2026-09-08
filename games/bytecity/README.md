@@ -1,6 +1,6 @@
 # ByteCity • Omarchy Arcade
 
-An authentic, legally safe, uncompromised city builder for the Omarchy Linux desktop arcade suite, powered by Will Wright's open-source 1989 **Micropolis (GPLv3)** C++ simulation core paired with a modern **2.5D dimetric isometric vector renderer** (PySide6 / QML).
+An authentic, legally safe, uncompromised city builder for the Omarchy Linux desktop arcade suite, powered by Will Wright's open-source 1989 **Micropolis (GPLv3)** C++ simulation core paired with a responsive **2D top-down arcade viewport** adhering to the Omarchy Arcade template design.
 
 ![ByteCity Gameplay](screenshot.png)
 
@@ -9,36 +9,37 @@ An authentic, legally safe, uncompromised city builder for the Omarchy Linux des
 ## Key Features
 
 1. **Authentic 1989 Simulation Engine:**
-   - 100% genuine C++ simulation logic (Micropolis GPLv3) compiled natively (`libmicropolis.so` on Omarchy Linux).
-   - Full cellular automaton zoning rules, power grid propagation, traffic pathfinding, pollution dissipation, land value gradients, and crime rates.
-   - Dynamic RCI (Residential, Commercial, Industrial) economic demand valves driven by market simulation.
-   - Live city treasury, tax policy slider (0%–20%), municipal maintenance funding, and public approval polling.
+   - 100% genuine C++ simulation logic (Micropolis GPLv3) compiled natively (`libmicropolis.dylib` on macOS, `libmicropolis.so` on Linux).
+   - Full cellular automaton zoning rules, power grid propagation, traffic, pollution, land value gradients, and crime rates.
+   - Dynamic RCI (Residential, Commercial, Industrial) economic demand gauges.
+   - Live city treasury, population count, and date calendar.
 
-2. **2.5D Dimetric Isometric Vector Renderer:**
-   - High-performance `CityViewport` (`QQuickPaintedItem`) with pure mathematical vector rendering (`QPainter`).
-   - Zero raster bitmap sprite sheets; adheres strictly to the Omarchy palette (Catppuccin Macchiato tones).
-   - Elevated building blocks, glowing window matrices, architectural roof geometries, power line poles with crossbars, and dynamic water ripples.
-   - Smooth mouse pan (middle-click drag or right-click drag) and mouse-wheel zoom (0.5x to 2.5x).
+2. **2D Orthographic Arcade Viewport:**
+   - High-performance `CityViewport` (`QQuickPaintedItem`) with pure mathematical 2D rendering (`QPainter`).
+   - Adheres strictly to Omarchy theme tokens (Catppuccin Macchiato, Mocha, Latte, etc.).
+   - Crisp pixel-art tiles, zone center markers ("R", "C", "I"), road connections, power lines, and live unpowered alerts (`⚡`).
+   - Smooth pan (drag right/middle mouse or WASD / Arrows) and zoom (mouse wheel or `+` / `-`).
 
 3. **Construction Palette:**
-   - **Bulldozer ($1):** Clear land and demolish structures.
-   - **Roads ($10):** Connect zones and conduct light traffic.
+   - **Bulldozer ($1):** Clear terrain, demolish buildings, and clear rubble.
+   - **Roads ($10):** Connect zones and conduct traffic.
    - **Power Wires ($5):** Transmit high-voltage electricity across non-zoned tiles.
-   - **Railroads ($20):** High-capacity transit mitigating vehicular gridlock.
-   - **Residential Zone ($100):** $3 \times 3$ housing plots developing from low-density to high-rise towers.
-   - **Commercial Zone ($100):** $3 \times 3$ office towers and commerce centers.
-   - **Industrial Zone ($100):** $3 \times 3$ manufacturing facilities with smokestacks.
-   - **Police Department ($500):** $3 \times 3$ precinct providing law enforcement coverage.
+   - **Railroads ($20):** High-capacity mass transit.
+   - **Residential Zone ($100):** $3 \times 3$ housing plots developing as population grows.
+   - **Commercial Zone ($100):** $3 \times 3$ commercial office and shop plots.
+   - **Industrial Zone ($100):** $3 \times 3$ manufacturing facilities.
+   - **Police Department ($500):** $3 \times 3$ precinct providing law enforcement.
    - **Fire Department ($500):** $3 \times 3$ station providing rapid fire response.
-   - **Coal Power Plant ($3,000):** $4 \times 4$ heavy plant generating substantial electricity with pollution.
+   - **Coal Power Plant ($3,000):** $4 \times 4$ heavy plant generating high electricity.
    - **Nuclear Power Plant ($5,000):** $4 \times 4$ clean high-output generator.
    - **Parks ($10):** Green open spaces boosting local land value.
+   - **Stadium ($5,000):** $4 \times 4$ entertainment venue.
+   - **Seaport ($3,000):** $4 \times 4$ maritime industrial port.
+   - **Airport ($10,000):** $6 \times 6$ international travel hub.
 
-4. **Municipal Governance & Emergency Response:**
-   - **Budget Modal:** Adjust city property taxes and observe expected annual revenues.
-   - **Evaluation Modal:** Poll citizens on mayor job approval and primary city grievances.
-   - **Disaster Drills:** Trigger Monster attacks, Earthquakes, Tornadoes, and Fires on demand.
-   - **Advisor Pill:** Live floating updates and notifications from the city advisor.
+4. **Floppy Disk Footprint:**
+   - Slimmed down to **1.2 MB**, fitting comfortably onto a standard 1.44 MB 3.5" HD floppy disk.
+   - 100% offline, zero cloud dependencies.
 
 ---
 
@@ -46,27 +47,23 @@ An authentic, legally safe, uncompromised city builder for the Omarchy Linux des
 
 | Action | Control |
 | :--- | :--- |
-| **Pan Camera** | Click & Drag (Middle Mouse Button or Right Mouse Button) |
-| **Zoom In / Out** | Mouse Wheel Scroll |
-| **Place Tool / Zone** | Left Click on Map |
-| **Select Tool** | Click tool in left palette or use numeric hotkeys |
-| **Simulation Speed** | Pause, 1x Normal, 2x Fast, 3x Hyper in Top Bar |
-| **Open Budget** | Click `Budget` button in Top Bar |
-| **Check Polls** | Click `Polls` button in Top Bar |
-| **Disasters Menu** | Click `Disasters` button in Top Bar |
+| **Pan Camera** | Click & Drag (Right or Middle Mouse Button), or WASD / Arrows / Vim HJKL |
+| **Zoom In / Out** | Mouse Wheel Scroll, or `+` / `-` keys |
+| **Place Tool / Zone** | Left Click on Map (Road, Wire, Rail, Doze support click-and-drag) |
+| **Select Tool** | Click tool in left dock |
+| **Simulation Speed** | `Space` (Pause/Resume), `1` (Normal), `2` (Fast), `3` (Ultra) |
+| **Audio Mute** | `M` key or click Speaker icon |
+| **Help / Handbook** | `?` key or click Question icon |
+| **Inaugurate New City** | Click `New City` button in header |
 
 ---
 
 ## Running ByteCity
 
-Launch from the project root using the virtual environment:
-
 ```bash
-/Users/christhompson/arcade/.venv/bin/python games/bytecity/main.py
-```
+# Launch directly with Python
+python3 games/bytecity/main.py
 
-To recompile the native simulation core:
-
-```bash
-make -C games/bytecity/native clean && make -C games/bytecity/native
+# Launch with a specific Omarchy theme
+python3 games/bytecity/main.py --theme catppuccin-latte
 ```

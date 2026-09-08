@@ -403,26 +403,25 @@
       "category": "Simulation & City",
       "floppy_color": "#0891B2",
       "grid_color": "#06B6D4",
-      "version": "0.9.0",
-      "status": "unreleased",
+      "version": "1.0.0",
+      "status": "released",
       "tagline": "Classic 1989 Micropolis City Simulation Homage",
-      "description": "Authentic 1989 Will Wright Micropolis C++ simulation engine with isometric 2.5D vector visuals. Manage RCI zoning, power grids, city budget, traffic, and municipal safety.",
+      "description": "Authentic 1989 Will Wright Micropolis C++ simulation engine in a responsive 2D arcade viewport. Manage RCI zoning, power grids, city budget, traffic, and municipal safety.",
       "instructions": [
-        "COMING SOON: Currently in preview engineering.",
         "Zone Residential (Green), Commercial (Blue), and Industrial (Yellow) plots.",
         "Connect infrastructure with power plants, power lines, and roads.",
         "Balance annual city budget tax rates against municipal services."
       ],
       "controls": {
-        "mouse": "Click tools in palette, click/drag on map to build",
-        "keyboard": "1\u20139 to select tools, WASD/Arrows to pan map, +/- to zoom"
+        "mouse": "Click tools in palette, click/drag on map to build, right-drag to pan",
+        "keyboard": "WASD/Arrows to pan map, +/- to zoom, Space to pause, 1-3 for speed"
       },
       "folder": "games/bytecity",
       "entrypoint": "games/bytecity/main.qml",
       "cover_image": "assets/covers/bytecity.png",
-      "size": "4.9 MB",
-      "size_bytes": 5176455,
-      "download_size": "4.9 MB"
+      "size": "1.2 MB",
+      "size_bytes": 1274929,
+      "download_size": "1.2 MB"
     },
     {
       "id": "galacticswarm",
