@@ -621,6 +621,19 @@ class CityViewport(QQuickPaintedItem):
 
     # --- Procedural Road & Bridge Renderer ---
 
+    def _is_road_connected(self, tx: int, ty: int) -> bool:
+        if not (0 <= tx < 120 and 0 <= ty < 100) or not self._engine:
+            return False
+        raw = self._engine.fast_get_tile(tx, ty)
+        t = raw & 0x03FF
+        # Roads (64..207)
+        if 64 <= t <= 207:
+            return True
+        # Rail/Road level crossings (237, 238)
+        if t in (237, 238):
+            return True
+        return False
+
     def _draw_road(self, painter: QPainter, t: int, sx: float, sy: float, ts: float, tx: int, ty: int):
         rect = QRectF(sx, sy, ts + 0.5, ts + 0.5)
 
@@ -672,24 +685,24 @@ class CityViewport(QQuickPaintedItem):
 
         # 77: HROADPOWER (Horizontal Road with Vertical Wire Crossing)
         if t == 77:
-            self._draw_road_straight_h(painter, sx, sy, ts)
+            self._draw_road_straight_h(painter, sx, sy, ts, tx, ty)
             self._draw_wire_crossing(painter, 77, sx, sy, ts)
             return
 
         # 78: VROADPOWER (Vertical Road with Horizontal Wire Crossing)
         if t == 78:
-            self._draw_road_straight_v(painter, sx, sy, ts)
+            self._draw_road_straight_v(painter, sx, sy, ts, tx, ty)
             self._draw_wire_crossing(painter, 78, sx, sy, ts)
             return
 
         # 66: Straight Horizontal Road
         if t == 66:
-            self._draw_road_straight_h(painter, sx, sy, ts)
+            self._draw_road_straight_h(painter, sx, sy, ts, tx, ty)
             return
 
         # 67: Straight Vertical Road
         if t == 67:
-            self._draw_road_straight_v(painter, sx, sy, ts)
+            self._draw_road_straight_v(painter, sx, sy, ts, tx, ty)
             return
 
         # Curves (68..71)
@@ -708,117 +721,287 @@ class CityViewport(QQuickPaintedItem):
             return
 
         # Generic road fallback
-        self._draw_road_straight_h(painter, sx, sy, ts)
+        self._draw_road_straight_h(painter, sx, sy, ts, tx, ty)
 
-    def _draw_road_straight_h(self, painter: QPainter, sx: float, sy: float, ts: float):
+    def _draw_road_straight_h(self, painter: QPainter, sx: float, sy: float, ts: float, tx: int = -1, ty: int = -1):
         # Asphalt body
         painter.fillRect(QRectF(sx, sy + ts * 0.16, ts + 0.5, ts * 0.68), COLOR_ROAD)
-        # Curbs
+        # Curbs (top and bottom)
         painter.setPen(QPen(COLOR_ROAD_CURB, max(1.0, ts * 0.06)))
         painter.drawLine(QPointF(sx, sy + ts * 0.16), QPointF(sx + ts, sy + ts * 0.16))
         painter.drawLine(QPointF(sx, sy + ts * 0.84), QPointF(sx + ts, sy + ts * 0.84))
+
+        conn_w = self._is_road_connected(tx - 1, ty) if (tx >= 0 and ty >= 0) else True
+        conn_e = self._is_road_connected(tx + 1, ty) if (tx >= 0 and ty >= 0) else True
+
+        # Dead-end capping curbs
+        curb_pen = QPen(COLOR_ROAD_CURB, max(1.2, ts * 0.08))
+        painter.setPen(curb_pen)
+        if not conn_w:
+            painter.drawLine(QPointF(sx, sy + ts * 0.16), QPointF(sx, sy + ts * 0.84))
+        if not conn_e:
+            painter.drawLine(QPointF(sx + ts, sy + ts * 0.16), QPointF(sx + ts, sy + ts * 0.84))
+
         # Dashed yellow lane
         if ts >= 10:
-            painter.setPen(QPen(COLOR_ROAD_LANE, max(1.0, ts * 0.08), Qt.DashLine))
-            painter.drawLine(QPointF(sx, sy + ts * 0.5), QPointF(sx + ts, sy + ts * 0.5))
+            x_start = sx + (ts * 0.28 if not conn_w else 0.0)
+            x_end = sx + ts - (ts * 0.28 if not conn_e else 0.0)
+            if x_end > x_start:
+                painter.setPen(QPen(COLOR_ROAD_LANE, max(1.0, ts * 0.08), Qt.DashLine))
+                painter.drawLine(QPointF(x_start, sy + ts * 0.5), QPointF(x_end, sy + ts * 0.5))
 
-    def _draw_road_straight_v(self, painter: QPainter, sx: float, sy: float, ts: float):
+    def _draw_road_straight_v(self, painter: QPainter, sx: float, sy: float, ts: float, tx: int = -1, ty: int = -1):
         # Asphalt body
         painter.fillRect(QRectF(sx + ts * 0.16, sy, ts * 0.68, ts + 0.5), COLOR_ROAD)
-        # Curbs
+        # Curbs (left and right)
         painter.setPen(QPen(COLOR_ROAD_CURB, max(1.0, ts * 0.06)))
         painter.drawLine(QPointF(sx + ts * 0.16, sy), QPointF(sx + ts * 0.16, sy + ts))
         painter.drawLine(QPointF(sx + ts * 0.84, sy), QPointF(sx + ts * 0.84, sy + ts))
+
+        conn_n = self._is_road_connected(tx, ty - 1) if (tx >= 0 and ty >= 0) else True
+        conn_s = self._is_road_connected(tx, ty + 1) if (tx >= 0 and ty >= 0) else True
+
+        # Dead-end capping curbs
+        curb_pen = QPen(COLOR_ROAD_CURB, max(1.2, ts * 0.08))
+        painter.setPen(curb_pen)
+        if not conn_n:
+            painter.drawLine(QPointF(sx + ts * 0.16, sy), QPointF(sx + ts * 0.84, sy))
+        if not conn_s:
+            painter.drawLine(QPointF(sx + ts * 0.16, sy + ts), QPointF(sx + ts * 0.84, sy + ts))
+
         # Dashed yellow lane
         if ts >= 10:
-            painter.setPen(QPen(COLOR_ROAD_LANE, max(1.0, ts * 0.08), Qt.DashLine))
-            painter.drawLine(QPointF(sx + ts * 0.5, sy), QPointF(sx + ts * 0.5, sy + ts))
+            y_start = sy + (ts * 0.28 if not conn_n else 0.0)
+            y_end = sy + ts - (ts * 0.28 if not conn_s else 0.0)
+            if y_end > y_start:
+                painter.setPen(QPen(COLOR_ROAD_LANE, max(1.0, ts * 0.08), Qt.DashLine))
+                painter.drawLine(QPointF(sx + ts * 0.5, y_start), QPointF(sx + ts * 0.5, y_end))
 
     def _draw_road_curve(self, painter: QPainter, t: int, sx: float, sy: float, ts: float):
-        # Corner curves: 68=NE, 69=ES, 70=SW, 71=WN
-        # Draw central junction and the two arms
-        painter.fillRect(QRectF(sx + ts * 0.16, sy + ts * 0.16, ts * 0.68, ts * 0.68), COLOR_ROAD)
+        # 68=NE, 69=ES, 70=SW, 71=WN
+        # Arc geometry: inner curb 0.16*ts, center lane 0.5*ts, outer curb 0.84*ts
+        r_in = ts * 0.16
+        r_mid = ts * 0.50
+        r_out = ts * 0.84
 
-        cx, cy = sx + ts * 0.5, sy + ts * 0.5
-        arc_path = QPainterPath()
+        if t == 68:  # North & East (Bottom-Left of a 2x2 loop)
+            cx, cy = sx + ts, sy
+            start_ang, span_ang = 180.0, 90.0
+        elif t == 69:  # East & South (Top-Left of a 2x2 loop)
+            cx, cy = sx + ts, sy + ts
+            start_ang, span_ang = 90.0, 90.0
+        elif t == 70:  # South & West (Top-Right of a 2x2 loop)
+            cx, cy = sx, sy + ts
+            start_ang, span_ang = 0.0, 90.0
+        else:  # 71: West & North (Bottom-Right of a 2x2 loop)
+            cx, cy = sx, sy
+            start_ang, span_ang = 270.0, 90.0
 
-        if t == 68:  # North & East
-            painter.fillRect(QRectF(sx + ts * 0.16, sy, ts * 0.68, ts * 0.5), COLOR_ROAD)
-            painter.fillRect(QRectF(cx, sy + ts * 0.16, ts * 0.5, ts * 0.68), COLOR_ROAD)
-            arc_path.moveTo(cx, sy)
-            arc_path.quadTo(cx, cy, sx + ts, cy)
-        elif t == 69:  # East & South
-            painter.fillRect(QRectF(cx, sy + ts * 0.16, ts * 0.5, ts * 0.68), COLOR_ROAD)
-            painter.fillRect(QRectF(sx + ts * 0.16, cy, ts * 0.68, ts * 0.5), COLOR_ROAD)
-            arc_path.moveTo(sx + ts, cy)
-            arc_path.quadTo(cx, cy, cx, sy + ts)
-        elif t == 70:  # South & West
-            painter.fillRect(QRectF(sx + ts * 0.16, cy, ts * 0.68, ts * 0.5), COLOR_ROAD)
-            painter.fillRect(QRectF(sx, sy + ts * 0.16, ts * 0.5, ts * 0.68), COLOR_ROAD)
-            arc_path.moveTo(cx, sy + ts)
-            arc_path.quadTo(cx, cy, sx, cy)
-        elif t == 71:  # West & North
-            painter.fillRect(QRectF(sx, sy + ts * 0.16, ts * 0.5, ts * 0.68), COLOR_ROAD)
-            painter.fillRect(QRectF(sx + ts * 0.16, sy, ts * 0.68, ts * 0.5), COLOR_ROAD)
-            arc_path.moveTo(sx, cy)
-            arc_path.quadTo(cx, cy, cx, sy)
+        # 1. Asphalt Body (annulus sector)
+        asphalt_path = QPainterPath()
+        asphalt_path.arcMoveTo(QRectF(cx - r_out, cy - r_out, 2 * r_out, 2 * r_out), start_ang)
+        asphalt_path.arcTo(QRectF(cx - r_out, cy - r_out, 2 * r_out, 2 * r_out), start_ang, span_ang)
+        asphalt_path.arcTo(QRectF(cx - r_in, cy - r_in, 2 * r_in, 2 * r_in), start_ang + span_ang, -span_ang)
+        asphalt_path.closeSubpath()
 
-        # Curved dashed yellow lane
-        if ts >= 12:
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(COLOR_ROAD)
+        painter.drawPath(asphalt_path)
+
+        # 2. Curbs (inner and outer circular arcs)
+        curb_pen = QPen(COLOR_ROAD_CURB, max(1.0, ts * 0.06))
+        painter.setPen(curb_pen)
+        painter.setBrush(Qt.NoBrush)
+
+        inner_curb = QPainterPath()
+        inner_curb.arcMoveTo(QRectF(cx - r_in, cy - r_in, 2 * r_in, 2 * r_in), start_ang)
+        inner_curb.arcTo(QRectF(cx - r_in, cy - r_in, 2 * r_in, 2 * r_in), start_ang, span_ang)
+        painter.drawPath(inner_curb)
+
+        outer_curb = QPainterPath()
+        outer_curb.arcMoveTo(QRectF(cx - r_out, cy - r_out, 2 * r_out, 2 * r_out), start_ang)
+        outer_curb.arcTo(QRectF(cx - r_out, cy - r_out, 2 * r_out, 2 * r_out), start_ang, span_ang)
+        painter.drawPath(outer_curb)
+
+        # 3. Dashed Yellow Center Lane Arc
+        if ts >= 10:
+            lane_path = QPainterPath()
+            lane_path.arcMoveTo(QRectF(cx - r_mid, cy - r_mid, 2 * r_mid, 2 * r_mid), start_ang)
+            lane_path.arcTo(QRectF(cx - r_mid, cy - r_mid, 2 * r_mid, 2 * r_mid), start_ang, span_ang)
             painter.setPen(QPen(COLOR_ROAD_LANE, max(1.0, ts * 0.08), Qt.DashLine))
-            painter.drawPath(arc_path)
+            painter.drawPath(lane_path)
 
     def _draw_road_t_junction(self, painter: QPainter, t: int, sx: float, sy: float, ts: float):
         # 72=NEW, 73=NES, 74=ESW, 75=NSW
-        cx, cy = sx + ts * 0.5, sy + ts * 0.5
-        stop_pen = QPen(COLOR_ROAD_STOP, max(1.5, ts * 0.09))
+        curb_pen = QPen(COLOR_ROAD_CURB, max(1.0, ts * 0.06))
+        lane_pen = QPen(COLOR_ROAD_LANE, max(1.0, ts * 0.08), Qt.DashLine)
+        cw_pen = QPen(COLOR_ROAD_STOP, max(1.0, ts * 0.05))
 
-        if t in (72, 74):  # Main road is Horizontal
-            self._draw_road_straight_h(painter, sx, sy, ts)
-            if t == 72:  # Stem goes North
-                painter.fillRect(QRectF(sx + ts * 0.16, sy, ts * 0.68, ts * 0.5), COLOR_ROAD)
-                painter.setPen(stop_pen)
-                painter.drawLine(QPointF(sx + ts * 0.2, sy + ts * 0.2), QPointF(sx + ts * 0.8, sy + ts * 0.2))
-            else:  # 74: Stem goes South
-                painter.fillRect(QRectF(sx + ts * 0.16, cy, ts * 0.68, ts * 0.5), COLOR_ROAD)
-                painter.setPen(stop_pen)
-                painter.drawLine(QPointF(sx + ts * 0.2, sy + ts * 0.8), QPointF(sx + ts * 0.8, sy + ts * 0.8))
-        else:  # Main road is Vertical (73, 75)
-            self._draw_road_straight_v(painter, sx, sy, ts)
-            if t == 73:  # Stem goes East
-                painter.fillRect(QRectF(cx, sy + ts * 0.16, ts * 0.5, ts * 0.68), COLOR_ROAD)
-                painter.setPen(stop_pen)
-                painter.drawLine(QPointF(sx + ts * 0.8, sy + ts * 0.2), QPointF(sx + ts * 0.8, sy + ts * 0.8))
-            else:  # 75: Stem goes West
-                painter.fillRect(QRectF(sx, sy + ts * 0.16, ts * 0.5, ts * 0.68), COLOR_ROAD)
-                painter.setPen(stop_pen)
-                painter.drawLine(QPointF(sx + ts * 0.2, sy + ts * 0.2), QPointF(sx + ts * 0.2, sy + ts * 0.8))
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(COLOR_ROAD)
+
+        if t == 72:  # NEW: Horizontal road + North stem
+            # Asphalt
+            painter.fillRect(QRectF(sx, sy + ts * 0.16, ts, ts * 0.68), COLOR_ROAD)
+            painter.fillRect(QRectF(sx + ts * 0.16, sy, ts * 0.68, ts * 0.5), COLOR_ROAD)
+            # Curbs
+            painter.setPen(curb_pen)
+            painter.drawLine(QPointF(sx, sy + ts * 0.84), QPointF(sx + ts, sy + ts * 0.84))
+            # Corner curbs
+            c1 = QPainterPath()
+            c1.moveTo(sx, sy + ts * 0.16)
+            c1.lineTo(sx + ts * 0.16, sy + ts * 0.16)
+            c1.lineTo(sx + ts * 0.16, sy)
+            painter.drawPath(c1)
+            c2 = QPainterPath()
+            c2.moveTo(sx + ts * 0.84, sy)
+            c2.lineTo(sx + ts * 0.84, sy + ts * 0.16)
+            c2.lineTo(sx + ts, sy + ts * 0.16)
+            painter.drawPath(c2)
+            # Dashed lanes
+            if ts >= 10:
+                painter.setPen(lane_pen)
+                painter.drawLine(QPointF(sx, sy + ts * 0.5), QPointF(sx + ts, sy + ts * 0.5))
+                painter.drawLine(QPointF(sx + ts * 0.5, sy), QPointF(sx + ts * 0.5, sy + ts * 0.5))
+            # Crosswalk across North entrance
+            if ts >= 14:
+                painter.setPen(cw_pen)
+                for i in range(3):
+                    xx = sx + ts * (0.28 + i * 0.16)
+                    painter.drawLine(QPointF(xx, sy + ts * 0.04), QPointF(xx, sy + ts * 0.13))
+
+        elif t == 74:  # ESW: Horizontal road + South stem
+            # Asphalt
+            painter.fillRect(QRectF(sx, sy + ts * 0.16, ts, ts * 0.68), COLOR_ROAD)
+            painter.fillRect(QRectF(sx + ts * 0.16, sy + ts * 0.5, ts * 0.68, ts * 0.5), COLOR_ROAD)
+            # Curbs
+            painter.setPen(curb_pen)
+            painter.drawLine(QPointF(sx, sy + ts * 0.16), QPointF(sx + ts, sy + ts * 0.16))
+            c1 = QPainterPath()
+            c1.moveTo(sx, sy + ts * 0.84)
+            c1.lineTo(sx + ts * 0.16, sy + ts * 0.84)
+            c1.lineTo(sx + ts * 0.16, sy + ts)
+            painter.drawPath(c1)
+            c2 = QPainterPath()
+            c2.moveTo(sx + ts * 0.84, sy + ts)
+            c2.lineTo(sx + ts * 0.84, sy + ts * 0.84)
+            c2.lineTo(sx + ts, sy + ts * 0.84)
+            painter.drawPath(c2)
+            # Dashed lanes
+            if ts >= 10:
+                painter.setPen(lane_pen)
+                painter.drawLine(QPointF(sx, sy + ts * 0.5), QPointF(sx + ts, sy + ts * 0.5))
+                painter.drawLine(QPointF(sx + ts * 0.5, sy + ts * 0.5), QPointF(sx + ts * 0.5, sy + ts))
+            # Crosswalk across South entrance
+            if ts >= 14:
+                painter.setPen(cw_pen)
+                for i in range(3):
+                    xx = sx + ts * (0.28 + i * 0.16)
+                    painter.drawLine(QPointF(xx, sy + ts * 0.87), QPointF(xx, sy + ts * 0.96))
+
+        elif t == 73:  # NES: Vertical road + East stem
+            # Asphalt
+            painter.fillRect(QRectF(sx + ts * 0.16, sy, ts * 0.68, ts), COLOR_ROAD)
+            painter.fillRect(QRectF(sx + ts * 0.5, sy + ts * 0.16, ts * 0.5, ts * 0.68), COLOR_ROAD)
+            # Curbs
+            painter.setPen(curb_pen)
+            painter.drawLine(QPointF(sx + ts * 0.16, sy), QPointF(sx + ts * 0.16, sy + ts))
+            c1 = QPainterPath()
+            c1.moveTo(sx + ts * 0.84, sy)
+            c1.lineTo(sx + ts * 0.84, sy + ts * 0.16)
+            c1.lineTo(sx + ts, sy + ts * 0.16)
+            painter.drawPath(c1)
+            c2 = QPainterPath()
+            c2.moveTo(sx + ts * 0.84, sy + ts)
+            c2.lineTo(sx + ts * 0.84, sy + ts * 0.84)
+            c2.lineTo(sx + ts, sy + ts * 0.84)
+            painter.drawPath(c2)
+            # Dashed lanes
+            if ts >= 10:
+                painter.setPen(lane_pen)
+                painter.drawLine(QPointF(sx + ts * 0.5, sy), QPointF(sx + ts * 0.5, sy + ts))
+                painter.drawLine(QPointF(sx + ts * 0.5, sy + ts * 0.5), QPointF(sx + ts, sy + ts * 0.5))
+            # Crosswalk across East entrance
+            if ts >= 14:
+                painter.setPen(cw_pen)
+                for i in range(3):
+                    yy = sy + ts * (0.28 + i * 0.16)
+                    painter.drawLine(QPointF(sx + ts * 0.87, yy), QPointF(sx + ts * 0.96, yy))
+
+        elif t == 75:  # NSW: Vertical road + West stem
+            # Asphalt
+            painter.fillRect(QRectF(sx + ts * 0.16, sy, ts * 0.68, ts), COLOR_ROAD)
+            painter.fillRect(QRectF(sx, sy + ts * 0.16, ts * 0.5, ts * 0.68), COLOR_ROAD)
+            # Curbs
+            painter.setPen(curb_pen)
+            painter.drawLine(QPointF(sx + ts * 0.84, sy), QPointF(sx + ts * 0.84, sy + ts))
+            c1 = QPainterPath()
+            c1.moveTo(sx + ts * 0.16, sy)
+            c1.lineTo(sx + ts * 0.16, sy + ts * 0.16)
+            c1.lineTo(sx, sy + ts * 0.16)
+            painter.drawPath(c1)
+            c2 = QPainterPath()
+            c2.moveTo(sx + ts * 0.16, sy + ts)
+            c2.lineTo(sx + ts * 0.16, sy + ts * 0.84)
+            c2.lineTo(sx, sy + ts * 0.84)
+            painter.drawPath(c2)
+            # Dashed lanes
+            if ts >= 10:
+                painter.setPen(lane_pen)
+                painter.drawLine(QPointF(sx + ts * 0.5, sy), QPointF(sx + ts * 0.5, sy + ts))
+                painter.drawLine(QPointF(sx, sy + ts * 0.5), QPointF(sx + ts * 0.5, sy + ts * 0.5))
+            # Crosswalk across West entrance
+            if ts >= 14:
+                painter.setPen(cw_pen)
+                for i in range(3):
+                    yy = sy + ts * (0.28 + i * 0.16)
+                    painter.drawLine(QPointF(sx + ts * 0.04, yy), QPointF(sx + ts * 0.13, yy))
 
     def _draw_road_intersection(self, painter: QPainter, sx: float, sy: float, ts: float):
         # 76: 4-Way Intersection
-        painter.fillRect(QRectF(sx, sy + ts * 0.16, ts + 0.5, ts * 0.68), COLOR_ROAD)
-        painter.fillRect(QRectF(sx + ts * 0.16, sy, ts * 0.68, ts + 0.5), COLOR_ROAD)
+        # Full open asphalt cross
+        painter.fillRect(QRectF(sx, sy + ts * 0.16, ts, ts * 0.68), COLOR_ROAD)
+        painter.fillRect(QRectF(sx + ts * 0.16, sy, ts * 0.68, ts), COLOR_ROAD)
 
-        # Crosswalks on each entrance
+        # 4 Corner Curbs (leaving all 4 arms open!)
+        curb_pen = QPen(COLOR_ROAD_CURB, max(1.0, ts * 0.06))
+        painter.setPen(curb_pen)
+
+        c1 = QPainterPath()
+        c1.moveTo(sx, sy + ts * 0.16)
+        c1.lineTo(sx + ts * 0.16, sy + ts * 0.16)
+        c1.lineTo(sx + ts * 0.16, sy)
+        painter.drawPath(c1)
+
+        c2 = QPainterPath()
+        c2.moveTo(sx + ts * 0.84, sy)
+        c2.lineTo(sx + ts * 0.84, sy + ts * 0.16)
+        c2.lineTo(sx + ts, sy + ts * 0.16)
+        painter.drawPath(c2)
+
+        c3 = QPainterPath()
+        c3.moveTo(sx, sy + ts * 0.84)
+        c3.lineTo(sx + ts * 0.16, sy + ts * 0.84)
+        c3.lineTo(sx + ts * 0.16, sy + ts)
+        painter.drawPath(c3)
+
+        c4 = QPainterPath()
+        c4.moveTo(sx + ts * 0.84, sy + ts)
+        c4.lineTo(sx + ts * 0.84, sy + ts * 0.84)
+        c4.lineTo(sx + ts, sy + ts * 0.84)
+        painter.drawPath(c4)
+
+        # Crosswalk zebra stripes on all 4 entrances
         if ts >= 14:
             cw_pen = QPen(COLOR_ROAD_STOP, max(1.0, ts * 0.05), Qt.SolidLine)
             painter.setPen(cw_pen)
-            # North crosswalk
             for i in range(3):
                 xx = sx + ts * (0.28 + i * 0.16)
-                painter.drawLine(QPointF(xx, sy + ts * 0.05), QPointF(xx, sy + ts * 0.14))
-            # South crosswalk
-            for i in range(3):
-                xx = sx + ts * (0.28 + i * 0.16)
-                painter.drawLine(QPointF(xx, sy + ts * 0.86), QPointF(xx, sy + ts * 0.95))
-            # West crosswalk
-            for i in range(3):
+                painter.drawLine(QPointF(xx, sy + ts * 0.04), QPointF(xx, sy + ts * 0.13))
+                painter.drawLine(QPointF(xx, sy + ts * 0.87), QPointF(xx, sy + ts * 0.96))
                 yy = sy + ts * (0.28 + i * 0.16)
-                painter.drawLine(QPointF(sx + ts * 0.05, yy), QPointF(sx + ts * 0.14, yy))
-            # East crosswalk
-            for i in range(3):
-                yy = sy + ts * (0.28 + i * 0.16)
-                painter.drawLine(QPointF(sx + ts * 0.86, yy), QPointF(sx + ts * 0.95, yy))
+                painter.drawLine(QPointF(sx + ts * 0.04, yy), QPointF(sx + ts * 0.13, yy))
+                painter.drawLine(QPointF(sx + ts * 0.87, yy), QPointF(sx + ts * 0.96, yy))
 
     # --- Animated Road Traffic Renderer ---
 
@@ -897,6 +1080,20 @@ class CityViewport(QQuickPaintedItem):
 
     # --- Procedural Railroad & Crossing Renderer ---
 
+    def _is_rail_connected(self, tx: int, ty: int) -> bool:
+        if not (0 <= tx < 120 and 0 <= ty < 100) or not self._engine:
+            return False
+        raw = self._engine.fast_get_tile(tx, ty)
+        t = raw & 0x03FF
+        # Rail tiles
+        if 224 <= t <= 239:
+            return True
+        if t in (221, 222):
+            return True
+        if 240 <= t <= 255:
+            return True
+        return False
+
     def _draw_rail(self, painter: QPainter, t: int, sx: float, sy: float, ts: float, tx: int, ty: int):
         rect = QRectF(sx, sy, ts + 0.5, ts + 0.5)
 
@@ -905,7 +1102,7 @@ class CityViewport(QQuickPaintedItem):
             painter.fillRect(rect, COLOR_WATER)
             # Heavy timber bridge beams
             painter.fillRect(QRectF(sx, sy + ts * 0.18, ts + 0.5, ts * 0.64), COLOR_RAIL_BALLAST)
-            self._draw_rail_straight_h(painter, sx, sy, ts)
+            self._draw_rail_straight_h(painter, sx, sy, ts, tx, ty)
             # Steel bridge guardrails
             painter.setPen(QPen(COLOR_BRIDGE_BARRIER, max(1.0, ts * 0.06)))
             painter.drawLine(QPointF(sx, sy + ts * 0.18), QPointF(sx + ts, sy + ts * 0.18))
@@ -916,7 +1113,7 @@ class CityViewport(QQuickPaintedItem):
         if t == 225:
             painter.fillRect(rect, COLOR_WATER)
             painter.fillRect(QRectF(sx + ts * 0.18, sy, ts * 0.64, ts + 0.5), COLOR_RAIL_BALLAST)
-            self._draw_rail_straight_v(painter, sx, sy, ts)
+            self._draw_rail_straight_v(painter, sx, sy, ts, tx, ty)
             painter.setPen(QPen(COLOR_BRIDGE_BARRIER, max(1.0, ts * 0.06)))
             painter.drawLine(QPointF(sx + ts * 0.18, sy), QPointF(sx + ts * 0.18, sy + ts))
             painter.drawLine(QPointF(sx + ts * 0.82, sy), QPointF(sx + ts * 0.82, sy + ts))
@@ -927,12 +1124,12 @@ class CityViewport(QQuickPaintedItem):
 
         # 226: Straight Horizontal Rail
         if t == 226:
-            self._draw_rail_straight_h(painter, sx, sy, ts)
+            self._draw_rail_straight_h(painter, sx, sy, ts, tx, ty)
             return
 
         # 227: Straight Vertical Rail
         if t == 227:
-            self._draw_rail_straight_v(painter, sx, sy, ts)
+            self._draw_rail_straight_v(painter, sx, sy, ts, tx, ty)
             return
 
         # Curves (228..231)
@@ -945,11 +1142,16 @@ class CityViewport(QQuickPaintedItem):
             self._draw_rail_junction(painter, t, sx, sy, ts)
             return
 
-        self._draw_rail_straight_h(painter, sx, sy, ts)
+        self._draw_rail_straight_h(painter, sx, sy, ts, tx, ty)
 
-    def _draw_rail_straight_h(self, painter: QPainter, sx: float, sy: float, ts: float):
+    def _draw_rail_straight_h(self, painter: QPainter, sx: float, sy: float, ts: float, tx: int = -1, ty: int = -1):
+        conn_w = self._is_rail_connected(tx - 1, ty) if (tx >= 0 and ty >= 0) else True
+        conn_e = self._is_rail_connected(tx + 1, ty) if (tx >= 0 and ty >= 0) else True
+
         # Ballast gravel bed
-        painter.fillRect(QRectF(sx, sy + ts * 0.18, ts + 0.5, ts * 0.64), COLOR_RAIL_BALLAST)
+        bx_start = sx + (ts * 0.12 if not conn_w else 0.0)
+        bx_end = sx + ts - (ts * 0.12 if not conn_e else 0.0)
+        painter.fillRect(QRectF(bx_start, sy + ts * 0.18, max(0.0, bx_end - bx_start) + 0.5, ts * 0.64), COLOR_RAIL_BALLAST)
 
         # Wooden sleepers (ties) spaced along tile
         tie_w = max(1.5, ts * 0.09)
@@ -957,7 +1159,12 @@ class CityViewport(QQuickPaintedItem):
         painter.setPen(tie_pen)
         num_ties = max(3, int(ts / 5.5))
         for i in range(num_ties):
-            tx_pos = sx + ts * ((i + 0.5) / num_ties)
+            frac = (i + 0.5) / num_ties
+            if not conn_w and frac < 0.25:
+                continue
+            if not conn_e and frac > 0.75:
+                continue
+            tx_pos = sx + ts * frac
             painter.drawLine(QPointF(tx_pos, sy + ts * 0.22), QPointF(tx_pos, sy + ts * 0.78))
 
         # Dual parallel steel tracks
@@ -966,16 +1173,34 @@ class CityViewport(QQuickPaintedItem):
 
         y1 = sy + ts * 0.35
         y2 = sy + ts * 0.65
-        painter.setPen(track_dark)
-        painter.drawLine(QPointF(sx, y1), QPointF(sx + ts, y1))
-        painter.drawLine(QPointF(sx, y2), QPointF(sx + ts, y2))
-        painter.setPen(track_light)
-        painter.drawLine(QPointF(sx, y1 - 0.5), QPointF(sx + ts, y1 - 0.5))
-        painter.drawLine(QPointF(sx, y2 - 0.5), QPointF(sx + ts, y2 - 0.5))
+        rx_start = sx + (ts * 0.22 if not conn_w else 0.0)
+        rx_end = sx + ts - (ts * 0.22 if not conn_e else 0.0)
 
-    def _draw_rail_straight_v(self, painter: QPainter, sx: float, sy: float, ts: float):
+        painter.setPen(track_dark)
+        painter.drawLine(QPointF(rx_start, y1), QPointF(rx_end, y1))
+        painter.drawLine(QPointF(rx_start, y2), QPointF(rx_end, y2))
+        painter.setPen(track_light)
+        painter.drawLine(QPointF(rx_start, y1 - 0.5), QPointF(rx_end, y1 - 0.5))
+        painter.drawLine(QPointF(rx_start, y2 - 0.5), QPointF(rx_end, y2 - 0.5))
+
+        # Buffer stops at dead ends
+        if not conn_w:
+            buf_x = sx + ts * 0.14
+            painter.fillRect(QRectF(buf_x, sy + ts * 0.26, ts * 0.08, ts * 0.48), QColor("#6c584c"))
+            painter.fillRect(QRectF(buf_x + ts * 0.02, sy + ts * 0.31, ts * 0.04, ts * 0.38), QColor("#c1121f"))
+        if not conn_e:
+            buf_x = sx + ts * 0.78
+            painter.fillRect(QRectF(buf_x, sy + ts * 0.26, ts * 0.08, ts * 0.48), QColor("#6c584c"))
+            painter.fillRect(QRectF(buf_x + ts * 0.02, sy + ts * 0.31, ts * 0.04, ts * 0.38), QColor("#c1121f"))
+
+    def _draw_rail_straight_v(self, painter: QPainter, sx: float, sy: float, ts: float, tx: int = -1, ty: int = -1):
+        conn_n = self._is_rail_connected(tx, ty - 1) if (tx >= 0 and ty >= 0) else True
+        conn_s = self._is_rail_connected(tx, ty + 1) if (tx >= 0 and ty >= 0) else True
+
         # Ballast gravel bed
-        painter.fillRect(QRectF(sx + ts * 0.18, sy, ts * 0.64, ts + 0.5), COLOR_RAIL_BALLAST)
+        by_start = sy + (ts * 0.12 if not conn_n else 0.0)
+        by_end = sy + ts - (ts * 0.12 if not conn_s else 0.0)
+        painter.fillRect(QRectF(sx + ts * 0.18, by_start, ts * 0.64, max(0.0, by_end - by_start) + 0.5), COLOR_RAIL_BALLAST)
 
         # Wooden sleepers (ties) spaced vertically
         tie_h = max(1.5, ts * 0.09)
@@ -983,7 +1208,12 @@ class CityViewport(QQuickPaintedItem):
         painter.setPen(tie_pen)
         num_ties = max(3, int(ts / 5.5))
         for i in range(num_ties):
-            ty_pos = sy + ts * ((i + 0.5) / num_ties)
+            frac = (i + 0.5) / num_ties
+            if not conn_n and frac < 0.25:
+                continue
+            if not conn_s and frac > 0.75:
+                continue
+            ty_pos = sy + ts * frac
             painter.drawLine(QPointF(sx + ts * 0.22, ty_pos), QPointF(sx + ts * 0.78, ty_pos))
 
         # Dual parallel steel tracks
@@ -992,63 +1222,184 @@ class CityViewport(QQuickPaintedItem):
 
         x1 = sx + ts * 0.35
         x2 = sx + ts * 0.65
+        ry_start = sy + (ts * 0.22 if not conn_n else 0.0)
+        ry_end = sy + ts - (ts * 0.22 if not conn_s else 0.0)
+
         painter.setPen(track_dark)
-        painter.drawLine(QPointF(x1, sy), QPointF(x1, sy + ts))
-        painter.drawLine(QPointF(x2, sy), QPointF(x2, sy + ts))
+        painter.drawLine(QPointF(x1, ry_start), QPointF(x1, ry_end))
+        painter.drawLine(QPointF(x2, ry_start), QPointF(x2, ry_end))
         painter.setPen(track_light)
-        painter.drawLine(QPointF(x1 - 0.5, sy), QPointF(x1 - 0.5, sy + ts))
-        painter.drawLine(QPointF(x2 - 0.5, sy), QPointF(x2 - 0.5, sy + ts))
+        painter.drawLine(QPointF(x1 - 0.5, ry_start), QPointF(x1 - 0.5, ry_end))
+        painter.drawLine(QPointF(x2 - 0.5, ry_start), QPointF(x2 - 0.5, ry_end))
+
+        # Buffer stops at dead ends
+        if not conn_n:
+            buf_y = sy + ts * 0.14
+            painter.fillRect(QRectF(sx + ts * 0.26, buf_y, ts * 0.48, ts * 0.08), QColor("#6c584c"))
+            painter.fillRect(QRectF(sx + ts * 0.31, buf_y + ts * 0.02, ts * 0.38, ts * 0.04), QColor("#c1121f"))
+        if not conn_s:
+            buf_y = sy + ts * 0.78
+            painter.fillRect(QRectF(sx + ts * 0.26, buf_y, ts * 0.48, ts * 0.08), QColor("#6c584c"))
+            painter.fillRect(QRectF(sx + ts * 0.31, buf_y + ts * 0.02, ts * 0.38, ts * 0.04), QColor("#c1121f"))
 
     def _draw_rail_curve(self, painter: QPainter, t: int, sx: float, sy: float, ts: float):
-        cx, cy = sx + ts * 0.5, sy + ts * 0.5
-        # Ballast in corner
-        painter.fillRect(QRectF(sx + ts * 0.18, sy + ts * 0.18, ts * 0.64, ts * 0.64), COLOR_RAIL_BALLAST)
+        # 228=NE (Bottom-Left), 229=ES (Top-Left), 230=SW (Top-Right), 231=WN (Bottom-Right)
+        r_in = ts * 0.35
+        r_out = ts * 0.65
+        r_in_b = ts * 0.18
+        r_out_b = ts * 0.82
 
-        # Draw arms and curved tracks
-        track_pen = QPen(COLOR_RAIL_STEEL, max(1.2, ts * 0.07))
-        painter.setPen(track_pen)
+        if t == 228:  # North & East (Bottom-Left of a 2x2 loop)
+            cx, cy = sx + ts, sy
+            start_ang, span_ang = 180.0, 90.0
+            tie_angles = [202.5, 225.0, 247.5]
+        elif t == 229:  # East & South (Top-Left of a 2x2 loop)
+            cx, cy = sx + ts, sy + ts
+            start_ang, span_ang = 90.0, 90.0
+            tie_angles = [112.5, 135.0, 157.5]
+        elif t == 230:  # South & West (Top-Right of a 2x2 loop)
+            cx, cy = sx, sy + ts
+            start_ang, span_ang = 0.0, 90.0
+            tie_angles = [22.5, 45.0, 67.5]
+        else:  # 231: West & North (Bottom-Right of a 2x2 loop)
+            cx, cy = sx, sy
+            start_ang, span_ang = 270.0, 90.0
+            tie_angles = [292.5, 315.0, 337.5]
 
-        p1 = QPainterPath()
-        p2 = QPainterPath()
+        # 1. Ballast gravel bed (annulus sector)
+        ballast_path = QPainterPath()
+        ballast_path.arcMoveTo(QRectF(cx - r_out_b, cy - r_out_b, 2 * r_out_b, 2 * r_out_b), start_ang)
+        ballast_path.arcTo(QRectF(cx - r_out_b, cy - r_out_b, 2 * r_out_b, 2 * r_out_b), start_ang, span_ang)
+        ballast_path.arcTo(QRectF(cx - r_in_b, cy - r_in_b, 2 * r_in_b, 2 * r_in_b), start_ang + span_ang, -span_ang)
+        ballast_path.closeSubpath()
 
-        if t == 228:  # NE
-            painter.fillRect(QRectF(sx + ts * 0.18, sy, ts * 0.64, ts * 0.5), COLOR_RAIL_BALLAST)
-            painter.fillRect(QRectF(cx, sy + ts * 0.18, ts * 0.5, ts * 0.64), COLOR_RAIL_BALLAST)
-            p1.moveTo(sx + ts * 0.35, sy)
-            p1.quadTo(sx + ts * 0.35, sy + ts * 0.35, sx + ts, sy + ts * 0.35)
-            p2.moveTo(sx + ts * 0.65, sy)
-            p2.quadTo(sx + ts * 0.65, sy + ts * 0.65, sx + ts, sy + ts * 0.65)
-        elif t == 229:  # ES
-            painter.fillRect(QRectF(cx, sy + ts * 0.18, ts * 0.5, ts * 0.64), COLOR_RAIL_BALLAST)
-            painter.fillRect(QRectF(sx + ts * 0.18, cy, ts * 0.64, ts * 0.5), COLOR_RAIL_BALLAST)
-            p1.moveTo(sx + ts, sy + ts * 0.35)
-            p1.quadTo(sx + ts * 0.65, sy + ts * 0.35, sx + ts * 0.65, sy + ts)
-            p2.moveTo(sx + ts, sy + ts * 0.65)
-            p2.quadTo(sx + ts * 0.35, sy + ts * 0.65, sx + ts * 0.35, sy + ts)
-        elif t == 230:  # SW
-            painter.fillRect(QRectF(sx + ts * 0.18, cy, ts * 0.64, ts * 0.5), COLOR_RAIL_BALLAST)
-            painter.fillRect(QRectF(sx, sy + ts * 0.18, ts * 0.5, ts * 0.64), COLOR_RAIL_BALLAST)
-            p1.moveTo(sx + ts * 0.65, sy + ts)
-            p1.quadTo(sx + ts * 0.65, sy + ts * 0.65, sx, sy + ts * 0.65)
-            p2.moveTo(sx + ts * 0.35, sy + ts)
-            p2.quadTo(sx + ts * 0.35, sy + ts * 0.35, sx, sy + ts * 0.35)
-        elif t == 231:  # WN
-            painter.fillRect(QRectF(sx, sy + ts * 0.18, ts * 0.5, ts * 0.64), COLOR_RAIL_BALLAST)
-            painter.fillRect(QRectF(sx + ts * 0.18, sy, ts * 0.64, ts * 0.5), COLOR_RAIL_BALLAST)
-            p1.moveTo(sx, sy + ts * 0.65)
-            p1.quadTo(sx + ts * 0.35, sy + ts * 0.65, sx + ts * 0.35, sy)
-            p2.moveTo(sx, sy + ts * 0.35)
-            p2.quadTo(sx + ts * 0.65, sy + ts * 0.35, sx + ts * 0.65, sy)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(COLOR_RAIL_BALLAST)
+        painter.drawPath(ballast_path)
 
-        painter.drawPath(p1)
-        painter.drawPath(p2)
+        # 2. Radial wooden ties (sleepers)
+        tie_pen = QPen(COLOR_RAIL_TIE, max(1.5, ts * 0.09))
+        painter.setPen(tie_pen)
+        for ang in tie_angles:
+            rad = math.radians(ang)
+            tx1 = cx + ts * 0.22 * math.cos(rad)
+            ty1 = cy - ts * 0.22 * math.sin(rad)
+            tx2 = cx + ts * 0.78 * math.cos(rad)
+            ty2 = cy - ts * 0.78 * math.sin(rad)
+            painter.drawLine(QPointF(tx1, ty1), QPointF(tx2, ty2))
+
+        # 3. Dual steel tracks (concentric circular arcs)
+        track_dark = QPen(COLOR_RAIL_STEEL_DARK, max(1.5, ts * 0.08))
+        track_light = QPen(COLOR_RAIL_STEEL, max(1.0, ts * 0.05))
+
+        arc_in = QPainterPath()
+        arc_in.arcMoveTo(QRectF(cx - r_in, cy - r_in, 2 * r_in, 2 * r_in), start_ang)
+        arc_in.arcTo(QRectF(cx - r_in, cy - r_in, 2 * r_in, 2 * r_in), start_ang, span_ang)
+
+        arc_out = QPainterPath()
+        arc_out.arcMoveTo(QRectF(cx - r_out, cy - r_out, 2 * r_out, 2 * r_out), start_ang)
+        arc_out.arcTo(QRectF(cx - r_out, cy - r_out, 2 * r_out, 2 * r_out), start_ang, span_ang)
+
+        painter.setBrush(Qt.NoBrush)
+        painter.setPen(track_dark)
+        painter.drawPath(arc_in)
+        painter.drawPath(arc_out)
+        painter.setPen(track_light)
+        painter.drawPath(arc_in)
+        painter.drawPath(arc_out)
 
     def _draw_rail_junction(self, painter: QPainter, t: int, sx: float, sy: float, ts: float):
-        # Full ballast junction
-        painter.fillRect(QRectF(sx + ts * 0.18, sy, ts * 0.64, ts + 0.5), COLOR_RAIL_BALLAST)
-        painter.fillRect(QRectF(sx, sy + ts * 0.18, ts + 0.5, ts * 0.64), COLOR_RAIL_BALLAST)
-        self._draw_rail_straight_h(painter, sx, sy, ts)
-        self._draw_rail_straight_v(painter, sx, sy, ts)
+        # 232=NEW, 233=NES, 234=ESW, 235=NSW, 236=NESW
+        has_n = t in (232, 233, 235, 236)
+        has_e = t in (232, 233, 234, 236)
+        has_s = t in (233, 234, 235, 236)
+        has_w = t in (232, 234, 235, 236)
+
+        # Center ballast
+        painter.fillRect(QRectF(sx + ts * 0.18, sy + ts * 0.18, ts * 0.64, ts * 0.64), COLOR_RAIL_BALLAST)
+        if has_n:
+            painter.fillRect(QRectF(sx + ts * 0.18, sy, ts * 0.64, ts * 0.25), COLOR_RAIL_BALLAST)
+        if has_s:
+            painter.fillRect(QRectF(sx + ts * 0.18, sy + ts * 0.75, ts * 0.64, ts * 0.25 + 0.5), COLOR_RAIL_BALLAST)
+        if has_w:
+            painter.fillRect(QRectF(sx, sy + ts * 0.18, ts * 0.25, ts * 0.64), COLOR_RAIL_BALLAST)
+        if has_e:
+            painter.fillRect(QRectF(sx + ts * 0.75, sy + ts * 0.18, ts * 0.25 + 0.5, ts * 0.64), COLOR_RAIL_BALLAST)
+
+        # Sleepers (ties) only on entry branches outside central crossing zone
+        tie_pen = QPen(COLOR_RAIL_TIE, max(1.5, ts * 0.09))
+        painter.setPen(tie_pen)
+        if has_w:
+            painter.drawLine(QPointF(sx + ts * 0.10, sy + ts * 0.22), QPointF(sx + ts * 0.10, sy + ts * 0.78))
+        if has_e:
+            painter.drawLine(QPointF(sx + ts * 0.90, sy + ts * 0.22), QPointF(sx + ts * 0.90, sy + ts * 0.78))
+        if has_n:
+            painter.drawLine(QPointF(sx + ts * 0.22, sy + ts * 0.10), QPointF(sx + ts * 0.78, sy + ts * 0.10))
+        if has_s:
+            painter.drawLine(QPointF(sx + ts * 0.22, sy + ts * 0.90), QPointF(sx + ts * 0.78, sy + ts * 0.90))
+
+        # Parallel steel tracks
+        track_dark = QPen(COLOR_RAIL_STEEL_DARK, max(1.5, ts * 0.08))
+        track_light = QPen(COLOR_RAIL_STEEL, max(1.0, ts * 0.05))
+
+        x1 = sx + ts * 0.35
+        x2 = sx + ts * 0.65
+        y1 = sy + ts * 0.35
+        y2 = sy + ts * 0.65
+
+        # Horizontal rails
+        if has_w and has_e:
+            painter.setPen(track_dark)
+            painter.drawLine(QPointF(sx, y1), QPointF(sx + ts, y1))
+            painter.drawLine(QPointF(sx, y2), QPointF(sx + ts, y2))
+            painter.setPen(track_light)
+            painter.drawLine(QPointF(sx, y1 - 0.5), QPointF(sx + ts, y1 - 0.5))
+            painter.drawLine(QPointF(sx, y2 - 0.5), QPointF(sx + ts, y2 - 0.5))
+        elif has_w:
+            painter.setPen(track_dark)
+            painter.drawLine(QPointF(sx, y1), QPointF(x2, y1))
+            painter.drawLine(QPointF(sx, y2), QPointF(x2, y2))
+            painter.setPen(track_light)
+            painter.drawLine(QPointF(sx, y1 - 0.5), QPointF(x2, y1 - 0.5))
+            painter.drawLine(QPointF(sx, y2 - 0.5), QPointF(x2, y2 - 0.5))
+        elif has_e:
+            painter.setPen(track_dark)
+            painter.drawLine(QPointF(x1, y1), QPointF(sx + ts, y1))
+            painter.drawLine(QPointF(x1, y2), QPointF(sx + ts, y2))
+            painter.setPen(track_light)
+            painter.drawLine(QPointF(x1, y1 - 0.5), QPointF(sx + ts, y1 - 0.5))
+            painter.drawLine(QPointF(x1, y2 - 0.5), QPointF(sx + ts, y2 - 0.5))
+
+        # Vertical rails
+        if has_n and has_s:
+            painter.setPen(track_dark)
+            painter.drawLine(QPointF(x1, sy), QPointF(x1, sy + ts))
+            painter.drawLine(QPointF(x2, sy), QPointF(x2, sy + ts))
+            painter.setPen(track_light)
+            painter.drawLine(QPointF(x1 - 0.5, sy), QPointF(x1 - 0.5, sy + ts))
+            painter.drawLine(QPointF(x2 - 0.5, sy), QPointF(x2 - 0.5, sy + ts))
+        elif has_n:
+            painter.setPen(track_dark)
+            painter.drawLine(QPointF(x1, sy), QPointF(x1, y2))
+            painter.drawLine(QPointF(x2, sy), QPointF(x2, y2))
+            painter.setPen(track_light)
+            painter.drawLine(QPointF(x1 - 0.5, sy), QPointF(x1 - 0.5, y2))
+            painter.drawLine(QPointF(x2 - 0.5, sy), QPointF(x2 - 0.5, y2))
+        elif has_s:
+            painter.setPen(track_dark)
+            painter.drawLine(QPointF(x1, y1), QPointF(x1, sy + ts))
+            painter.drawLine(QPointF(x2, y1), QPointF(x2, sy + ts))
+            painter.setPen(track_light)
+            painter.drawLine(QPointF(x1 - 0.5, y1), QPointF(x1 - 0.5, sy + ts))
+            painter.drawLine(QPointF(x2 - 0.5, y1), QPointF(x2 - 0.5, sy + ts))
+
+        # Diamond crossover center frog accent for 4-way crossings
+        if t == 236:
+            frog_pen = QPen(COLOR_RAIL_STEEL_DARK, max(1.2, ts * 0.06))
+            painter.setPen(frog_pen)
+            cx, cy = sx + ts * 0.5, sy + ts * 0.5
+            cr = ts * 0.06
+            painter.drawRect(QRectF(cx - cr, cy - cr, cr * 2, cr * 2))
 
     def _draw_rail_crossing(self, painter: QPainter, t: int, sx: float, sy: float, ts: float, tx: int, ty: int):
         # 237: HRAILROAD (Rail E-W, Road N-S)
@@ -1067,11 +1418,12 @@ class CityViewport(QQuickPaintedItem):
             painter.setPen(track_pen)
             painter.drawLine(QPointF(sx, sy + ts * 0.35), QPointF(sx + ts, sy + ts * 0.35))
             painter.drawLine(QPointF(sx, sy + ts * 0.65), QPointF(sx + ts, sy + ts * 0.65))
-            # Road warning line on approaches
+            # Yellow warning dashed lines on road approaches
             if ts >= 12:
-                painter.setPen(QPen(COLOR_ROAD_STOP, max(1.0, ts * 0.06)))
-                painter.drawLine(QPointF(sx + ts * 0.22, sy + ts * 0.12), QPointF(sx + ts * 0.78, sy + ts * 0.12))
-                painter.drawLine(QPointF(sx + ts * 0.22, sy + ts * 0.88), QPointF(sx + ts * 0.78, sy + ts * 0.88))
+                warn_pen = QPen(QColor("#ffd60a"), max(1.0, ts * 0.07), Qt.DotLine)
+                painter.setPen(warn_pen)
+                painter.drawLine(QPointF(sx + ts * 0.18, sy + ts * 0.20), QPointF(sx + ts * 0.82, sy + ts * 0.20))
+                painter.drawLine(QPointF(sx + ts * 0.18, sy + ts * 0.80), QPointF(sx + ts * 0.82, sy + ts * 0.80))
         else:
             # 238: Horizontal Road, Vertical Rail
             self._draw_road_straight_h(painter, sx, sy, ts)
@@ -1086,11 +1438,12 @@ class CityViewport(QQuickPaintedItem):
             painter.setPen(track_pen)
             painter.drawLine(QPointF(sx + ts * 0.35, sy), QPointF(sx + ts * 0.35, sy + ts))
             painter.drawLine(QPointF(sx + ts * 0.65, sy), QPointF(sx + ts * 0.65, sy + ts))
-            # Road warning line on approaches
+            # Yellow warning dashed lines on road approaches
             if ts >= 12:
-                painter.setPen(QPen(COLOR_ROAD_STOP, max(1.0, ts * 0.06)))
-                painter.drawLine(QPointF(sx + ts * 0.12, sy + ts * 0.22), QPointF(sx + ts * 0.12, sy + ts * 0.78))
-                painter.drawLine(QPointF(sx + ts * 0.88, sy + ts * 0.22), QPointF(sx + ts * 0.88, sy + ts * 0.78))
+                warn_pen = QPen(QColor("#ffd60a"), max(1.0, ts * 0.07), Qt.DotLine)
+                painter.setPen(warn_pen)
+                painter.drawLine(QPointF(sx + ts * 0.20, sy + ts * 0.18), QPointF(sx + ts * 0.20, sy + ts * 0.82))
+                painter.drawLine(QPointF(sx + ts * 0.80, sy + ts * 0.18), QPointF(sx + ts * 0.80, sy + ts * 0.82))
 
     # --- Procedural Powerline Renderer ---
 
@@ -1145,8 +1498,8 @@ class CityViewport(QQuickPaintedItem):
         cx = sx + ts * 0.5
         cy = sy + ts * 0.5
 
-        # High-voltage wires: only drawn to valid connections!
-        wire_pen = QPen(COLOR_WIRE_CABLE, max(1.0, ts * 0.06))
+        # 1. High-voltage cables: sleek wires only to connected directions
+        wire_pen = QPen(COLOR_WIRE_CABLE, max(1.2, ts * 0.07))
         painter.setPen(wire_pen)
 
         if conn_n:
@@ -1158,34 +1511,37 @@ class CityViewport(QQuickPaintedItem):
         if conn_w:
             painter.drawLine(QPointF(cx, cy), QPointF(sx, cy))
 
-        # Central Utility Pole & Crossarm
-        pole_r = max(2.0, ts * 0.12)
+        # 2. Central Utility Pole & Crossarm
+        # Neat, subtle utility pole - NOT a giant protruding comb!
+        pole_r = max(1.5, ts * 0.09)
         painter.setPen(Qt.NoPen)
-        # Pole base shadow
-        painter.setBrush(QColor(0, 0, 0, 70))
-        painter.drawEllipse(QRectF(cx - pole_r * 0.8, cy - pole_r * 0.3, pole_r * 1.6, pole_r * 0.9))
+        painter.setBrush(QColor(0, 0, 0, 60))
+        painter.drawEllipse(QRectF(cx - pole_r * 0.8, cy - pole_r * 0.3, pole_r * 1.6, pole_r * 0.8))
 
         # Wooden Pole
         painter.setBrush(COLOR_WIRE_POLE)
         painter.drawEllipse(QRectF(cx - pole_r, cy - pole_r, pole_r * 2.0, pole_r * 2.0))
 
-        # Crossarm perpendicular to line orientation
-        is_predom_v = (conn_n or conn_s) and not (conn_e or conn_w)
-        arm_pen = QPen(COLOR_WIRE_ARM, max(1.5, ts * 0.1))
+        # Only draw a small crossarm if this tile connects in a single straight line
+        is_straight_v = (conn_n or conn_s) and not (conn_e or conn_w)
+        is_straight_h = (conn_e or conn_w) and not (conn_n or conn_s)
+
+        arm_w = max(2.5, ts * 0.16)
+        arm_pen = QPen(COLOR_WIRE_ARM, max(1.2, ts * 0.07))
         painter.setPen(arm_pen)
-        if is_predom_v:
-            painter.drawLine(QPointF(cx - ts * 0.22, cy), QPointF(cx + ts * 0.22, cy))
-            # Ceramic insulators
+
+        if is_straight_v:
+            painter.drawLine(QPointF(cx - arm_w, cy), QPointF(cx + arm_w, cy))
             painter.setPen(Qt.NoPen)
             painter.setBrush(COLOR_WIRE_INSULATOR)
-            painter.drawEllipse(QRectF(cx - ts * 0.24, cy - 1.5, 3.0, 3.0))
-            painter.drawEllipse(QRectF(cx + ts * 0.16, cy - 1.5, 3.0, 3.0))
-        else:
-            painter.drawLine(QPointF(cx, cy - ts * 0.22), QPointF(cx, cy + ts * 0.22))
+            painter.drawEllipse(QRectF(cx - arm_w - 1, cy - 1, 2.0, 2.0))
+            painter.drawEllipse(QRectF(cx + arm_w - 1, cy - 1, 2.0, 2.0))
+        elif is_straight_h:
+            painter.drawLine(QPointF(cx, cy - arm_w), QPointF(cx, cy + arm_w))
             painter.setPen(Qt.NoPen)
             painter.setBrush(COLOR_WIRE_INSULATOR)
-            painter.drawEllipse(QRectF(cx - 1.5, cy - ts * 0.24, 3.0, 3.0))
-            painter.drawEllipse(QRectF(cx - 1.5, cy + ts * 0.16, 3.0, 3.0))
+            painter.drawEllipse(QRectF(cx - 1, cy - arm_w - 1, 2.0, 2.0))
+            painter.drawEllipse(QRectF(cx - 1, cy + arm_w - 1, 2.0, 2.0))
 
     def _draw_wire_water(self, painter: QPainter, t: int, sx: float, sy: float, ts: float, tx: int, ty: int):
         # 208=HPOWER, 209=VPOWER: Transmission Tower in Water
@@ -1222,15 +1578,15 @@ class CityViewport(QQuickPaintedItem):
     def _draw_wire_crossing(self, painter: QPainter, crossing_t: int, sx: float, sy: float, ts: float):
         # 77 (HROADPOWER) & 221 (RAILHPOWERV): Horizontal Road/Rail, Vertical Overhead Wire
         # 78 (VROADPOWER) & 222 (RAILVPOWERH): Vertical Road/Rail, Horizontal Overhead Wire
-        pole_pen = QPen(COLOR_WIRE_ARM, max(1.5, ts * 0.1))
+        pole_pen = QPen(COLOR_WIRE_ARM, max(1.2, ts * 0.08))
         cable_pen = QPen(COLOR_WIRE_CABLE, max(1.2, ts * 0.07))
 
         if crossing_t in (77, 221):
             cx = sx + ts * 0.5
             # Roadside/trackside utility poles
             painter.setPen(pole_pen)
-            painter.drawLine(QPointF(cx - ts * 0.15, sy + ts * 0.1), QPointF(cx + ts * 0.15, sy + ts * 0.1))
-            painter.drawLine(QPointF(cx - ts * 0.15, sy + ts * 0.9), QPointF(cx + ts * 0.15, sy + ts * 0.9))
+            painter.drawLine(QPointF(cx - ts * 0.12, sy + ts * 0.08), QPointF(cx + ts * 0.12, sy + ts * 0.08))
+            painter.drawLine(QPointF(cx - ts * 0.12, sy + ts * 0.92), QPointF(cx + ts * 0.12, sy + ts * 0.92))
             # Overhead wire spanning vertically across
             painter.setPen(cable_pen)
             painter.drawLine(QPointF(cx, sy), QPointF(cx, sy + ts))
@@ -1238,8 +1594,8 @@ class CityViewport(QQuickPaintedItem):
             cy = sy + ts * 0.5
             # Roadside utility poles on left and right
             painter.setPen(pole_pen)
-            painter.drawLine(QPointF(sx + ts * 0.1, cy - ts * 0.15), QPointF(sx + ts * 0.1, cy + ts * 0.15))
-            painter.drawLine(QPointF(sx + ts * 0.9, cy - ts * 0.15), QPointF(sx + ts * 0.9, cy + ts * 0.15))
+            painter.drawLine(QPointF(sx + ts * 0.08, cy - ts * 0.12), QPointF(sx + ts * 0.08, cy + ts * 0.12))
+            painter.drawLine(QPointF(sx + ts * 0.92, cy - ts * 0.12), QPointF(sx + ts * 0.92, cy + ts * 0.12))
             # Overhead wire spanning horizontally across
             painter.setPen(cable_pen)
             painter.drawLine(QPointF(sx, cy), QPointF(sx + ts, cy))
