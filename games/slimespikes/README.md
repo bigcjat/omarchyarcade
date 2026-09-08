@@ -16,7 +16,7 @@ Built natively with hardware acceleration for **Omarchy Linux** and tiling windo
   * **Lime (`#76FF03` Neon Green):** A fizzy citrus drop featuring glowing neon highlights.
   * **Metal (`#E0E0E0` Chrome Silver):** A rare polished liquid-metal slime with high-specular reflective gleam.
   * **Gold (`#FFD700` Amber King):** A prestigious royal slime crowned with a 3-point gold crown and sparkling ruby gem.
-  * **Angel (`#F3E5F5` Pearl White):** A heavenly seraph slime sporting fluttering feathered wings and a floating golden halo.
+  * **Shadow (`#4B3869` Midnight Plum):** A sleek phantom slime shrouded in rich obsidian purple with bright white eyes.
 * **Organic Squash & Stretch Physics:**
   * Procedural Bezier teardrop geometry with pointed top swirl tip and chubby bottom cheeks.
   * Launch elongation ($scaleY: 1.65, scaleX: 0.62$) pulling the slime like molten taffy during flips.

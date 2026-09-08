@@ -92,18 +92,18 @@ var SLIME_CHARACTERS = {
         hasCrown: true,
         hasBlush: false
     },
-    angel: {
-        id: "angel",
-        name: "ANGEL",
-        tagline: "Heavenly Winged Slime",
-        color: "#F0F4FF",
-        coreColor: "#FFFFFF",
-        glowColor: "#B0C0E0",
-        mouthColor: "#D9446A",
-        particleColor: "#FFFFFF",
-        hasWings: true,
+    shadow: {
+        id: "shadow",
+        name: "SHADOW",
+        tagline: "Midnight Phantom Slime",
+        color: "#3B2D54",
+        coreColor: "#58427C",
+        glowColor: "#211832",
+        mouthColor: "#9C27B0",
+        particleColor: "#A855F7",
+        hasWings: false,
         hasCrown: false,
-        hasBlush: true
+        hasBlush: false
     }
 };
 
@@ -737,43 +737,7 @@ function drawSlime(ctx, s, charId, themeAccent) {
     var w = s.width;
     var h = s.height;
 
-    // 1. Little Wings for Angel Slime
-    if (charData.hasWings) {
-        var flap = Math.sin(gameTime * 24) * 0.25;
-        ctx.save();
-        ctx.fillStyle = "#FFFFFF";
-        ctx.strokeStyle = "#C8D8F0";
-        ctx.lineWidth = 1.2;
-        // Left Wing
-        ctx.save();
-        ctx.translate(-w * 0.45, 0);
-        ctx.rotate(-0.35 + flap);
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 10, 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-        // Right Wing
-        ctx.save();
-        ctx.translate(w * 0.45, 0);
-        ctx.rotate(0.35 - flap);
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 10, 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-
-        // Halo
-        ctx.strokeStyle = "#FFD700";
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.ellipse(0, -h * 0.65, 11, 4, 0, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.restore();
-    }
-
-    // 2. Crown for Gold Slime
+    // Crown for Gold Slime
     if (charData.hasCrown) {
         ctx.save();
         ctx.fillStyle = "#FFEE55";
@@ -836,7 +800,7 @@ function drawSlime(ctx, s, charId, themeAccent) {
     ctx.fill();
     ctx.restore();
 
-    // 5. Blush Cheeks (for Cherry / Angel)
+    // Blush Cheeks (for Cherry)
     if (charData.hasBlush) {
         ctx.fillStyle = "rgba(255, 80, 120, 0.40)";
         // Left Blush

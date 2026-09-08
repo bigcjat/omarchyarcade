@@ -49,7 +49,7 @@ ApplicationWindow {
     readonly property bool isTiledDesktopMode: fullPlayfield || root.height < 520 || root.width < 440
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Tap / Click / Space / W / S: Invert gravity instantly between Floor and Ceiling!\n• Avoid Spikes: Dodge floor spikes by flipping to the ceiling, and ceiling spikes by flipping to the floor!\n• Slime Squash & Stretch: Enjoy bouncy gelatinous spring physics and landing splats!\n• 6 Characters: Press 1-6 or click 'Slimes' to switch between Gooey, Cherry, Lime, Metal, Gold, and Angel!\n• Speed Surge: Speed increases smoothly the further you survive!\n• Instant Restart: Press Space, Enter, or R to dive right back into the action!"
+    property string helpText: "• Flip Gravity: Space, Enter, Up, Down, W, or S\n• Avoid Spikes: Flip between floor and ceiling to dodge hazards\n• Slime Characters: Press 1-6 to switch between Gooey, Cherry, Lime, Metal, Gold, and Shadow\n• Restart: R\n• Sound: M\n• Help: ? or Esc"
 
     signal screenshotSaved(string filePath)
 
@@ -179,7 +179,7 @@ ApplicationWindow {
             if (event.key === Qt.Key_3) { root.selectSlime("lime"); event.accepted = true; return; }
             if (event.key === Qt.Key_4) { root.selectSlime("metal"); event.accepted = true; return; }
             if (event.key === Qt.Key_5) { root.selectSlime("gold"); event.accepted = true; return; }
-            if (event.key === Qt.Key_6) { root.selectSlime("angel"); event.accepted = true; return; }
+            if (event.key === Qt.Key_6) { root.selectSlime("shadow"); event.accepted = true; return; }
 
             if (event.key === Qt.Key_R) {
                 root.restartGame();
@@ -367,20 +367,36 @@ ApplicationWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 8
 
-                // How to Play
+                // Help Button
                 Rectangle {
+                    id: helpBtn
                     height: 32
-                    width: subheaderItem.isCrowded ? 32 : 100
+                    width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
                     radius: 8
                     color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
                     border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
                     border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
 
                     Row {
+                        id: helpRow
                         anchors.centerIn: parent
                         spacing: 5
-                        Text { text: "?"; font.pixelSize: 12; font.bold: true; color: root.themeAccent }
-                        Text { text: "Help"; font.pixelSize: 11; font.bold: true; color: root.themeFg; visible: !subheaderItem.isCrowded }
+                        Text {
+                            text: "?"
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: root.themeAccent
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "How to Play"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
                     }
 
                     MouseArea {
@@ -536,7 +552,7 @@ ApplicationWindow {
                         { id: "lime", name: "Lime (3)", color: "#10E070", key: "3" },
                         { id: "metal", name: "Metal (4)", color: "#C0C8D8", key: "4" },
                         { id: "gold", name: "Gold (5)", color: "#FFB800", key: "5" },
-                        { id: "angel", name: "Angel (6)", color: "#F0F4FF", key: "6" }
+                        { id: "shadow", name: "Shadow (6)", color: "#A855F7", key: "6" }
                     ]
 
                     Rectangle {
@@ -871,14 +887,15 @@ ApplicationWindow {
         }
 
         // =====================================================================
-        // HOW TO PLAY MODAL (Layered above pause screen at z: 1100)
+        // MODALS & OVERLAYS (Help, Game Over, Sound Toast)
         // =====================================================================
+        // Help Modal
         Rectangle {
             id: helpModal
             anchors.fill: parent
-            color: "#e6000000"
+            color: "#b3000000"
             visible: root.showHelp
-            z: 1100
+            z: 900
 
             MouseArea {
                 anchors.fill: parent
@@ -886,12 +903,12 @@ ApplicationWindow {
             }
 
             Rectangle {
-                width: Math.min(parent.width * 0.88, 460)
-                height: helpCol.height + 44
+                width: Math.min(parent.width * 0.88, 380)
+                height: helpCol.height + 40
                 anchors.centerIn: parent
                 color: root.themeCardBg
-                border.color: root.themeAccent
-                border.width: 1.5
+                border.color: root.themeBorder
+                border.width: 1
                 radius: 12
 
                 Column {
@@ -910,7 +927,7 @@ ApplicationWindow {
 
                     Text {
                         text: root.helpText
-                        font.pixelSize: 11
+                        font.pixelSize: 12
                         color: root.themeFg
                         lineHeight: 1.4
                         width: parent.width
@@ -938,7 +955,7 @@ ApplicationWindow {
                     }
 
                     Text {
-                        text: "SlimeSpikes • Omarchy Arcade"
+                        text: "Created by Chris Thompson (@bigcjat) with Gemini"
                         font.pixelSize: 9
                         color: root.themeSubtext
                         anchors.horizontalCenter: parent.horizontalCenter
