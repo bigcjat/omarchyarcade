@@ -4,12 +4,14 @@ High-performance QQuickPaintedItem rendering the 120x100 Micropolis tilemap.
 Clean orthographic projection with pan, zoom, drag-to-build, and theme awareness.
 """
 
+import os
 import sys
 import math
 from PySide6.QtCore import Qt, QPointF, QRectF, Signal, Property, Slot, QObject, QTimer
 from PySide6.QtGui import (
-    QColor, QFont, QPainter, QPainterPath, QPen, QBrush, QCursor, QRadialGradient, QLinearGradient, QPolygonF
+    QColor, QFont, QPainter, QPainterPath, QPen, QBrush, QCursor, QRadialGradient, QLinearGradient, QPolygonF, QImage
 )
+
 from PySide6.QtQuick import QQuickPaintedItem
 
 # Tool footprints: size (width=height) in tiles
@@ -176,7 +178,27 @@ class CityViewport(QQuickPaintedItem):
             'speed': 2.4,
         }
 
+        # Building Sprites
+        self._res_sprites_3x3 = {}
+        self._house_sprites = []
+        self._load_building_sprites()
+
+    def _load_building_sprites(self):
+        base_dir = os.path.join(os.path.dirname(__file__), "assets", "buildings")
+        # Load 3x3 residential & civic sprites (5 rows x 4 cols)
+        for r in range(5):
+            for c in range(4):
+                p = os.path.join(base_dir, f"res_r{r}_c{c}.png")
+                if os.path.exists(p):
+                    self._res_sprites_3x3[(r, c)] = QImage(p)
+        # Load 1x1 house sprites
+        for idx in range(5):
+            hp = os.path.join(base_dir, f"house_{idx}.png")
+            if os.path.exists(hp):
+                self._house_sprites.append(QImage(hp))
+
     # --- Properties ---
+
 
     def get_city_engine(self):
         return self._engine
@@ -436,14 +458,15 @@ class CityViewport(QQuickPaintedItem):
 
         ts = self._tile_size
 
-        # Visible tile bounds
+        # Visible tile bounds (padded by 2 tiles so multi-tile buildings render seamlessly)
         left_t = self._cam_x - (w / (2.0 * ts))
         top_t = self._cam_y - (h / (2.0 * ts))
 
-        min_tx = max(0, int(math.floor(left_t)))
-        max_tx = min(120, int(math.ceil(left_t + w / ts)) + 1)
-        min_ty = max(0, int(math.floor(top_t)))
-        max_ty = min(100, int(math.ceil(top_t + h / ts)) + 1)
+        min_tx = max(0, int(math.floor(left_t)) - 2)
+        max_tx = min(120, int(math.ceil(left_t + w / ts)) + 3)
+        min_ty = max(0, int(math.floor(top_t)) - 2)
+        max_ty = min(100, int(math.ceil(top_t + h / ts)) + 3)
+
 
         # Batch draw tiles
         painter.save()
@@ -555,16 +578,11 @@ class CityViewport(QQuickPaintedItem):
                 self._draw_rail(painter, t, sx, sy, ts, tx, ty)
             return
 
-        # 9. RESIDENTIAL (240..422)
-        if 240 <= t <= 422:
-            painter.fillRect(rect, COLOR_RES_BASE)
-            if raw & 0x0400 or t == 244:
-                painter.setPen(QColor("#ffffff"))
-                painter.drawText(rect, Qt.AlignCenter, "R")
-            elif ts >= 16:
-                painter.fillRect(QRectF(sx + ts * 0.2, sy + ts * 0.2, ts * 0.6, ts * 0.6), QColor("#1b4332"))
-            self._check_unpowered(painter, raw, has_power, rect)
+        # 9. RESIDENTIAL (240..422) & EXTENDED SHRINES (956..1018)
+        if (240 <= t <= 422) or (956 <= t <= 1018):
+            self._draw_residential_zone(painter, raw, t, has_power, sx, sy, ts, tx, ty)
             return
+
 
         # 10. COMMERCIAL (423..611)
         if 423 <= t <= 611:
@@ -2079,9 +2097,83 @@ class CityViewport(QQuickPaintedItem):
 
         painter.restore()
 
+    def _draw_residential_zone(self, painter: QPainter, raw: int, t: int, has_power: bool, sx: float, sy: float, ts: float, tx: int, ty: int):
+        rect = QRectF(sx, sy, ts + 0.5, ts + 0.5)
+
+        # 1. Vacant Zoned Lot (Stage 0, tiles 240..248)
+        if 240 <= t <= 248:
+            if t == 244 or (raw & 0x0400):
+                lot_rect = QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts)
+                painter.fillRect(lot_rect, QColor("#dfc492"))
+                painter.setPen(QPen(QColor("#a89066"), 1, Qt.DashLine))
+                painter.setBrush(Qt.NoBrush)
+                painter.drawRect(lot_rect)
+                painter.setPen(QPen(QColor("#1e252b"), 2))
+                painter.setFont(QFont("Arial", max(8, int(ts * 0.45)), QFont.Bold))
+                painter.drawText(rect, Qt.AlignCenter, "R")
+                self._check_unpowered(painter, raw, has_power, rect)
+            return
+
+        # 2. Stage 1: Single Houses (tiles 249..260)
+        if 249 <= t <= 260:
+            painter.fillRect(rect, QColor("#dfc492"))
+            if self._house_sprites:
+                h_idx = (t - 249) % len(self._house_sprites)
+                painter.drawImage(QRectF(sx + 1, sy + 1, ts - 2, ts - 2), self._house_sprites[h_idx])
+            else:
+                painter.fillRect(QRectF(sx + ts * 0.15, sy + ts * 0.15, ts * 0.7, ts * 0.7), QColor("#37474f"))
+            return
+
+        # 3. Stages 2 to 5: 3x3 Unified Residential Buildings (tiles 261..404)
+        if 261 <= t <= 404:
+            bld_idx = (t - 261) // 9
+            sub_idx = (t - 261) % 9
+            if sub_idx == 4 or (raw & 0x0400):
+                r = min(3, bld_idx // 4)  # Land value: 0..3 (Low, Med, High, Lux)
+                c = min(3, bld_idx % 4)   # Density: 0..3 (Stage 2, 3, 4, 5)
+                sprite = self._res_sprites_3x3.get((r, c))
+                if sprite:
+                    painter.drawImage(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), sprite)
+                else:
+                    painter.fillRect(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), COLOR_RES_BASE)
+                self._check_unpowered(painter, raw, has_power, rect)
+            return
+
+        # 4. Hospital (tiles 405..413, center 409)
+        if 405 <= t <= 413:
+            if t == 409 or (raw & 0x0400):
+                sprite = self._res_sprites_3x3.get((4, 0))
+                if sprite:
+                    painter.drawImage(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), sprite)
+                else:
+                    painter.fillRect(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), QColor("#b71c1c"))
+                self._check_unpowered(painter, raw, has_power, rect)
+            return
+
+        # 5. Church / Shinto Temple (tiles 414..422, center 418)
+        if 414 <= t <= 422:
+            if t == 418 or (raw & 0x0400):
+                sprite = self._res_sprites_3x3.get((4, 2))
+                if sprite:
+                    painter.drawImage(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), sprite)
+                else:
+                    painter.fillRect(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), QColor("#4a148c"))
+                self._check_unpowered(painter, raw, has_power, rect)
+            return
+
+        # 6. Extended Churches / Shrines (tiles 956..1018)
+        if 956 <= t <= 1018:
+            if (t - 956) % 9 == 4 or (raw & 0x0400):
+                sprite = self._res_sprites_3x3.get((4, 3))
+                if sprite:
+                    painter.drawImage(QRectF(sx - ts, sy - ts, 3 * ts, 3 * ts), sprite)
+                self._check_unpowered(painter, raw, has_power, rect)
+            return
+
     def _check_unpowered(self, painter: QPainter, raw: int, has_power: bool, rect: QRectF):
         """Draws a warning icon on unpowered zone center tiles."""
         if (raw & 0x0400) and not has_power:
             painter.setPen(QColor("#ff0000"))
             painter.drawText(rect, Qt.AlignTop | Qt.AlignRight, "⚡")
+
 
