@@ -111,6 +111,7 @@ Item {
 
                         readonly property bool isSelected: index === sidebarView.selectedIndex
                         readonly property bool installed: modelData ? (typeof root !== "undefined" && root.isInstalled ? root.isInstalled(modelData.id) : true) : true
+                        readonly property bool hasUpdate: modelData ? (typeof root !== "undefined" && root.hasGameUpdate ? root.hasGameUpdate(modelData.id, modelData.version || "") : (typeof arcadeBackend !== "undefined" && arcadeBackend.hasGameUpdate ? arcadeBackend.hasGameUpdate(modelData.id, modelData.version || "") : false)) : false
 
                         // Left active indicator strip
                         Rectangle {
@@ -175,12 +176,31 @@ Item {
                                 }
                             }
 
-                            // Status dot
+                            // Status dot / update badge
                             Rectangle {
-                                width: sidebarView.isNarrow ? 6 : 8
-                                height: sidebarView.isNarrow ? 6 : 8
-                                radius: width / 2
-                                color: rowItem.installed ? "#22c55e" : "#f59e0b"
+                                width: rowItem.hasUpdate ? (sidebarView.isNarrow ? 44 : 50) : (sidebarView.isNarrow ? 6 : 8)
+                                height: rowItem.hasUpdate ? (sidebarView.isNarrow ? 15 : 18) : (sidebarView.isNarrow ? 6 : 8)
+                                radius: rowItem.hasUpdate ? 4 : (width / 2)
+                                color: rowItem.hasUpdate ? "#0284c7" : (rowItem.installed ? "#22c55e" : "#f59e0b")
+                                border.color: rowItem.hasUpdate ? "#38bdf8" : "transparent"
+                                border.width: rowItem.hasUpdate ? 1 : 0
+
+                                Row {
+                                    anchors.centerIn: parent
+                                    visible: rowItem.hasUpdate
+                                    spacing: 2
+                                    Text {
+                                        text: "🔄"
+                                        font.pixelSize: sidebarView.isNarrow ? 7 : 8
+                                    }
+                                    Text {
+                                        text: "UPDATE"
+                                        font.family: "monospace"
+                                        font.pixelSize: sidebarView.isNarrow ? 7 : 8
+                                        font.bold: true
+                                        color: "#f0f9ff"
+                                    }
+                                }
                             }
                         }
 
@@ -387,6 +407,44 @@ Item {
                             Flow {
                                 width: parent.width
                                 spacing: 10
+
+                                readonly property bool activeHasUpdate: activeGame ? (typeof root !== "undefined" && root.hasGameUpdate ? root.hasGameUpdate(activeGame.id, activeGame.version || "") : (typeof arcadeBackend !== "undefined" && arcadeBackend.hasGameUpdate ? arcadeBackend.hasGameUpdate(activeGame.id, activeGame.version || "") : false)) : false
+                                readonly property bool activeInstalled: activeGame ? (typeof root !== "undefined" && root.isInstalled ? root.isInstalled(activeGame.id) : true) : true
+
+                                // Update Button (prominent cyan)
+                                Rectangle {
+                                    visible: parent.activeHasUpdate
+                                    height: sidebarView.isNarrow ? 38 : 44
+                                    width: sidebarView.isNarrow ? 150 : 180
+                                    radius: 8
+                                    color: sidebarUpdateMouse.containsMouse ? "#38bdf8" : "#0284c7"
+                                    border.color: "#38bdf8"
+                                    border.width: 1
+
+                                    RowLayout {
+                                        anchors.centerIn: parent
+                                        spacing: 6
+                                        Text { text: "🔄"; font.pixelSize: sidebarView.isNarrow ? 12 : 14; color: "#f0f9ff" }
+                                        Text {
+                                            text: "UPDATE (v" + (activeGame ? (activeGame.version || "") : "") + ")"
+                                            font.pixelSize: sidebarView.isNarrow ? 11 : 13
+                                            font.bold: true
+                                            color: "#f0f9ff"
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: sidebarUpdateMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (activeGame) {
+                                                sidebarView.detailRequested(activeGame);
+                                            }
+                                        }
+                                    }
+                                }
 
                                 Rectangle {
                                     height: sidebarView.isNarrow ? 38 : 44

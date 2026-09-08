@@ -118,6 +118,7 @@ Item {
                             readonly property bool isSelected: index === desktopView.selectedIndex
                             readonly property bool isHovered: iconMouse.containsMouse
                             readonly property bool installed: modelData ? (typeof root !== "undefined" && root.isInstalled ? root.isInstalled(modelData.id) : true) : true
+                            readonly property bool hasUpdate: modelData ? (typeof root !== "undefined" && root.hasGameUpdate ? root.hasGameUpdate(modelData.id, modelData.version || "") : (typeof arcadeBackend !== "undefined" && arcadeBackend.hasGameUpdate ? arcadeBackend.hasGameUpdate(modelData.id, modelData.version || "") : false)) : false
 
                             // Selection Box Highlight
                             Rectangle {
@@ -162,12 +163,19 @@ Item {
                                         anchors.bottom: parent.bottom
                                         anchors.right: parent.right
                                         anchors.margins: 2
-                                        width: 10
-                                        height: 10
-                                        radius: 5
-                                        color: iconItem.installed ? "#22c55e" : "#f59e0b"
-                                        border.color: "#0a0a0f"
+                                        width: iconItem.hasUpdate ? 14 : 10
+                                        height: iconItem.hasUpdate ? 14 : 10
+                                        radius: iconItem.hasUpdate ? 3 : 5
+                                        color: iconItem.hasUpdate ? "#0284c7" : (iconItem.installed ? "#22c55e" : "#f59e0b")
+                                        border.color: iconItem.hasUpdate ? "#38bdf8" : "#0a0a0f"
                                         border.width: 1.5
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            visible: iconItem.hasUpdate
+                                            text: "🔄"
+                                            font.pixelSize: 8
+                                        }
                                     }
                                 }
 
