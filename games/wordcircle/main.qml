@@ -37,21 +37,20 @@ Window {
     property string gameState: "playing"
     property int score: 0
     property int bestScore: 0
-    property int currentLevel: 66
+    property int currentLevel: 1
     property string currentChapter: "Neon Nebula"
     property int bonusCount: 0
+    property int solvedCount: 0
     property bool splashEnabled: true
     property bool isMuted: true
     property bool showHelp: false
-    property bool showLevelSelect: true
-    property int previewLevel: 66
     property bool isTiledDesktopMode: root.height < 540 || root.width < 440
     property alias fullPlayfield: root.isTiledDesktopMode
     property bool _spaceConstrained: root.height < 540 || root.width < 440
     on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Connect Letters: Click & drag across the wheel or type on keyboard\n• Submit Word: Release drag or press ENTER\n• Next / Prev Level: [ and ] or click ◀ ▶\n• Shuffle Letters: Click 🔀 or press SPACE\n• Undo Letter: BACKSPACE\n• Clear Selection: ESC\n• Full/Compact View: Shift+F\n• Mute Sound: M\n• Restart Level: R"
+    property string helpText: "• Connect Letters: Click & drag across the wheel or type on keyboard\n• Submit Word: Release drag or press ENTER\n• Next Puzzle: Click 🎲 New Puzzle or press N\n• Shuffle Letters: Click 🔀 or press SPACE\n• Undo Letter: BACKSPACE\n• Clear Selection: ESC\n• Full/Compact View: Shift+F\n• Mute Sound: M\n• Restart Level: R"
 
     // Engine bindings
     property var activeIndices: Engine.activeIndices
@@ -68,37 +67,34 @@ Window {
     property real dragY: 0
 
     Component.onCompleted: {
-        // Load saved scores
         if (typeof settingsManager !== "undefined" && settingsManager) {
             bestScore = settingsManager.getBestScore();
-            var savedLvl = parseInt(settingsManager.getValue("savedLevel", "66"), 10);
-            if (!isNaN(savedLvl) && savedLvl >= 6) {
-                currentLevel = savedLvl;
-                previewLevel = savedLvl;
-            } else {
-                currentLevel = 66;
-                previewLevel = 66;
-            }
+            solvedCount = settingsManager.getSolvedCount();
+            loadNextPuzzle(0);
+        }
+    }
 
-            // Load levels
-            var rawLevels = settingsManager.getLevelsJson();
-            if (rawLevels && rawLevels.length > 10) {
-                try {
-                    var parsed = JSON.parse(rawLevels);
-                    Engine.loadLevels(parsed);
-                    Engine.init(currentLevel - 1);
-                    updateUIState();
-                } catch(e) {
-                    console.log("Error parsing levels: " + e);
-                }
+    function loadNextPuzzle(targetLen) {
+        if (typeof settingsManager === "undefined" || !settingsManager) return;
+        var pzJson = settingsManager.getNextDynamicPuzzle(targetLen || 0);
+        if (pzJson && pzJson.length > 10) {
+            try {
+                var pz = JSON.parse(pzJson);
+                Engine.loadSingleLevel(pz);
+                solvedCount = settingsManager.getSolvedCount();
+                currentLevel = solvedCount + 1;
+                currentChapter = pz.chapter || "Neon Nebula";
+                updateUIState();
+                playSound("dock");
+                soundToast.show("Puzzle #" + currentLevel + " • " + pz.circle_letters.length + " Letters");
+            } catch(e) {
+                console.log("Error loading dynamic puzzle: " + e);
             }
         }
     }
 
     function updateUIState() {
         if (!Engine.currentLevel) return;
-        currentLevel = Engine.currentLevelIndex + 1;
-        currentChapter = Engine.currentLevel.chapter || "Sunrise Valley";
         score = Engine.score;
         if (score > bestScore) {
             bestScore = score;
@@ -241,36 +237,12 @@ Window {
                 }
             }
 
-            if (root.showLevelSelect) {
-                if (event.key === Qt.Key_Escape) {
-                    root.showLevelSelect = false;
-                    event.accepted = true;
-                    return;
-                }
-                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
-                    root.jumpToLevel(root.previewLevel);
-                    root.showLevelSelect = false;
-                    event.accepted = true;
-                    return;
-                }
-                if (event.key === Qt.Key_Left || event.key === Qt.Key_Down) {
-                    root.previewLevel = Math.max(1, root.previewLevel - 1);
-                    event.accepted = true;
-                    return;
-                }
-                if (event.key === Qt.Key_Right || event.key === Qt.Key_Up) {
-                    root.previewLevel = Math.min(100, root.previewLevel + 1);
-                    event.accepted = true;
-                    return;
-                }
-            }
-
-            if (event.key === Qt.Key_L) {
-                root.previewLevel = root.currentLevel;
-                root.showLevelSelect = true;
+            if (event.key === Qt.Key_N || event.key === Qt.Key_BracketRight || event.key === Qt.Key_PageDown) {
+                root.loadNextPuzzle(0);
                 event.accepted = true;
                 return;
             }
+
 
             if (event.key === Qt.Key_M) {
                 root.toggleMute();
@@ -297,12 +269,6 @@ Window {
                 return;
             }
 
-            if (event.key === Qt.Key_BracketRight || event.key === Qt.Key_PageDown) {
-                root.jumpToLevel(root.currentLevel + 1);
-                event.accepted = true;
-                return;
-            }
-
             if (event.key === Qt.Key_Question || event.key === Qt.Key_Slash) {
                 root.showHelp = !root.showHelp;
                 event.accepted = true;
@@ -325,9 +291,12 @@ Window {
                     onSound: root.playSound,
                     onScore: function(s) { root.score = s; },
                     onLevelComplete: function(lvl) {
-                        if (typeof settingsManager !== "undefined" && settingsManager) {
-                            settingsManager.setValue("savedLevel", lvl.toString());
+                        if (typeof settingsManager !== "undefined" && settingsManager && Engine.currentLevel) {
+                            settingsManager.markRootSolved(Engine.currentLevel.root_word);
+                            root.solvedCount = settingsManager.getSolvedCount();
                         }
+                        soundToast.show("🎉 Solved! Loading Next...");
+                        autoNextTimer.restart();
                     }
                 });
                 updateUIState();
@@ -410,7 +379,7 @@ Window {
                 }
 
                 Text {
-                    text: root.currentChapter + " • Level " + root.currentLevel + " of 100"
+                    text: root.currentChapter + " • Puzzle #" + root.currentLevel + (root.solvedCount > 0 ? " (Solved: " + root.solvedCount + ")" : "")
                     font.pixelSize: 11
                     font.bold: true
                     color: root.themeSubtext
@@ -520,35 +489,36 @@ Window {
                 }
             }
 
-            // Right: Toolbar Buttons
+            // Right: Utility Controls
             Row {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
+                spacing: 6
 
-                // Level Select Button
+                // New Puzzle Button
                 Rectangle {
                     height: 30
-                    width: subheaderItem.isCrowded ? 30 : 76
+                    width: subheaderItem.isCrowded ? 30 : 98
                     radius: 6
-                    color: levelBtnMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: newPzMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
                     border.color: root.themeAccent
                     border.width: 1
 
                     Row {
                         anchors.centerIn: parent
                         spacing: 4
-                        Text { text: "🗺️"; font.pixelSize: 11 }
-                        Text { text: "Levels"; font.pixelSize: 10; font.bold: true; color: root.themeAccent; visible: !subheaderItem.isCrowded }
+                        Text { text: "🎲"; font.pixelSize: 11 }
+                        Text { text: "New Puzzle"; font.pixelSize: 10; font.bold: true; color: root.themeAccent; visible: !subheaderItem.isCrowded }
                     }
 
                     MouseArea {
-                        id: levelBtnMouse
+                        id: newPzMouse
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            root.previewLevel = root.currentLevel;
-                            root.showLevelSelect = true;
+                            root.playSound("click");
+                            root.loadNextPuzzle(0);
                         }
                     }
                 }
@@ -1071,298 +1041,14 @@ Window {
         }
 
         // =====================================================================
-        // MODALS & OVERLAYS (Level Select Modal, Help Modal, Sound Toast)
+        // MODALS & OVERLAYS (Help Modal, Sound Toast)
         // =====================================================================
-        // Level Select Modal (Shows at game start or when clicking Levels)
-        Rectangle {
-            id: levelSelectModal
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            color: "#d9000000"
-            visible: root.showLevelSelect
-            z: 950
-
-            MouseArea {
-                anchors.fill: parent
-                // Modal stays open until player selects or plays
-            }
-
-            Rectangle {
-                id: levelCard
-                width: Math.min(parent.width * 0.94, 460)
-                height: levelSelectCol.height + 44
-                anchors.centerIn: parent
-                color: root.themeCardBg
-                border.color: root.themeAccent
-                border.width: 1.5
-                radius: 14
-
-                // Stop clicks on card from closing
-                MouseArea { anchors.fill: parent }
-
-                Column {
-                    id: levelSelectCol
-                    anchors.centerIn: parent
-                    width: parent.width - 40
-                    spacing: 14
-
-                    // Header
-                    Column {
-                        width: parent.width
-                        spacing: 4
-                        Text {
-                            text: "🎯 CHOOSE STARTING LEVEL"
-                            font.pixelSize: 18
-                            font.bold: true
-                            color: root.themeAccent
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            font.letterSpacing: 1
-                        }
-                        Text {
-                            text: "Pick your preferred letter difficulty or any level (1–100):"
-                            font.pixelSize: 11
-                            color: root.themeSubtext
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-
-                    // 5 Letter Count Tier Buttons
-                    Grid {
-                        columns: 5
-                        spacing: 6
-                        width: parent.width
-
-                        Repeater {
-                            model: [
-                                { label: "3 Letters", lvl: 1,  sub: "Warmup" },
-                                { label: "4 Letters", lvl: 6,  sub: "Casual" },
-                                { label: "5 Letters", lvl: 26, sub: "Medium" },
-                                { label: "6 Letters", lvl: 66, sub: "Expert" },
-                                { label: "7 Letters", lvl: 96, sub: "Master" }
-                            ]
-
-                            Rectangle {
-                                width: (levelSelectCol.width - 24) / 5
-                                height: 58
-                                radius: 8
-                                color: (root.previewLevel === modelData.lvl || 
-                                       (modelData.lvl === 1 && root.previewLevel >= 1 && root.previewLevel <= 5) ||
-                                       (modelData.lvl === 6 && root.previewLevel >= 6 && root.previewLevel <= 25) ||
-                                       (modelData.lvl === 26 && root.previewLevel >= 26 && root.previewLevel <= 65) ||
-                                       (modelData.lvl === 66 && root.previewLevel >= 66 && root.previewLevel <= 95) ||
-                                       (modelData.lvl === 96 && root.previewLevel >= 96))
-                                       ? Qt.alpha(root.themeAccent, 0.22) : root.themeBoardBg
-                                border.color: (root.previewLevel === modelData.lvl || 
-                                              (modelData.lvl === 1 && root.previewLevel >= 1 && root.previewLevel <= 5) ||
-                                              (modelData.lvl === 6 && root.previewLevel >= 6 && root.previewLevel <= 25) ||
-                                              (modelData.lvl === 26 && root.previewLevel >= 26 && root.previewLevel <= 65) ||
-                                              (modelData.lvl === 66 && root.previewLevel >= 66 && root.previewLevel <= 95) ||
-                                              (modelData.lvl === 96 && root.previewLevel >= 96))
-                                              ? root.themeAccent : root.themeBorder
-                                border.width: 1.5
-
-                                Column {
-                                    anchors.centerIn: parent
-                                    spacing: 2
-                                    Text {
-                                        text: modelData.label
-                                        font.pixelSize: 10
-                                        font.bold: true
-                                        color: root.themeFg
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                    }
-                                    Text {
-                                        text: "Lvl " + modelData.lvl
-                                        font.pixelSize: 9
-                                        font.bold: true
-                                        color: root.themeAccent
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                    }
-                                    Text {
-                                        text: modelData.sub
-                                        font.pixelSize: 8
-                                        color: root.themeSubtext
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                    }
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        root.previewLevel = modelData.lvl;
-                                        root.playSound("click");
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Level Stepper Bar: [-10] [-1] [ Level X ] [+1] [+10]
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 8
-
-                        Rectangle {
-                            width: 44; height: 34; radius: 6
-                            color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
-                            Text { anchors.centerIn: parent; text: "-10"; font.pixelSize: 11; font.bold: true; color: root.themeFg }
-                            MouseArea {
-                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                                onClicked: { root.previewLevel = Math.max(1, root.previewLevel - 10); root.playSound("click"); }
-                            }
-                        }
-
-                        Rectangle {
-                            width: 36; height: 34; radius: 6
-                            color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
-                            Text { anchors.centerIn: parent; text: "-1"; font.pixelSize: 11; font.bold: true; color: root.themeFg }
-                            MouseArea {
-                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                                onClicked: { root.previewLevel = Math.max(1, root.previewLevel - 1); root.playSound("click"); }
-                            }
-                        }
-
-                        Rectangle {
-                            width: 130; height: 34; radius: 6
-                            color: Qt.alpha(root.themeAccent, 0.15); border.color: root.themeAccent; border.width: 1.5
-                            Text {
-                                anchors.centerIn: parent
-                                text: "Level " + root.previewLevel + " of 100"
-                                font.pixelSize: 13
-                                font.bold: true
-                                color: root.themeAccent
-                            }
-                        }
-
-                        Rectangle {
-                            width: 36; height: 34; radius: 6
-                            color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
-                            Text { anchors.centerIn: parent; text: "+1"; font.pixelSize: 11; font.bold: true; color: root.themeFg }
-                            MouseArea {
-                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                                onClicked: { root.previewLevel = Math.min(100, root.previewLevel + 1); root.playSound("click"); }
-                            }
-                        }
-
-                        Rectangle {
-                            width: 44; height: 34; radius: 6
-                            color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
-                            Text { anchors.centerIn: parent; text: "+10"; font.pixelSize: 11; font.bold: true; color: root.themeFg }
-                            MouseArea {
-                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                                onClicked: { root.previewLevel = Math.min(100, root.previewLevel + 10); root.playSound("click"); }
-                            }
-                        }
-                    }
-
-                    // Level Details Summary Box
-                    Rectangle {
-                        width: parent.width
-                        height: 38
-                        radius: 8
-                        color: root.themeBoardBg
-                        border.color: root.themeBorder
-                        border.width: 1
-
-                        readonly property var curLvlData: Engine.getLevelData(root.previewLevel - 1)
-
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 12
-                            Text {
-                                text: "Chapter: " + (parent.parent.curLvlData ? parent.parent.curLvlData.chapter : "Sunrise Valley")
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: root.themeFg
-                            }
-                            Text {
-                                text: "•"
-                                font.pixelSize: 11
-                                color: root.themeSubtext
-                            }
-                            Text {
-                                text: (parent.parent.curLvlData ? parent.parent.curLvlData.circle_letters.length : 6) + " Letters in Wheel"
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: root.themeAccent
-                            }
-                        }
-                    }
-
-                    // Action Buttons Row: [ 🎲 Random Level ] [ PLAY LEVEL X ▶ ]
-                    Row {
-                        width: parent.width
-                        spacing: 8
-
-                        Rectangle {
-                            width: 120
-                            height: 42
-                            radius: 8
-                            color: rndBtnMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                            border.color: root.themeAccent
-                            border.width: 1.5
-
-                            Row {
-                                anchors.centerIn: parent
-                                spacing: 6
-                                Text { text: "🎲"; font.pixelSize: 13 }
-                                Text { text: "Random"; font.pixelSize: 12; font.bold: true; color: root.themeAccent }
-                            }
-
-                            MouseArea {
-                                id: rndBtnMouse
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    var rnd = Math.floor(Math.random() * 95) + 6; // Random 4, 5, 6, or 7 letter level!
-                                    root.jumpToLevel(rnd);
-                                    root.showLevelSelect = false;
-                                }
-                            }
-                        }
-
-                        Rectangle {
-                            width: parent.width - 128
-                            height: 42
-                            radius: 8
-                            color: startBtnMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-
-                            Row {
-                                anchors.centerIn: parent
-                                spacing: 6
-                                Text {
-                                    text: "PLAY LEVEL " + root.previewLevel + " ▶"
-                                    font.bold: true
-                                    font.pixelSize: 13
-                                    color: root.themeBtnFg
-                                    font.letterSpacing: 1
-                                }
-                            }
-
-                            MouseArea {
-                                id: startBtnMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    root.jumpToLevel(root.previewLevel);
-                                    root.showLevelSelect = false;
-                                }
-                            }
-                        }
-                    }
-
-                    Text {
-                        text: "Press ENTER to Play • ESC to Close"
-                        font.pixelSize: 9
-                        color: root.themeSubtext
-                        anchors.horizontalCenter: parent.horizontalCenter
-                    }
-                }
-            }
+        // Auto-advance timer when level completes
+        Timer {
+            id: autoNextTimer
+            interval: 1300
+            repeat: false
+            onTriggered: root.loadNextPuzzle(0)
         }
 
         // Help Modal

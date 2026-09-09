@@ -36,6 +36,19 @@ function loadLevels(data) {
     }
 }
 
+function loadSingleLevel(lvlData) {
+    if (!lvlData) return;
+    currentLevel = lvlData;
+    foundWords = [];
+    foundBonusWords = [];
+    activeIndices = [];
+    activeWord = "";
+    isLevelComplete = false;
+    levelCompleteTimer = 0;
+    feedbackMessage = "";
+    circleLetters = currentLevel.circle_letters.slice();
+}
+
 /**
  * Initializes engine and loads specified level.
  */

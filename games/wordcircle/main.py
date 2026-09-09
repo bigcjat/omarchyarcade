@@ -15,6 +15,7 @@ Features:
 import os
 import sys
 import re
+import json
 import shutil
 import subprocess
 import tomllib
@@ -51,6 +52,46 @@ class SettingsManager(QObject):
     @Slot(str, str, result=str)
     def getValue(self, key, default_val=""):
         return str(self.settings.value(key, default_val))
+
+    @Slot(result=int)
+    def getSolvedCount(self):
+        solved = self.settings.value("solvedRoots", [])
+        if isinstance(solved, list):
+            return len(solved)
+        return 0
+
+    @Slot(str)
+    def markRootSolved(self, root_word):
+        solved = self.settings.value("solvedRoots", [])
+        if not isinstance(solved, list):
+            solved = []
+        if root_word and root_word not in solved:
+            solved.append(root_word)
+            self.settings.setValue("solvedRoots", solved)
+            self.settings.sync()
+
+    @Slot(int, result=str)
+    def getNextDynamicPuzzle(self, target_length=0):
+        try:
+            try:
+                from level_generator import generate_dynamic_puzzle
+            except ImportError:
+                from games.wordcircle.level_generator import generate_dynamic_puzzle
+            solved = self.settings.value("solvedRoots", [])
+            if not isinstance(solved, list):
+                solved = []
+            
+            # Blacklist 3-letter baby words forever
+            excluded = set(solved) | {"CAT", "DOG", "SUN", "TOP", "PAN", "ACT"}
+            puzzle_num = len(solved) + 1
+
+            t_len = target_length if target_length in (4, 5, 6, 7) else None
+            p = generate_dynamic_puzzle(target_length=t_len, excluded_roots=excluded, puzzle_num=puzzle_num)
+            if p:
+                return json.dumps(p)
+        except Exception as e:
+            print(f"Error generating dynamic puzzle: {e}", file=sys.stderr)
+        return "{}"
 
     @Slot(result=str)
     def getLevelsJson(self):

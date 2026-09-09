@@ -348,6 +348,90 @@ def generate_levels(num_levels=100):
 
     return levels
 
+CURATED_ROOTS = [
+    # 5-letters
+    "HEART", "PLANT", "BEACH", "EARTH", "WATER", "CLOUD", "LIGHT", "RIVER", "DREAM", "STORM",
+    "SPACE", "MUSIC", "PEACE", "MAGIC", "POWER", "NIGHT", "OCEAN", "SMILE", "TRAIN", "HOUSE",
+    "HORSE", "STONE", "FRUIT", "FLAME", "SHARK", "TIGER", "EAGLE", "ROBOT", "CROWN", "BLADE",
+    "GHOST", "SOLAR", "SUGAR", "SWEET", "TRACK", "GUIDE", "FAITH", "BRAVE", "PRIDE", "SHINE",
+    "BLOOM", "BREAD", "CHAIR", "CLOCK", "DANCE", "FLASH", "GLASS", "GREEN", "HONOR", "KNIFE",
+    "LEMON", "LUCKY", "MONEY", "PAINT", "PAPER", "PILOT", "PRICE", "PRIZE", "QUEEN", "RADIO",
+    "ROUND", "SHIRT", "SIGHT", "SOUND", "SPORT", "STAGE", "TABLE", "TOWER", "VOICE", "WHEEL",
+    # 6-letters
+    "PLANET", "FOREST", "CASTLE", "GARDEN", "WINTER", "SUMMER", "SPRING", "SILVER", "ORANGE",
+    "YELLOW", "PURPLE", "FLOWER", "STREAM", "ISLAND", "CANDLE", "SHADOW", "BRIDGE", "KNIGHT",
+    "WIZARD", "DRAGON", "FROZEN", "MARBLE", "DESERT", "BREEZE", "SUNSET", "PENCIL", "ROCKET",
+    "VOYAGE", "NATURE", "BEAUTY", "CAMERA", "CIRCLE", "DANGER", "DOCTOR", "ENGINE", "FAMILY",
+    "FATHER", "FLIGHT", "FUTURE", "HEALTH", "HUNTER", "LEADER", "MARKET", "MEMORY", "MIRROR",
+    "MOTHER", "PALACE", "PERSON", "PLAYER", "POETRY", "POLICE", "RECORD", "RESCUE", "SAFARI",
+    "SAILOR", "SEASON", "SECRET", "SHIELD", "SIGNAL", "SPIRIT", "SQUARE", "STATUE", "STREET",
+    # 7-letters
+    "JOURNEY", "WEATHER", "DIAMOND", "RAINBOW", "CRYSTAL", "MORNING", "FREEDOM", "PACKAGE",
+    "BALANCE", "CAPTAIN", "CENTURY", "CHAMPION", "COMPANY", "COUNTRY", "CREATIVE", "CULTURE",
+    "DAYLIGHT", "DISCOVER", "DOLPHIN", "DYNAMIC", "ELEMENT", "EMPEROR", "EVENING", "EXPLORE",
+    "FACTORY", "FANTASY", "FEATHER", "FIREWORK", "FORTUNE", "FORWARD", "FRIENDS", "GALAXY",
+    "GATEWAY", "GLORIOUS", "GODDESS", "HARBOR", "HARMONY", "HARVEST", "HERITAGE", "HIGHWAY",
+    "HORIZON", "HOSPITAL", "HUNDRED", "ILLUSION", "INFINITY", "INSPIRE", "JOURNAL", "KINGDOM",
+    "LANTERN", "LEGEND", "LIBERTY", "LULLABY", "MAJESTIC", "MIRACLE", "MISSION", "MONSTER",
+    "MYSTERY", "NETWORK", "OLYMPIC", "OUTSIDE", "PARADISE", "PASSAGE", "PATIENT", "PENGUIN",
+    "PHOENIX", "PIONEER", "PLAYFUL", "POPULAR", "PREMIUM", "PROMISE", "PROUDLY", "PYRAMID"
+]
+
+_CACHED_DICT = None
+
+def generate_dynamic_puzzle(target_length=None, excluded_roots=None, puzzle_num=1):
+    global _CACHED_DICT
+    if _CACHED_DICT is None:
+        _CACHED_DICT = load_dictionary()
+
+    excluded = set(excluded_roots or [])
+
+    if target_length and target_length in (4, 5, 6, 7):
+        candidate_roots = [r for r in CURATED_ROOTS if len(r) == target_length and r not in excluded]
+    else:
+        candidate_roots = [r for r in CURATED_ROOTS if r not in excluded]
+
+    if not candidate_roots:
+        candidate_roots = [r for r in CURATED_ROOTS if (not target_length or len(r) == target_length)]
+
+    random.shuffle(candidate_roots)
+
+    for root_word in candidate_roots:
+        subwords = get_all_subwords(root_word, _CACHED_DICT)
+        if len(subwords) < 4:
+            continue
+        res = solve_crossword_layout(subwords)
+        if res is not None:
+            placed, rows, cols = res
+            target_set = set(p["word"] for p in placed)
+            bonus_words = [w for w in subwords if w not in target_set and len(w) >= 3]
+
+            letters = list(root_word)
+            random.shuffle(letters)
+            if "".join(letters) == root_word and len(letters) >= 4:
+                letters[0], letters[1] = letters[1], letters[0]
+
+            chapters = {
+                4: "Emerald Forest",
+                5: "Sapphire Ocean",
+                6: "Neon Nebula",
+                7: "Galactic Core"
+            }
+            chapter = chapters.get(len(root_word), "Cosmic Void")
+
+            return {
+                "level": puzzle_num,
+                "chapter": chapter,
+                "root_word": root_word,
+                "circle_letters": letters,
+                "grid_rows": rows,
+                "grid_cols": cols,
+                "words": placed,
+                "bonus_words": sorted(bonus_words[:30])
+            }
+
+    return None
+
 if __name__ == "__main__":
     levels = generate_levels(100)
     out_path = Path(__file__).parent / "levels.json"
