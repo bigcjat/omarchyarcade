@@ -39,16 +39,38 @@ SEED_ROOTS = [
     "JOURNEY", "WEATHER", "DIAMOND", "RAINBOW", "CRYSTAL"
 ]
 
-def load_dictionary():
-    """Loads and filters common English words for fair, non-obscure puzzles."""
-    common_txt = Path(__file__).resolve().parent / "assets" / "common_words.txt"
-    valid_words = set()
+_CACHED_FREQ = None
 
+def load_dictionary():
+    """Loads and filters common English words with frequency weighting."""
+    global _CACHED_FREQ
+    assets_dir = Path(__file__).resolve().parent / "assets"
+    freq_json = assets_dir / "frequency_words.json"
+    freq_map = {}
+
+    if freq_json.exists():
+        try:
+            freq_map = json.loads(freq_json.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    _CACHED_FREQ = freq_map
+
+    valid_words = set(freq_map.keys())
+
+    BAD_ACRONYMS = {
+        "MLS", "SIE", "MEL", "MSIE", "LES", "MIL", "SIM", "SOA", "AOL", "IRA", "IRS",
+        "ISA", "ISO", "LAOS", "LISA", "ROSA", "SAO", "SRI", "ALI", "RIO", "ALO", "LOA",
+        "RIA", "URL", "HTML", "HTTP", "FAQ", "PDF", "XML", "DNS", "FTP", "SQL", "PHP", "CSS"
+    }
+    for bad in BAD_ACRONYMS:
+        valid_words.discard(bad)
+
+    common_txt = assets_dir / "common_words.txt"
     if common_txt.exists():
         with open(common_txt, "r", encoding="utf-8", errors="ignore") as f:
             for line in f:
                 w = line.strip().upper()
-                if 3 <= len(w) <= 7 and w.isalpha():
+                if 3 <= len(w) <= 7 and w.isalpha() and w not in BAD_ACRONYMS:
                     valid_words.add(w)
 
     dict_file = Path("/usr/share/dict/words")
@@ -56,9 +78,8 @@ def load_dictionary():
         with open(dict_file, "r", encoding="utf-8", errors="ignore") as f:
             for line in f:
                 w = line.strip().upper()
-                # If we have common words list, only include dict words that are in common or length >= 5
-                if 3 <= len(w) <= 7 and w.isalpha() and w.isascii():
-                    if not valid_words or w in valid_words or len(w) >= 6:
+                if 3 <= len(w) <= 7 and w.isalpha() and w.isascii() and w not in BAD_ACRONYMS:
+                    if len(w) >= 6 or w in valid_words:
                         valid_words.add(w)
     
     # Core high-frequency supplementary words to ensure common short words exist
@@ -154,18 +175,25 @@ def load_dictionary():
     valid_words.update(core_common)
     return valid_words
 
-def get_all_subwords(root_word, dictionary):
-    """Finds all valid words that can be formed from letters of root_word."""
+def get_all_subwords(root_word, dictionary, freq_dict=None):
+    """Finds all valid words that can be formed from letters of root_word, ranked by frequency."""
     root_counter = Counter(root_word)
     matches = []
+    freq_map = freq_dict or (_CACHED_FREQ or {})
     for w in dictionary:
         if len(w) < 3:
             continue
         w_counter = Counter(w)
         if all(root_counter[char] >= count for char, count in w_counter.items()):
             matches.append(w)
-    # Sort by length descending, then alphabetically
-    matches.sort(key=lambda x: (-len(x), x))
+    
+    # Sort: root_word is ALWAYS first! Then by length desc, then by frequency score desc!
+    matches.sort(key=lambda x: (
+        x != root_word,
+        -len(x),
+        -freq_map.get(x, 0),
+        x
+    ))
     return matches
 
 def solve_crossword_layout(subwords):
@@ -176,119 +204,116 @@ def solve_crossword_layout(subwords):
     if len(subwords) < 3:
         return None
 
-    # Try various combinations of words
-    # Always include the longest word as anchor
     anchor = subwords[0]
-    
-    # Grid bounds: 12x12 virtual, trimmed later
-    grid = {} # (r, c) -> char
-    placed = []
+    best_result = None
 
-    # Place anchor at (4, 4) horizontally
-    r0, c0 = 4, 4
-    for idx, ch in enumerate(anchor):
-        grid[(r0, c0 + idx)] = ch
-    placed.append({"word": anchor, "row": r0, "col": c0, "dir": "across"})
+    for attempt in range(8):
+        grid = {}
+        placed = []
+        r0, c0 = 4, 4
+        for idx, ch in enumerate(anchor):
+            grid[(r0, c0 + idx)] = ch
+        placed.append({"word": anchor, "row": r0, "col": c0, "dir": "across"})
 
-    # Try placing intersecting vertical words
-    candidates = subwords[1:]
-    random.shuffle(candidates)
+        candidates = list(subwords[1:])
+        if attempt > 0:
+            random.shuffle(candidates)
 
-    def can_place(word, start_r, start_c, direction):
-        dr = 1 if direction == "down" else 0
-        dc = 1 if direction == "across" else 0
-        
-        # Check cell conflicts and immediate adjacent parallel touches
-        overlap_count = 0
-        for i, ch in enumerate(word):
-            r = start_r + i * dr
-            c = start_c + i * dc
-            existing = grid.get((r, c))
-            if existing is not None:
-                if existing != ch:
-                    return False
-                overlap_count += 1
-            else:
-                # Check neighbors perpendicular to direction
-                if direction == "down":
-                    if (r, c - 1) in grid or (r, c + 1) in grid:
+        def can_place(word, start_r, start_c, direction):
+            dr = 1 if direction == "down" else 0
+            dc = 1 if direction == "across" else 0
+            overlap_count = 0
+            for i, ch in enumerate(word):
+                r = start_r + i * dr
+                c = start_c + i * dc
+                existing = grid.get((r, c))
+                if existing is not None:
+                    if existing != ch:
                         return False
+                    overlap_count += 1
                 else:
-                    if (r - 1, c) in grid or (r + 1, c) in grid:
-                        return False
-        
-        # Check one cell before and after the word (no run-ons)
-        before = (start_r - dr, start_c - dc)
-        after = (start_r + len(word) * dr, start_c + len(word) * dc)
-        if before in grid or after in grid:
-            return False
+                    if direction == "down":
+                        if (r, c - 1) in grid or (r, c + 1) in grid:
+                            return False
+                    else:
+                        if (r - 1, c) in grid or (r + 1, c) in grid:
+                            return False
+            before = (start_r - dr, start_c - dc)
+            after = (start_r + len(word) * dr, start_c + len(word) * dc)
+            if before in grid or after in grid:
+                return False
+            return overlap_count >= 1
 
-        return overlap_count >= 1
-
-    # First pass: try vertical words intersecting anchor
-    for w in candidates:
-        if len(placed) >= 7:
-            break
-        # Find match with letters in anchor
-        for i, anchor_ch in enumerate(anchor):
-            anchor_r = r0
-            anchor_c = c0 + i
-            for w_idx, w_ch in enumerate(w):
-                if w_ch == anchor_ch:
-                    start_r = anchor_r - w_idx
-                    start_c = anchor_c
-                    if can_place(w, start_r, start_c, "down"):
-                        for k, ch in enumerate(w):
-                            grid[(start_r + k, start_c)] = ch
-                        placed.append({"word": w, "row": start_r, "col": start_c, "dir": "down"})
-                        break
-            if w in [p["word"] for p in placed]:
+        for w in candidates:
+            if len(placed) >= 8:
                 break
-
-    # Second pass: try horizontal words intersecting already placed vertical words
-    for w in candidates:
-        if w in [p["word"] for p in placed]:
-            continue
-        if len(placed) >= 8:
-            break
-        vert_placed = [p for p in placed if p["dir"] == "down"]
-        placed_ok = False
-        for vp in vert_placed:
-            for v_idx, v_ch in enumerate(vp["word"]):
-                cell_r = vp["row"] + v_idx
-                cell_c = vp["col"]
+            placed_ok = False
+            for p in list(placed):
+                if p["dir"] != "across":
+                    continue
+                a_word, a_r, a_c = p["word"], p["row"], p["col"]
                 for w_idx, w_ch in enumerate(w):
-                    if w_ch == v_ch:
-                        start_r = cell_r
-                        start_c = cell_c - w_idx
-                        if can_place(w, start_r, start_c, "across"):
-                            for k, ch in enumerate(w):
-                                grid[(start_r, start_c + k)] = ch
-                            placed.append({"word": w, "row": start_r, "col": start_c, "dir": "across"})
-                            placed_ok = True
-                            break
+                    for a_idx, a_ch in enumerate(a_word):
+                        if w_ch == a_ch:
+                            start_r = a_r - w_idx
+                            start_c = a_c + a_idx
+                            if can_place(w, start_r, start_c, "down"):
+                                for k, ch in enumerate(w):
+                                    grid[(start_r + k, start_c)] = ch
+                                placed.append({"word": w, "row": start_r, "col": start_c, "dir": "down"})
+                                placed_ok = True
+                                break
+                    if placed_ok:
+                        break
                 if placed_ok:
                     break
-            if placed_ok:
+
+        remaining = [w for w in candidates if not any(p["word"] == w for p in placed)]
+        for w in remaining:
+            if len(placed) >= 8:
                 break
+            placed_ok = False
+            for p in list(placed):
+                if p["dir"] != "down":
+                    continue
+                v_word, v_r, v_c = p["word"], p["row"], p["col"]
+                for v_idx, v_ch in enumerate(v_word):
+                    cell_r = v_r + v_idx
+                    cell_c = v_c
+                    for w_idx, w_ch in enumerate(w):
+                        if w_ch == v_ch:
+                            start_r = cell_r
+                            start_c = cell_c - w_idx
+                            if can_place(w, start_r, start_c, "across"):
+                                for k, ch in enumerate(w):
+                                    grid[(start_r, start_c + k)] = ch
+                                placed.append({"word": w, "row": start_r, "col": start_c, "dir": "across"})
+                                placed_ok = True
+                                break
+                    if placed_ok:
+                        break
+                if placed_ok:
+                    break
 
-    if len(placed) < 3:
-        return None
+        if len(placed) >= 3:
+            if best_result is None or len(placed) > len(best_result[0]):
+                min_r = min(p["row"] for p in placed)
+                min_c = min(p["col"] for p in placed)
+                max_r = max(p["row"] + (len(p["word"]) if p["dir"] == "down" else 1) for p in placed)
+                max_c = max(p["col"] + (len(p["word"]) if p["dir"] == "across" else 1) for p in placed)
+                norm_placed = []
+                for p in placed:
+                    norm_placed.append({
+                        "word": p["word"],
+                        "row": p["row"] - min_r,
+                        "col": p["col"] - min_c,
+                        "dir": p["dir"]
+                    })
+                best_result = (norm_placed, max_r - min_r, max_c - min_c)
+                if len(placed) >= 7:
+                    break
 
-    # Normalize coordinates so top-left starts at (0, 0)
-    min_r = min(p["row"] for p in placed)
-    min_c = min(p["col"] for p in placed)
-    max_r = max(p["row"] + (len(p["word"]) if p["dir"] == "down" else 1) for p in placed)
-    max_c = max(p["col"] + (len(p["word"]) if p["dir"] == "across" else 1) for p in placed)
-
-    for p in placed:
-        p["row"] -= min_r
-        p["col"] -= min_c
-
-    rows = max_r - min_r
-    cols = max_c - min_c
-
-    return placed, rows, cols
+    return best_result
 
 def generate_levels(num_levels=100):
     print("Loading dictionary...")
@@ -360,6 +385,11 @@ def generate_levels(num_levels=100):
     return levels
 
 CURATED_ROOTS = [
+    # 4-letters
+    "STOP", "POST", "STAR", "BEAR", "COLD", "LION", "MOON", "ROOM", "RAIN", "BIRD",
+    "FISH", "WIND", "FIRE", "BLUE", "GOLD", "NOTE", "ROCK", "TREE", "SHIP", "TIME",
+    "ROAD", "SAND", "ROSE", "SALT", "LEAF", "WOOD", "WAVE", "TIDE", "BOAT", "SONG",
+    "TUNE", "BOOK", "PAGE", "WORD", "LINE", "SIGN", "YEAR", "HOUR", "WEEK", "DAWN",
     # 5-letters
     "HEART", "PLANT", "BEACH", "EARTH", "WATER", "CLOUD", "LIGHT", "RIVER", "DREAM", "STORM",
     "SPACE", "MUSIC", "PEACE", "MAGIC", "POWER", "NIGHT", "OCEAN", "SMILE", "TRAIN", "HOUSE",
@@ -408,8 +438,10 @@ def generate_dynamic_puzzle(target_length=None, excluded_roots=None, puzzle_num=
     random.shuffle(candidate_roots)
 
     for root_word in candidate_roots:
-        subwords = get_all_subwords(root_word, _CACHED_DICT)
-        if len(subwords) < 4:
+        subwords = get_all_subwords(root_word, _CACHED_DICT, _CACHED_FREQ)
+        # Guarantee root_word is ALWAYS the first subword so it is placed on the board!
+        subwords = [root_word] + [w for w in subwords if w != root_word]
+        if len(subwords) < 3:
             continue
         res = solve_crossword_layout(subwords)
         if res is not None:
