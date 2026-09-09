@@ -1429,10 +1429,10 @@ Window {
                     }
                 }
 
-                // Legal / Attribution Footnote
+                // Attribution Footnote
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: "Created by Chris Thompson (@bigcjat) with Gemini\nTetraBlocks • Public Domain Rules • MIT License"
+                    text: "Created by Chris Thompson (@bigcjat) with Gemini"
                     horizontalAlignment: Text.AlignHCenter
                     font.pixelSize: 9
                     color: Qt.alpha(root.themeSubtext, 0.7)

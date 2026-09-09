@@ -1498,7 +1498,7 @@ ApplicationWindow {
                     // Credits / Attribution Footnote
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "Created by Chris Thompson (@bigcjat) with Gemini\nBased on 2048 by Gabriele Cirulli • MIT License"
+                        text: "Created by Chris Thompson (@bigcjat) with Gemini"
                         horizontalAlignment: Text.AlignHCenter
                         font.pixelSize: modalCard.isVeryTiny ? 8 : (modalCard.isCompact ? 9 : 10)
                         color: Qt.alpha(root.themeSubtext, 0.75)
