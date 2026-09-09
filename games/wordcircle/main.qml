@@ -49,7 +49,7 @@ Window {
     on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Connect Letters: Click & drag across the wheel or type on keyboard\n• Submit Word: Release drag or press ENTER\n• Shuffle Letters: Click 🔀 or press SPACE\n• Undo Letter: BACKSPACE\n• Clear Selection: ESC\n• Full/Compact View: Shift+F\n• Mute Sound: M\n• Restart Level: R"
+    property string helpText: "• Connect Letters: Click & drag across the wheel or type on keyboard\n• Submit Word: Release drag or press ENTER\n• Next / Prev Level: [ and ] or click ◀ ▶\n• Shuffle Letters: Click 🔀 or press SPACE\n• Undo Letter: BACKSPACE\n• Clear Selection: ESC\n• Full/Compact View: Shift+F\n• Mute Sound: M\n• Restart Level: R"
 
     // Engine bindings
     property var activeIndices: Engine.activeIndices
@@ -164,6 +164,18 @@ Window {
         playSound("click");
     }
 
+    function jumpToLevel(lvl) {
+        if (lvl < 1) lvl = 1;
+        if (lvl > 100) lvl = 100;
+        Engine.startLevel(lvl - 1);
+        updateUIState();
+        playSound("dock");
+        soundToast.show("Level " + lvl + " (" + (Engine.circleLetters ? Engine.circleLetters.length : 0) + " Letters)");
+        if (typeof settingsManager !== "undefined" && settingsManager) {
+            settingsManager.setValue("savedLevel", lvl.toString());
+        }
+    }
+
     function captureScreenshot(filePath, shouldQuit) {
         var targetItem = (splashScreen && splashScreen.visible && splashScreen.opacity > 0) ? splashScreen : mainContainer;
         targetItem.grabToImage(function(result) {
@@ -238,6 +250,18 @@ Window {
 
             if (event.key === Qt.Key_R) {
                 root.restartGame();
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_BracketLeft || event.key === Qt.Key_PageUp) {
+                root.jumpToLevel(root.currentLevel - 1);
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_BracketRight || event.key === Qt.Key_PageDown) {
+                root.jumpToLevel(root.currentLevel + 1);
                 event.accepted = true;
                 return;
             }
@@ -348,11 +372,40 @@ Window {
                     font.letterSpacing: 1
                 }
 
-                Text {
-                    text: root.currentChapter + " • Level " + root.currentLevel + " of 100"
-                    font.pixelSize: 11
-                    font.bold: true
-                    color: root.themeSubtext
+                Row {
+                    spacing: 6
+
+                    Rectangle {
+                        width: 18; height: 18; radius: 4
+                        color: prevLvlMouse.containsMouse ? root.themeCardBg : "transparent"
+                        border.color: prevLvlMouse.containsMouse ? root.themeAccent : "transparent"
+                        border.width: 1
+                        Text { anchors.centerIn: parent; text: "◀"; font.pixelSize: 9; color: root.themeAccent }
+                        MouseArea {
+                            id: prevLvlMouse; anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                            onClicked: root.jumpToLevel(root.currentLevel - 1)
+                        }
+                    }
+
+                    Text {
+                        text: "Lvl " + root.currentLevel + " (" + (root.circleLetters ? root.circleLetters.length : 0) + " Letters) • " + root.currentChapter
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.themeSubtext
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Rectangle {
+                        width: 18; height: 18; radius: 4
+                        color: nextLvlMouse.containsMouse ? root.themeCardBg : "transparent"
+                        border.color: nextLvlMouse.containsMouse ? root.themeAccent : "transparent"
+                        border.width: 1
+                        Text { anchors.centerIn: parent; text: "▶"; font.pixelSize: 9; color: root.themeAccent }
+                        MouseArea {
+                            id: nextLvlMouse; anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                            onClicked: root.jumpToLevel(root.currentLevel + 1)
+                        }
+                    }
                 }
             }
 
