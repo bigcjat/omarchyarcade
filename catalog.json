@@ -1,7 +1,7 @@
 {
   "version": 4,
   "app_name": "Omarchy Arcade",
-  "updated_at": "2026-09-09T00:43:00Z",
+  "updated_at": "2026-09-09T07:19:00Z",
   "games": [
     {
       "id": "2048",
@@ -1260,6 +1260,45 @@
         "tokyo traffic",
         "kei truck",
         "logic puzzle"
+      ]
+    },
+    {
+      "id": "nutssort",
+      "title": "Nuts Sort",
+      "ref": "OA-035",
+      "category": "Puzzles & Grid Logic",
+      "floppy_color": "#F59E0B",
+      "grid_color": "#3B82F6",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Tactile Isometric Nut & Bolt Color Sorting Puzzle",
+      "description": "Sort anodized nuts across threaded steel bolts by color. Lift, spin, and stack matching nuts until every bolt holds a single uniform color across thousands of progressively challenging levels.",
+      "instructions": [
+        "Select a bolt to unscrew its top nut, then select a destination bolt to thread it on.",
+        "A nut can only be placed onto an empty bolt or onto a matching color with remaining bolt capacity.",
+        "Solve the stage by sorting all nuts so that every bolt contains only 4 nuts of a single color.",
+        "Use number keys 1–9 or mouse clicks to pick up and transfer nuts smoothly."
+      ],
+      "controls": {
+        "keyboard": "Number keys 1–9 or click to pick/place nuts, U to undo, R to restart stage, ? / Esc for help, M to mute",
+        "mouse": "Click bolts to lift and drop nuts"
+      },
+      "folder": "games/nutssort",
+      "entrypoint": "games/nutssort/main.py",
+      "cover_image": "assets/covers/nutssort.png",
+      "size": "1.0 MB",
+      "size_bytes": 1039040,
+      "download_size": "1.0 MB",
+      "keywords": [
+        "nuts sort",
+        "nut and bolt",
+        "color sort",
+        "ball sort",
+        "water sort",
+        "isometric puzzle",
+        "anodized",
+        "logic puzzle",
+        "brain teaser"
       ]
     }
   ]

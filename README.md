@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Offline-Forever-00f0ff?style=flat-square" alt="Offline Forever"/>
   <img src="https://img.shields.io/badge/Telemetry-Zero-10b981?style=flat-square" alt="Zero Telemetry"/>
   <img src="https://img.shields.io/badge/Ads-Zero-f59e0b?style=flat-square" alt="Zero Ads"/>
-  <img src="https://img.shields.io/badge/Games-32%20Included-ec4899?style=flat-square" alt="32 Games"/>
+  <img src="https://img.shields.io/badge/Games-35%20Included-ec4899?style=flat-square" alt="35 Games"/>
   <img src="https://img.shields.io/badge/Interface-Keyboard--Primary-8b5cf6?style=flat-square" alt="Keyboard-Primary"/>
   <img src="https://img.shields.io/badge/Platform-Omarchy%20Linux%20(Hyprland)-38bdf8?style=flat-square" alt="Omarchy Linux"/>
 </p>
@@ -111,7 +111,7 @@ sudo pacman -U omarchy-arcade-1.0.0-1-any.pkg.tar.zst
 
 ---
 
-## The 34 Games Included
+## The 35 Games Included
 
 Every game includes full offline documentation, keyboard controls mappings, and standalone launch capabilities:
 
@@ -151,6 +151,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **Dr. Virus** | Blocks & Merging | **544 KB** | Retro medical puzzle with cascading gravity, living reactive viruses, and multi-stage progression. | [Manual](games/drvirus/README.md) |
 | **WordCircle** | Word & Trivia | **571 KB** | Circular anagram crossword puzzle adventure with dual input and bonus word banking. | [Manual](games/wordcircle/README.md) |
 | **Parking Jam** | Puzzles & Logic | **1.3 MB** | Tactile sliding Japanese vehicle escape puzzle with 56 verified multi-step levels. | [Manual](games/parkingjam/README.md) |
+| **Nuts Sort** | Puzzles & Logic | **1.0 MB** | Tactile isometric nut & bolt color sorting puzzle with 10,000+ solvable levels. | [Manual](games/nutssort/README.md) |
 
 ---
 
