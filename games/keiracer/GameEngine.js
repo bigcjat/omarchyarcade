@@ -913,13 +913,20 @@ function update(dt, input, soundCallback) {
             }
         }
 
-        // Visual plane: player vehicle is rendered at playerScreenY = 0.90 * height
-        // In 3D space, this visual plane is at playerZ + (CAMERA_HEIGHT * CAMERA_DEPTH * 0.25)
-        var visualPlayerZ = (playerZ + ((CAMERA_HEIGHT * CAMERA_DEPTH) * 0.25)) % trackLength;
+        // Visual plane: player vehicle center is at playerZ + 135
+        var visualPlayerZ = (playerZ + 135) % trackLength;
+        var dz = visualPlayerZ - car.z;
+        if (dz > trackLength / 2) dz -= trackLength;
+        else if (dz < -trackLength / 2) dz += trackLength;
 
-        // Collision detection between player and AI car when side-by-side
-        if (Math.abs(visualPlayerZ - car.z) < 130) {
-            if (Math.abs(playerX - car.offset) < 0.45) {
+        // Accurate physical contact box:
+        // A full lane is 0.667 wide; vehicle bodies are ~0.26 wide.
+        // Cars now only collide when their bodies actually make physical contact.
+        var hitWidth = (isDrifting && Math.abs(driftAngle) > 0.1) ? 0.30 : 0.26;
+
+        // Collision detection between player and AI car when touching
+        if (Math.abs(dz) < 70) {
+            if (Math.abs(playerX - car.offset) < hitWidth) {
                 // Impact!
                 if (collisionCooldown <= 0) {
                     var playerSpd = speed;
@@ -963,11 +970,11 @@ function update(dt, input, soundCallback) {
         }
 
         // Overtake detection (player passes rival cleanly at speed)
-        if (!car.overtaken && visualPlayerZ > car.z && (visualPlayerZ - car.z) < 300) {
+        if (!car.overtaken && dz > 60 && dz < 250) {
             car.overtaken = true;
             score += 250;
             if (soundCallback) soundCallback("pass");
-        } else if (visualPlayerZ < car.z) {
+        } else if (dz < -50) {
             car.overtaken = false;
         }
     }
