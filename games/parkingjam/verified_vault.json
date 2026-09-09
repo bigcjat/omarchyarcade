@@ -1,0 +1,4208 @@
+{
+  "easy": [
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 9,
+      "slideMoves": 2,
+      "startExits": 1,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 6,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 1, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 3, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 9,
+      "slideMoves": 2,
+      "startExits": 1,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 2, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 3, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 9,
+      "slideMoves": 2,
+      "startExits": 1,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 4,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 4, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 1, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 9,
+      "slideMoves": 2,
+      "startExits": 1,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 0, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 1, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 9,
+      "slideMoves": 2,
+      "startExits": 1,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 2,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 2, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 0, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 9,
+      "slideMoves": 2,
+      "startExits": 1,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 1,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 6,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 1, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 0, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 9,
+      "slideMoves": 2,
+      "startExits": 1,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 0, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 3, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 9,
+      "slideMoves": 2,
+      "startExits": 1,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 4,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 4, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 3, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 6,
+      "slideMoves": 0,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 1,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 4,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 0, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 1, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 6,
+      "slideMoves": 0,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 3, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 1, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 6,
+      "slideMoves": 0,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 4,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 4, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 4, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 6,
+      "slideMoves": 0,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 4,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 0, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 4, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 6,
+      "slideMoves": 0,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 3, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 2, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 6,
+      "slideMoves": 0,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 4,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 0, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 2, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 6,
+      "slideMoves": 0,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 4,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 0, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 0, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "easy",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 6,
+      "slideMoves": 0,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 4,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 4, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 0, \"o\": \"H\"}]"
+    }
+  ],
+  "medium": [
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 4,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 7,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 0, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 3, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 7,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 3, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 3, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 4,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 7,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 3, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 3, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 6,
+          "gx": 4,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 7,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 1, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 3, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 7,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 3, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 0, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 3,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 4,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 7,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 0, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 0, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 6,
+          "gx": 4,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 7,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 1, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 1, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 4,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 7,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 3, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 1, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 10,
+      "slideMoves": 2,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 7,
+          "gx": 4,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 1, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 2, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 10,
+      "slideMoves": 2,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 7,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 2, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 2, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 10,
+      "slideMoves": 2,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 4,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 7,
+          "gx": 1,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 4, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 4, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 10,
+      "slideMoves": 2,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 6,
+          "gx": 4,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 7,
+          "gx": 2,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 0, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 4, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 10,
+      "slideMoves": 2,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 2,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 7,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 2, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 1, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 10,
+      "slideMoves": 2,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 1,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 7,
+          "gx": 4,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 1, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 1, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 10,
+      "slideMoves": 2,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 6,
+          "gx": 4,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 7,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 0, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 0, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "medium",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 10,
+      "slideMoves": 2,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 4,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 7,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 4, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 0, \"o\": \"H\"}]"
+    }
+  ],
+  "hard": [
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 4,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 7,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 8,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 0, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 0, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 7,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 8,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 3, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 0, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 4,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 7,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 8,
+          "gx": 4,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 3, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 0, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 6,
+          "gx": 4,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 7,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 8,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 1, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 0, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 7,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 8,
+          "gx": 3,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 3, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 4, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 3,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 4,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 7,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 8,
+          "gx": 0,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 0, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 4, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 6,
+          "gx": 4,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 7,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 8,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 1, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 3, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 2,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 4,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 7,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 8,
+          "gx": 4,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 3, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 3, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 4,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 7,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 8,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 0, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 7,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 8,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 3, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 4,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 7,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 8,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 3, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 6,
+          "gx": 4,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 7,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 8,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 1, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 7,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 8,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 3, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 3,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 4,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 7,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 8,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 0, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 6,
+          "gx": 4,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 7,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 8,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 1, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 12,
+      "slideMoves": 3,
+      "startExits": 3,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 4,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 7,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 8,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 3, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 2,
+      "startExits": 4,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 7,
+          "gx": 4,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 8,
+          "gx": 0,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 1, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 4, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 2,
+      "startExits": 4,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 2,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 4,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 7,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 8,
+          "gx": 3,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 2, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 4, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 2,
+      "startExits": 4,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 4,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 7,
+          "gx": 1,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 8,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 4, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 0, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 2,
+      "startExits": 4,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 5,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 6,
+          "gx": 4,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 7,
+          "gx": 2,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 8,
+          "gx": 4,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        }
+      ],
+      "ser": "[{\"d\": \"south\", \"gx\": 0, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 0, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 2,
+      "startExits": 4,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 2,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 1,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 3,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 7,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 8,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        }
+      ],
+      "ser": "[{\"d\": \"west\", \"gx\": 2, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 3, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 0, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 2,
+      "startExits": 4,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 1,
+          "gy": 4,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 4,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 5,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 6,
+          "gx": 3,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 7,
+          "gx": 4,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 8,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        }
+      ],
+      "ser": "[{\"d\": \"east\", \"gx\": 1, \"gy\": 4, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 1, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 2, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 0, \"o\": \"H\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 2,
+      "startExits": 4,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 0,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 4,
+          "gx": 3,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 3,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 6,
+          "gx": 4,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 7,
+          "gx": 2,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 8,
+          "gx": 4,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 0, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 0, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 1, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 3, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 3, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 4, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 2, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 4, \"gy\": 3, \"o\": \"V\"}]"
+    },
+    {
+      "difficulty": "hard",
+      "cols": 5,
+      "rows": 5,
+      "minMoves": 11,
+      "slideMoves": 2,
+      "startExits": 4,
+      "cars": [
+        {
+          "id": 0,
+          "gx": 4,
+          "gy": 2,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 1,
+          "gx": 3,
+          "gy": 1,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 2,
+          "gx": 2,
+          "gy": 1,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        },
+        {
+          "id": 3,
+          "gx": 2,
+          "gy": 3,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 4,
+          "gx": 1,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 5,
+          "gx": 0,
+          "gy": 2,
+          "length": 2,
+          "orient": "H",
+          "dir": "west"
+        },
+        {
+          "id": 6,
+          "gx": 0,
+          "gy": 0,
+          "length": 2,
+          "orient": "V",
+          "dir": "north"
+        },
+        {
+          "id": 7,
+          "gx": 1,
+          "gy": 0,
+          "length": 2,
+          "orient": "H",
+          "dir": "east"
+        },
+        {
+          "id": 8,
+          "gx": 0,
+          "gy": 3,
+          "length": 2,
+          "orient": "V",
+          "dir": "south"
+        }
+      ],
+      "ser": "[{\"d\": \"north\", \"gx\": 4, \"gy\": 2, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 3, \"gy\": 1, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 2, \"gy\": 1, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 2, \"gy\": 3, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 1, \"gy\": 3, \"o\": \"V\"}, {\"d\": \"west\", \"gx\": 0, \"gy\": 2, \"o\": \"H\"}, {\"d\": \"north\", \"gx\": 0, \"gy\": 0, \"o\": \"V\"}, {\"d\": \"east\", \"gx\": 1, \"gy\": 0, \"o\": \"H\"}, {\"d\": \"south\", \"gx\": 0, \"gy\": 3, \"o\": \"V\"}]"
+    }
+  ]
+}

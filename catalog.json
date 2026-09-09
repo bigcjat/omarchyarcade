@@ -1222,6 +1222,46 @@
         "spelling",
         "word puzzle"
       ]
+    },
+    {
+      "id": "parkingjam",
+      "title": "Parking Jam",
+      "ref": "OA-034",
+      "category": "Puzzles & Grid Logic",
+      "floppy_color": "#059669",
+      "grid_color": "#38BDF8",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Tactile Sliding Vehicle Gridlock Escape Puzzle",
+      "description": "Navigate gridlocked Tokyo traffic by sliding Japanese sports cars, kei trucks, and city buses to clear exit paths and guide cars off the lot across 3 difficulty tiers.",
+      "instructions": [
+        "Tap or click an unblocked vehicle facing an open exit gate to drive it off the lot into Tokyo traffic.",
+        "Drag or use keyboard controls (Arrows / WASD / Vim) to slide blocked vehicles along their horizontal or vertical tracks into empty stalls.",
+        "Untangle traffic jams in as few moves as possible to beat the par score.",
+        "Progress through Easy, Medium, and Hard tiers featuring 17 authentic Japanese vehicle types."
+      ],
+      "controls": {
+        "keyboard": "Arrows / WASD / Vim (H/J/K/L) to slide vehicles, Space/Enter to exit, Tab to cycle selection, U to undo, R to restart, M to mute, Esc to back",
+        "mouse": "Click & drag vehicles along their track to slide; tap unblocked vehicles at exit gates to drive away"
+      },
+      "folder": "games/parkingjam",
+      "entrypoint": "games/parkingjam/main.py",
+      "cover_image": "assets/covers/parkingjam.png",
+      "size": "3.5 MB",
+      "size_bytes": 3665894,
+      "download_size": "3.5 MB",
+      "keywords": [
+        "parking jam",
+        "rush hour",
+        "traffic puzzle",
+        "car slide",
+        "sliding block puzzle",
+        "unblock car",
+        "tokyo traffic",
+        "kei truck",
+        "logic puzzle"
+      ]
     }
   ]
 }
+
