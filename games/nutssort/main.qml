@@ -1605,7 +1605,7 @@ Window {
                     }
 
                     Text {
-                        text: "Created for Omarchy Arcade • bigcjat"
+                        text: "Created by Chris Thompson (@bigcjat) with Gemini"
                         font.pixelSize: 9
                         color: root.themeSubtext
                         anchors.horizontalCenter: parent.horizontalCenter
