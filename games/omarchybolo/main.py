@@ -31,7 +31,7 @@ DISK_ICON = ASSETS_DIR / "disk_icon.png"
 
 APP_TITLE = "OmarchyBolo II"
 APP_REF = "OA-029"
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.0.4"
 
 class QuietHandler(SimpleHTTPRequestHandler):
     """Quiet handler that serves files from DIST_DIR with explicit CORS and MIME types."""
