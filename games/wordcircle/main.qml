@@ -973,6 +973,7 @@ Window {
                             id: centerShuffleMouse
                             anchors.fill: parent
                             hoverEnabled: true
+                            enabled: !root.isDragging
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 Engine.shuffleLetters();
@@ -990,7 +991,7 @@ Window {
                         function checkHit(mouseX, mouseY) {
                             var letters = Engine.circleLetters || [];
                             var count = letters.length;
-                            var hitRadius = wheelContainer.nodeRadius * 1.3;
+                            var hitRadius = wheelContainer.nodeRadius * 1.6;
 
                             for (var i = 0; i < count; i++) {
                                 var pos = wheelContainer.getNodePosition(i, count);
