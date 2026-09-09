@@ -173,7 +173,7 @@ def load_dictionary():
     return valid_words
 
 def get_all_subwords(root_word, dictionary, freq_dict=None):
-    """Finds all valid words that can be formed from letters of root_word, ranked by frequency."""
+    """Finds all valid words that can be formed from letters of root_word, strictly ranked by frequency."""
     root_counter = Counter(root_word)
     matches = []
     freq_map = freq_dict or (_CACHED_FREQ or {})
@@ -184,37 +184,42 @@ def get_all_subwords(root_word, dictionary, freq_dict=None):
         if all(root_counter[char] >= count for char, count in w_counter.items()):
             matches.append(w)
     
-    # Sort: root_word is ALWAYS first! Then by length desc, then by frequency score desc!
+    # Sort: root_word is ALWAYS first! Then strictly by frequency score desc (most common English words first!)
     matches.sort(key=lambda x: (
         x != root_word,
-        -len(x),
         -freq_map.get(x, 0),
+        -len(x),
         x
     ))
     return matches
 
 def solve_crossword_layout(subwords):
     """
-    Attempts to lay out 4 to 8 words on an interlocking 2D grid.
+    Attempts to lay out 5 to 11 common words on an interlocking 2D grid.
+    Prioritizes the most common words from the frequency list.
     Returns list of placed words with {word, row, col, dir}, or None if failed.
     """
     if len(subwords) < 3:
         return None
 
+    global _CACHED_FREQ
+    freq_map = _CACHED_FREQ or {}
     anchor = subwords[0]
     best_result = None
+    best_score = -1
 
-    for attempt in range(8):
+    for attempt in range(25):
         grid = {}
         placed = []
-        r0, c0 = 4, 4
+        r0, c0 = 6, 6
         for idx, ch in enumerate(anchor):
             grid[(r0, c0 + idx)] = ch
         placed.append({"word": anchor, "row": r0, "col": c0, "dir": "across"})
 
-        candidates = list(subwords[1:])
+        pool = list(subwords[1:])
         if attempt > 0:
-            random.shuffle(candidates)
+            # Keep the top 2 most frequent words fixed, perturb the rest to explore layouts
+            pool = pool[:2] + sorted(pool[2:], key=lambda _: random.random())
 
         def can_place(word, start_r, start_c, direction):
             dr = 1 if direction == "down" else 0
@@ -241,59 +246,42 @@ def solve_crossword_layout(subwords):
                 return False
             return overlap_count >= 1
 
-        for w in candidates:
-            if len(placed) >= 8:
-                break
-            placed_ok = False
-            for p in list(placed):
-                if p["dir"] != "across":
-                    continue
-                a_word, a_r, a_c = p["word"], p["row"], p["col"]
-                for w_idx, w_ch in enumerate(w):
-                    for a_idx, a_ch in enumerate(a_word):
-                        if w_ch == a_ch:
-                            start_r = a_r - w_idx
-                            start_c = a_c + a_idx
-                            if can_place(w, start_r, start_c, "down"):
-                                for k, ch in enumerate(w):
-                                    grid[(start_r + k, start_c)] = ch
-                                placed.append({"word": w, "row": start_r, "col": start_c, "dir": "down"})
-                                placed_ok = True
-                                break
-                    if placed_ok:
-                        break
-                if placed_ok:
+        # Multi-pass placement to build rich, dense intersecting crosswords
+        for _pass in range(3):
+            for w in pool:
+                if len(placed) >= 11:
                     break
-
-        remaining = [w for w in candidates if not any(p["word"] == w for p in placed)]
-        for w in remaining:
-            if len(placed) >= 8:
-                break
-            placed_ok = False
-            for p in list(placed):
-                if p["dir"] != "down":
+                if any(p["word"] == w for p in placed):
                     continue
-                v_word, v_r, v_c = p["word"], p["row"], p["col"]
-                for v_idx, v_ch in enumerate(v_word):
-                    cell_r = v_r + v_idx
-                    cell_c = v_c
+                placed_ok = False
+                for p in list(placed):
+                    perp_dir = "down" if p["dir"] == "across" else "across"
                     for w_idx, w_ch in enumerate(w):
-                        if w_ch == v_ch:
-                            start_r = cell_r
-                            start_c = cell_c - w_idx
-                            if can_place(w, start_r, start_c, "across"):
-                                for k, ch in enumerate(w):
-                                    grid[(start_r, start_c + k)] = ch
-                                placed.append({"word": w, "row": start_r, "col": start_c, "dir": "across"})
-                                placed_ok = True
-                                break
+                        for p_idx, p_ch in enumerate(p["word"]):
+                            if w_ch == p_ch:
+                                if perp_dir == "down":
+                                    start_r = p["row"] - w_idx
+                                    start_c = p["col"] + p_idx
+                                else:
+                                    start_r = p["row"] + p_idx
+                                    start_c = p["col"] - w_idx
+                                if can_place(w, start_r, start_c, perp_dir):
+                                    dr = 1 if perp_dir == "down" else 0
+                                    dc = 1 if perp_dir == "across" else 0
+                                    for k, ch in enumerate(w):
+                                        grid[(start_r + k * dr, start_c + k * dc)] = ch
+                                    placed.append({"word": w, "row": start_r, "col": start_c, "dir": perp_dir})
+                                    placed_ok = True
+                                    break
+                        if placed_ok:
+                            break
                     if placed_ok:
                         break
-                if placed_ok:
-                    break
 
-        if len(placed) >= 3:
-            if best_result is None or len(placed) > len(best_result[0]):
+        if len(placed) >= 4:
+            # Score heavily by placing the user's highest frequency words
+            score = len(placed) * 1000 + sum(min(freq_map.get(p["word"], 50), 3000) for p in placed)
+            if score > best_score:
                 min_r = min(p["row"] for p in placed)
                 min_c = min(p["col"] for p in placed)
                 max_r = max(p["row"] + (len(p["word"]) if p["dir"] == "down" else 1) for p in placed)
@@ -306,9 +294,8 @@ def solve_crossword_layout(subwords):
                         "col": p["col"] - min_c,
                         "dir": p["dir"]
                     })
+                best_score = score
                 best_result = (norm_placed, max_r - min_r, max_c - min_c)
-                if len(placed) >= 7:
-                    break
 
     return best_result
 
