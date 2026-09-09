@@ -1072,7 +1072,10 @@ Window {
         // Level Select Modal (Shows at game start or when clicking Levels)
         Rectangle {
             id: levelSelectModal
-            anchors.fill: parent
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
             color: "#d9000000"
             visible: root.showLevelSelect
             z: 950
@@ -1332,7 +1335,10 @@ Window {
         // Help Modal
         Rectangle {
             id: helpModal
-            anchors.fill: parent
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
             color: "#cc000000"
             visible: root.showHelp
             z: 900
