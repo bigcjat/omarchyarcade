@@ -297,6 +297,12 @@ function project(point, cameraX, cameraY, cameraZ, cameraDepth, screenWidth, scr
     var hy = (typeof horizonY !== "undefined") ? horizonY : getHorizonY(screenWidth, screenHeight);
     var roadSpanY = screenHeight - hy;
 
+    // On extreme ultra-wide horizontal tiles (e.g. 1/3 horizontal, 1920x300),
+    // prevent the road from stretching into an enormous 6x wide pancake that dwarfs the vehicle.
+    // Constrain horizontal road spread so lane width remains proportional to the vertical road span.
+    var maxFocalX = roadSpanY * 2.2;
+    var focalX = Math.min(screenWidth / 2, maxFocalX);
+
     var transX = point.world.x - cameraX;
     var transY = point.world.y - cameraY;
     var transZ = point.world.z - cameraZ;
@@ -306,9 +312,9 @@ function project(point, cameraX, cameraY, cameraZ, cameraDepth, screenWidth, scr
     point.camera.z = transZ;
 
     point.screen.scale = cameraDepth / Math.max(1, transZ);
-    point.screen.x = Math.round((screenWidth / 2) + (point.screen.scale * transX * screenWidth / 2));
+    point.screen.x = Math.round((screenWidth / 2) + (point.screen.scale * transX * focalX));
     point.screen.y = Math.round(hy - (point.screen.scale * transY * roadSpanY));
-    point.screen.w = Math.round(point.screen.scale * roadW * screenWidth / 2);
+    point.screen.w = Math.round(point.screen.scale * roadW * focalX);
 }
 
 // --- Track Generation ---
@@ -1352,7 +1358,9 @@ function drawTrafficCar(ctx, screenX, screenY, scale, car, canvas, spriteUrls) {
 function drawRoadsideSprite(ctx, screenX, screenY, scale, spriteType) {
     var hy = getHorizonY(width, height);
     var roadSpanY = height - hy;
-    var w = spriteType.width * scale * (width / 2);
+    var maxFocalX = roadSpanY * 2.2;
+    var focalX = Math.min(width / 2, maxFocalX);
+    var w = spriteType.width * scale * focalX;
     var h = spriteType.height * scale * (roadSpanY * 1.05);
     if (w < 6 || h < 6) return;
 
@@ -1637,14 +1645,21 @@ function render(ctx, w, h, theme, canvas, spriteUrls, selectedCar) {
     var playerScreenY = height - gaugesH + 2;
     var playerScreenX = width / 2;
 
-    // Vehicle sizing matching Image 2:
-    // The truck occupies ~54% of the road span from tires to roof,
-    // leaving the remaining ~46% of road span (clear road to the horizon) visible.
-    var playerH = roadSpanY * 0.54;
+    // Vehicle sizing:
+    // Sized relative to the road span, with lane-proportional framing on ultra-wide tiles
+    // so the vehicle never shrinks into a toy while keeping full forward visibility of the horizon.
+    var aspect = width / Math.max(1, height);
+    var spanFactor = (aspect >= 3.0) ? 0.68 : (aspect >= 2.0 ? 0.60 : 0.54);
+    var playerH = roadSpanY * spanFactor;
 
-    // On narrow vertical splits, clamp width to fit cleanly within one lane (max 32% screen width)
-    if (playerH * carAspect > width * 0.32) {
-        playerH = (width * 0.32) / carAspect;
+    // Lane-proportional constraint:
+    // Road width at bottom is 2 * focalX, so center lane width is (2 * focalX) / 3.
+    // Ensure the car fits cleanly within the center lane (~68% max).
+    var maxFocalX = roadSpanY * 2.2;
+    var focalX = Math.min(width / 2, maxFocalX);
+    var laneW = (2 * focalX) / 3;
+    if (playerH * carAspect > laneW * 0.68) {
+        playerH = (laneW * 0.68) / carAspect;
     }
     var playerW = playerH * carAspect;
     currentRenderPlayerH = playerH;
