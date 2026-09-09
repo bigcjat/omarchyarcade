@@ -45,6 +45,11 @@ function init(levelIdx) {
     startLevel(currentLevelIndex);
 }
 
+function getLevelData(idx) {
+    if (!allLevels || idx < 0 || idx >= allLevels.length) return null;
+    return allLevels[idx];
+}
+
 /**
  * Starts a specific level.
  */
