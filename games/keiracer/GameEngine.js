@@ -36,9 +36,9 @@ var VEHICLE_PRESETS = {
         gaugeMaxRPM: 8000,
         downshiftRPM: 2700,
         shiftTime: 0.16,
-        topSpeed: 110, // km/h (~68 mph)
-        zeroSixtyTime: 18.5,
-        brakePower: 29.0, // km/h/s (~3.8s from top speed to 0)
+        topSpeed: 125, // km/h (~78 mph)
+        zeroSixtyTime: 12.5,
+        brakePower: 32.0,
         engineSound: "engine_kei",
         hasTurbo: false,
         baseH: 212,
@@ -214,7 +214,7 @@ var bounce = 0;
 
 var score = 0;
 var distanceTraveled = 0;
-var timeLeft = 50.0;
+var timeLeft = 75.0;
 var gameOver = false;
 var stageCompleted = false;
 var stage = 1;
@@ -461,6 +461,7 @@ function resetCars() {
             offset: offset,
             z: z,
             speed: carSpeed,
+            baseSpeed: carSpeed,
             percent: 0,
             type: carType,
             overtaken: false
@@ -612,7 +613,7 @@ function init(w, h) {
 
     score = 0;
     distanceTraveled = 0;
-    timeLeft = 50.0;
+    timeLeft = 75.0;
     gameOver = false;
     stageCompleted = false;
     stage = 1;
@@ -811,7 +812,7 @@ function update(dt, input, soundCallback) {
     if (playerSegment.isCheckpoint && !playerSegment.checked) {
         playerSegment.checked = true;
         totalCheckpoints++;
-        timeLeft += 30.0;
+        timeLeft += 50.0;
         score += 5000;
         if (soundCallback) soundCallback("checkpoint");
 
@@ -896,14 +897,44 @@ function update(dt, input, soundCallback) {
         if (Math.abs(visualPlayerZ - car.z) < 130) {
             if (Math.abs(playerX - car.offset) < 0.45) {
                 // Impact!
-                speed = Math.max(20, speed * 0.4);
-                car.speed = Math.max(30, car.speed * 0.6);
                 if (collisionCooldown <= 0) {
-                    shakeIntensity = 10;
+                    var playerSpd = speed;
+                    var carSpd = car.speed;
+
+                    // Speed trading physics:
+                    // When hitting from behind, the rear vehicle slows to the front vehicle's speed,
+                    // and the front vehicle is propelled forward at the rear vehicle's speed.
+                    if (playerSpd > carSpd) {
+                        // Player hits car in front: player slows to car's speed, car gets boosted to player's speed
+                        speed = Math.max(15, carSpd);
+                        car.speed = Math.max(15, playerSpd);
+                        car.z = (car.z + 20) % trackLength;
+                    } else if (carSpd > playerSpd) {
+                        // Car hits player from behind: car slows to player's speed, player gets boosted to car's speed
+                        speed = Math.max(15, carSpd);
+                        car.speed = Math.max(15, playerSpd);
+                        playerZ = (playerZ + 20) % trackLength;
+                    } else {
+                        // Glancing bump at equal speeds
+                        var bump = Math.max(15, playerSpd * 0.96);
+                        speed = bump;
+                        car.speed = bump;
+                    }
+
+                    shakeIntensity = 8;
                     emitCrashSparks(width / 2, height * 0.75);
                     if (soundCallback) soundCallback("crash");
-                    collisionCooldown = 0.6; // 600ms cooldown so it doesn't machine-gun spam
+                    collisionCooldown = 0.4; // 400ms cooldown to allow vehicles to separate cleanly
                 }
+            }
+        }
+
+        // Gradually relax AI car speed back toward base cruising speed after an impact
+        if (car.baseSpeed) {
+            if (car.speed > car.baseSpeed) {
+                car.speed = Math.max(car.baseSpeed, car.speed - (step * 8.0));
+            } else if (car.speed < car.baseSpeed) {
+                car.speed = Math.min(car.baseSpeed, car.speed + (step * 10.0));
             }
         }
 

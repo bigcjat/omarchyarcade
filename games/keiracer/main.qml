@@ -34,7 +34,7 @@ Window {
     on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
-    property string helpText: "• Steer: Arrow Keys / WASD / HJKL\n• Accelerate / Brake: Up / Down or W / S\n• Drift: Spacebar at speed for lateral slide\n• Garage: Press C to switch Kei cars\n• View: Shift+F for compact/full playfield\n• Sound: Press M to toggle audio\n• Restart: Press R for a new run\n• Checkpoints: Cross arch gates for +30s\n• Near Miss / Pass: Draft and pass rivals for points"
+    property string helpText: "• Steer: Arrow Keys / WASD / HJKL\n• Accelerate / Brake: Up / Down or W / S\n• Drift: Spacebar at speed for lateral slide\n• Garage: Press C to switch Kei cars\n• View: Shift+F for compact/full playfield\n• Sound: Press M to toggle audio\n• Restart: Press R for a new run\n• Checkpoints: Cross arch gates for +50s\n• Near Miss / Pass: Draft and pass rivals for points"
 
     // Game & Drivetrain state properties bound to Engine
     property string selectedCar: "keitruck"
@@ -54,7 +54,7 @@ Window {
     property int gaugeMaxRPM: 8000
     property int currentScore: 0
     property int highScore: 0
-    property real currentTimeLeft: 50.0
+    property real currentTimeLeft: 75.0
     property int currentStage: 1
     property bool isGameOver: false
     property bool isStageComplete: false
@@ -139,7 +139,7 @@ Window {
         root.currentGear = 1;
         root.redlineRPM = Engine.redlineRPM;
         root.idleRPM = Engine.idleRPM;
-        root.currentTimeLeft = 50.0;
+        root.currentTimeLeft = 75.0;
         root.currentStage = 1;
         bannerText = "STAGE 1 START";
         bannerTimer = 90;
@@ -155,7 +155,7 @@ Window {
     function triggerSound(name) {
         playSound(name);
         if (name === "checkpoint") {
-            bannerText = "CHECKPOINT EXTENSION +30s";
+            bannerText = "CHECKPOINT EXTENSION +50s";
             bannerTimer = 90;
         } else if (name === "crash") {
             bannerText = "COLLISION!";
