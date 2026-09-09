@@ -43,6 +43,8 @@ Window {
     property bool splashEnabled: true
     property bool isMuted: true
     property bool showHelp: false
+    property bool showLevelSelect: true
+    property int previewLevel: 1
     property bool isTiledDesktopMode: root.height < 540 || root.width < 440
     property alias fullPlayfield: root.isTiledDesktopMode
     property bool _spaceConstrained: root.height < 540 || root.width < 440
@@ -235,6 +237,37 @@ Window {
                 }
             }
 
+            if (root.showLevelSelect) {
+                if (event.key === Qt.Key_Escape) {
+                    root.showLevelSelect = false;
+                    event.accepted = true;
+                    return;
+                }
+                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                    root.jumpToLevel(root.previewLevel);
+                    root.showLevelSelect = false;
+                    event.accepted = true;
+                    return;
+                }
+                if (event.key === Qt.Key_Left || event.key === Qt.Key_Down) {
+                    root.previewLevel = Math.max(1, root.previewLevel - 1);
+                    event.accepted = true;
+                    return;
+                }
+                if (event.key === Qt.Key_Right || event.key === Qt.Key_Up) {
+                    root.previewLevel = Math.min(100, root.previewLevel + 1);
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            if (event.key === Qt.Key_L) {
+                root.previewLevel = root.currentLevel;
+                root.showLevelSelect = true;
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_M) {
                 root.toggleMute();
                 event.accepted = true;
@@ -372,40 +405,11 @@ Window {
                     font.letterSpacing: 1
                 }
 
-                Row {
-                    spacing: 6
-
-                    Rectangle {
-                        width: 18; height: 18; radius: 4
-                        color: prevLvlMouse.containsMouse ? root.themeCardBg : "transparent"
-                        border.color: prevLvlMouse.containsMouse ? root.themeAccent : "transparent"
-                        border.width: 1
-                        Text { anchors.centerIn: parent; text: "◀"; font.pixelSize: 9; color: root.themeAccent }
-                        MouseArea {
-                            id: prevLvlMouse; anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                            onClicked: root.jumpToLevel(root.currentLevel - 1)
-                        }
-                    }
-
-                    Text {
-                        text: "Lvl " + root.currentLevel + " (" + (root.circleLetters ? root.circleLetters.length : 0) + " Letters) • " + root.currentChapter
-                        font.pixelSize: 11
-                        font.bold: true
-                        color: root.themeSubtext
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    Rectangle {
-                        width: 18; height: 18; radius: 4
-                        color: nextLvlMouse.containsMouse ? root.themeCardBg : "transparent"
-                        border.color: nextLvlMouse.containsMouse ? root.themeAccent : "transparent"
-                        border.width: 1
-                        Text { anchors.centerIn: parent; text: "▶"; font.pixelSize: 9; color: root.themeAccent }
-                        MouseArea {
-                            id: nextLvlMouse; anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                            onClicked: root.jumpToLevel(root.currentLevel + 1)
-                        }
-                    }
+                Text {
+                    text: root.currentChapter + " • Level " + root.currentLevel + " of 100"
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeSubtext
                 }
             }
 
@@ -517,6 +521,33 @@ Window {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 8
+
+                // Level Select Button
+                Rectangle {
+                    height: 30
+                    width: subheaderItem.isCrowded ? 30 : 76
+                    radius: 6
+                    color: levelBtnMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: root.themeAccent
+                    border.width: 1
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text { text: "🗺️"; font.pixelSize: 11 }
+                        Text { text: "Levels"; font.pixelSize: 10; font.bold: true; color: root.themeAccent; visible: !subheaderItem.isCrowded }
+                    }
+
+                    MouseArea {
+                        id: levelBtnMouse
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.previewLevel = root.currentLevel;
+                            root.showLevelSelect = true;
+                        }
+                    }
+                }
 
                 // Help Button
                 Rectangle {
@@ -1036,8 +1067,268 @@ Window {
         }
 
         // =====================================================================
-        // MODALS & OVERLAYS (Help Modal, Sound Toast)
+        // MODALS & OVERLAYS (Level Select Modal, Help Modal, Sound Toast)
         // =====================================================================
+        // Level Select Modal (Shows at game start or when clicking Levels)
+        Rectangle {
+            id: levelSelectModal
+            anchors.fill: parent
+            color: "#d9000000"
+            visible: root.showLevelSelect
+            z: 950
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    // Clicking outside closes only if a level is already running
+                    if (Engine.currentLevel) root.showLevelSelect = false;
+                }
+            }
+
+            Rectangle {
+                id: levelCard
+                width: Math.min(parent.width * 0.94, 460)
+                height: levelSelectCol.height + 44
+                anchors.centerIn: parent
+                color: root.themeCardBg
+                border.color: root.themeAccent
+                border.width: 1.5
+                radius: 14
+
+                // Stop clicks on card from closing
+                MouseArea { anchors.fill: parent }
+
+                Column {
+                    id: levelSelectCol
+                    anchors.centerIn: parent
+                    width: parent.width - 40
+                    spacing: 14
+
+                    // Header
+                    Column {
+                        width: parent.width
+                        spacing: 4
+                        Text {
+                            text: "🎯 CHOOSE STARTING LEVEL"
+                            font.pixelSize: 18
+                            font.bold: true
+                            color: root.themeAccent
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            font.letterSpacing: 1
+                        }
+                        Text {
+                            text: "Pick your preferred letter difficulty or any level (1–100):"
+                            font.pixelSize: 11
+                            color: root.themeSubtext
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+
+                    // 5 Letter Count Tier Buttons
+                    Grid {
+                        columns: 5
+                        spacing: 6
+                        width: parent.width
+
+                        Repeater {
+                            model: [
+                                { label: "3 Letters", lvl: 1,  sub: "Warmup" },
+                                { label: "4 Letters", lvl: 6,  sub: "Casual" },
+                                { label: "5 Letters", lvl: 26, sub: "Medium" },
+                                { label: "6 Letters", lvl: 66, sub: "Expert" },
+                                { label: "7 Letters", lvl: 96, sub: "Master" }
+                            ]
+
+                            Rectangle {
+                                width: (levelSelectCol.width - 24) / 5
+                                height: 58
+                                radius: 8
+                                color: (root.previewLevel === modelData.lvl || 
+                                       (modelData.lvl === 1 && root.previewLevel >= 1 && root.previewLevel <= 5) ||
+                                       (modelData.lvl === 6 && root.previewLevel >= 6 && root.previewLevel <= 25) ||
+                                       (modelData.lvl === 26 && root.previewLevel >= 26 && root.previewLevel <= 65) ||
+                                       (modelData.lvl === 66 && root.previewLevel >= 66 && root.previewLevel <= 95) ||
+                                       (modelData.lvl === 96 && root.previewLevel >= 96))
+                                       ? Qt.alpha(root.themeAccent, 0.22) : root.themeBoardBg
+                                border.color: (root.previewLevel === modelData.lvl || 
+                                              (modelData.lvl === 1 && root.previewLevel >= 1 && root.previewLevel <= 5) ||
+                                              (modelData.lvl === 6 && root.previewLevel >= 6 && root.previewLevel <= 25) ||
+                                              (modelData.lvl === 26 && root.previewLevel >= 26 && root.previewLevel <= 65) ||
+                                              (modelData.lvl === 66 && root.previewLevel >= 66 && root.previewLevel <= 95) ||
+                                              (modelData.lvl === 96 && root.previewLevel >= 96))
+                                              ? root.themeAccent : root.themeBorder
+                                border.width: 1.5
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 2
+                                    Text {
+                                        text: modelData.label
+                                        font.pixelSize: 10
+                                        font.bold: true
+                                        color: root.themeFg
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
+                                    Text {
+                                        text: "Lvl " + modelData.lvl
+                                        font.pixelSize: 9
+                                        font.bold: true
+                                        color: root.themeAccent
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
+                                    Text {
+                                        text: modelData.sub
+                                        font.pixelSize: 8
+                                        color: root.themeSubtext
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        root.previewLevel = modelData.lvl;
+                                        root.playSound("click");
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Level Stepper Bar: [-10] [-1] [ Level X ] [+1] [+10]
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 8
+
+                        Rectangle {
+                            width: 44; height: 34; radius: 6
+                            color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
+                            Text { anchors.centerIn: parent; text: "-10"; font.pixelSize: 11; font.bold: true; color: root.themeFg }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: { root.previewLevel = Math.max(1, root.previewLevel - 10); root.playSound("click"); }
+                            }
+                        }
+
+                        Rectangle {
+                            width: 36; height: 34; radius: 6
+                            color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
+                            Text { anchors.centerIn: parent; text: "-1"; font.pixelSize: 11; font.bold: true; color: root.themeFg }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: { root.previewLevel = Math.max(1, root.previewLevel - 1); root.playSound("click"); }
+                            }
+                        }
+
+                        Rectangle {
+                            width: 130; height: 34; radius: 6
+                            color: Qt.alpha(root.themeAccent, 0.15); border.color: root.themeAccent; border.width: 1.5
+                            Text {
+                                anchors.centerIn: parent
+                                text: "Level " + root.previewLevel + " of 100"
+                                font.pixelSize: 13
+                                font.bold: true
+                                color: root.themeAccent
+                            }
+                        }
+
+                        Rectangle {
+                            width: 36; height: 34; radius: 6
+                            color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
+                            Text { anchors.centerIn: parent; text: "+1"; font.pixelSize: 11; font.bold: true; color: root.themeFg }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: { root.previewLevel = Math.min(100, root.previewLevel + 1); root.playSound("click"); }
+                            }
+                        }
+
+                        Rectangle {
+                            width: 44; height: 34; radius: 6
+                            color: root.themeBoardBg; border.color: root.themeBorder; border.width: 1
+                            Text { anchors.centerIn: parent; text: "+10"; font.pixelSize: 11; font.bold: true; color: root.themeFg }
+                            MouseArea {
+                                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: { root.previewLevel = Math.min(100, root.previewLevel + 10); root.playSound("click"); }
+                            }
+                        }
+                    }
+
+                    // Level Details Summary Box
+                    Rectangle {
+                        width: parent.width
+                        height: 38
+                        radius: 8
+                        color: root.themeBoardBg
+                        border.color: root.themeBorder
+                        border.width: 1
+
+                        readonly property var curLvlData: (Engine.allLevels && Engine.allLevels.length >= root.previewLevel) ? Engine.allLevels[root.previewLevel - 1] : null
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 12
+                            Text {
+                                text: "Chapter: " + (parent.parent.curLvlData ? parent.parent.curLvlData.chapter : "Sunrise Valley")
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: root.themeFg
+                            }
+                            Text {
+                                text: "•"
+                                font.pixelSize: 11
+                                color: root.themeSubtext
+                            }
+                            Text {
+                                text: (parent.parent.curLvlData ? parent.parent.curLvlData.circle_letters.length : 3) + " Letters in Wheel"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: root.themeAccent
+                            }
+                        }
+                    }
+
+                    // Start Game Button
+                    Rectangle {
+                        width: parent.width
+                        height: 42
+                        radius: 8
+                        color: startBtnMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 6
+                            Text {
+                                text: "PLAY LEVEL " + root.previewLevel + " ▶"
+                                font.bold: true
+                                font.pixelSize: 13
+                                color: root.themeBtnFg
+                                font.letterSpacing: 1
+                            }
+                        }
+
+                        MouseArea {
+                            id: startBtnMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.jumpToLevel(root.previewLevel);
+                                root.showLevelSelect = false;
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: "Press ENTER to Play • ESC to Close"
+                        font.pixelSize: 9
+                        color: root.themeSubtext
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+                }
+            }
+        }
+
         // Help Modal
         Rectangle {
             id: helpModal
