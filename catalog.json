@@ -1180,6 +1180,48 @@
         "vitamins",
         "medicine puzzle"
       ]
+    },
+    {
+      "id": "wordcircle",
+      "title": "WordCircle",
+      "ref": "OA-033",
+      "category": "Word & Trivia",
+      "floppy_color": "#F0F0F2",
+      "grid_color": "#38BDF8",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Circular Anagram Crossword Puzzle Adventure",
+      "description": "Connect letters around a circular dial to discover interlocking words across 100 progressive crossword levels. Features dual input (smooth mouse/touch neon trails or direct keyboard typing), bonus word banking, letter shuffling, and 5 themed chapters.",
+      "instructions": [
+        "Click and drag a line through the circular letter nodes to spell words, or type letters directly on your keyboard.",
+        "Release drag or press Enter to submit your word.",
+        "Discovered words fill in their corresponding crossword slots on the board above.",
+        "Find extra valid dictionary words to bank bonus stars and score multipliers.",
+        "Click Shuffle or press Space to scramble the letter dial for a fresh perspective."
+      ],
+      "controls": {
+        "keyboard": "Type letters A–Z to connect, Enter to submit, Space to shuffle, Backspace to undo, Esc to clear",
+        "mouse": "Click & drag across letter nodes to connect words, click Shuffle button in subheader"
+      },
+      "folder": "games/wordcircle",
+      "entrypoint": "games/wordcircle/main.py",
+      "cover_image": "assets/covers/wordcircle.png",
+      "size": "571 KB",
+      "size_bytes": 584697,
+      "download_size": "571 KB",
+      "keywords": [
+        "wordscapes",
+        "word connect",
+        "word cookies",
+        "word crossy",
+        "word trip",
+        "anagrams",
+        "crossword",
+        "letter wheel",
+        "letter circle",
+        "spelling",
+        "word puzzle"
+      ]
     }
   ]
 }

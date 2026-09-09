@@ -1,0 +1,356 @@
+#!/usr/bin/env python3
+"""
+WordCircle Level Generator
+Builds a rich, offline database of 100 progressive crossword levels
+based on familiar English root words and interlocking sub-anagrams.
+"""
+
+import json
+import random
+from pathlib import Path
+from collections import Counter
+
+# Core curated root words sorted progressively by length and difficulty
+# Chapters:
+# Levels 1-15:   Warmup / Sunrise (3-4 letter roots, 3-4 target words)
+# Levels 16-40:  Forest / Meadow  (4-5 letter roots, 4-5 target words)
+# Levels 41-75:  Ocean / Sky      (5-6 letter roots, 5-6 target words)
+# Levels 76-100: Cosmos / Galaxy  (6-7 letter roots, 6-8 target words)
+
+SEED_ROOTS = [
+    # 3-Letter Roots (Levels 1-5)
+    "CAT", "DOG", "SUN", "TOP", "PAN",
+    # 4-Letter Roots (Levels 6-25)
+    "STOP", "STAR", "BEAR", "COLD", "LION", "MOON", "RAIN", "BIRD",
+    "FISH", "WIND", "FIRE", "BLUE", "GOLD", "NOTE", "ROCK", "TREE",
+    "SHIP", "TIME", "ROAD", "SAND",
+    # 5-Letter Roots (Levels 26-65)
+    "HEART", "PLANT", "BEACH", "EARTH", "WATER", "CLOUD", "LIGHT", "RIVER",
+    "DREAM", "STORM", "SPACE", "MUSIC", "PEACE", "MAGIC", "POWER", "NIGHT",
+    "OCEAN", "SMILE", "TRAIN", "HOUSE", "HORSE", "STONE", "FRUIT", "FLAME",
+    "SHARK", "TIGER", "EAGLE", "ROBOT", "CROWN", "BLADE", "GHOST", "SOLAR",
+    "SUGAR", "SWEET", "TRACK", "GUIDE", "FAITH", "BRAVE", "PRIDE", "SHINE",
+    # 6-Letter Roots (Levels 66-95)
+    "PLANET", "FOREST", "CASTLE", "GARDEN", "WINTER", "SUMMER", "SPRING", "SILVER",
+    "SPRING", "ORANGE", "YELLOW", "PURPLE", "FLOWER", "STREAM", "ISLAND", "CANDLE",
+    "SHADOW", "BRIDGE", "KNIGHT", "WIZARD", "DRAGON", "FROZEN", "MARBLE", "DESERT",
+    "BREEZE", "SUNSET", "PENCIL", "ROCKET", "VOYAGE", "NATURE",
+    # 7-Letter Roots (Levels 96-100 Grand Finale)
+    "JOURNEY", "WEATHER", "DIAMOND", "RAINBOW", "CRYSTAL"
+]
+
+def load_dictionary():
+    """Loads and filters common English words for fair, non-obscure puzzles."""
+    dict_file = Path("/usr/share/dict/words")
+    valid_words = set()
+    if dict_file.exists():
+        with open(dict_file, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                w = line.strip().upper()
+                if 2 <= len(w) <= 7 and w.isalpha() and w.isascii():
+                    valid_words.add(w)
+    
+    # Core high-frequency supplementary words to ensure common short words exist
+    core_common = {
+        "ACT", "CAT", "DOG", "GOD", "SUN", "TOP", "POT", "OPT", "PAN", "NAP",
+        "STOP", "POST", "POTS", "TOPS", "SPOT", "SOP", "STAR", "RATS", "TARS", "ARTS",
+        "ART", "RAT", "TAR", "BEAR", "BARE", "EAR", "BAR", "BRA", "ERA", "ARE",
+        "COLD", "OLD", "DOC", "LION", "OIL", "ION", "NIL", "MOON", "MOO", "ROOM",
+        "RAIN", "RAN", "AIR", "BIRD", "RIB", "BID", "FISH", "HIS", "SIN",
+        "WIND", "WIN", "FIRE", "RIF", "BLUE", "GOLD", "GOD", "LOG", "DOG",
+        "NOTE", "TON", "NOT", "ONE", "NET", "TOE", "ROCK", "CORK", "TREE", "SEE",
+        "TEE", "SHIP", "HIP", "SIP", "TIME", "TIE", "ITEM", "MITE", "ROAD", "OAR",
+        "ROD", "SAND", "AND", "SAD", "DAN",
+        # 5-letter
+        "HEART", "EARTH", "HATER", "HEAR", "HEAT", "HATE", "HARE", "TEAR", "RATE",
+        "EAR", "ART", "HAT", "THE", "TEA", "EAT", "ATE", "ERA", "ARE",
+        "PLANT", "PLANE", "PLAN", "PANT", "LANE", "LEAN", "NEAT", "TAPE", "PLEA",
+        "PALE", "PANEL", "PAN", "NAP", "PEN", "PET", "NET", "TAP", "PAT", "APT",
+        "BEACH", "EACH", "ACHE", "CAB", "ACE",
+        "WATER", "TEAR", "WEAR", "WET", "WAR", "RAW", "AWE",
+        "CLOUD", "LOUD", "COLD", "DUO", "DOC",
+        "LIGHT", "GILT", "HIT", "LIT",
+        "RIVER", "RIVE", "ERR",
+        "DREAM", "DARE", "READ", "DEAR", "MADE", "DAME", "ARM", "RED", "DAM", "MAD",
+        "STORM", "MOST", "SORT", "SHOT", "ROTS", "ROSE", "MORT",
+        "SPACE", "CAPE", "PACE", "ACES", "CASE", "CAP", "SPA", "SAP",
+        "MUSIC", "SCUM", "SUM",
+        "PEACE", "CAPE", "PACE", "APEX",
+        "MAGIC", "MICA", "AIM", "CAM",
+        "POWER", "ROPE", "PORE", "WORE", "ROW", "PRO", "PER",
+        "NIGHT", "THIN", "HINT", "GIN", "TIN", "HIT",
+        "OCEAN", "CONE", "CANE", "ONCE", "ACNE", "CAN", "EON", "ONE",
+        "SMILE", "MILE", "SLIME", "LIME", "SEMI", "ELM", "LIE",
+        "TRAIN", "RAIN", "RANT", "ANTI", "TIN", "AIR", "TAN", "ART", "RAT", "TAR",
+        "HOUSE", "HOSE", "SHOE", "SHE", "HUE", "USE",
+        "HORSE", "SHORE", "HOSE", "ROSE", "HERO", "SHE", "ROE", "ORE",
+        "STONE", "NOTES", "TONES", "NOTE", "TONE", "SENT", "NOSE", "TOES", "TOE", "SON", "NET", "NOT", "ONE", "TEN",
+        "FRUIT", "RIFT", "TURF", "FIT", "FUR",
+        "FLAME", "LAME", "MALE", "MEAL", "FLEA", "LEAF", "ALE", "ELF",
+        "SHARK", "HARK", "RASH", "ARK", "ASH", "HAS",
+        "TIGER", "TIRE", "GRIT", "RITE", "TIE", "GET",
+        "EAGLE", "GALE", "ALE", "LEG", "AGE",
+        "ROBOT", "BOOT", "ROOT", "TOO",
+        "CROWN", "CORN", "CROW", "WORN", "NOW", "WON", "ROW", "COW",
+        "BLADE", "BALE", "BALD", "LEAD", "ABLE", "BED", "BAD", "LAD", "ALE",
+        "GHOST", "SHOT", "HOST", "HOG", "HOT", "GOT",
+        "SOLAR", "SOAR", "ORAL", "ALSO", "OAR",
+        "SUGAR", "RUGS", "RAGS", "RUG", "RAG", "GAS",
+        "SWEET", "WEST", "STEW", "SEE", "TEE", "WET",
+        "TRACK", "CART", "TACK", "CAT", "ACT", "ART", "TAR", "RAT",
+        "GUIDE", "DIG", "DUE", "DIE",
+        "FAITH", "THAI", "FAT", "FIT", "HIT", "HAT",
+        "BRAVE", "BARE", "RAVE", "BAR", "BRA",
+        "PRIDE", "RIDE", "RIPE", "DRIP", "RED", "RIP", "PIE", "DIP",
+        "SHINE", "SHIN", "SINE", "HEN", "HIS", "SIN",
+        # 6-letter
+        "PLANET", "PANEL", "PLANT", "PLANE", "PLEA", "PALE", "LANE", "LEAN", "NEAT", "PLAN", "PANT", "TAPE",
+        "FOREST", "FORTE", "STORE", "FROST", "FORTS", "ROSE", "REST", "SORE", "FORT", "TORE", "SOFT", "ROTE",
+        "CASTLE", "SCALE", "STALE", "LACES", "LACE", "TALE", "SALE", "LATE", "CASE", "SEAL", "LAST", "SALT", "CAST", "CATS",
+        "GARDEN", "DANGER", "RANGED", "GRADE", "GRAND", "RANGE", "READ", "DEAR", "GEAR", "RANG", "AGED", "DARE", "DRAG",
+        "WINTER", "TWINE", "WRITE", "TIRE", "TWIN", "WIRE", "RENT", "WENT", "WINE", "TIRE",
+        "SUMMER", "MUMMER", "MUSE", "USER", "SURE", "MUM", "RUM", "SUM", "USE",
+        "SILVER", "LIVERS", "LIVER", "LIVES", "VEIL", "LIVE", "EVIL", "VILE", "RISE", "SIRE",
+        "SPRING", "RINGS", "GRIPS", "RING", "SING", "GRIP", "SPIN", "PING", "PIG", "PIN", "RIP", "SIN", "SIP",
+        "ORANGE", "GROAN", "RANGE", "ANGER", "ORGAN", "GEAR", "ROAN", "GONE", "NEAR", "EARN", "AGE", "RAG", "RUN", "ONE",
+        "YELLOW", "LOWLY", "YELL", "WELL", "BLOW", "OWL", "LOW", "YOW",
+        "PURPLE", "PULP", "LURE", "RULE", "PURE", "PER",
+        "FLOWER", "WOLVES", "LOWER", "TOWEL", "FLOW", "WOLF", "BLOW", "FORE", "FOWL", "ROWE", "FRO", "LOW", "ROW", "FOR",
+        "STREAM", "MASTER", "TEAMS", "MATES", "SMART", "STEAM", "STARE", "TAME", "MEAT", "TEAM", "STAR", "REST", "STEM", "MATE",
+        "ISLAND", "SNAIL", "LANDS", "SAIL", "LAID", "LAND", "SAND", "NAIL", "DIAL", "LAD", "SIN", "AND", "AID",
+        "CANDLE", "LANCED", "CLEAN", "LANCE", "DANCE", "ACNE", "LANE", "LEAN", "CLAD", "LAND", "CAN", "AND", "LAD",
+        "SHADOW", "SHOW", "WASH", "WHOA", "DASH", "SODA", "SAD", "HAD", "SAW", "ASH",
+        "BRIDGE", "BRIDE", "BIRD", "RIDE", "GRID", "DIRE", "BIG", "RED", "BED", "RIB", "DIE",
+        "KNIGHT", "NIGHT", "THING", "THIN", "HINT", "GIN", "INK", "HIT", "TIN",
+        "WIZARD", "DRAW", "RAID", "WAR", "RAW", "AIR", "AID",
+        "DRAGON", "GROAN", "RADON", "GRAND", "ROAD", "ROAN", "DOG", "GOD", "RAG", "ROD", "OAR", "AND",
+        "FROZEN", "ZONE", "ZERO", "FORE", "FRO", "ONE", "FOR",
+        "MARBLE", "BLAME", "AMBER", "BEAM", "BALM", "BARE", "MALE", "BEAR", "RAM", "BAR", "EAR", "ARM",
+        "DESERT", "RESET", "STEED", "DEER", "REST", "TREE", "SEED", "REED", "RED", "SEE", "SET", "TEE",
+        "BREEZE", "BEER", "ZEEB", "BEE",
+        "SUNSET", "TUNES", "NEST", "NUTS", "SUET", "SENT", "SETS", "TENS", "SUN", "SET", "NUT", "NET", "TEN",
+        "PENCIL", "PINE", "LINE", "NICE", "CLIP", "LICE", "PILE", "PIN", "LIP", "PEN", "NIL", "ICE",
+        "ROCKET", "CORTE", "ROTE", "TORE", "CORK", "CORE", "ROCK", "LOCK", "COTE", "ORE", "ROE",
+        "VOYAGE", "GAVE", "AGE",
+        "NATURE", "TUNER", "RENT", "NEAR", "TRUE", "TUNE", "RATE", "TEAR", "RUN", "EAR", "TEA", "ART", "RAT", "NET", "TEN",
+        # 7-letter
+        "JOURNEY", "ENJOY", "YOUR", "ROUE", "JOIN", "JURY", "RUN", "JOY", "ONE",
+        "WEATHER", "WHEAT", "WATER", "HEATER", "WEAR", "HATE", "HEAT", "WHAT", "TREE", "THE", "TEA", "WET", "EAR", "HAT", "WAR",
+        "DIAMOND", "DOMAIN", "AMINO", "MIND", "MAID", "MAIN", "DAMN", "MAN", "DAM", "AND", "DIM", "AIM",
+        "RAINBOW", "BRAIN", "BARON", "ROBIN", "RAIN", "BORN", "BARN", "BROW", "BOW", "ROW", "AIR", "WIN", "BAN",
+        "CRYSTAL", "STRAY", "CLAY", "STAY", "STAR", "RAYS", "RATS", "CATS", "CART", "SAY", "RAY", "CRY", "ACT", "CAT", "ART"
+    }
+    valid_words.update(core_common)
+    return valid_words
+
+def get_all_subwords(root_word, dictionary):
+    """Finds all valid words that can be formed from letters of root_word."""
+    root_counter = Counter(root_word)
+    matches = []
+    for w in dictionary:
+        if len(w) < 3:
+            continue
+        w_counter = Counter(w)
+        if all(root_counter[char] >= count for char, count in w_counter.items()):
+            matches.append(w)
+    # Sort by length descending, then alphabetically
+    matches.sort(key=lambda x: (-len(x), x))
+    return matches
+
+def solve_crossword_layout(subwords):
+    """
+    Attempts to lay out 4 to 8 words on an interlocking 2D grid.
+    Returns list of placed words with {word, row, col, dir}, or None if failed.
+    """
+    if len(subwords) < 3:
+        return None
+
+    # Try various combinations of words
+    # Always include the longest word as anchor
+    anchor = subwords[0]
+    
+    # Grid bounds: 12x12 virtual, trimmed later
+    grid = {} # (r, c) -> char
+    placed = []
+
+    # Place anchor at (4, 4) horizontally
+    r0, c0 = 4, 4
+    for idx, ch in enumerate(anchor):
+        grid[(r0, c0 + idx)] = ch
+    placed.append({"word": anchor, "row": r0, "col": c0, "dir": "across"})
+
+    # Try placing intersecting vertical words
+    candidates = subwords[1:]
+    random.shuffle(candidates)
+
+    def can_place(word, start_r, start_c, direction):
+        dr = 1 if direction == "down" else 0
+        dc = 1 if direction == "across" else 0
+        
+        # Check cell conflicts and immediate adjacent parallel touches
+        overlap_count = 0
+        for i, ch in enumerate(word):
+            r = start_r + i * dr
+            c = start_c + i * dc
+            existing = grid.get((r, c))
+            if existing is not None:
+                if existing != ch:
+                    return False
+                overlap_count += 1
+            else:
+                # Check neighbors perpendicular to direction
+                if direction == "down":
+                    if (r, c - 1) in grid or (r, c + 1) in grid:
+                        return False
+                else:
+                    if (r - 1, c) in grid or (r + 1, c) in grid:
+                        return False
+        
+        # Check one cell before and after the word (no run-ons)
+        before = (start_r - dr, start_c - dc)
+        after = (start_r + len(word) * dr, start_c + len(word) * dc)
+        if before in grid or after in grid:
+            return False
+
+        return overlap_count >= 1
+
+    # First pass: try vertical words intersecting anchor
+    for w in candidates:
+        if len(placed) >= 7:
+            break
+        # Find match with letters in anchor
+        for i, anchor_ch in enumerate(anchor):
+            anchor_r = r0
+            anchor_c = c0 + i
+            for w_idx, w_ch in enumerate(w):
+                if w_ch == anchor_ch:
+                    start_r = anchor_r - w_idx
+                    start_c = anchor_c
+                    if can_place(w, start_r, start_c, "down"):
+                        for k, ch in enumerate(w):
+                            grid[(start_r + k, start_c)] = ch
+                        placed.append({"word": w, "row": start_r, "col": start_c, "dir": "down"})
+                        break
+            if w in [p["word"] for p in placed]:
+                break
+
+    # Second pass: try horizontal words intersecting already placed vertical words
+    for w in candidates:
+        if w in [p["word"] for p in placed]:
+            continue
+        if len(placed) >= 8:
+            break
+        vert_placed = [p for p in placed if p["dir"] == "down"]
+        placed_ok = False
+        for vp in vert_placed:
+            for v_idx, v_ch in enumerate(vp["word"]):
+                cell_r = vp["row"] + v_idx
+                cell_c = vp["col"]
+                for w_idx, w_ch in enumerate(w):
+                    if w_ch == v_ch:
+                        start_r = cell_r
+                        start_c = cell_c - w_idx
+                        if can_place(w, start_r, start_c, "across"):
+                            for k, ch in enumerate(w):
+                                grid[(start_r, start_c + k)] = ch
+                            placed.append({"word": w, "row": start_r, "col": start_c, "dir": "across"})
+                            placed_ok = True
+                            break
+                if placed_ok:
+                    break
+            if placed_ok:
+                break
+
+    if len(placed) < 3:
+        return None
+
+    # Normalize coordinates so top-left starts at (0, 0)
+    min_r = min(p["row"] for p in placed)
+    min_c = min(p["col"] for p in placed)
+    max_r = max(p["row"] + (len(p["word"]) if p["dir"] == "down" else 1) for p in placed)
+    max_c = max(p["col"] + (len(p["word"]) if p["dir"] == "across" else 1) for p in placed)
+
+    for p in placed:
+        p["row"] -= min_r
+        p["col"] -= min_c
+
+    rows = max_r - min_r
+    cols = max_c - min_c
+
+    return placed, rows, cols
+
+def generate_levels(num_levels=100):
+    print("Loading dictionary...")
+    dictionary = load_dictionary()
+    print(f"Dictionary loaded: {len(dictionary):,} words.")
+
+    levels = []
+    root_pool = list(SEED_ROOTS)
+    
+    # Expand root pool to 100 with repeating cycling or variants if needed
+    while len(root_pool) < num_levels:
+        root_pool.extend(SEED_ROOTS)
+    root_pool = root_pool[:num_levels]
+
+    chapter_names = ["Sunrise Valley", "Emerald Forest", "Sapphire Ocean", "Neon Nebula", "Galactic Core"]
+
+    for lvl_idx, root_word in enumerate(root_pool, 1):
+        chapter_idx = min(len(chapter_names) - 1, (lvl_idx - 1) // 20)
+        chapter = chapter_names[chapter_idx]
+
+        subwords = get_all_subwords(root_word, dictionary)
+        # Filter subwords to reasonable length based on level
+        if lvl_idx <= 10:
+            subwords = [w for w in subwords if len(w) <= 4]
+        
+        # Solve crossword layout
+        res = solve_crossword_layout(subwords)
+        if not res:
+            # Fallback simple parallel or basic cross
+            subwords_fallback = sorted(subwords, key=lambda x: -len(x))[:4]
+            if len(subwords_fallback) >= 2:
+                # Place horizontally stacked
+                placed = []
+                for i, w in enumerate(subwords_fallback):
+                    placed.append({"word": w, "row": i * 2, "col": 0, "dir": "across"})
+                rows = len(subwords_fallback) * 2
+                cols = max(len(w) for w in subwords_fallback)
+            else:
+                placed = [{"word": root_word, "row": 0, "col": 0, "dir": "across"}]
+                rows = 1
+                cols = len(root_word)
+        else:
+            placed, rows, cols = res
+
+        target_word_set = set(p["word"] for p in placed)
+        # All other valid subwords become bonus words!
+        bonus_words = [w for w in subwords if w not in target_word_set and len(w) >= 3]
+
+        # Scramble letters for the circular dial
+        letters = list(root_word)
+        random.shuffle(letters)
+        # Make sure scrambled circle is not identical to root word if len >= 4
+        if len(letters) >= 4 and "".join(letters) == root_word:
+            letters[0], letters[1] = letters[1], letters[0]
+
+        level_data = {
+            "level": lvl_idx,
+            "chapter": chapter,
+            "root_word": root_word,
+            "circle_letters": letters,
+            "grid_rows": rows,
+            "grid_cols": cols,
+            "words": placed,
+            "bonus_words": sorted(bonus_words[:25])  # Cap at 25 bonus words per level
+        }
+        levels.append(level_data)
+        print(f"Generated Level {lvl_idx:3d}: '{root_word}' ({chapter}) -> {len(placed)} target words, {len(bonus_words)} bonus words")
+
+    return levels
+
+if __name__ == "__main__":
+    levels = generate_levels(100)
+    out_path = Path(__file__).parent / "levels.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump({"levels": levels}, f, indent=2)
+    print(f"\nSuccessfully saved {len(levels)} levels to {out_path} ({out_path.stat().st_size / 1024:.1f} KB)")

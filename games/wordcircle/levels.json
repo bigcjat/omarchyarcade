@@ -1,0 +1,7654 @@
+{
+  "levels": [
+    {
+      "level": 1,
+      "chapter": "Sunrise Valley",
+      "root_word": "CAT",
+      "circle_letters": [
+        "C",
+        "A",
+        "T"
+      ],
+      "grid_rows": 4,
+      "grid_cols": 3,
+      "words": [
+        {
+          "word": "ACT",
+          "row": 0,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "CAT",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": []
+    },
+    {
+      "level": 2,
+      "chapter": "Sunrise Valley",
+      "root_word": "DOG",
+      "circle_letters": [
+        "G",
+        "O",
+        "D"
+      ],
+      "grid_rows": 4,
+      "grid_cols": 3,
+      "words": [
+        {
+          "word": "DOG",
+          "row": 0,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "GOD",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": []
+    },
+    {
+      "level": 3,
+      "chapter": "Sunrise Valley",
+      "root_word": "SUN",
+      "circle_letters": [
+        "S",
+        "U",
+        "N"
+      ],
+      "grid_rows": 1,
+      "grid_cols": 3,
+      "words": [
+        {
+          "word": "SUN",
+          "row": 0,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": []
+    },
+    {
+      "level": 4,
+      "chapter": "Sunrise Valley",
+      "root_word": "TOP",
+      "circle_letters": [
+        "O",
+        "T",
+        "P"
+      ],
+      "grid_rows": 4,
+      "grid_cols": 3,
+      "words": [
+        {
+          "word": "OPT",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "POT",
+          "row": 0,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "TOP",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        }
+      ],
+      "bonus_words": []
+    },
+    {
+      "level": 5,
+      "chapter": "Sunrise Valley",
+      "root_word": "PAN",
+      "circle_letters": [
+        "A",
+        "P",
+        "N"
+      ],
+      "grid_rows": 4,
+      "grid_cols": 3,
+      "words": [
+        {
+          "word": "NAP",
+          "row": 0,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "PAN",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": []
+    },
+    {
+      "level": 6,
+      "chapter": "Sunrise Valley",
+      "root_word": "STOP",
+      "circle_letters": [
+        "P",
+        "S",
+        "T",
+        "O"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "POST",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "POT",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "POTS",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "SPOT",
+          "row": 2,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "PST",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "SOP",
+          "row": 0,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "TOP",
+          "row": 5,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "OPT",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "SOT",
+        "STOP",
+        "TOPS"
+      ]
+    },
+    {
+      "level": 7,
+      "chapter": "Sunrise Valley",
+      "root_word": "STAR",
+      "circle_letters": [
+        "R",
+        "A",
+        "T",
+        "S"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 10,
+      "words": [
+        {
+          "word": "ARTS",
+          "row": 2,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "SART",
+          "row": 1,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "RAT",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "SAT",
+          "row": 2,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "TAR",
+          "row": 3,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "STAR",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "TSAR",
+          "row": 4,
+          "col": 6,
+          "dir": "across"
+        },
+        {
+          "word": "RATS",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ART",
+        "AST",
+        "RAS",
+        "SAR",
+        "STRA",
+        "TARS",
+        "TRA"
+      ]
+    },
+    {
+      "level": 8,
+      "chapter": "Sunrise Valley",
+      "root_word": "BEAR",
+      "circle_letters": [
+        "R",
+        "B",
+        "E",
+        "A"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "BARE",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "AER",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "BER",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "EAR",
+          "row": 2,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "RAB",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "ABE",
+          "row": 3,
+          "col": 5,
+          "dir": "across"
+        },
+        {
+          "word": "BAE",
+          "row": 0,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "BRA",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ARE",
+        "BAR",
+        "BEA",
+        "BEAR",
+        "BRAE",
+        "ERA",
+        "REA",
+        "REB"
+      ]
+    },
+    {
+      "level": 9,
+      "chapter": "Sunrise Valley",
+      "root_word": "COLD",
+      "circle_letters": [
+        "C",
+        "D",
+        "L",
+        "O"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "CLOD",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "DOL",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "COLD",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "DOC",
+          "row": 2,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "OLD",
+          "row": 0,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "LOD",
+          "row": 5,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "COD",
+          "row": 4,
+          "col": 5,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "COL"
+      ]
+    },
+    {
+      "level": 10,
+      "chapter": "Sunrise Valley",
+      "root_word": "LION",
+      "circle_letters": [
+        "I",
+        "N",
+        "O",
+        "L"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 5,
+      "words": [
+        {
+          "word": "LINO",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "OIL",
+          "row": 1,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "NOIL",
+          "row": 0,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "LION",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "INO",
+          "row": 3,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "NIL",
+          "row": 0,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ION",
+          "row": 1,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "LOIN",
+          "row": 5,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "LIN"
+      ]
+    },
+    {
+      "level": 11,
+      "chapter": "Sunrise Valley",
+      "root_word": "MOON",
+      "circle_letters": [
+        "O",
+        "N",
+        "M",
+        "O"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 4,
+      "words": [
+        {
+          "word": "MONO",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "MOO",
+          "row": 2,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "MON",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "MOON",
+          "row": 2,
+          "col": 0,
+          "dir": "down"
+        }
+      ],
+      "bonus_words": []
+    },
+    {
+      "level": 12,
+      "chapter": "Sunrise Valley",
+      "root_word": "RAIN",
+      "circle_letters": [
+        "N",
+        "I",
+        "R",
+        "A"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "ARNI",
+          "row": 2,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "RANI",
+          "row": 1,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "NAR",
+          "row": 2,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "ANI",
+          "row": 0,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "IRA",
+          "row": 0,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "RAIN",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "NAIR",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "RAN",
+          "row": 4,
+          "col": 5,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "AIR",
+        "ARN",
+        "IAN",
+        "IRAN",
+        "RIA"
+      ]
+    },
+    {
+      "level": 13,
+      "chapter": "Sunrise Valley",
+      "root_word": "BIRD",
+      "circle_letters": [
+        "D",
+        "I",
+        "R",
+        "B"
+      ],
+      "grid_rows": 4,
+      "grid_cols": 6,
+      "words": [
+        {
+          "word": "BIRD",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "RID",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "DIB",
+          "row": 1,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "BID",
+          "row": 3,
+          "col": 3,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "DRIB",
+        "RIB"
+      ]
+    },
+    {
+      "level": 14,
+      "chapter": "Sunrise Valley",
+      "root_word": "FISH",
+      "circle_letters": [
+        "S",
+        "H",
+        "I",
+        "F"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 4,
+      "words": [
+        {
+          "word": "FISH",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "HSI",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "HIS",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "SHI",
+          "row": 0,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": []
+    },
+    {
+      "level": 15,
+      "chapter": "Sunrise Valley",
+      "root_word": "WIND",
+      "circle_letters": [
+        "I",
+        "D",
+        "W",
+        "N"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "WIND",
+          "row": 2,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "IND",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "WID",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "NID",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "WIN",
+          "row": 0,
+          "col": 4,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "DIN"
+      ]
+    },
+    {
+      "level": 16,
+      "chapter": "Sunrise Valley",
+      "root_word": "FIRE",
+      "circle_letters": [
+        "R",
+        "I",
+        "F",
+        "E"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "FIRE",
+          "row": 3,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "FIE",
+          "row": 3,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "RIE",
+          "row": 3,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "RIFE",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "FEI",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "REF",
+          "row": 0,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "RIF",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "FIR",
+          "row": 2,
+          "col": 4,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "IFE",
+        "IRE",
+        "REIF"
+      ]
+    },
+    {
+      "level": 17,
+      "chapter": "Sunrise Valley",
+      "root_word": "BLUE",
+      "circle_letters": [
+        "E",
+        "B",
+        "U",
+        "L"
+      ],
+      "grid_rows": 4,
+      "grid_cols": 5,
+      "words": [
+        {
+          "word": "BLUE",
+          "row": 1,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "BEL",
+          "row": 1,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "LUE",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "ELB",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "LEU",
+        "LUBE",
+        "ULE"
+      ]
+    },
+    {
+      "level": 18,
+      "chapter": "Sunrise Valley",
+      "root_word": "GOLD",
+      "circle_letters": [
+        "L",
+        "D",
+        "O",
+        "G"
+      ],
+      "grid_rows": 4,
+      "grid_cols": 6,
+      "words": [
+        {
+          "word": "GOLD",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "DOL",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "DOG",
+          "row": 1,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "OLD",
+          "row": 2,
+          "col": 3,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "GOD",
+        "GOL",
+        "LOD",
+        "LOG"
+      ]
+    },
+    {
+      "level": 19,
+      "chapter": "Sunrise Valley",
+      "root_word": "NOTE",
+      "circle_letters": [
+        "E",
+        "T",
+        "O",
+        "N"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "NOTE",
+          "row": 3,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "EON",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "TEN",
+          "row": 3,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "ONE",
+          "row": 1,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "TONE",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "TOE",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "NOT",
+          "row": 5,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "NEO",
+          "row": 2,
+          "col": 5,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "NET",
+        "TON"
+      ]
+    },
+    {
+      "level": 20,
+      "chapter": "Sunrise Valley",
+      "root_word": "ROCK",
+      "circle_letters": [
+        "O",
+        "R",
+        "C",
+        "K"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "CORK",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "OCK",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "ROC",
+          "row": 2,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "ROCK",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "ROK",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "CRO",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ORC",
+          "row": 0,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "COR",
+          "row": 4,
+          "col": 4,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "KOR"
+      ]
+    },
+    {
+      "level": 21,
+      "chapter": "Emerald Forest",
+      "root_word": "TREE",
+      "circle_letters": [
+        "E",
+        "E",
+        "R",
+        "T"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 6,
+      "words": [
+        {
+          "word": "REET",
+          "row": 2,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "TEE",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "RET",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "TEER",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "ERE",
+          "row": 0,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "EER",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "REE",
+        "TREE"
+      ]
+    },
+    {
+      "level": 22,
+      "chapter": "Emerald Forest",
+      "root_word": "SHIP",
+      "circle_letters": [
+        "I",
+        "P",
+        "H",
+        "S"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 6,
+      "words": [
+        {
+          "word": "PISH",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "HSI",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "PHI",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "SHIP",
+          "row": 2,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "HIP",
+          "row": 0,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "PSI",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "HIS",
+        "SHI",
+        "SIP"
+      ]
+    },
+    {
+      "level": 23,
+      "chapter": "Emerald Forest",
+      "root_word": "TIME",
+      "circle_letters": [
+        "I",
+        "T",
+        "M",
+        "E"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "EMIT",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "TIM",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "MET",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "ITEM",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "TIE",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "MITE",
+          "row": 0,
+          "col": 3,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "TIME"
+      ]
+    },
+    {
+      "level": 24,
+      "chapter": "Emerald Forest",
+      "root_word": "ROAD",
+      "circle_letters": [
+        "O",
+        "D",
+        "A",
+        "R"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "DORA",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "ADO",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "ROAD",
+          "row": 2,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "ORA",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "OAR",
+          "row": 4,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "DOR",
+          "row": 0,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "DAO",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ODA",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ARO",
+        "DAR",
+        "ORAD",
+        "RAD",
+        "ROD"
+      ]
+    },
+    {
+      "level": 25,
+      "chapter": "Emerald Forest",
+      "root_word": "SAND",
+      "circle_letters": [
+        "D",
+        "A",
+        "S",
+        "N"
+      ],
+      "grid_rows": 4,
+      "grid_cols": 5,
+      "words": [
+        {
+          "word": "SAND",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "DAN",
+          "row": 1,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "AND",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "SAN",
+          "row": 0,
+          "col": 2,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "DAS",
+        "SAD"
+      ]
+    },
+    {
+      "level": 26,
+      "chapter": "Emerald Forest",
+      "root_word": "HEART",
+      "circle_letters": [
+        "A",
+        "R",
+        "E",
+        "H",
+        "T"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "EARTH",
+          "row": 2,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "RAT",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "ATE",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "RATE",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "HATER",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "AHET",
+          "row": 0,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "ARE",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "RAH",
+          "row": 4,
+          "col": 4,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "AER",
+        "AHT",
+        "ART",
+        "EAR",
+        "EAT",
+        "ERA",
+        "ERTH",
+        "HAET",
+        "HARE",
+        "HART",
+        "HATE",
+        "HEAR",
+        "HEART",
+        "HEAT",
+        "HERAT",
+        "RATH",
+        "RATHE",
+        "RHEA",
+        "TAHR",
+        "TARE",
+        "TEAR",
+        "TERA",
+        "THAR",
+        "THEA",
+        "TRAH"
+      ]
+    },
+    {
+      "level": 27,
+      "chapter": "Emerald Forest",
+      "root_word": "PLANT",
+      "circle_letters": [
+        "P",
+        "N",
+        "T",
+        "L",
+        "A"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 10,
+      "words": [
+        {
+          "word": "PLANT",
+          "row": 3,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "NAP",
+          "row": 1,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "TAL",
+          "row": 2,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "LANT",
+          "row": 0,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "PLAN",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "PAL",
+          "row": 0,
+          "col": 5,
+          "dir": "across"
+        },
+        {
+          "word": "APT",
+          "row": 1,
+          "col": 7,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ALN",
+        "ALP",
+        "ALT",
+        "ANT",
+        "LAN",
+        "LAP",
+        "LAT",
+        "NAT",
+        "PALT",
+        "PAN",
+        "PANT",
+        "PAT",
+        "PLAT",
+        "TAN",
+        "TAP"
+      ]
+    },
+    {
+      "level": 28,
+      "chapter": "Emerald Forest",
+      "root_word": "BEACH",
+      "circle_letters": [
+        "C",
+        "H",
+        "A",
+        "B",
+        "E"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "BACHE",
+          "row": 1,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "BAC",
+          "row": 1,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "BACH",
+          "row": 1,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "ACE",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "BEACH",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "CHAB",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ACHE",
+          "row": 2,
+          "col": 5,
+          "dir": "across"
+        },
+        {
+          "word": "BAE",
+          "row": 0,
+          "col": 5,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ABE",
+        "ACH",
+        "BAH",
+        "BEA",
+        "CAB",
+        "CHA",
+        "CHE",
+        "EACH",
+        "HABE",
+        "HAEC"
+      ]
+    },
+    {
+      "level": 29,
+      "chapter": "Emerald Forest",
+      "root_word": "EARTH",
+      "circle_letters": [
+        "H",
+        "A",
+        "R",
+        "E",
+        "T"
+      ],
+      "grid_rows": 8,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "EARTH",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "RAT",
+          "row": 2,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "HEAR",
+          "row": 3,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "AHET",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "RATH",
+          "row": 2,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "RATHE",
+          "row": 2,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "HEART",
+          "row": 3,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "AER",
+          "row": 5,
+          "col": 4,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "AHT",
+        "ARE",
+        "ART",
+        "ATE",
+        "EAR",
+        "EAT",
+        "ERA",
+        "ERTH",
+        "ETA",
+        "HAET",
+        "HARE",
+        "HART",
+        "HATE",
+        "HATER",
+        "HEAT",
+        "HERAT",
+        "RATE",
+        "RHEA",
+        "TAHR",
+        "TARE",
+        "TEAR",
+        "TERA",
+        "THAR",
+        "THEA",
+        "TRAH"
+      ]
+    },
+    {
+      "level": 30,
+      "chapter": "Emerald Forest",
+      "root_word": "WATER",
+      "circle_letters": [
+        "T",
+        "E",
+        "R",
+        "A",
+        "W"
+      ],
+      "grid_rows": 8,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "TAWER",
+          "row": 4,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "REA",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "TRA",
+          "row": 4,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "WET",
+          "row": 4,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "WATER",
+          "row": 0,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "WETA",
+          "row": 4,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "TEA",
+          "row": 6,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "WEA",
+          "row": 0,
+          "col": 6,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "AER",
+        "ARE",
+        "ART",
+        "ATE",
+        "AWE",
+        "EAR",
+        "EAT",
+        "ERA",
+        "ETA",
+        "RAT",
+        "RATE",
+        "RAW",
+        "RET",
+        "TAE",
+        "TARE",
+        "TEAR",
+        "TERA",
+        "TEWA",
+        "TWAE",
+        "WAER",
+        "WARE",
+        "WART",
+        "WEAR",
+        "WERT",
+        "WREAT"
+      ]
+    },
+    {
+      "level": 31,
+      "chapter": "Emerald Forest",
+      "root_word": "CLOUD",
+      "circle_letters": [
+        "U",
+        "C",
+        "D",
+        "L",
+        "O"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 11,
+      "words": [
+        {
+          "word": "CLOUD",
+          "row": 3,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "CLOD",
+          "row": 3,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "LUDO",
+          "row": 0,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "COLD",
+          "row": 0,
+          "col": 8,
+          "dir": "down"
+        },
+        {
+          "word": "UDO",
+          "row": 3,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "COULD",
+          "row": 6,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "LOU",
+          "row": 1,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "LUO",
+          "row": 2,
+          "col": 8,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "COD",
+        "COL",
+        "COUL",
+        "CUD",
+        "DOC",
+        "DOL",
+        "DOUC",
+        "DUCO",
+        "DUO",
+        "LOD",
+        "LOUD",
+        "LUC",
+        "OLD"
+      ]
+    },
+    {
+      "level": 32,
+      "chapter": "Emerald Forest",
+      "root_word": "LIGHT",
+      "circle_letters": [
+        "I",
+        "G",
+        "T",
+        "L",
+        "H"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "LIGHT",
+          "row": 3,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "GIL",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "THIG",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "GITH",
+          "row": 1,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "GILT",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "HIT",
+          "row": 4,
+          "col": 6,
+          "dir": "across"
+        },
+        {
+          "word": "LIT",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "TIG",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "GIT",
+        "HILT",
+        "LITH",
+        "TIL"
+      ]
+    },
+    {
+      "level": 33,
+      "chapter": "Emerald Forest",
+      "root_word": "RIVER",
+      "circle_letters": [
+        "V",
+        "R",
+        "R",
+        "I",
+        "E"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "RIVER",
+          "row": 3,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "VERI",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "VIER",
+          "row": 3,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "RIVE",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "RIER",
+          "row": 3,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "VEI",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "IRE",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "REV",
+          "row": 0,
+          "col": 5,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ERR",
+        "RIE",
+        "VIE",
+        "VIRE"
+      ]
+    },
+    {
+      "level": 34,
+      "chapter": "Emerald Forest",
+      "root_word": "DREAM",
+      "circle_letters": [
+        "M",
+        "D",
+        "A",
+        "R",
+        "E"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "ARMED",
+          "row": 3,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "RAMED",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "DAR",
+          "row": 3,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "DRAM",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "DARE",
+          "row": 3,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "ERA",
+          "row": 5,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "ARED",
+          "row": 6,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "DAME",
+          "row": 0,
+          "col": 5,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ADE",
+        "AER",
+        "AME",
+        "ARE",
+        "ARM",
+        "DAE",
+        "DAER",
+        "DAM",
+        "DEAR",
+        "DERM",
+        "DERMA",
+        "DREAM",
+        "EAR",
+        "ERD",
+        "ERMA",
+        "MAD",
+        "MADE",
+        "MAE",
+        "MAR",
+        "MARE",
+        "MEAD",
+        "MER",
+        "RAME",
+        "READ",
+        "REAM"
+      ]
+    },
+    {
+      "level": 35,
+      "chapter": "Emerald Forest",
+      "root_word": "STORM",
+      "circle_letters": [
+        "O",
+        "S",
+        "M",
+        "R",
+        "T"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "STORM",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "MOR",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "STROM",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "TOM",
+          "row": 0,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "MORT",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "ROT",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "MOST",
+          "row": 6,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "TOR",
+          "row": 0,
+          "col": 6,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "MOT",
+        "MRS",
+        "ORT",
+        "ROTS",
+        "SORT",
+        "SOT"
+      ]
+    },
+    {
+      "level": 36,
+      "chapter": "Emerald Forest",
+      "root_word": "SPACE",
+      "circle_letters": [
+        "P",
+        "E",
+        "A",
+        "C",
+        "S"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "CAPES",
+          "row": 3,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "PESA",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "AES",
+          "row": 2,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "CASE",
+          "row": 3,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "APE",
+          "row": 0,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "ASE",
+          "row": 5,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "CAPE",
+          "row": 0,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "SCAPE",
+          "row": 0,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ACE",
+        "ACES",
+        "APSE",
+        "ASP",
+        "CAP",
+        "CEP",
+        "CEPA",
+        "CEPS",
+        "ESCA",
+        "PAC",
+        "PACE",
+        "PEA",
+        "PES",
+        "SAC",
+        "SAP",
+        "SCAP",
+        "SEA",
+        "SEC",
+        "SPA",
+        "SPACE",
+        "SPAE",
+        "SPEC"
+      ]
+    },
+    {
+      "level": 37,
+      "chapter": "Emerald Forest",
+      "root_word": "MUSIC",
+      "circle_letters": [
+        "S",
+        "C",
+        "U",
+        "I",
+        "M"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "MUSCI",
+          "row": 3,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "SIC",
+          "row": 3,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "CUM",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "SCUM",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "ISM",
+          "row": 3,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "MUSIC",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "SUM",
+          "row": 4,
+          "col": 6,
+          "dir": "across"
+        },
+        {
+          "word": "MUS",
+          "row": 0,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "IMU",
+        "SIM",
+        "SIUM",
+        "SUI"
+      ]
+    },
+    {
+      "level": 38,
+      "chapter": "Emerald Forest",
+      "root_word": "PEACE",
+      "circle_letters": [
+        "E",
+        "E",
+        "P",
+        "C",
+        "A"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 5,
+      "words": [
+        {
+          "word": "PEACE",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ACE",
+          "row": 1,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "CEE",
+          "row": 3,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "PAC",
+          "row": 3,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "CAPE",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "PACE",
+          "row": 3,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "CAP",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "PEA",
+          "row": 5,
+          "col": 2,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "APE",
+        "CEP",
+        "CEPA",
+        "CEPE",
+        "PEE"
+      ]
+    },
+    {
+      "level": 39,
+      "chapter": "Emerald Forest",
+      "root_word": "MAGIC",
+      "circle_letters": [
+        "M",
+        "I",
+        "A",
+        "C",
+        "G"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "GAMIC",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "AMI",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "CAG",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "CIG",
+          "row": 1,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "AMIC",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "AIM",
+          "row": 4,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "CAM",
+          "row": 0,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "IMA",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "GAM",
+        "GIM",
+        "MAC",
+        "MAG",
+        "MAGI",
+        "MAGIC",
+        "MICA",
+        "MIG"
+      ]
+    },
+    {
+      "level": 40,
+      "chapter": "Emerald Forest",
+      "root_word": "POWER",
+      "circle_letters": [
+        "E",
+        "P",
+        "W",
+        "O",
+        "R"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "POWER",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ROE",
+          "row": 2,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "ROPE",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "ROWE",
+          "row": 3,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "ORE",
+          "row": 0,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "WOE",
+          "row": 5,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "WORE",
+          "row": 0,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "PORE",
+          "row": 6,
+          "col": 1,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "OER",
+        "OPE",
+        "OWE",
+        "OWER",
+        "PER",
+        "PEW",
+        "POE",
+        "POW",
+        "PRO",
+        "PROW",
+        "REP",
+        "ROW",
+        "WER",
+        "WOP",
+        "WRO"
+      ]
+    },
+    {
+      "level": 41,
+      "chapter": "Sapphire Ocean",
+      "root_word": "NIGHT",
+      "circle_letters": [
+        "H",
+        "N",
+        "T",
+        "I",
+        "G"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "NIGHT",
+          "row": 3,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "THING",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "TIN",
+          "row": 3,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "NTH",
+          "row": 1,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "GITH",
+          "row": 3,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "TING",
+          "row": 3,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "NIT",
+          "row": 0,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "HING",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "GIN",
+        "GIT",
+        "HIN",
+        "HINT",
+        "HIT",
+        "ING",
+        "NIG",
+        "NIGH",
+        "THIG",
+        "THIN",
+        "TIG"
+      ]
+    },
+    {
+      "level": 42,
+      "chapter": "Sapphire Ocean",
+      "root_word": "OCEAN",
+      "circle_letters": [
+        "A",
+        "O",
+        "C",
+        "N",
+        "E"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 11,
+      "words": [
+        {
+          "word": "ACONE",
+          "row": 2,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "ONA",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "EON",
+          "row": 1,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "EOAN",
+          "row": 2,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "AEON",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "COAN",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ONCE",
+          "row": 3,
+          "col": 7,
+          "dir": "across"
+        },
+        {
+          "word": "ACE",
+          "row": 0,
+          "col": 5,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ACNE",
+        "CAN",
+        "CANE",
+        "CANOE",
+        "COE",
+        "CON",
+        "CONE",
+        "EAN",
+        "NACE",
+        "NAE",
+        "NEA",
+        "NEO",
+        "NOA",
+        "OCEAN",
+        "ONCA",
+        "ONE"
+      ]
+    },
+    {
+      "level": 43,
+      "chapter": "Sapphire Ocean",
+      "root_word": "SMILE",
+      "circle_letters": [
+        "L",
+        "I",
+        "M",
+        "S",
+        "E"
+      ],
+      "grid_rows": 4,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "LIMES",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "SIL",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "SEMI",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "LIS",
+          "row": 0,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "SILE",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "LISE",
+          "row": 0,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "SIE",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ELM",
+          "row": 3,
+          "col": 6,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ELI",
+        "ELS",
+        "EMIL",
+        "ISLE",
+        "ISM",
+        "LEI",
+        "LES",
+        "LIE",
+        "LIM",
+        "LIME",
+        "MEL",
+        "MES",
+        "MIL",
+        "MILE",
+        "MILES",
+        "MISE",
+        "SIM",
+        "SIME",
+        "SLIM",
+        "SLIME",
+        "SMILE"
+      ]
+    },
+    {
+      "level": 44,
+      "chapter": "Sapphire Ocean",
+      "root_word": "TRAIN",
+      "circle_letters": [
+        "I",
+        "N",
+        "T",
+        "A",
+        "R"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 10,
+      "words": [
+        {
+          "word": "RIANT",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "RITA",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "TIAR",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "ANTI",
+          "row": 0,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "AIT",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "IRAN",
+          "row": 3,
+          "col": 6,
+          "dir": "across"
+        },
+        {
+          "word": "RAT",
+          "row": 0,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "NAIR",
+          "row": 1,
+          "col": 6,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "AINT",
+        "AIR",
+        "AIRT",
+        "ANI",
+        "ANT",
+        "ARN",
+        "ARNI",
+        "ART",
+        "ATI",
+        "IAN",
+        "IRA",
+        "ITA",
+        "NATR",
+        "RAIN",
+        "RANI",
+        "RANT",
+        "TAIN",
+        "TAIRN",
+        "TARI",
+        "TARIN",
+        "TARN",
+        "TINA",
+        "TRAIN",
+        "TRAN",
+        "TRIN"
+      ]
+    },
+    {
+      "level": 45,
+      "chapter": "Sapphire Ocean",
+      "root_word": "HOUSE",
+      "circle_letters": [
+        "U",
+        "O",
+        "H",
+        "S",
+        "E"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 10,
+      "words": [
+        {
+          "word": "HOUSE",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "HOE",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "HUSE",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "HUE",
+          "row": 0,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "SHOE",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "SOE",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "HUSO",
+          "row": 0,
+          "col": 6,
+          "dir": "across"
+        },
+        {
+          "word": "OES",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "HOSE",
+        "OSE",
+        "SHE",
+        "SHO",
+        "SHOU",
+        "SHU",
+        "SOH",
+        "SOU",
+        "SUE",
+        "USE",
+        "USH"
+      ]
+    },
+    {
+      "level": 46,
+      "chapter": "Sapphire Ocean",
+      "root_word": "HORSE",
+      "circle_letters": [
+        "S",
+        "H",
+        "E",
+        "O",
+        "R"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 5,
+      "words": [
+        {
+          "word": "HORSE",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "HER",
+          "row": 3,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "SHOR",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "OER",
+          "row": 2,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "HOER",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "HERO",
+          "row": 3,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "SHOER",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "RHO",
+          "row": 5,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "EROS",
+        "ERS",
+        "HERS",
+        "HOE",
+        "HOSE",
+        "OES",
+        "ORE",
+        "OSE",
+        "REH",
+        "RESH",
+        "RHE",
+        "ROE",
+        "ROSE",
+        "SER",
+        "SERO",
+        "SHE",
+        "SHER",
+        "SHO",
+        "SHOE",
+        "SHORE",
+        "SOE",
+        "SOH",
+        "SORE"
+      ]
+    },
+    {
+      "level": 47,
+      "chapter": "Sapphire Ocean",
+      "root_word": "STONE",
+      "circle_letters": [
+        "T",
+        "S",
+        "O",
+        "N",
+        "E"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 5,
+      "words": [
+        {
+          "word": "NOTES",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "TONE",
+          "row": 1,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "NOSE",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "TOE",
+          "row": 3,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "SON",
+          "row": 3,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "TOES",
+          "row": 3,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "STONE",
+          "row": 0,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "EON",
+          "row": 1,
+          "col": 2,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ENOS",
+        "ENS",
+        "NEO",
+        "NEST",
+        "NET",
+        "NOT",
+        "NOTE",
+        "OES",
+        "ONE",
+        "ONS",
+        "ONSET",
+        "OSE",
+        "SEN",
+        "SENT",
+        "SET",
+        "SETON",
+        "SNOT",
+        "SOE",
+        "SOT",
+        "STEN",
+        "STENO",
+        "TEN",
+        "TENS",
+        "TON",
+        "TONES"
+      ]
+    },
+    {
+      "level": 48,
+      "chapter": "Sapphire Ocean",
+      "root_word": "FRUIT",
+      "circle_letters": [
+        "R",
+        "I",
+        "F",
+        "T",
+        "U"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 6,
+      "words": [
+        {
+          "word": "FRUIT",
+          "row": 3,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "RUT",
+          "row": 3,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "TUR",
+          "row": 3,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "TURF",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "URI",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "TURI",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "RIT",
+          "row": 5,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "FUR",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "FIR",
+        "FIT",
+        "FRIT",
+        "FUT",
+        "RIF",
+        "RIFT",
+        "TRI",
+        "TUI",
+        "URF"
+      ]
+    },
+    {
+      "level": 49,
+      "chapter": "Sapphire Ocean",
+      "root_word": "FLAME",
+      "circle_letters": [
+        "M",
+        "L",
+        "A",
+        "E",
+        "F"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 10,
+      "words": [
+        {
+          "word": "FLAME",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "MAL",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "ALEM",
+          "row": 2,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "MELA",
+          "row": 1,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "FLEAM",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "FLEM",
+          "row": 0,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "MALE",
+          "row": 1,
+          "col": 6,
+          "dir": "across"
+        },
+        {
+          "word": "LEA",
+          "row": 3,
+          "col": 6,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ALE",
+        "ALEF",
+        "ALF",
+        "ALME",
+        "AME",
+        "ELF",
+        "ELM",
+        "FAE",
+        "FAM",
+        "FAME",
+        "FEAL",
+        "FLAM",
+        "FLEA",
+        "LAM",
+        "LAME",
+        "LEAF",
+        "LEAM",
+        "MAE",
+        "MEAL",
+        "MEL"
+      ]
+    },
+    {
+      "level": 50,
+      "chapter": "Sapphire Ocean",
+      "root_word": "SHARK",
+      "circle_letters": [
+        "S",
+        "H",
+        "K",
+        "A",
+        "R"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "SHARK",
+          "row": 1,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "SAH",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "SAK",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "KHA",
+          "row": 1,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "KHAR",
+          "row": 1,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "SHA",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "SARK",
+          "row": 3,
+          "col": 5,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ARK",
+        "ASH",
+        "ASK",
+        "ASKR",
+        "HAK",
+        "HARK",
+        "HAS",
+        "HASK",
+        "KRA",
+        "KRAS",
+        "RAH",
+        "RAKH",
+        "RAS",
+        "RASH",
+        "SAR"
+      ]
+    },
+    {
+      "level": 51,
+      "chapter": "Sapphire Ocean",
+      "root_word": "TIGER",
+      "circle_letters": [
+        "I",
+        "R",
+        "T",
+        "G",
+        "E"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 11,
+      "words": [
+        {
+          "word": "TIGER",
+          "row": 2,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "GET",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "TIGRE",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "REG",
+          "row": 2,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "TIRE",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "RIE",
+          "row": 4,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "GRIT",
+          "row": 4,
+          "col": 7,
+          "dir": "across"
+        },
+        {
+          "word": "TIGE",
+          "row": 0,
+          "col": 5,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ERG",
+        "GER",
+        "GIE",
+        "GIRT",
+        "GIT",
+        "IRE",
+        "ITER",
+        "REIT",
+        "RET",
+        "RIG",
+        "RIT",
+        "RITE",
+        "TEG",
+        "TERI",
+        "TIE",
+        "TIER",
+        "TIG",
+        "TRI",
+        "TRIG"
+      ]
+    },
+    {
+      "level": 52,
+      "chapter": "Sapphire Ocean",
+      "root_word": "EAGLE",
+      "circle_letters": [
+        "L",
+        "E",
+        "A",
+        "G",
+        "E"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 6,
+      "words": [
+        {
+          "word": "AEGLE",
+          "row": 2,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "GEE",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "LEE",
+          "row": 2,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "ALEE",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "AGEE",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "GALEE",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "LEG",
+          "row": 4,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "LEA",
+          "row": 0,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "AGE",
+        "ALE",
+        "EAGLE",
+        "EEL",
+        "GAEL",
+        "GAL",
+        "GALE",
+        "GEAL",
+        "GEL",
+        "GLEE",
+        "LAG"
+      ]
+    },
+    {
+      "level": 53,
+      "chapter": "Sapphire Ocean",
+      "root_word": "ROBOT",
+      "circle_letters": [
+        "T",
+        "B",
+        "O",
+        "R",
+        "O"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "BOORT",
+          "row": 3,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "ROB",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "ROT",
+          "row": 2,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "ORT",
+          "row": 1,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "ROBOT",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "BROT",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "BORT",
+          "row": 0,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "OTO",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "BOO",
+        "BOOR",
+        "BOOT",
+        "BOR",
+        "BORO",
+        "BOT",
+        "BROO",
+        "ORB",
+        "ROOT",
+        "ROTO",
+        "TOO",
+        "TOR",
+        "TORO"
+      ]
+    },
+    {
+      "level": 54,
+      "chapter": "Sapphire Ocean",
+      "root_word": "CROWN",
+      "circle_letters": [
+        "W",
+        "O",
+        "R",
+        "C",
+        "N"
+      ],
+      "grid_rows": 3,
+      "grid_cols": 5,
+      "words": [
+        {
+          "word": "CROWN",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "WRO",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "OWN",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        }
+      ],
+      "bonus_words": [
+        "CON",
+        "COR",
+        "CORN",
+        "COW",
+        "CRO",
+        "CROW",
+        "NOR",
+        "NOW",
+        "ORC",
+        "ROC",
+        "RON",
+        "ROW",
+        "WON",
+        "WORN"
+      ]
+    },
+    {
+      "level": 55,
+      "chapter": "Sapphire Ocean",
+      "root_word": "BLADE",
+      "circle_letters": [
+        "L",
+        "E",
+        "B",
+        "A",
+        "D"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "BLADE",
+          "row": 3,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "BALE",
+          "row": 3,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "BELD",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "ELD",
+          "row": 3,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "ABLE",
+          "row": 3,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "DEL",
+          "row": 1,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "BAE",
+          "row": 6,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "LAB",
+          "row": 4,
+          "col": 6,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ABE",
+        "ABED",
+        "ABEL",
+        "ADE",
+        "ALB",
+        "ALBE",
+        "ALE",
+        "BAD",
+        "BADE",
+        "BAL",
+        "BALD",
+        "BEA",
+        "BEAD",
+        "BEAL",
+        "BED",
+        "BEL",
+        "BELA",
+        "BLAD",
+        "BLAE",
+        "BLED",
+        "DALE",
+        "DEAL",
+        "LADE",
+        "LEAD",
+        "LEDA"
+      ]
+    },
+    {
+      "level": 56,
+      "chapter": "Sapphire Ocean",
+      "root_word": "GHOST",
+      "circle_letters": [
+        "T",
+        "H",
+        "S",
+        "O",
+        "G"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "GHOST",
+          "row": 2,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "THOS",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "GOSH",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "GOT",
+          "row": 0,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "GOTH",
+          "row": 0,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "TOSH",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "GOS",
+        "HOG",
+        "HOST",
+        "HOT",
+        "SHO",
+        "SHOG",
+        "SHOT",
+        "SOG",
+        "SOH",
+        "SOT",
+        "STOG",
+        "THO",
+        "TOG",
+        "TOGS"
+      ]
+    },
+    {
+      "level": 57,
+      "chapter": "Sapphire Ocean",
+      "root_word": "SOLAR",
+      "circle_letters": [
+        "S",
+        "R",
+        "O",
+        "L",
+        "A"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "ROSAL",
+          "row": 3,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "SOAR",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "ALSO",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "LAS",
+          "row": 3,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "SAO",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ASOR",
+          "row": 1,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "SAL",
+          "row": 5,
+          "col": 6,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ALO",
+        "ARO",
+        "LAO",
+        "LAR",
+        "LARS",
+        "LOA",
+        "LORA",
+        "LORS",
+        "OAR",
+        "ORA",
+        "ORAL",
+        "RAS",
+        "ROSA",
+        "SAR",
+        "SLA",
+        "SOL",
+        "SOLA",
+        "SOLAR",
+        "SORA",
+        "SORAL"
+      ]
+    },
+    {
+      "level": 58,
+      "chapter": "Sapphire Ocean",
+      "root_word": "SUGAR",
+      "circle_letters": [
+        "R",
+        "G",
+        "U",
+        "A",
+        "S"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "ARGUS",
+          "row": 3,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "RUSA",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "RAG",
+          "row": 3,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "RUG",
+          "row": 1,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "GAUS",
+          "row": 0,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "RAGS",
+          "row": 3,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "URS",
+          "row": 3,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "GRUS",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ARU",
+        "AUS",
+        "GAR",
+        "GAS",
+        "GAU",
+        "GAUR",
+        "GRA",
+        "GUAR",
+        "GUR",
+        "GUS",
+        "RAS",
+        "RUA",
+        "RUGA",
+        "RUGS",
+        "RUS",
+        "SAG",
+        "SAR",
+        "SAUR",
+        "SUGAR",
+        "SUR",
+        "SURA",
+        "URA",
+        "URSA",
+        "USAR"
+      ]
+    },
+    {
+      "level": 59,
+      "chapter": "Sapphire Ocean",
+      "root_word": "SWEET",
+      "circle_letters": [
+        "S",
+        "E",
+        "T",
+        "W",
+        "E"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "SWEET",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "WET",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "SET",
+          "row": 1,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "WES",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "TWEE",
+          "row": 0,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "WEST",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "WESTE",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "EWE",
+        "SEE",
+        "SEW",
+        "STEW",
+        "TEE",
+        "TEW",
+        "WEE",
+        "WEET",
+        "WESE"
+      ]
+    },
+    {
+      "level": 60,
+      "chapter": "Sapphire Ocean",
+      "root_word": "TRACK",
+      "circle_letters": [
+        "T",
+        "R",
+        "A",
+        "K",
+        "C"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 10,
+      "words": [
+        {
+          "word": "TRACK",
+          "row": 3,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "KAT",
+          "row": 1,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "CAT",
+          "row": 2,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "ARK",
+          "row": 1,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "CARK",
+          "row": 0,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "ART",
+          "row": 1,
+          "col": 7,
+          "dir": "across"
+        },
+        {
+          "word": "ARC",
+          "row": 0,
+          "col": 5,
+          "dir": "across"
+        },
+        {
+          "word": "RACK",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ACT",
+        "CAR",
+        "CART",
+        "KRA",
+        "RAT",
+        "TACK",
+        "TAR",
+        "TCK",
+        "TRA"
+      ]
+    },
+    {
+      "level": 61,
+      "chapter": "Neon Nebula",
+      "root_word": "GUIDE",
+      "circle_letters": [
+        "E",
+        "I",
+        "U",
+        "G",
+        "D"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "GUIDE",
+          "row": 2,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "GUD",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "UDI",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "DIG",
+          "row": 2,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "GUE",
+          "row": 0,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "GUDE",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "GIED",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "GIE",
+          "row": 4,
+          "col": 6,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "DEG",
+        "DEGU",
+        "DIE",
+        "DUE",
+        "DUG",
+        "GED",
+        "GID",
+        "IDE"
+      ]
+    },
+    {
+      "level": 62,
+      "chapter": "Neon Nebula",
+      "root_word": "FAITH",
+      "circle_letters": [
+        "A",
+        "F",
+        "H",
+        "T",
+        "I"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 5,
+      "words": [
+        {
+          "word": "FAITH",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "HIA",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "THA",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "THAI",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "FIT",
+          "row": 2,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "TAI",
+          "row": 4,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "HAT",
+          "row": 0,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "HATI",
+          "row": 0,
+          "col": 1,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "AFT",
+        "AHT",
+        "AIT",
+        "ATI",
+        "FAT",
+        "FIAT",
+        "HAFT",
+        "HIT",
+        "ITA"
+      ]
+    },
+    {
+      "level": 63,
+      "chapter": "Neon Nebula",
+      "root_word": "BRAVE",
+      "circle_letters": [
+        "E",
+        "V",
+        "R",
+        "B",
+        "A"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "BRAVE",
+          "row": 3,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "BAE",
+          "row": 3,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "BEAR",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "RAVE",
+          "row": 1,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "ARE",
+          "row": 5,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "BARE",
+          "row": 5,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "REA",
+          "row": 1,
+          "col": 6,
+          "dir": "across"
+        },
+        {
+          "word": "AVE",
+          "row": 1,
+          "col": 2,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ABE",
+        "AER",
+        "AVER",
+        "BAR",
+        "BEA",
+        "BER",
+        "BRA",
+        "BRAE",
+        "BREVA",
+        "EAR",
+        "ERA",
+        "EVA",
+        "RAB",
+        "REB",
+        "REV",
+        "VARE",
+        "VERA",
+        "VERB"
+      ]
+    },
+    {
+      "level": 64,
+      "chapter": "Neon Nebula",
+      "root_word": "PRIDE",
+      "circle_letters": [
+        "I",
+        "R",
+        "D",
+        "E",
+        "P"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 11,
+      "words": [
+        {
+          "word": "PRIDE",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "RIP",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "RIPE",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "RIDE",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "REID",
+          "row": 1,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "PIE",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "REDIP",
+          "row": 1,
+          "col": 6,
+          "dir": "across"
+        },
+        {
+          "word": "DIP",
+          "row": 4,
+          "col": 6,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "DIE",
+        "DIER",
+        "DIRE",
+        "DRIP",
+        "ERD",
+        "IDE",
+        "IRE",
+        "PED",
+        "PER",
+        "PERI",
+        "PIED",
+        "PIER",
+        "PIR",
+        "PRIED",
+        "RED",
+        "REP",
+        "RID",
+        "RIE"
+      ]
+    },
+    {
+      "level": 65,
+      "chapter": "Neon Nebula",
+      "root_word": "SHINE",
+      "circle_letters": [
+        "H",
+        "N",
+        "I",
+        "E",
+        "S"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 6,
+      "words": [
+        {
+          "word": "ESHIN",
+          "row": 2,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "SIN",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "HIN",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "SIE",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "SINH",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "SHIN",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "SHINE",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "SEN",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ENS",
+        "HEI",
+        "HEIN",
+        "HEN",
+        "HIE",
+        "HIS",
+        "HISN",
+        "HSI",
+        "NEI",
+        "NESH",
+        "SHE",
+        "SHEN",
+        "SHI",
+        "SINE"
+      ]
+    },
+    {
+      "level": 66,
+      "chapter": "Neon Nebula",
+      "root_word": "PLANET",
+      "circle_letters": [
+        "P",
+        "T",
+        "A",
+        "L",
+        "N",
+        "E"
+      ],
+      "grid_rows": 9,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "PANTLE",
+          "row": 4,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "ATLE",
+          "row": 4,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "ENAPT",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "LEAPT",
+          "row": 4,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "PATE",
+          "row": 1,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "TAP",
+          "row": 2,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "PAL",
+          "row": 6,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "NAEL",
+          "row": 0,
+          "col": 2,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ALEN",
+        "ALPEN",
+        "ANTE",
+        "ATEN",
+        "ENTAL",
+        "ETNA",
+        "LATEN",
+        "LEANT",
+        "NEPAL",
+        "PALET",
+        "PANEL",
+        "PATEL",
+        "PATEN",
+        "PELTA",
+        "PENAL",
+        "PENTA",
+        "PETAL",
+        "PLANE",
+        "PLANET",
+        "PLANT",
+        "PLATE",
+        "PLATEN",
+        "PLEAT",
+        "TAPEN",
+        "TEPAL"
+      ]
+    },
+    {
+      "level": 67,
+      "chapter": "Neon Nebula",
+      "root_word": "FOREST",
+      "circle_letters": [
+        "F",
+        "E",
+        "R",
+        "T",
+        "O",
+        "S"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 12,
+      "words": [
+        {
+          "word": "FOREST",
+          "row": 3,
+          "col": 5,
+          "dir": "across"
+        },
+        {
+          "word": "SER",
+          "row": 1,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "TREF",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "SOE",
+          "row": 3,
+          "col": 9,
+          "dir": "down"
+        },
+        {
+          "word": "REFT",
+          "row": 0,
+          "col": 10,
+          "dir": "down"
+        },
+        {
+          "word": "OSE",
+          "row": 3,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "FOSTER",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ORE",
+          "row": 0,
+          "col": 9,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "EROS",
+        "FEST",
+        "FETOR",
+        "FORE",
+        "FORSET",
+        "FORST",
+        "FORT",
+        "FORTE",
+        "FORTS",
+        "FRET",
+        "FROE",
+        "FROST",
+        "FROT",
+        "OFER",
+        "OFTER",
+        "REST",
+        "ROSE",
+        "ROSET",
+        "ROTE",
+        "ROTS",
+        "ROTSE",
+        "SOTER",
+        "STERO",
+        "STORE",
+        "TORSE"
+      ]
+    },
+    {
+      "level": 68,
+      "chapter": "Neon Nebula",
+      "root_word": "CASTLE",
+      "circle_letters": [
+        "E",
+        "L",
+        "C",
+        "T",
+        "S",
+        "A"
+      ],
+      "grid_rows": 9,
+      "grid_cols": 6,
+      "words": [
+        {
+          "word": "CASTLE",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ATES",
+          "row": 4,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "ELT",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "SAC",
+          "row": 2,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "SCALE",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "LACET",
+          "row": 4,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "SELT",
+          "row": 1,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "SETA",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ACES",
+        "ACLE",
+        "ACTS",
+        "ALCES",
+        "ALEC",
+        "ATLE",
+        "CASE",
+        "CASEL",
+        "CAST",
+        "CASTE",
+        "CLEAT",
+        "ECLAT",
+        "ECTAL",
+        "LACES",
+        "LEAST",
+        "SCALT",
+        "SCEAT",
+        "SCLATE",
+        "SETAL",
+        "SLATE",
+        "STALE",
+        "STEAL",
+        "STELA",
+        "TALES",
+        "TECLA"
+      ]
+    },
+    {
+      "level": 69,
+      "chapter": "Neon Nebula",
+      "root_word": "GARDEN",
+      "circle_letters": [
+        "N",
+        "R",
+        "A",
+        "D",
+        "E",
+        "G"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "DANGER",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "EAR",
+          "row": 2,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "GAD",
+          "row": 3,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "GARE",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "GEAR",
+          "row": 1,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "REND",
+          "row": 3,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "GADE",
+          "row": 3,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "AGED",
+          "row": 0,
+          "col": 3,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "AGEN",
+        "AGER",
+        "AGRE",
+        "ANDE",
+        "ANDRE",
+        "ANGER",
+        "ARED",
+        "AREND",
+        "ARENG",
+        "ARNE",
+        "DAER",
+        "DANE",
+        "DANG",
+        "DAREN",
+        "DRANG",
+        "DRENG",
+        "EDGAR",
+        "GANDER",
+        "GARDEN",
+        "GRADE",
+        "GRAND",
+        "GRANE",
+        "RANGE",
+        "RANGED",
+        "REDAN"
+      ]
+    },
+    {
+      "level": 70,
+      "chapter": "Neon Nebula",
+      "root_word": "WINTER",
+      "circle_letters": [
+        "N",
+        "W",
+        "E",
+        "I",
+        "R",
+        "T"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "TWINER",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "WERT",
+          "row": 0,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "WER",
+          "row": 3,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "WIRE",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "RENT",
+          "row": 3,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "NERI",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "NEW",
+          "row": 3,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "TIN",
+          "row": 6,
+          "col": 5,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ERWIN",
+        "INERT",
+        "INTER",
+        "ITEN",
+        "ITER",
+        "NETI",
+        "NEWT",
+        "NITER",
+        "REIN",
+        "REIT",
+        "RETIN",
+        "REWIN",
+        "RINE",
+        "RITE",
+        "TERI",
+        "TERN",
+        "TIEN",
+        "TIER",
+        "TINE",
+        "TRINE",
+        "TWINE",
+        "TWIRE",
+        "WINER",
+        "WINTER",
+        "WRITE"
+      ]
+    },
+    {
+      "level": 71,
+      "chapter": "Neon Nebula",
+      "root_word": "SUMMER",
+      "circle_letters": [
+        "U",
+        "R",
+        "M",
+        "S",
+        "M",
+        "E"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "SUMMER",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "MES",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "URS",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "UME",
+          "row": 1,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "URE",
+          "row": 1,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "MURE",
+          "row": 0,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "MER",
+          "row": 0,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "USE",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "EMM",
+        "EMU",
+        "ERS",
+        "MEM",
+        "MEUM",
+        "MRS",
+        "MRU",
+        "MUM",
+        "MUS",
+        "MUSE",
+        "MUSER",
+        "REMUS",
+        "RUE",
+        "RUM",
+        "RUS",
+        "RUSE",
+        "SER",
+        "SERUM",
+        "SMUR",
+        "SUE",
+        "SUER",
+        "SUM",
+        "SUR",
+        "SURE",
+        "USER"
+      ]
+    },
+    {
+      "level": 72,
+      "chapter": "Neon Nebula",
+      "root_word": "SPRING",
+      "circle_letters": [
+        "G",
+        "R",
+        "S",
+        "P",
+        "N",
+        "I"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "SPRING",
+          "row": 3,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "GIRN",
+          "row": 1,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "GRIN",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "SIN",
+          "row": 3,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "GRIS",
+          "row": 3,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "SING",
+          "row": 3,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "RIP",
+          "row": 1,
+          "col": 5,
+          "dir": "across"
+        },
+        {
+          "word": "PING",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "GIN",
+        "GIP",
+        "GRIP",
+        "GRIPS",
+        "ING",
+        "NIG",
+        "NIP",
+        "PIG",
+        "PIN",
+        "PIR",
+        "PIRN",
+        "PRIG",
+        "PSI",
+        "RIG",
+        "RING",
+        "RINGS",
+        "RISP",
+        "SIG",
+        "SIGN",
+        "SIP",
+        "SNIG",
+        "SNIP",
+        "SPIG",
+        "SPIN",
+        "SPRIG"
+      ]
+    },
+    {
+      "level": 73,
+      "chapter": "Neon Nebula",
+      "root_word": "SILVER",
+      "circle_letters": [
+        "E",
+        "V",
+        "L",
+        "S",
+        "R",
+        "I"
+      ],
+      "grid_rows": 9,
+      "grid_cols": 10,
+      "words": [
+        {
+          "word": "LIVERS",
+          "row": 4,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "VLEI",
+          "row": 3,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "LEVIR",
+          "row": 2,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "LIVES",
+          "row": 0,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "RIVEL",
+          "row": 4,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "LEI",
+          "row": 6,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "VEIL",
+          "row": 0,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "LIER",
+          "row": 8,
+          "col": 6,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ELVIS",
+        "EVIL",
+        "ISLE",
+        "LEVI",
+        "LEVIS",
+        "LIRE",
+        "LISE",
+        "LIVE",
+        "LIVER",
+        "LIVRE",
+        "REIS",
+        "RILE",
+        "RISE",
+        "RIVE",
+        "SERI",
+        "SIER",
+        "SILE",
+        "SILVER",
+        "SIRE",
+        "SIVER",
+        "SLIVE",
+        "SLIVER",
+        "VERI",
+        "VIER",
+        "VILE"
+      ]
+    },
+    {
+      "level": 74,
+      "chapter": "Neon Nebula",
+      "root_word": "SPRING",
+      "circle_letters": [
+        "G",
+        "I",
+        "N",
+        "P",
+        "S",
+        "R"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "SPRING",
+          "row": 3,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "GRIP",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "SNIG",
+          "row": 3,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "NIP",
+          "row": 2,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "RINGS",
+          "row": 0,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "SNIP",
+          "row": 1,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "PSI",
+          "row": 5,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ING",
+          "row": 0,
+          "col": 1,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "GIN",
+        "GIP",
+        "GIRN",
+        "GRIN",
+        "GRIPS",
+        "GRIS",
+        "NIG",
+        "PIG",
+        "PIN",
+        "PING",
+        "PIR",
+        "PIRN",
+        "PRIG",
+        "RIG",
+        "RING",
+        "RIP",
+        "RISP",
+        "SIG",
+        "SIGN",
+        "SIN",
+        "SING",
+        "SIP",
+        "SPIG",
+        "SPIN",
+        "SPRIG"
+      ]
+    },
+    {
+      "level": 75,
+      "chapter": "Neon Nebula",
+      "root_word": "ORANGE",
+      "circle_letters": [
+        "N",
+        "A",
+        "G",
+        "E",
+        "O",
+        "R"
+      ],
+      "grid_rows": 8,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "ONAGER",
+          "row": 2,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "RAGE",
+          "row": 1,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "GER",
+          "row": 1,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "ORANG",
+          "row": 2,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "ORAGE",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "AGER",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "ORANGE",
+          "row": 2,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "AGRE",
+          "row": 6,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "AEON",
+        "AERO",
+        "AGEN",
+        "AGON",
+        "AGONE",
+        "ANGER",
+        "ANGO",
+        "ANGOR",
+        "ARENG",
+        "ARGO",
+        "ARGON",
+        "ERGON",
+        "GENOA",
+        "GENRO",
+        "GONER",
+        "GORAN",
+        "GRANE",
+        "GRANO",
+        "GROAN",
+        "NAGOR",
+        "NEGRO",
+        "ORGAN",
+        "RANGE",
+        "ROGAN",
+        "RONGA"
+      ]
+    },
+    {
+      "level": 76,
+      "chapter": "Neon Nebula",
+      "root_word": "YELLOW",
+      "circle_letters": [
+        "L",
+        "W",
+        "L",
+        "O",
+        "E",
+        "Y"
+      ],
+      "grid_rows": 9,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "YELLOW",
+          "row": 4,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "WELLY",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "LOWLY",
+          "row": 4,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "YOWL",
+          "row": 1,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "OWE",
+          "row": 4,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "LLEW",
+          "row": 1,
+          "col": 8,
+          "dir": "down"
+        },
+        {
+          "word": "YEO",
+          "row": 1,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "WELL",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ELL",
+        "LEO",
+        "LEW",
+        "LEY",
+        "LOW",
+        "LOWY",
+        "LOY",
+        "LWO",
+        "LYE",
+        "OLE",
+        "OWL",
+        "OWLY",
+        "WEY",
+        "WOE",
+        "WOY",
+        "WYE",
+        "WYLE",
+        "YELL",
+        "YEW",
+        "YOE",
+        "YOW"
+      ]
+    },
+    {
+      "level": 77,
+      "chapter": "Neon Nebula",
+      "root_word": "PURPLE",
+      "circle_letters": [
+        "P",
+        "R",
+        "U",
+        "E",
+        "L",
+        "P"
+      ],
+      "grid_rows": 8,
+      "grid_cols": 6,
+      "words": [
+        {
+          "word": "PULPER",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "PER",
+          "row": 4,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "PURE",
+          "row": 4,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "PELU",
+          "row": 1,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "PULER",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "PERU",
+          "row": 4,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "PEP",
+          "row": 7,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "PUL",
+          "row": 1,
+          "col": 1,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "LER",
+        "LERP",
+        "LEU",
+        "LUE",
+        "LUPE",
+        "LUR",
+        "LURE",
+        "PEUL",
+        "PLUP",
+        "PREP",
+        "PRUE",
+        "PULE",
+        "PULP",
+        "PUP",
+        "PUR",
+        "PURL",
+        "PURPLE",
+        "REL",
+        "REP",
+        "REPP",
+        "RUE",
+        "RULE",
+        "ULE",
+        "UPPER",
+        "URE"
+      ]
+    },
+    {
+      "level": 78,
+      "chapter": "Neon Nebula",
+      "root_word": "FLOWER",
+      "circle_letters": [
+        "E",
+        "W",
+        "F",
+        "L",
+        "O",
+        "R"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "FLOWER",
+          "row": 3,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "ROLF",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "ROWE",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "FROWL",
+          "row": 2,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "ROLFE",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "ROWEL",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "LOF",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "LEO",
+          "row": 5,
+          "col": 2,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ELF",
+        "FEW",
+        "FLEW",
+        "FLOE",
+        "FLOW",
+        "FOLE",
+        "FORE",
+        "FOREL",
+        "FOWL",
+        "FOWLER",
+        "FROE",
+        "FROW",
+        "LORE",
+        "LOWER",
+        "OFER",
+        "ORLE",
+        "OWER",
+        "OWLER",
+        "REFLOW",
+        "ROLE",
+        "WELF",
+        "WERF",
+        "WOLF",
+        "WOLFER",
+        "WORE"
+      ]
+    },
+    {
+      "level": 79,
+      "chapter": "Neon Nebula",
+      "root_word": "STREAM",
+      "circle_letters": [
+        "S",
+        "M",
+        "A",
+        "E",
+        "T",
+        "R"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "MARTES",
+          "row": 4,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "MAE",
+          "row": 4,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "EATS",
+          "row": 2,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "MARS",
+          "row": 1,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "TREMA",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "REAM",
+          "row": 6,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "TAE",
+          "row": 0,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "MET",
+          "row": 1,
+          "col": 6,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ARMET",
+        "ARMS",
+        "ASTER",
+        "MASTER",
+        "MATER",
+        "MATES",
+        "MERAT",
+        "METRA",
+        "RAMET",
+        "REMAST",
+        "SERTA",
+        "SMART",
+        "SMEAR",
+        "STARE",
+        "STEAM",
+        "STEMA",
+        "STRAE",
+        "STRAM",
+        "STREAM",
+        "TAMER",
+        "TARSE",
+        "TEAMS",
+        "TERAS",
+        "TERMA",
+        "TRAME"
+      ]
+    },
+    {
+      "level": 80,
+      "chapter": "Neon Nebula",
+      "root_word": "ISLAND",
+      "circle_letters": [
+        "N",
+        "S",
+        "I",
+        "D",
+        "L",
+        "A"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "ISLAND",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "SLA",
+          "row": 3,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "SIDA",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "SIND",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "LASI",
+          "row": 0,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "NILS",
+          "row": 3,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "SLAD",
+          "row": 3,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "SLID",
+          "row": 0,
+          "col": 5,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ADIN",
+        "ALIDS",
+        "ALIN",
+        "ANDI",
+        "ANIL",
+        "ANIS",
+        "DAIL",
+        "DAIN",
+        "DAIS",
+        "DALI",
+        "DANI",
+        "DANLI",
+        "DASI",
+        "DIAL",
+        "DIAN",
+        "DISA",
+        "DISNA",
+        "LADIN",
+        "LAID",
+        "LANDS",
+        "LINDA",
+        "NIDAL",
+        "SINAL",
+        "SLAIN",
+        "SNAIL"
+      ]
+    },
+    {
+      "level": 81,
+      "chapter": "Galactic Core",
+      "root_word": "CANDLE",
+      "circle_letters": [
+        "D",
+        "N",
+        "E",
+        "L",
+        "C",
+        "A"
+      ],
+      "grid_rows": 8,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "CALDEN",
+          "row": 3,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "CAD",
+          "row": 3,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "DEAL",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "LANE",
+          "row": 0,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "NEA",
+          "row": 3,
+          "col": 8,
+          "dir": "down"
+        },
+        {
+          "word": "DECAN",
+          "row": 3,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "ECAD",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "CLED",
+          "row": 5,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ACLE",
+        "ACNE",
+        "ALEC",
+        "ALEN",
+        "ANDE",
+        "CADE",
+        "CAND",
+        "CANDLE",
+        "CANE",
+        "CANEL",
+        "CLAD",
+        "CLAN",
+        "CLEAD",
+        "CLEAN",
+        "DACE",
+        "DALE",
+        "DANCE",
+        "DECAL",
+        "ELAND",
+        "LACED",
+        "LADEN",
+        "LANCE",
+        "LANCED",
+        "LENAD",
+        "LENCA"
+      ]
+    },
+    {
+      "level": 82,
+      "chapter": "Galactic Core",
+      "root_word": "SHADOW",
+      "circle_letters": [
+        "A",
+        "D",
+        "H",
+        "S",
+        "W",
+        "O"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 10,
+      "words": [
+        {
+          "word": "SHADOW",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "SHO",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "SOH",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "HWA",
+          "row": 1,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "SADH",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "SHOW",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "DAW",
+          "row": 5,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "HOD",
+          "row": 1,
+          "col": 7,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ADO",
+        "AHO",
+        "ASH",
+        "AWD",
+        "DAH",
+        "DAO",
+        "DAS",
+        "DASH",
+        "DHA",
+        "DHAW",
+        "DHOW",
+        "DOSA",
+        "SADO",
+        "SAHO",
+        "SHAD",
+        "SHAW",
+        "SHOA",
+        "SHOAD",
+        "SHOD",
+        "SODA",
+        "SWAD",
+        "WASH",
+        "WASHO",
+        "WHOA",
+        "WOAD"
+      ]
+    },
+    {
+      "level": 83,
+      "chapter": "Galactic Core",
+      "root_word": "BRIDGE",
+      "circle_letters": [
+        "R",
+        "B",
+        "D",
+        "G",
+        "I",
+        "E"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 6,
+      "words": [
+        {
+          "word": "BEGIRD",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "IRE",
+          "row": 1,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "RIDGE",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "BER",
+          "row": 3,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "BERG",
+          "row": 3,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "GED",
+          "row": 1,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "DIRE",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "RIB",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "BEID",
+        "BERI",
+        "BIDE",
+        "BIDER",
+        "BIER",
+        "BIRD",
+        "BRED",
+        "BREDI",
+        "BREI",
+        "BRIDE",
+        "BRIDGE",
+        "BRIG",
+        "DEBI",
+        "DIEB",
+        "DIER",
+        "DIRGE",
+        "DREG",
+        "DRIB",
+        "GERB",
+        "GIBE",
+        "GIBER",
+        "GIED",
+        "GRIDE",
+        "REBID",
+        "REDIG"
+      ]
+    },
+    {
+      "level": 84,
+      "chapter": "Galactic Core",
+      "root_word": "KNIGHT",
+      "circle_letters": [
+        "T",
+        "I",
+        "H",
+        "N",
+        "K",
+        "G"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "KNIGHT",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ING",
+          "row": 1,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "NIGHT",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "KING",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "THINK",
+          "row": 2,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "NIGH",
+          "row": 0,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "KIT",
+          "row": 6,
+          "col": 5,
+          "dir": "across"
+        },
+        {
+          "word": "HINT",
+          "row": 3,
+          "col": 5,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "GIN",
+        "GINK",
+        "GIT",
+        "GITH",
+        "HIN",
+        "HING",
+        "HIT",
+        "INK",
+        "KIN",
+        "KITH",
+        "KNIT",
+        "NIG",
+        "NIT",
+        "NTH",
+        "THIG",
+        "THIN",
+        "THING",
+        "TIG",
+        "TIN",
+        "TING",
+        "TINK"
+      ]
+    },
+    {
+      "level": 85,
+      "chapter": "Galactic Core",
+      "root_word": "WIZARD",
+      "circle_letters": [
+        "W",
+        "Z",
+        "R",
+        "I",
+        "D",
+        "A"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 10,
+      "words": [
+        {
+          "word": "WIZARD",
+          "row": 2,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "WIRD",
+          "row": 2,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "WIZ",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "IDA",
+          "row": 1,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "AID",
+          "row": 2,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "WARD",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "WID",
+          "row": 0,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "IWA",
+          "row": 1,
+          "col": 7,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ADZ",
+        "AIR",
+        "ARID",
+        "AWD",
+        "DAR",
+        "DARI",
+        "DAW",
+        "DRAW",
+        "IRA",
+        "IZAR",
+        "IZARD",
+        "RAD",
+        "RAID",
+        "RAW",
+        "RIA",
+        "RID",
+        "WAD",
+        "WADI",
+        "WAIRD",
+        "WAR",
+        "WAZIR",
+        "WIR",
+        "ZAD",
+        "ZAR",
+        "ZIRA"
+      ]
+    },
+    {
+      "level": 86,
+      "chapter": "Galactic Core",
+      "root_word": "DRAGON",
+      "circle_letters": [
+        "R",
+        "A",
+        "D",
+        "G",
+        "N",
+        "O"
+      ],
+      "grid_rows": 8,
+      "grid_cols": 6,
+      "words": [
+        {
+          "word": "DRAGON",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "NAGOR",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "GAON",
+          "row": 4,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "DARG",
+          "row": 4,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "NOR",
+          "row": 4,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "NORA",
+          "row": 4,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "DAGO",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "GAR",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ADORN",
+        "AGON",
+        "ANGO",
+        "ANGOR",
+        "ARGO",
+        "ARGON",
+        "DANG",
+        "DARGO",
+        "DARN",
+        "DOGRA",
+        "DONAR",
+        "DONGA",
+        "DRAGO",
+        "DRANG",
+        "DRONA",
+        "GONAD",
+        "GORAN",
+        "GRAND",
+        "GRANO",
+        "GROAN",
+        "ORANG",
+        "ORGAN",
+        "RADON",
+        "ROGAN",
+        "RONGA"
+      ]
+    },
+    {
+      "level": 87,
+      "chapter": "Galactic Core",
+      "root_word": "FROZEN",
+      "circle_letters": [
+        "Z",
+        "O",
+        "N",
+        "R",
+        "F",
+        "E"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 6,
+      "words": [
+        {
+          "word": "FROZEN",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "RON",
+          "row": 3,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "FOE",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "ZERO",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "ORF",
+          "row": 1,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "NOR",
+          "row": 3,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "ZEN",
+          "row": 3,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "ONE",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "EON",
+        "FEN",
+        "FERN",
+        "FEZ",
+        "FON",
+        "FOR",
+        "FORE",
+        "FREON",
+        "FRO",
+        "FROE",
+        "FROZE",
+        "NEF",
+        "NEO",
+        "OER",
+        "OFER",
+        "ONER",
+        "ORE",
+        "REF",
+        "ROE",
+        "RONE",
+        "ZER",
+        "ZONE"
+      ]
+    },
+    {
+      "level": 88,
+      "chapter": "Galactic Core",
+      "root_word": "MARBLE",
+      "circle_letters": [
+        "A",
+        "M",
+        "R",
+        "L",
+        "E",
+        "B"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "AMBLER",
+          "row": 2,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "ABEL",
+          "row": 2,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "LEA",
+          "row": 2,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "RAM",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "BER",
+          "row": 0,
+          "col": 8,
+          "dir": "down"
+        },
+        {
+          "word": "LEAR",
+          "row": 2,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "BERM",
+          "row": 0,
+          "col": 8,
+          "dir": "down"
+        },
+        {
+          "word": "RAME",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ABLE",
+        "ABLER",
+        "ALBE",
+        "ALEM",
+        "ALME",
+        "AMBER",
+        "AMBLE",
+        "BALE",
+        "BALER",
+        "BALM",
+        "BEARM",
+        "BELAM",
+        "BELAR",
+        "BEMAR",
+        "BLAME",
+        "BLAMER",
+        "BLARE",
+        "BLEAR",
+        "BREAM",
+        "EMBAR",
+        "LAMBER",
+        "MABEL",
+        "MARBLE",
+        "RAMBLE",
+        "REALM"
+      ]
+    },
+    {
+      "level": 89,
+      "chapter": "Galactic Core",
+      "root_word": "DESERT",
+      "circle_letters": [
+        "E",
+        "S",
+        "T",
+        "R",
+        "E",
+        "D"
+      ],
+      "grid_rows": 8,
+      "grid_cols": 10,
+      "words": [
+        {
+          "word": "DESERT",
+          "row": 4,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "REED",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "EER",
+          "row": 4,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "REEST",
+          "row": 3,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "RET",
+          "row": 2,
+          "col": 9,
+          "dir": "down"
+        },
+        {
+          "word": "TREED",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "SEDER",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "SER",
+          "row": 6,
+          "col": 3,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "DEER",
+        "DERE",
+        "DETER",
+        "DREE",
+        "DREST",
+        "ERSE",
+        "ESTER",
+        "ESTRE",
+        "REDE",
+        "REES",
+        "REET",
+        "RESET",
+        "REST",
+        "SEED",
+        "SEER",
+        "SERE",
+        "SERT",
+        "STEED",
+        "STEER",
+        "STERE",
+        "STRE",
+        "STREE",
+        "TEER",
+        "TERSE",
+        "TSERE"
+      ]
+    },
+    {
+      "level": 90,
+      "chapter": "Galactic Core",
+      "root_word": "BREEZE",
+      "circle_letters": [
+        "Z",
+        "R",
+        "E",
+        "E",
+        "E",
+        "B"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "BREEZE",
+          "row": 3,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "BER",
+          "row": 3,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "BEER",
+          "row": 0,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "BERE",
+          "row": 3,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "EER",
+          "row": 3,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "BEE",
+          "row": 1,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "REB",
+          "row": 2,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "ZEE",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "BREE",
+        "ERE",
+        "REE",
+        "ZEEB",
+        "ZER"
+      ]
+    },
+    {
+      "level": 91,
+      "chapter": "Galactic Core",
+      "root_word": "SUNSET",
+      "circle_letters": [
+        "S",
+        "N",
+        "S",
+        "U",
+        "T",
+        "E"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "SUNSET",
+          "row": 2,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "SUS",
+          "row": 2,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "UTE",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "UNSET",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "TESS",
+          "row": 2,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "UST",
+          "row": 0,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "SUE",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "SUET",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ENS",
+        "ESS",
+        "ESTUS",
+        "NESS",
+        "NEST",
+        "NET",
+        "NUT",
+        "NUTS",
+        "SEN",
+        "SENT",
+        "SET",
+        "SETS",
+        "SSU",
+        "STEN",
+        "STU",
+        "STUE",
+        "STUN",
+        "SUN",
+        "SUNE",
+        "SUNT",
+        "TENS",
+        "TSUN",
+        "TUNE",
+        "TUNES",
+        "USENT"
+      ]
+    },
+    {
+      "level": 92,
+      "chapter": "Galactic Core",
+      "root_word": "PENCIL",
+      "circle_letters": [
+        "N",
+        "L",
+        "E",
+        "I",
+        "P",
+        "C"
+      ],
+      "grid_rows": 6,
+      "grid_cols": 12,
+      "words": [
+        {
+          "word": "PENCIL",
+          "row": 3,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "PEN",
+          "row": 3,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "CEP",
+          "row": 3,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "LIEN",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "CLEP",
+          "row": 2,
+          "col": 8,
+          "dir": "down"
+        },
+        {
+          "word": "LEI",
+          "row": 0,
+          "col": 5,
+          "dir": "across"
+        },
+        {
+          "word": "PILE",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "CLIP",
+          "row": 2,
+          "col": 8,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "CEIL",
+        "CEL",
+        "CINE",
+        "CINEL",
+        "CLINE",
+        "ELI",
+        "EPIC",
+        "ICE",
+        "LEN",
+        "LICE",
+        "LIE",
+        "LIN",
+        "LINE",
+        "LIP",
+        "NEI",
+        "NEIL",
+        "NEP",
+        "NICE",
+        "NIL",
+        "NILE",
+        "NIP",
+        "PIC",
+        "PICE",
+        "PIEN",
+        "PINE"
+      ]
+    },
+    {
+      "level": 93,
+      "chapter": "Galactic Core",
+      "root_word": "ROCKET",
+      "circle_letters": [
+        "T",
+        "E",
+        "C",
+        "O",
+        "R",
+        "K"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 12,
+      "words": [
+        {
+          "word": "ROCKET",
+          "row": 2,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "COR",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "COKER",
+          "row": 2,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "RECTO",
+          "row": 1,
+          "col": 8,
+          "dir": "down"
+        },
+        {
+          "word": "CORTE",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "CORKE",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "ORT",
+          "row": 6,
+          "col": 5,
+          "dir": "across"
+        },
+        {
+          "word": "TORE",
+          "row": 4,
+          "col": 8,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "CERO",
+        "COE",
+        "COKE",
+        "CORE",
+        "CORK",
+        "COT",
+        "COTE",
+        "CRO",
+        "KETO",
+        "KORE",
+        "KOREC",
+        "OKET",
+        "RECK",
+        "RECT",
+        "ROCK",
+        "ROKE",
+        "ROTE",
+        "TECK",
+        "TECO",
+        "TOCK",
+        "TOKE",
+        "TORC",
+        "TREK",
+        "TROCK",
+        "TROKE"
+      ]
+    },
+    {
+      "level": 94,
+      "chapter": "Galactic Core",
+      "root_word": "VOYAGE",
+      "circle_letters": [
+        "A",
+        "Y",
+        "E",
+        "G",
+        "V",
+        "O"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "VOYAGE",
+          "row": 2,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "YOGA",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "GAVE",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "VOE",
+          "row": 0,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "VOG",
+          "row": 0,
+          "col": 6,
+          "dir": "across"
+        },
+        {
+          "word": "EGO",
+          "row": 4,
+          "col": 4,
+          "dir": "across"
+        },
+        {
+          "word": "YEA",
+          "row": 4,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "AGE",
+        "AGO",
+        "AGY",
+        "AVE",
+        "AVO",
+        "AYE",
+        "EVA",
+        "GAY",
+        "GEO",
+        "GEY",
+        "GOA",
+        "GOAVE",
+        "GOVE",
+        "GOY",
+        "GYVE",
+        "OVA",
+        "OVEY",
+        "VAG",
+        "VAGE",
+        "VEGA",
+        "YAO",
+        "YEO",
+        "YOE"
+      ]
+    },
+    {
+      "level": 95,
+      "chapter": "Galactic Core",
+      "root_word": "NATURE",
+      "circle_letters": [
+        "T",
+        "R",
+        "A",
+        "U",
+        "E",
+        "N"
+      ],
+      "grid_rows": 8,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "NATURE",
+          "row": 4,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "ARENT",
+          "row": 1,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "URE",
+          "row": 4,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "ANTE",
+          "row": 1,
+          "col": 8,
+          "dir": "down"
+        },
+        {
+          "word": "RENT",
+          "row": 1,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "UREA",
+          "row": 4,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "URENT",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "TERA",
+          "row": 1,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ANTRE",
+        "ANTU",
+        "ARNE",
+        "ARNUT",
+        "ATEN",
+        "ATUNE",
+        "AUNE",
+        "AUNT",
+        "AUTE",
+        "EARN",
+        "ENRUT",
+        "ETNA",
+        "ETUA",
+        "NATE",
+        "NATR",
+        "NAUT",
+        "NEAR",
+        "RETAN",
+        "TERNA",
+        "TUARN",
+        "TUNER",
+        "UNTAR",
+        "URATE",
+        "URENA",
+        "URNAE"
+      ]
+    },
+    {
+      "level": 96,
+      "chapter": "Galactic Core",
+      "root_word": "JOURNEY",
+      "circle_letters": [
+        "J",
+        "R",
+        "Y",
+        "N",
+        "U",
+        "O",
+        "E"
+      ],
+      "grid_rows": 5,
+      "grid_cols": 11,
+      "words": [
+        {
+          "word": "JOURNEY",
+          "row": 1,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "RUE",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "ONERY",
+          "row": 0,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "YOE",
+          "row": 1,
+          "col": 8,
+          "dir": "down"
+        },
+        {
+          "word": "JON",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "RUEN",
+          "row": 0,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "URN",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "EON",
+          "row": 3,
+          "col": 8,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ENJOY",
+        "ERYON",
+        "EURYON",
+        "EYN",
+        "JOE",
+        "JOEY",
+        "JOY",
+        "JUN",
+        "JUNE",
+        "JUNO",
+        "JURE",
+        "JURY",
+        "ONER",
+        "OYER",
+        "RENU",
+        "ROEY",
+        "RONE",
+        "ROUE",
+        "ROUN",
+        "RUNE",
+        "RYEN",
+        "YERN",
+        "YORE",
+        "YOUR",
+        "YOURN"
+      ]
+    },
+    {
+      "level": 97,
+      "chapter": "Galactic Core",
+      "root_word": "WEATHER",
+      "circle_letters": [
+        "W",
+        "E",
+        "A",
+        "E",
+        "T",
+        "H",
+        "R"
+      ],
+      "grid_rows": 8,
+      "grid_cols": 9,
+      "words": [
+        {
+          "word": "WEATHER",
+          "row": 4,
+          "col": 2,
+          "dir": "across"
+        },
+        {
+          "word": "HEER",
+          "row": 3,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "WHET",
+          "row": 1,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "HARE",
+          "row": 4,
+          "col": 6,
+          "dir": "down"
+        },
+        {
+          "word": "TRA",
+          "row": 3,
+          "col": 8,
+          "dir": "down"
+        },
+        {
+          "word": "AWHET",
+          "row": 0,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "TRAH",
+          "row": 3,
+          "col": 8,
+          "dir": "down"
+        },
+        {
+          "word": "TEER",
+          "row": 6,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ARETE",
+        "EARTH",
+        "EATER",
+        "ETHER",
+        "HATER",
+        "HAWER",
+        "HEART",
+        "HEATER",
+        "HERAT",
+        "HEREAT",
+        "HEWER",
+        "RATHE",
+        "REHEAT",
+        "RETHAW",
+        "RETHE",
+        "REWET",
+        "RHEAE",
+        "TAWER",
+        "TEAER",
+        "TEWER",
+        "THAWER",
+        "WETHER",
+        "WHEREAT",
+        "WREATH",
+        "WREATHE"
+      ]
+    },
+    {
+      "level": 98,
+      "chapter": "Galactic Core",
+      "root_word": "DIAMOND",
+      "circle_letters": [
+        "M",
+        "I",
+        "D",
+        "D",
+        "N",
+        "O",
+        "A"
+      ],
+      "grid_rows": 10,
+      "grid_cols": 10,
+      "words": [
+        {
+          "word": "DIAMOND",
+          "row": 5,
+          "col": 3,
+          "dir": "across"
+        },
+        {
+          "word": "DIMNA",
+          "row": 5,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "DAO",
+          "row": 4,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "MAIN",
+          "row": 2,
+          "col": 8,
+          "dir": "down"
+        },
+        {
+          "word": "DIDO",
+          "row": 5,
+          "col": 9,
+          "dir": "down"
+        },
+        {
+          "word": "OAM",
+          "row": 5,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "DOMAIN",
+          "row": 0,
+          "col": 8,
+          "dir": "down"
+        },
+        {
+          "word": "INOMA",
+          "row": 7,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ADIN",
+        "ADION",
+        "ADMI",
+        "ADMIN",
+        "AION",
+        "AMID",
+        "AMIDO",
+        "AMIDON",
+        "AMINO",
+        "DAIMON",
+        "DAMON",
+        "DANIO",
+        "DIDNA",
+        "DODMAN",
+        "DOINA",
+        "DONDIA",
+        "DONIA",
+        "MADID",
+        "MANID",
+        "MONAD",
+        "NAOMI",
+        "NOMAD",
+        "ODDMAN",
+        "OMANI",
+        "OMINA"
+      ]
+    },
+    {
+      "level": 99,
+      "chapter": "Galactic Core",
+      "root_word": "RAINBOW",
+      "circle_letters": [
+        "A",
+        "N",
+        "B",
+        "R",
+        "I",
+        "O",
+        "W"
+      ],
+      "grid_rows": 8,
+      "grid_cols": 8,
+      "words": [
+        {
+          "word": "RAINBOW",
+          "row": 3,
+          "col": 1,
+          "dir": "across"
+        },
+        {
+          "word": "WON",
+          "row": 1,
+          "col": 4,
+          "dir": "down"
+        },
+        {
+          "word": "AWIN",
+          "row": 3,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "BROW",
+          "row": 3,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "NAIR",
+          "row": 0,
+          "col": 1,
+          "dir": "down"
+        },
+        {
+          "word": "NAW",
+          "row": 1,
+          "col": 7,
+          "dir": "down"
+        },
+        {
+          "word": "BROWN",
+          "row": 3,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "ROI",
+          "row": 5,
+          "col": 0,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ABIR",
+        "ABRIN",
+        "AION",
+        "ARION",
+        "ARNI",
+        "AROW",
+        "BAIN",
+        "BAIRN",
+        "BANI",
+        "BARI",
+        "BAROI",
+        "BARON",
+        "BIRON",
+        "BONAIR",
+        "BORAN",
+        "BORANI",
+        "BRAIN",
+        "BRAWN",
+        "BRIAN",
+        "INORB",
+        "IOWAN",
+        "NORIA",
+        "RABIN",
+        "ROBIN",
+        "ROWAN"
+      ]
+    },
+    {
+      "level": 100,
+      "chapter": "Galactic Core",
+      "root_word": "CRYSTAL",
+      "circle_letters": [
+        "C",
+        "T",
+        "S",
+        "A",
+        "L",
+        "R",
+        "Y"
+      ],
+      "grid_rows": 7,
+      "grid_cols": 7,
+      "words": [
+        {
+          "word": "CRYSTAL",
+          "row": 3,
+          "col": 0,
+          "dir": "across"
+        },
+        {
+          "word": "LAY",
+          "row": 1,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "CAL",
+          "row": 3,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "SAL",
+          "row": 3,
+          "col": 3,
+          "dir": "down"
+        },
+        {
+          "word": "RATS",
+          "row": 2,
+          "col": 5,
+          "dir": "down"
+        },
+        {
+          "word": "CLAY",
+          "row": 0,
+          "col": 2,
+          "dir": "down"
+        },
+        {
+          "word": "SCALY",
+          "row": 2,
+          "col": 0,
+          "dir": "down"
+        },
+        {
+          "word": "CYST",
+          "row": 0,
+          "col": 2,
+          "dir": "across"
+        }
+      ],
+      "bonus_words": [
+        "ACLYS",
+        "ACRYL",
+        "ARSYL",
+        "ASCRY",
+        "CARLS",
+        "CARTY",
+        "CARYL",
+        "CLART",
+        "CLARTY",
+        "CLARY",
+        "CYSTAL",
+        "LASTY",
+        "SALTY",
+        "SATYR",
+        "SCALT",
+        "SCART",
+        "SCARY",
+        "SCRAT",
+        "SCRAY",
+        "SLART",
+        "SLATY",
+        "STACY",
+        "STARY",
+        "STRAY",
+        "STYLAR"
+      ]
+    }
+  ]
+}
