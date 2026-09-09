@@ -229,23 +229,33 @@ Window {
                 return;
             }
 
+            // If Help modal is open, Escape closes it
             if (root.showHelp) {
-                if (event.key === Qt.Key_Escape || event.key === Qt.Key_Question || event.key === Qt.Key_Slash) {
+                if (event.key === Qt.Key_Escape) {
                     root.showHelp = false;
                     event.accepted = true;
                     return;
                 }
             }
 
-            if (event.key === Qt.Key_N || event.key === Qt.Key_BracketRight || event.key === Qt.Key_PageDown) {
+            // Modifier-based shortcuts only (Ctrl+N, Ctrl+M, Ctrl+R, Shift+F)
+            // Plain single letters must NEVER trigger actions in a word typing game!
+            var hasCtrl = (event.modifiers & Qt.ControlModifier) !== 0;
+
+            if (hasCtrl && event.key === Qt.Key_N) {
                 root.loadNextPuzzle(0);
                 event.accepted = true;
                 return;
             }
 
-
-            if (event.key === Qt.Key_M) {
+            if (hasCtrl && event.key === Qt.Key_M) {
                 root.toggleMute();
+                event.accepted = true;
+                return;
+            }
+
+            if (hasCtrl && event.key === Qt.Key_R) {
+                root.restartGame();
                 event.accepted = true;
                 return;
             }
@@ -257,27 +267,8 @@ Window {
                 return;
             }
 
-            if (event.key === Qt.Key_R) {
-                root.restartGame();
-                event.accepted = true;
-                return;
-            }
-
-            if (event.key === Qt.Key_BracketLeft || event.key === Qt.Key_PageUp) {
-                root.jumpToLevel(root.currentLevel - 1);
-                event.accepted = true;
-                return;
-            }
-
-            if (event.key === Qt.Key_Question || event.key === Qt.Key_Slash) {
-                root.showHelp = !root.showHelp;
-                event.accepted = true;
-                return;
-            }
-
-            // WordCircle In-Game Controls
+            // WordCircle Controls: Space = Shuffle
             if (event.key === Qt.Key_Space) {
-                // Shuffle letters
                 Engine.shuffleLetters();
                 root.playSound("push");
                 updateUIState();
