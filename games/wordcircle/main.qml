@@ -180,6 +180,33 @@ Window {
         }
     }
 
+    function doTypeLetter(ch) {
+        Engine.typeChar(ch, { onSound: root.playSound });
+        updateUIState();
+    }
+
+    function doSubmitWord() {
+        Engine.submitWord({
+            onSound: root.playSound,
+            onScore: function(s) { root.score = s; },
+            onLevelComplete: function(lvl) {
+                if (typeof settingsManager !== "undefined" && settingsManager && Engine.currentLevel) {
+                    settingsManager.markRootSolved(Engine.currentLevel.root_word);
+                    root.solvedCount = settingsManager.getSolvedCount();
+                }
+                soundToast.show("🎉 Solved! Loading Next...");
+                autoNextTimer.restart();
+            }
+        });
+        updateUIState();
+    }
+
+    function doShuffle() {
+        Engine.shuffleLetters();
+        root.playSound("push");
+        updateUIState();
+    }
+
     function captureScreenshot(filePath, shouldQuit) {
         var targetItem = (splashScreen && splashScreen.visible && splashScreen.opacity > 0) ? splashScreen : mainContainer;
         targetItem.grabToImage(function(result) {
