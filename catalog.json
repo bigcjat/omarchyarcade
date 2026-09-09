@@ -1,7 +1,7 @@
 {
   "version": 5,
   "app_name": "Omarchy Arcade",
-  "updated_at": "2026-09-09T21:33:25Z",
+  "updated_at": "2026-09-09T22:41:00Z",
   "games": [
     {
       "id": "2048",
@@ -706,7 +706,7 @@
       "category": "Action Arcade",
       "floppy_color": "#232328",
       "grid_color": "#00F0FF",
-      "version": "1.0.7",
+      "version": "1.0.8",
       "status": "released",
       "tagline": "Slow Car Racing League • OutRun-Style Pseudo-3D Arcade",
       "description": "OutRun-style pseudo-3D scanline highway racer starring the beloved Slow Car Racing League: Suzuki Carry Kei Truck, Smart Fortwo, Fiat Panda 4x4, Suzuki Sidekick, Jeep Wrangler YJ, and Volkswagen Type 2 Bus. Featuring authentic transmissions, realistic 0-60 gearing physics, and distinct procedural acoustic sound synthesis.",
@@ -714,7 +714,7 @@
         "Accelerate with Up / W through authentic multi-speed gear ratios.",
         "Steer through highway corners and tap Spacebar to drift your slow machine.",
         "Pick your ride in the Showroom Garage: Kei Truck, Smart Fortwo, Fiat Panda, Suzuki Sidekick, Wrangler YJ, or VW Bus.",
-        "Reach sector checkpoint arch gantries before the timer runs out for +30s.",
+        "Reach sector checkpoint arch gantries before the timer runs out for +50s.",
         "Weave through slow highway traffic to build high-score multipliers.",
         "Press C anytime to switch vehicles in the garage."
       ],
