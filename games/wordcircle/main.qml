@@ -44,6 +44,8 @@ Window {
     property bool splashEnabled: true
     property bool isMuted: true
     property bool showHelp: false
+    property bool showLevelSelect: true
+    property int previewLength: 5
     property bool isTiledDesktopMode: root.height < 540 || root.width < 440
     property alias fullPlayfield: root.isTiledDesktopMode
     property bool _spaceConstrained: root.height < 540 || root.width < 440
@@ -233,6 +235,21 @@ Window {
             if (root.showHelp) {
                 if (event.key === Qt.Key_Escape) {
                     root.showHelp = false;
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            // If Level Select modal is open, Escape closes it, Enter/Space starts game
+            if (root.showLevelSelect) {
+                if (event.key === Qt.Key_Escape) {
+                    root.showLevelSelect = false;
+                    event.accepted = true;
+                    return;
+                }
+                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                    root.loadNextPuzzle(root.previewLength);
+                    root.showLevelSelect = false;
                     event.accepted = true;
                     return;
                 }
@@ -485,6 +502,34 @@ Window {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 6
+
+                // Level Select Button
+                Rectangle {
+                    height: 30
+                    width: subheaderItem.isCrowded ? 30 : 74
+                    radius: 6
+                    color: lvlBtnMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: root.themeAccent
+                    border.width: 1
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text { text: "🎯"; font.pixelSize: 11 }
+                        Text { text: "Levels"; font.pixelSize: 10; font.bold: true; color: root.themeAccent; visible: !subheaderItem.isCrowded }
+                    }
+
+                    MouseArea {
+                        id: lvlBtnMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.playSound("click");
+                            root.showLevelSelect = !root.showLevelSelect;
+                        }
+                    }
+                }
 
                 // New Puzzle Button
                 Rectangle {
@@ -1041,6 +1086,218 @@ Window {
             interval: 1300
             repeat: false
             onTriggered: root.loadNextPuzzle(0)
+        }
+
+        // =====================================================================
+        // Level Select Modal (Shows at game start or when clicking Levels)
+        // =====================================================================
+        Rectangle {
+            id: levelSelectModal
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            color: "#d9000000"
+            visible: root.showLevelSelect
+            z: 950
+
+            MouseArea {
+                anchors.fill: parent
+                // Modal stays open until player selects or plays
+            }
+
+            Rectangle {
+                id: levelCard
+                width: Math.min(parent.width * 0.94, 460)
+                height: levelSelectCol.height + 44
+                anchors.centerIn: parent
+                color: root.themeCardBg
+                border.color: root.themeAccent
+                border.width: 1.5
+                radius: 14
+
+                // Stop clicks on card from closing
+                MouseArea { anchors.fill: parent }
+
+                Column {
+                    id: levelSelectCol
+                    anchors.centerIn: parent
+                    width: parent.width - 40
+                    spacing: 14
+
+                    // Header
+                    Column {
+                        width: parent.width
+                        spacing: 4
+                        Text {
+                            text: "🎯 CHOOSE STARTING LEVEL"
+                            font.pixelSize: 18
+                            font.bold: true
+                            color: root.themeAccent
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            font.letterSpacing: 1
+                        }
+                        Text {
+                            text: "Pick your preferred letter difficulty or jump right in:"
+                            font.pixelSize: 11
+                            color: root.themeSubtext
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+
+                    // Letter Count Tier Buttons (4, 5, 6, 7 Letters)
+                    Grid {
+                        columns: 4
+                        spacing: 8
+                        width: parent.width
+
+                        Repeater {
+                            model: [
+                                { label: "4 Letters", len: 4, sub: "Casual" },
+                                { label: "5 Letters", len: 5, sub: "Medium" },
+                                { label: "6 Letters", len: 6, sub: "Expert" },
+                                { label: "7 Letters", len: 7, sub: "Master" }
+                            ]
+
+                            Rectangle {
+                                width: (levelSelectCol.width - 24) / 4
+                                height: 62
+                                radius: 8
+                                color: (root.previewLength === modelData.len) ? Qt.alpha(root.themeAccent, 0.22) : root.themeBoardBg
+                                border.color: (root.previewLength === modelData.len) ? root.themeAccent : root.themeBorder
+                                border.width: 1.5
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 2
+                                    Text {
+                                        text: modelData.label
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                        color: root.themeFg
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
+                                    Text {
+                                        text: modelData.sub
+                                        font.pixelSize: 9
+                                        color: (root.previewLength === modelData.len) ? root.themeAccent : root.themeSubtext
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        root.previewLength = modelData.len;
+                                        root.playSound("click");
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Level Details Summary Box
+                    Rectangle {
+                        width: parent.width
+                        height: 38
+                        radius: 8
+                        color: root.themeBoardBg
+                        border.color: root.themeBorder
+                        border.width: 1
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 10
+                            Text {
+                                text: "Selected: " + root.previewLength + " Letters Wheel"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: root.themeAccent
+                            }
+                            Text {
+                                text: "•"
+                                font.pixelSize: 11
+                                color: root.themeSubtext
+                            }
+                            Text {
+                                text: "Solves Completed: " + root.solvedCount
+                                font.pixelSize: 11
+                                color: root.themeFg
+                            }
+                        }
+                    }
+
+                    // Action Buttons Row: [ 🎲 Random Level ] [ PLAY LEVEL ▶ ]
+                    Row {
+                        width: parent.width
+                        spacing: 8
+
+                        Rectangle {
+                            width: 120
+                            height: 42
+                            radius: 8
+                            color: rndBtnMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                            border.color: root.themeAccent
+                            border.width: 1.5
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 6
+                                Text { text: "🎲"; font.pixelSize: 13 }
+                                Text { text: "Random"; font.pixelSize: 12; font.bold: true; color: root.themeAccent }
+                            }
+
+                            MouseArea {
+                                id: rndBtnMouse
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    var rndLen = [4, 5, 6, 7][Math.floor(Math.random() * 4)];
+                                    root.previewLength = rndLen;
+                                    root.loadNextPuzzle(rndLen);
+                                    root.showLevelSelect = false;
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            width: parent.width - 128
+                            height: 42
+                            radius: 8
+                            color: startBtnMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 6
+                                Text {
+                                    text: "PLAY " + root.previewLength + "-LETTER PUZZLE ▶"
+                                    font.bold: true
+                                    font.pixelSize: 13
+                                    color: root.themeBtnFg
+                                }
+                            }
+
+                            MouseArea {
+                                id: startBtnMouse
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.loadNextPuzzle(root.previewLength);
+                                    root.showLevelSelect = false;
+                                }
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: "Press ENTER to Play • ESC to Close"
+                        font.pixelSize: 9
+                        color: root.themeSubtext
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+                }
+            }
         }
 
         // Help Modal
