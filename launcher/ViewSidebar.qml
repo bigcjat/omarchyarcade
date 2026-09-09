@@ -236,11 +236,11 @@ Item {
             color: "#0c0d14"
             clip: true
 
-            // Empty state if list is empty
+            // Empty state if no game is selected, but games exist in list
             ColumnLayout {
                 anchors.centerIn: parent
                 spacing: 12
-                visible: !activeGame
+                visible: !activeGame && games && games.length > 0
 
                 Text {
                     text: "📑"

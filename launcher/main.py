@@ -71,7 +71,14 @@ class ArcadeBackend(QObject):
 
     @Slot(result=str)
     def getCatalogJson(self) -> str:
-        """Fetches the game catalog dynamically from GitHub (with local fallback/cache)."""
+        """Fetches the game catalog dynamically from GitHub (or uses local repo file in dev mode)."""
+        # In local repo development mode, always use local catalog.json
+        if (BASE_DIR / "games").is_dir() and CATALOG_PATH.exists():
+            try:
+                return CATALOG_PATH.read_text(encoding="utf-8")
+            except Exception as e:
+                print(f"[Arcade] Error reading local dev catalog: {e}")
+
         import urllib.request
         import time
         remote_url = f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/catalog.json?_={int(time.time())}"

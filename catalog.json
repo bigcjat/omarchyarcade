@@ -1,7 +1,7 @@
 {
-  "version": 3,
+  "version": 4,
   "app_name": "Omarchy Arcade",
-  "updated_at": "2026-09-09T00:20:00Z",
+  "updated_at": "2026-09-09T00:43:00Z",
   "games": [
     {
       "id": "2048",
@@ -29,7 +29,15 @@
       "cover_image": "assets/covers/2048.png",
       "size": "455 KB",
       "size_bytes": 465839,
-      "download_size": "455 KB"
+      "download_size": "455 KB",
+      "keywords": [
+        "2048",
+        "threes",
+        "number merge",
+        "sliding tile",
+        "tile puzzle",
+        "math game"
+      ]
     },
     {
       "id": "tetrablocks",
@@ -57,7 +65,16 @@
       "cover_image": "assets/covers/tetrablocks.png",
       "size": "287 KB",
       "size_bytes": 294340,
-      "download_size": "287 KB"
+      "download_size": "287 KB",
+      "keywords": [
+        "tetris",
+        "blocks",
+        "tetromino",
+        "falling blocks",
+        "srs",
+        "guideline",
+        "line clear"
+      ]
     },
     {
       "id": "bytesnake",
@@ -85,7 +102,15 @@
       "cover_image": "assets/covers/bytesnake.png",
       "size": "203 KB",
       "size_bytes": 208179,
-      "download_size": "203 KB"
+      "download_size": "203 KB",
+      "keywords": [
+        "snake",
+        "nibbles",
+        "slither",
+        "worm",
+        "nokia",
+        "retro snake"
+      ]
     },
     {
       "id": "vectorpong",
@@ -113,7 +138,15 @@
       "cover_image": "assets/covers/vectorpong.png",
       "size": "209 KB",
       "size_bytes": 213710,
-      "download_size": "209 KB"
+      "download_size": "209 KB",
+      "keywords": [
+        "pong",
+        "table tennis",
+        "ping pong",
+        "atari pong",
+        "tennis",
+        "paddle"
+      ]
     },
     {
       "id": "cybersweeper",
@@ -141,7 +174,15 @@
       "cover_image": "assets/covers/cybersweeper.png",
       "size": "250 KB",
       "size_bytes": 256326,
-      "download_size": "250 KB"
+      "download_size": "250 KB",
+      "keywords": [
+        "minesweeper",
+        "mines",
+        "sweeper",
+        "minefield",
+        "bomb",
+        "windows mines"
+      ]
     },
     {
       "id": "dropfour",
@@ -169,7 +210,16 @@
       "cover_image": "assets/covers/dropfour.png",
       "size": "220 KB",
       "size_bytes": 225466,
-      "download_size": "220 KB"
+      "download_size": "220 KB",
+      "keywords": [
+        "connect four",
+        "connect 4",
+        "connect four in a row",
+        "4 in a row",
+        "four in a row",
+        "hasbro",
+        "drop four"
+      ]
     },
     {
       "id": "brickbash",
@@ -197,7 +247,15 @@
       "cover_image": "assets/covers/brickbash.png",
       "size": "238 KB",
       "size_bytes": 243231,
-      "download_size": "238 KB"
+      "download_size": "238 KB",
+      "keywords": [
+        "breakout",
+        "arkanoid",
+        "brick breaker",
+        "bricks",
+        "paddle ball",
+        "atari breakout"
+      ]
     },
     {
       "id": "voidinvaders",
@@ -225,7 +283,15 @@
       "cover_image": "assets/covers/voidinvaders.png",
       "size": "304 KB",
       "size_bytes": 311496,
-      "download_size": "304 KB"
+      "download_size": "304 KB",
+      "keywords": [
+        "space invaders",
+        "invaders",
+        "alien attack",
+        "taito",
+        "bunkers",
+        "alien shooter"
+      ]
     },
     {
       "id": "vectordrift",
@@ -253,7 +319,15 @@
       "cover_image": "assets/covers/vectordrift.png",
       "size": "457 KB",
       "size_bytes": 468209,
-      "download_size": "457 KB"
+      "download_size": "457 KB",
+      "keywords": [
+        "asteroids",
+        "drift",
+        "vector space",
+        "wireframe",
+        "thrust",
+        "rock shooter"
+      ]
     },
     {
       "id": "cyberflap",
@@ -281,7 +355,15 @@
       "cover_image": "assets/covers/cyberflap.png",
       "size": "224 KB",
       "size_bytes": 229424,
-      "download_size": "224 KB"
+      "download_size": "224 KB",
+      "keywords": [
+        "flappy bird",
+        "flappy",
+        "helicopter",
+        "copter",
+        "tap to fly",
+        "pipe dodge"
+      ]
     },
     {
       "id": "cyberhop",
@@ -309,7 +391,15 @@
       "cover_image": "assets/covers/cyberhop.png",
       "size": "393 KB",
       "size_bytes": 402709,
-      "download_size": "393 KB"
+      "download_size": "393 KB",
+      "keywords": [
+        "frogger",
+        "crossy road",
+        "frog",
+        "traffic dodge",
+        "river crossing",
+        "road crossing"
+      ]
     },
     {
       "id": "cratepusher",
@@ -337,7 +427,15 @@
       "cover_image": "assets/covers/cratepusher.png",
       "size": "363 KB",
       "size_bytes": 371746,
-      "download_size": "363 KB"
+      "download_size": "363 KB",
+      "keywords": [
+        "sokoban",
+        "box pusher",
+        "push box",
+        "warehouse",
+        "thinking rabbit",
+        "crate push"
+      ]
     },
     {
       "id": "dinorunner",
@@ -365,7 +463,16 @@
       "cover_image": "assets/covers/dinorunner.png",
       "size": "380 KB",
       "size_bytes": 389418,
-      "download_size": "380 KB"
+      "download_size": "380 KB",
+      "keywords": [
+        "t-rex runner",
+        "dino",
+        "dinosaur",
+        "chrome dino",
+        "offline dino",
+        "cactus runner",
+        "endless runner"
+      ]
     },
     {
       "id": "wordguess",
@@ -394,7 +501,16 @@
       "cover_image": "assets/covers/wordguess.png",
       "size": "291 KB",
       "size_bytes": 298417,
-      "download_size": "291 KB"
+      "download_size": "291 KB",
+      "keywords": [
+        "wordle",
+        "word guess",
+        "word puzzle",
+        "5 letter word",
+        "lingo",
+        "jotto",
+        "spelling"
+      ]
     },
     {
       "id": "bytecity",
@@ -422,7 +538,17 @@
       "cover_image": "assets/covers/bytecity.png",
       "size": "4.9 MB",
       "size_bytes": 5172315,
-      "download_size": "4.9 MB"
+      "download_size": "4.9 MB",
+      "keywords": [
+        "simcity",
+        "sim city",
+        "micropolis",
+        "city builder",
+        "will wright",
+        "maxis",
+        "urban simulation",
+        "mayor"
+      ]
     },
     {
       "id": "galacticswarm",
@@ -449,7 +575,16 @@
       "cover_image": "assets/covers/galacticswarm.png",
       "size": "1.3 MB",
       "size_bytes": 1313235,
-      "download_size": "1.3 MB"
+      "download_size": "1.3 MB",
+      "keywords": [
+        "galaga",
+        "galaxian",
+        "space shooter",
+        "namco",
+        "alien fleet",
+        "tractor beam",
+        "shmup"
+      ]
     },
     {
       "id": "byteman",
@@ -477,7 +612,17 @@
       "cover_image": "assets/covers/byteman.png",
       "size": "488 KB",
       "size_bytes": 500095,
-      "download_size": "488 KB"
+      "download_size": "488 KB",
+      "keywords": [
+        "pacman",
+        "pac-man",
+        "pac man",
+        "ghosts",
+        "dot muncher",
+        "maze",
+        "namco",
+        "power pellet"
+      ]
     },
     {
       "id": "gemswap",
@@ -505,7 +650,16 @@
       "cover_image": "assets/covers/gemswap.png",
       "size": "561 KB",
       "size_bytes": 574091,
-      "download_size": "561 KB"
+      "download_size": "561 KB",
+      "keywords": [
+        "bejeweled",
+        "candy crush",
+        "match 3",
+        "match-3",
+        "gem swap",
+        "jewels",
+        "popcap"
+      ]
     },
     {
       "id": "orbpop",
@@ -534,7 +688,16 @@
       "cover_image": "assets/covers/orbpop.png",
       "size": "522 KB",
       "size_bytes": 534591,
-      "download_size": "522 KB"
+      "download_size": "522 KB",
+      "keywords": [
+        "puzzle bobble",
+        "bust-a-move",
+        "bust a move",
+        "bubble shooter",
+        "bubble bobble",
+        "bubble pop",
+        "taito"
+      ]
     },
     {
       "id": "keiracer",
@@ -564,7 +727,17 @@
       "cover_image": "assets/covers/keiracer.png",
       "size": "1.2 MB",
       "size_bytes": 1305551,
-      "download_size": "1.2 MB"
+      "download_size": "1.2 MB",
+      "keywords": [
+        "outrun",
+        "top gear",
+        "rad racer",
+        "chase hq",
+        "highway racer",
+        "super hang on",
+        "pseudo 3d racer",
+        "arcade racing"
+      ]
     },
     {
       "id": "blackjack",
@@ -592,7 +765,16 @@
       "cover_image": "assets/covers/blackjack.png",
       "size": "659 KB",
       "size_bytes": 675200,
-      "download_size": "659 KB"
+      "download_size": "659 KB",
+      "keywords": [
+        "blackjack",
+        "21",
+        "twenty one",
+        "cards",
+        "casino",
+        "dealer",
+        "table game"
+      ]
     },
     {
       "id": "chess",
@@ -621,7 +803,15 @@
       "cover_image": "assets/covers/chess.png",
       "size": "588 KB",
       "size_bytes": 601683,
-      "download_size": "588 KB"
+      "download_size": "588 KB",
+      "keywords": [
+        "chess",
+        "checkmate",
+        "grandmaster",
+        "board game",
+        "chess ai",
+        "king queen"
+      ]
     },
     {
       "id": "checkers",
@@ -650,7 +840,15 @@
       "cover_image": "assets/covers/checkers.png",
       "size": "511 KB",
       "size_bytes": 523203,
-      "download_size": "511 KB"
+      "download_size": "511 KB",
+      "keywords": [
+        "checkers",
+        "draughts",
+        "dama",
+        "board game",
+        "jumping pieces",
+        "king"
+      ]
     },
     {
       "id": "solitaire",
@@ -679,7 +877,15 @@
       "cover_image": "assets/covers/solitaire.png",
       "size": "602 KB",
       "size_bytes": 615948,
-      "download_size": "602 KB"
+      "download_size": "602 KB",
+      "keywords": [
+        "solitaire",
+        "klondike",
+        "patience",
+        "windows solitaire",
+        "cards",
+        "card game"
+      ]
     },
     {
       "id": "videopoker",
@@ -708,7 +914,15 @@
       "cover_image": "assets/covers/videopoker.png",
       "size": "721 KB",
       "size_bytes": 738630,
-      "download_size": "721 KB"
+      "download_size": "721 KB",
+      "keywords": [
+        "video poker",
+        "jacks or better",
+        "deuces wild",
+        "casino poker",
+        "five card draw",
+        "poker machine"
+      ]
     },
     {
       "id": "backgammon",
@@ -736,7 +950,15 @@
       "cover_image": "assets/covers/backgammon.png",
       "size": "355 KB",
       "size_bytes": 364012,
-      "download_size": "355 KB"
+      "download_size": "355 KB",
+      "keywords": [
+        "backgammon",
+        "tavla",
+        "nard",
+        "doubling cube",
+        "board game",
+        "dice board"
+      ]
     },
     {
       "id": "reversi",
@@ -764,7 +986,14 @@
       "cover_image": "assets/covers/reversi.png",
       "size": "427 KB",
       "size_bytes": 437164,
-      "download_size": "427 KB"
+      "download_size": "427 KB",
+      "keywords": [
+        "othello",
+        "reversi",
+        "disc flipper",
+        "board game",
+        "flip discs"
+      ]
     },
     {
       "id": "bidama",
@@ -792,7 +1021,15 @@
       "cover_image": "assets/covers/bidama.png",
       "size": "492 KB",
       "size_bytes": 503402,
-      "download_size": "492 KB"
+      "download_size": "492 KB",
+      "keywords": [
+        "lose your marbles",
+        "marbles",
+        "marble drop",
+        "aim puzzle",
+        "sega",
+        "japanese marbles"
+      ]
     },
     {
       "id": "omarchybolo",
@@ -821,7 +1058,16 @@
       "cover_image": "assets/covers/omarchybolo.png",
       "size": "1.0 MB",
       "size_bytes": 1067007,
-      "download_size": "1.0 MB"
+      "download_size": "1.0 MB",
+      "keywords": [
+        "bolo",
+        "stuart cheshire",
+        "tank warfare",
+        "tanks",
+        "tank combat",
+        "armored combat",
+        "p2p tanks"
+      ]
     },
     {
       "id": "starframe",
@@ -850,7 +1096,15 @@
       "cover_image": "assets/covers/starframe.png",
       "size": "1.0 MB",
       "size_bytes": 1056768,
-      "download_size": "1.0 MB"
+      "download_size": "1.0 MB",
+      "keywords": [
+        "geometry wars",
+        "sinistar",
+        "space shooter",
+        "twin stick",
+        "vector shooter",
+        "kinetic shield"
+      ]
     },
     {
       "id": "slimesadventure",
@@ -879,7 +1133,15 @@
       "cover_image": "assets/covers/slimesadventure.png",
       "size": "1.1 MB",
       "size_bytes": 1190419,
-      "download_size": "1.1 MB"
+      "download_size": "1.1 MB",
+      "keywords": [
+        "gravity runner",
+        "canabalt",
+        "geometry dash",
+        "cave runner",
+        "slime runner",
+        "slime flip"
+      ]
     },
     {
       "id": "drvirus",
@@ -907,7 +1169,17 @@
       "cover_image": "assets/covers/drvirus.png",
       "size": "544 KB",
       "size_bytes": 557125,
-      "download_size": "544 KB"
+      "download_size": "544 KB",
+      "keywords": [
+        "dr mario",
+        "dr. mario",
+        "doctor mario",
+        "mario virus",
+        "virus attack",
+        "pills",
+        "vitamins",
+        "medicine puzzle"
+      ]
     }
   ]
 }

@@ -59,7 +59,7 @@ Item {
             ColumnLayout {
                 anchors.centerIn: parent
                 spacing: 12
-                visible: !activeGame
+                visible: !activeGame && games && games.length > 0
 
                 Text {
                     text: "💾"

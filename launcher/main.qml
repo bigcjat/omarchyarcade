@@ -344,11 +344,25 @@ ApplicationWindow {
                 matchesCat = true;
             }
 
+            var matchesKeywords = false;
+            if (query !== "" && g.keywords) {
+                var cleanQuery = query.replace(/[\s\-_]/g, "");
+                var kwList = Array.isArray(g.keywords) ? g.keywords : [g.keywords];
+                for (var ki = 0; ki < kwList.length; ki++) {
+                    var kw = kwList[ki].toLowerCase();
+                    if (kw.indexOf(query) !== -1 || (cleanQuery.length >= 3 && kw.replace(/[\s\-_]/g, "").indexOf(cleanQuery) !== -1)) {
+                        matchesKeywords = true;
+                        break;
+                    }
+                }
+            }
+
             var matchesSearch = (query === "" || 
                                  g.title.toLowerCase().indexOf(query) !== -1 || 
                                  g.category.toLowerCase().indexOf(query) !== -1 || 
                                  g.tagline.toLowerCase().indexOf(query) !== -1 ||
-                                 g.ref.toLowerCase().indexOf(query) !== -1);
+                                 g.ref.toLowerCase().indexOf(query) !== -1 ||
+                                 matchesKeywords);
 
             // If user explicitly searches for a query, show matching games even if unreleased
             if (query !== "" && matchesSearch) {
