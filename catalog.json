@@ -905,9 +905,9 @@
       "folder": "games/drvirus",
       "entrypoint": "games/drvirus/main.py",
       "cover_image": "assets/covers/drvirus.png",
-      "size": "728 KB",
-      "size_bytes": 745766,
-      "download_size": "728 KB"
+      "size": "544 KB",
+      "size_bytes": 557125,
+      "download_size": "544 KB"
     }
   ]
 }
