@@ -219,6 +219,7 @@ var gameOver = false;
 var stageCompleted = false;
 var stage = 1;
 var totalCheckpoints = 0;
+var lastTriggeredCheckpointIndex = -1;
 
 // Camera shake
 var shakeIntensity = 0;
@@ -334,7 +335,8 @@ function addSegment(curve, y) {
             rumble: (Math.floor(n / RUMBLE_LENGTH) % 2) ? "#ff007f" : "#00f0ff",
             lane: (Math.floor(n / RUMBLE_LENGTH) % 2) ? "#ffffff" : null
         },
-        isCheckpoint: false
+        isCheckpoint: false,
+        checkedLap: 0
     });
 }
 
@@ -642,6 +644,7 @@ function init(w, h) {
     stageCompleted = false;
     stage = 1;
     totalCheckpoints = 0;
+    lastTriggeredCheckpointIndex = -1;
     shakeIntensity = 0;
     offroadSoundTimer = 0;
     particles = [];
@@ -735,6 +738,7 @@ function update(dt, input, soundCallback) {
     var speedPercent = speed / MAX_SPEED;
 
     // Advance player along track
+    var oldPlayerZ = playerZ;
     playerZ = (playerZ + (speed * 100 * step)) % trackLength;
     distanceTraveled += (speed * 100 * step);
     score += Math.round(speed * step * 2);
@@ -832,17 +836,32 @@ function update(dt, input, soundCallback) {
     // Suspension bounce based on speed & hill grade
     bounce = (1.5 * Math.random() * (speed / MAX_SPEED) * (width / 800));
 
-    // Checkpoint detection
-    if (playerSegment.isCheckpoint && !playerSegment.checked) {
-        playerSegment.checked = true;
-        totalCheckpoints++;
-        timeLeft += 50.0;
-        score += 5000;
-        if (soundCallback) soundCallback("checkpoint");
+    // Checkpoint detection (continuous swept volume so high speed or frame drops never skip)
+    var oldSegIndex = Math.floor((oldPlayerZ + 140) / SEGMENT_LENGTH) % segments.length;
+    var newSegIndex = Math.floor((playerZ + 140) / SEGMENT_LENGTH) % segments.length;
 
-        if (playerSegment.isFinish) {
-            stage++;
-            stageCompleted = true;
+    var segCount = (newSegIndex >= oldSegIndex) 
+        ? (newSegIndex - oldSegIndex) 
+        : (newSegIndex + segments.length - oldSegIndex);
+
+    // Check all segments crossed during this frame
+    if (segCount < segments.length / 2) {
+        for (var s = 0; s <= segCount; s++) {
+            var checkIdx = (oldSegIndex + s) % segments.length;
+            var seg = segments[checkIdx];
+            if (seg.isCheckpoint && lastTriggeredCheckpointIndex !== checkIdx) {
+                lastTriggeredCheckpointIndex = checkIdx;
+                totalCheckpoints++;
+                timeLeft += 50.0;
+                score += 5000;
+                if (soundCallback) soundCallback("checkpoint");
+
+                if (seg.isFinish) {
+                    stage++;
+                    stageCompleted = true;
+                }
+                break;
+            }
         }
     }
 
