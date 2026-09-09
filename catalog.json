@@ -1,7 +1,7 @@
 {
-  "version": 2,
+  "version": 3,
   "app_name": "Omarchy Arcade",
-  "updated_at": "2026-09-08T20:28:08Z",
+  "updated_at": "2026-09-09T00:20:00Z",
   "games": [
     {
       "id": "2048",
@@ -880,6 +880,34 @@
       "size": "1.1 MB",
       "size_bytes": 1190419,
       "download_size": "1.1 MB"
+    },
+    {
+      "id": "drvirus",
+      "title": "Dr. Virus",
+      "ref": "OA-032",
+      "category": "Blocks & Merging",
+      "floppy_color": "#EA580C",
+      "grid_color": "#F38BA8",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Retro Medical Virus Elimination Puzzle",
+      "description": "Eradicate viral infections with falling two-tone vitamin capsules in this modern reimagining of the classic 1990 medical puzzle game. Features cascading combo gravity, responsive living virus animations (gazing, panicking, fever shivering, yawning, and taunting), multi-stage progression, and full keyboard/gamepad support.",
+      "instructions": [
+        "Align vitamins horizontally or vertically so that 4 or more segments of the same color match across viruses.",
+        "When half of a capsule dissolves in a line clear, its disconnected partner falls under independent gravity to trigger massive chain-reaction combo multipliers!",
+        "Clear all Fever (Red), Chill (Blue), and Weird (Yellow) viruses in the bottle to cure the infection and advance stages.",
+        "Watch out for viruses reacting in real-time as capsules drop overhead—they gaze, shiver, panic, and taunt your misses!"
+      ],
+      "controls": {
+        "keyboard": "A/D/Left/Right to move, W/Up/K/X to rotate CW, Z to rotate CCW, S/Down/J to soft drop, Space to hard drop",
+        "shortcuts": "R to restart (Stage 1), M to mute, ? to show help, Shift+F for full playfield"
+      },
+      "folder": "games/drvirus",
+      "entrypoint": "games/drvirus/main.py",
+      "cover_image": "assets/covers/drvirus.png",
+      "size": "728 KB",
+      "size_bytes": 745766,
+      "download_size": "728 KB"
     }
   ]
 }
