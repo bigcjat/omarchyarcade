@@ -315,6 +315,16 @@ def main():
             apply_system_scheme()
             app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
 
+    if "--width" in sys.argv:
+        w_idx = sys.argv.index("--width") + 1
+        if w_idx < len(sys.argv):
+            root_obj.setWidth(int(sys.argv[w_idx]))
+
+    if "--height" in sys.argv:
+        h_idx = sys.argv.index("--height") + 1
+        if h_idx < len(sys.argv):
+            root_obj.setHeight(int(sys.argv[h_idx]))
+
     if "--no-splash" in sys.argv:
         root_obj.setProperty("splashEnabled", False)
 

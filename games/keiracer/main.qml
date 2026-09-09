@@ -533,7 +533,7 @@ Window {
                 }
 
                 Text {
-                    text: "• " + ("SCORE: " + root.score)
+                    text: "• " + ("SCORE: " + root.currentScore)
                     font.pixelSize: 11
                     font.bold: true
                     color: root.themeFg

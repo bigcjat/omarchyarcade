@@ -225,6 +225,7 @@ var shakeIntensity = 0;
 var engineSoundTimer = 0;
 var offroadSoundTimer = 0;
 var collisionCooldown = 0;
+var currentRenderPlayerH = 200;
 
 // Particles (smoke, sparks, turbo flame)
 var particles = [];
@@ -277,8 +278,25 @@ function findSegment(z) {
     return segments[index];
 }
 
+function getHorizonY(w, h) {
+    var aspect = w / Math.max(1, h);
+    var horizonRatio;
+    if (aspect >= 1.5) {
+        horizonRatio = 0.28;
+    } else if (aspect <= 0.8) {
+        horizonRatio = 0.38;
+    } else {
+        var t = (aspect - 0.8) / (1.5 - 0.8);
+        horizonRatio = 0.38 - t * (0.38 - 0.28);
+    }
+    return Math.round(h * horizonRatio);
+}
+
 // 3D to 2D projection
-function project(point, cameraX, cameraY, cameraZ, cameraDepth, screenWidth, screenHeight, roadW) {
+function project(point, cameraX, cameraY, cameraZ, cameraDepth, screenWidth, screenHeight, roadW, horizonY) {
+    var hy = (typeof horizonY !== "undefined") ? horizonY : getHorizonY(screenWidth, screenHeight);
+    var roadSpanY = screenHeight - hy;
+
     var transX = point.world.x - cameraX;
     var transY = point.world.y - cameraY;
     var transZ = point.world.z - cameraZ;
@@ -289,7 +307,7 @@ function project(point, cameraX, cameraY, cameraZ, cameraDepth, screenWidth, scr
 
     point.screen.scale = cameraDepth / Math.max(1, transZ);
     point.screen.x = Math.round((screenWidth / 2) + (point.screen.scale * transX * screenWidth / 2));
-    point.screen.y = Math.round((screenHeight / 2) - (point.screen.scale * transY * screenHeight / 2));
+    point.screen.y = Math.round(hy - (point.screen.scale * transY * roadSpanY));
     point.screen.w = Math.round(point.screen.scale * roadW * screenWidth / 2);
 }
 
@@ -1236,7 +1254,8 @@ function drawTrafficCar(ctx, screenX, screenY, scale, car, canvas, spriteUrls) {
     else if (carAngle.indexOf("20") !== -1) aspectMultiplier = 1.22;
     else if (carAngle.indexOf("30") !== -1) aspectMultiplier = 1.30;
 
-    var h = (preset.baseH || 210) * (width / 800) * relativeScale;
+    var baseCarH = (typeof currentRenderPlayerH !== "undefined" && currentRenderPlayerH > 0) ? currentRenderPlayerH : 180;
+    var h = baseCarH * relativeScale * ((preset.baseH || 210) / 212);
     var w = h * (preset.aspectStraight || 1.0) * aspectMultiplier;
     if (w < 8 || h < 4) return;
 
@@ -1331,9 +1350,11 @@ function drawTrafficCar(ctx, screenX, screenY, scale, car, canvas, spriteUrls) {
 
 // --- Procedural Roadside Scenery Renderer ---
 function drawRoadsideSprite(ctx, screenX, screenY, scale, spriteType) {
-    var w = spriteType.width * scale * width / 2;
-    var h = spriteType.height * scale * width / 2;
-    if (w < 8 || h < 8) return;
+    var hy = getHorizonY(width, height);
+    var roadSpanY = height - hy;
+    var w = spriteType.width * scale * (width / 2);
+    var h = spriteType.height * scale * (roadSpanY * 1.05);
+    if (w < 6 || h < 6) return;
 
     ctx.save();
     ctx.translate(screenX, screenY);
@@ -1419,24 +1440,27 @@ function drawRoadsideSprite(ctx, screenX, screenY, scale, spriteType) {
 }
 
 // --- Background Synthwave Horizon & Sun Renderer ---
-function drawSkyAndHorizon(ctx, w, h, theme) {
+function drawSkyAndHorizon(ctx, w, h, theme, horizonY) {
+    var hy = (typeof horizonY !== "undefined") ? horizonY : getHorizonY(w, h);
+
     // 1. Synthwave Sky Gradient
-    var skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.6);
+    var skyGrad = ctx.createLinearGradient(0, 0, 0, hy * 1.15);
     skyGrad.addColorStop(0, theme.bg || "#090a0f");
     skyGrad.addColorStop(0.5, "#1e1035");
     skyGrad.addColorStop(0.85, "#4a1240");
     skyGrad.addColorStop(1, "#831843");
     ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, w, h * 0.5);
+    ctx.fillRect(0, 0, w, hy);
 
     // Ground shoulder base fill (pre-fills entire road base once)
     ctx.fillStyle = "#100c1e";
-    ctx.fillRect(0, h * 0.5, w, h * 0.5);
+    ctx.fillRect(0, hy, w, h - hy);
 
     // 2. Retro Neon Blinds Sun (Horizontal Raster Slices)
-    var sunRadius = h * 0.22;
+    // Positioned so the sun's bottom rests along the horizon, matching the cropped framing in Image 2
+    var sunRadius = Math.min(hy * 1.05, w * 0.20);
     var sunCenterX = w * 0.5;
-    var sunCenterY = h * 0.36;
+    var sunCenterY = hy - (sunRadius * 0.40);
 
     var sunGrad = ctx.createLinearGradient(0, sunCenterY - sunRadius, 0, sunCenterY + sunRadius);
     sunGrad.addColorStop(0, "#fde047");
@@ -1468,12 +1492,12 @@ function drawSkyAndHorizon(ctx, w, h, theme) {
 
     ctx.fillStyle = "#160b26";
     ctx.beginPath();
-    ctx.moveTo(0, h * 0.50);
+    ctx.moveTo(0, hy);
     for (var m = 0; m <= w; m += 30) {
         var peakH = Math.sin((m + parallaxOffset) * 0.015) * 28 + Math.sin((m + parallaxOffset) * 0.04) * 14 + 10;
-        ctx.lineTo(m, h * 0.50 - peakH);
+        ctx.lineTo(m, hy - peakH);
     }
-    ctx.lineTo(w, h * 0.50);
+    ctx.lineTo(w, hy);
     ctx.closePath();
     ctx.fill();
 
@@ -1481,8 +1505,8 @@ function drawSkyAndHorizon(ctx, w, h, theme) {
     ctx.strokeStyle = "#f43f5e";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(0, h * 0.50);
-    ctx.lineTo(w, h * 0.50);
+    ctx.moveTo(0, hy);
+    ctx.lineTo(w, hy);
     ctx.stroke();
 }
 
@@ -1501,8 +1525,11 @@ function render(ctx, w, h, theme, canvas, spriteUrls, selectedCar) {
         ctx.translate(sx, sy);
     }
 
+    var horizonY = getHorizonY(width, height);
+    var roadSpanY = height - horizonY;
+
     // 1. Draw Synthwave Sky, Mountains, and Sun
-    drawSkyAndHorizon(ctx, width, height, theme || {});
+    drawSkyAndHorizon(ctx, width, height, theme || {}, horizonY);
 
     // 2. Project Road Segments from Back to Front
     var baseSegment = findSegment(playerZ);
@@ -1525,8 +1552,8 @@ function render(ctx, w, h, theme, canvas, spriteUrls, selectedCar) {
         var segment = segments[(baseSegment.index + n) % segments.length];
         var looped = segment.index < baseSegment.index;
 
-        project(segment.p1, camX - x, camY, camZ - (looped ? trackLength : 0), CAMERA_DEPTH, width, height, ROAD_WIDTH);
-        project(segment.p2, camX - x - dx, camY, camZ - (looped ? trackLength : 0), CAMERA_DEPTH, width, height, ROAD_WIDTH);
+        project(segment.p1, camX - x, camY, camZ - (looped ? trackLength : 0), CAMERA_DEPTH, width, height, ROAD_WIDTH, horizonY);
+        project(segment.p2, camX - x - dx, camY, camZ - (looped ? trackLength : 0), CAMERA_DEPTH, width, height, ROAD_WIDTH, horizonY);
 
         x = x + dx;
         dx = dx + segment.curve;
@@ -1604,13 +1631,25 @@ function render(ctx, w, h, theme, canvas, spriteUrls, selectedCar) {
     // 5. Render Player Vehicle (Kei Truck, Quattro, Zonda, Agera, Porsche, Tesla, R34)
     var currentCarId = selectedCar || "keitruck";
     var preset = VEHICLE_PRESETS[currentCarId] || VEHICLE_PRESETS.keitruck;
-    var playerBaseH = (preset.baseH || 205) * (width / 800);
+    var carAspect = preset.aspectStraight || 1.0;
+
+    var gaugesH = Math.max(48, Math.min(68, height * 0.13));
+    var playerScreenY = height - gaugesH + 2;
     var playerScreenX = width / 2;
-    var gaugesH = Math.max(54, Math.min(68, height * 0.125));
-    var playerScreenY = height - gaugesH - 12;
+
+    // Vehicle sizing matching Image 2:
+    // The truck occupies ~54% of the road span from tires to roof,
+    // leaving the remaining ~46% of road span (clear road to the horizon) visible.
+    var playerH = roadSpanY * 0.54;
+
+    // On narrow vertical splits, clamp width to fit cleanly within one lane (max 32% screen width)
+    if (playerH * carAspect > width * 0.32) {
+        playerH = (width * 0.32) / carAspect;
+    }
+    var playerW = playerH * carAspect;
+    currentRenderPlayerH = playerH;
 
     var spriteUrl = null;
-    var carAspect = preset.aspectStraight || 1.25;
     var angleName = "straight";
     var isMirrored = false;
     if (spriteUrls) {
@@ -1651,13 +1690,12 @@ function render(ctx, w, h, theme, canvas, spriteUrls, selectedCar) {
             isMirrored = false;
         }
     }
-    var playerH = playerBaseH;
-    var playerW = playerBaseH * carAspect;
 
     // Emit drift tire smoke behind rear wheels if sliding
     if (isDrifting) {
-        emitDriftSmoke(playerScreenX - (playerW * 0.38), playerScreenY + (playerH * 0.10), width / 800, driftAngle);
-        emitDriftSmoke(playerScreenX + (playerW * 0.38), playerScreenY + (playerH * 0.10), width / 800, driftAngle);
+        var smokeScale = playerH / 210;
+        emitDriftSmoke(playerScreenX - (playerW * 0.38), playerScreenY + (playerH * 0.10), smokeScale, driftAngle);
+        emitDriftSmoke(playerScreenX + (playerW * 0.38), playerScreenY + (playerH * 0.10), smokeScale, driftAngle);
     }
 
     var brakeUrl = null;
