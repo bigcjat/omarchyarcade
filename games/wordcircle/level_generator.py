@@ -55,33 +55,29 @@ def load_dictionary():
             pass
     _CACHED_FREQ = freq_map
 
-    valid_words = set(freq_map.keys())
+    VOWELS = set("AEIOUY")
 
-    BAD_ACRONYMS = {
-        "MLS", "SIE", "MEL", "MSIE", "LES", "MIL", "SIM", "SOA", "AOL", "IRA", "IRS",
-        "ISA", "ISO", "LAOS", "LISA", "ROSA", "SAO", "SRI", "ALI", "RIO", "ALO", "LOA",
-        "RIA", "URL", "HTML", "HTTP", "FAQ", "PDF", "XML", "DNS", "FTP", "SQL", "PHP", "CSS"
+    # Start with words from user frequency list that have vowels
+    valid_words = {w.upper() for w in freq_map.keys() if any(c in VOWELS for c in w.upper())}
+
+    BAD_TOKENS = {
+        "STR", "STD", "VAR", "CHAR", "INT", "DEF", "MSG", "DIR", "CMD", "CFG", "DEV", "SYS",
+        "DOCS", "ETC", "APP", "API", "SQL", "PHP", "CSS", "HTML", "PDF", "XML", "DNS", "FTP",
+        "RSS", "DVD", "LTD", "GMT", "PST", "EST", "CST", "MST", "UTC", "WWW", "HTTP", "HTTPS",
+        "COM", "ORG", "NET", "GOV", "EDU", "LLC", "INC", "CORP", "DEPT", "ASAP", "DIY", "FAQ",
+        "GIF", "JPG", "PNG", "MP3", "MP4", "EXE", "ZIP", "MLS", "SIE", "MEL", "MSIE", "LES",
+        "MIL", "SIM", "SOA", "AOL", "IRA", "IRS", "ISA", "ISO", "LAOS", "LISA", "ROSA", "SAO",
+        "SRI", "ALI", "RIO", "ALO", "LOA", "RIA", "URL", "NSW", "QLD", "BLVD", "HRS", "RPM",
+        "TVS", "MHZ", "MRS", "PHD", "TCP", "GHZ", "GBP", "RFC", "SSL", "MLB", "PLC", "NHL",
+        "HDTV", "CBS", "PHPBB", "CMS", "CNN", "TFT", "JVC", "CFR", "PMC", "GSM", "DDR", "GPL",
+        "PPC", "RPG", "TGP", "GMBH", "MSGSTR", "PTS", "RRP", "NHS", "FWD", "GDP", "GST", "VPN",
+        "FCC", "CDT", "GMC", "PPM", "VCR", "PCT", "CCD", "LLP", "TMP", "NBC", "MPG", "PVC",
+        "SBJCT", "MTV", "PGP", "NTSC", "DSC", "GTK", "DTS", "SMTP", "BBS", "CTRL", "DVDS", "CDS",
+        "CVS", "LCD", "VHS", "BBC", "SRC", "DSL", "GPS", "PDT", "PSP", "NFL", "PCS", "GCC", "LBS",
+        "MPH", "BMW", "SMS", "CRM"
     }
-    for bad in BAD_ACRONYMS:
-        valid_words.discard(bad)
+    valid_words -= BAD_TOKENS
 
-    common_txt = assets_dir / "common_words.txt"
-    if common_txt.exists():
-        with open(common_txt, "r", encoding="utf-8", errors="ignore") as f:
-            for line in f:
-                w = line.strip().upper()
-                if 3 <= len(w) <= 7 and w.isalpha() and w not in BAD_ACRONYMS:
-                    valid_words.add(w)
-
-    dict_file = Path("/usr/share/dict/words")
-    if dict_file.exists():
-        with open(dict_file, "r", encoding="utf-8", errors="ignore") as f:
-            for line in f:
-                w = line.strip().upper()
-                if 3 <= len(w) <= 7 and w.isalpha() and w.isascii() and w not in BAD_ACRONYMS:
-                    if len(w) >= 6 or w in valid_words:
-                        valid_words.add(w)
-    
     # Core high-frequency supplementary words to ensure common short words exist
     core_common = {
         "ACT", "CAT", "DOG", "GOD", "SUN", "TOP", "POT", "OPT", "PAN", "NAP",
@@ -93,6 +89,7 @@ def load_dictionary():
         "NOTE", "TON", "NOT", "ONE", "NET", "TOE", "ROCK", "CORK", "TREE", "SEE",
         "TEE", "SHIP", "HIP", "SIP", "TIME", "TIE", "ITEM", "MITE", "ROAD", "OAR",
         "ROD", "SAND", "AND", "SAD", "DAN",
+        "SAT", "TAME", "MEAT", "TEAM", "MATE", "STEM", "SMART", "STEAM", "STARE",
         # 5-letter
         "HEART", "EARTH", "HATER", "HEAR", "HEAT", "HATE", "HARE", "TEAR", "RATE",
         "EAR", "ART", "HAT", "THE", "TEA", "EAT", "ATE", "ERA", "ARE",
