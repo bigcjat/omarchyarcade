@@ -56,6 +56,5 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 
-## License & Legal
+## Attribution
 * Public domain falling block mechanics.
-* Released under the **MIT License**. See [LICENSE](LICENSE) for details.

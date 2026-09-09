@@ -42,7 +42,6 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 
 ---
 
-## License & Attribution
+## Attribution
 
 * Level designs from *Microban* by David W. Skinner (used with permission / public distribution).
-* Released under the **MIT License**.

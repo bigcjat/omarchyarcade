@@ -57,9 +57,3 @@ Built natively with hardware acceleration for **Omarchy Linux** and tiling windo
 ```bash
 ./.venv/bin/python games/slimesadventure/main.py
 ```
-
----
-
-## License
-
-* Released under the **MIT License**.

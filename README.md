@@ -173,8 +173,7 @@ The launcher is designed for total keyboard efficiency without ever reaching for
 
 ---
 
-## Contributing & License
+## Contributing
 
 * **Adding New Games:** Use the standardized starter template in [`template/`](template/) and the guide in [`template/README_TEMPLATE.md`](template/README_TEMPLATE.md).
 * **Artwork Prompts:** See [`assets/COVER_ART_GUIDE.md`](assets/COVER_ART_GUIDE.md) for illustrated box art generation instructions.
-* **License:** Released under the **MIT License**. See [LICENSE](LICENSE) for details.

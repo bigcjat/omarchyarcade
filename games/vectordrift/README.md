@@ -50,9 +50,3 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 ./.venv/bin/python games/vectordrift/main.py --theme gruvbox
 ./.venv/bin/python games/vectordrift/main.py --theme catppuccin
 ```
-
----
-
-## License
-
-* Released under the **MIT License**.

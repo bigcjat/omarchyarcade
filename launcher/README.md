@@ -143,7 +143,6 @@ python games/wordguess/main.py --theme gruvbox
 
 ---
 
-## Contributing & License
+## Contributing
 
 * **Adding New Games:** Check out the starter template in [`template/`](../template/).
-* **License:** Released under the **MIT License**.

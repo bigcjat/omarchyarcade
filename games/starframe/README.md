@@ -50,9 +50,3 @@ Built natively with hardware acceleration for **Omarchy Linux** and tiling windo
 ```bash
 ./.venv/bin/python games/starframe/main.py
 ```
-
----
-
-## License
-
-* Released under the **MIT License**.

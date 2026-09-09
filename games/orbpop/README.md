@@ -37,9 +37,3 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 ```bash
 ./.venv/bin/python games/orbpop/main.py
 ```
-
----
-
-## License
-
-* Released under the **MIT License**.

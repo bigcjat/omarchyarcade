@@ -40,9 +40,3 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 ```bash
 ./.venv/bin/python games/gemswap/main.py
 ```
-
----
-
-## License
-
-* Released under the **MIT License**.

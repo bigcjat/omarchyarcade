@@ -36,9 +36,3 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 ```bash
 ./.venv/bin/python games/galacticswarm/main.py
 ```
-
----
-
-## License
-
-* Released under the **MIT License**.

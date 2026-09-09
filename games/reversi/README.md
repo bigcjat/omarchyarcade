@@ -60,9 +60,3 @@ Built natively with hardware acceleration for **Omarchy Linux**.
 ## Author & Credits
 
 Created by **Chris Thompson** ([@bigcjat](https://github.com/bigcjat)) with assistance from **Gemini**.
-
----
-
-## License
-
-* Released under the **MIT License**.

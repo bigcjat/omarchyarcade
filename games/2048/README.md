@@ -71,6 +71,5 @@ Because Omarchy uses Quickshell, the `Item` tree in `main.qml` can be loaded dir
 
 ---
 
-## License & Attribution
+## Attribution
 * Original 2048 created by [Gabriele Cirulli](https://github.com/gabrielecirulli/2048), based on 1024 by Veewo Studio and conceptually similar to Threes by Asher Vollmer.
-* Released under the **MIT License**. See [LICENSE](LICENSE) for details.

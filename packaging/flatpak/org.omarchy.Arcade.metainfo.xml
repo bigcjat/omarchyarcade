@@ -2,7 +2,7 @@
 <component type="desktop-application">
   <id>org.omarchy.Arcade</id>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>MIT</project_license>
+  <project_license>Proprietary</project_license>
   <name>Omarchy Arcade</name>
   <summary>Curated master game suite and offline retro desktop arcade</summary>
   
