@@ -52,7 +52,7 @@ Window {
     on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Connect Letters: Click & drag across the wheel or type on keyboard\n• Submit Word: Release drag or press ENTER\n• Next Puzzle: Click 🎲 New Puzzle or press N\n• Shuffle Letters: Click 🔀 or press SPACE\n• Undo Letter: BACKSPACE\n• Clear Selection: ESC\n• Full/Compact View: Shift+F\n• Mute Sound: M\n• Restart Level: R"
+    property string helpText: "• Connect Letters: Click & drag across wheel or type letters\n• Submit Word: Release drag or press ENTER\n• New Game: Click 🎲 New Game or Ctrl+N\n• Shuffle Letters: Click 🔀 or press SPACE\n• Undo Letter: BACKSPACE\n• Clear Selection: ESC\n• Full/Compact View: Shift+F\n• Mute Sound: Ctrl+M\n• Restart Level: Ctrl+R"
 
     // Engine bindings
     property var activeIndices: Engine.activeIndices
@@ -1347,7 +1347,7 @@ Window {
                     }
 
                     Text {
-                        text: "Omarchy Arcade • Word & Trivia Suite"
+                        text: "Created by Chris Thompson (@bigcjat) with Gemini"
                         font.pixelSize: 9
                         color: root.themeSubtext
                         anchors.horizontalCenter: parent.horizontalCenter

@@ -2182,7 +2182,7 @@ Window {
                     }
 
                     Text {
-                        text: "Starframe • Omarchy Arcade"
+                        text: "Created by Chris Thompson (@bigcjat) with Gemini"
                         font.pixelSize: 9
                         color: root.themeSubtext
                         anchors.horizontalCenter: parent.horizontalCenter
