@@ -265,6 +265,11 @@ Window {
         }
     }
 
+    function tapCar(uid) {
+        var item = carRepeater.itemAt(uid);
+        if (item) item.handleCarTap();
+    }
+
     function trySlideCar(uid, delta) {
         var c = carModel.get(uid);
         if (c.exited) return false;
