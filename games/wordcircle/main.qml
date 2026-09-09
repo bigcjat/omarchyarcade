@@ -260,7 +260,7 @@ Window {
             var hasCtrl = (event.modifiers & Qt.ControlModifier) !== 0;
 
             if (hasCtrl && event.key === Qt.Key_N) {
-                root.loadNextPuzzle(0);
+                root.showLevelSelect = true;
                 event.accepted = true;
                 return;
             }
@@ -474,18 +474,21 @@ Window {
             anchors.rightMargin: 16
             height: 32
 
-            readonly property bool isCrowded: width < 420
+            readonly property bool isCrowded: width < 480
 
-            // Left: Chapter Badge
+            // Left: Chapter Badge (strictly bounded to never overlap utility buttons)
             Rectangle {
+                id: chapterBadge
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 height: 26
                 radius: 6
-                width: chapterText.implicitWidth + 16
+                width: Math.min(chapterText.implicitWidth + 16, Math.max(0, subheaderItem.width - buttonRow.width - 16))
                 color: Qt.alpha(root.themeAccent, 0.15)
                 border.color: root.themeAccent
                 border.width: 1
+                visible: width > 50 && !subheaderItem.isCrowded
+                clip: true
 
                 Text {
                     id: chapterText
@@ -494,44 +497,18 @@ Window {
                     font.pixelSize: 10
                     font.bold: true
                     color: root.themeAccent
+                    elide: Text.ElideRight
                 }
             }
 
             // Right: Utility Controls
             Row {
+                id: buttonRow
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 6
 
-                // Level Select Button
-                Rectangle {
-                    height: 30
-                    width: subheaderItem.isCrowded ? 30 : 74
-                    radius: 6
-                    color: lvlBtnMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.themeAccent
-                    border.width: 1
-
-                    Row {
-                        anchors.centerIn: parent
-                        spacing: 4
-                        Text { text: "🎯"; font.pixelSize: 11 }
-                        Text { text: "Levels"; font.pixelSize: 10; font.bold: true; color: root.themeAccent; visible: !subheaderItem.isCrowded }
-                    }
-
-                    MouseArea {
-                        id: lvlBtnMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.playSound("click");
-                            root.showLevelSelect = !root.showLevelSelect;
-                        }
-                    }
-                }
-
-                // New Puzzle Button
+                // New Game Button (opens the Level Select / Difficulty Modal)
                 Rectangle {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : 98
@@ -544,7 +521,7 @@ Window {
                         anchors.centerIn: parent
                         spacing: 4
                         Text { text: "🎲"; font.pixelSize: 11 }
-                        Text { text: "New Puzzle"; font.pixelSize: 10; font.bold: true; color: root.themeAccent; visible: !subheaderItem.isCrowded }
+                        Text { text: "New Game"; font.pixelSize: 10; font.bold: true; color: root.themeAccent; visible: !subheaderItem.isCrowded }
                     }
 
                     MouseArea {
@@ -554,7 +531,7 @@ Window {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             root.playSound("click");
-                            root.loadNextPuzzle(0);
+                            root.showLevelSelect = true;
                         }
                     }
                 }
