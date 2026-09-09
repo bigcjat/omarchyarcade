@@ -52,6 +52,18 @@ var TUTORIAL_LEVELS = [
 ];
 
 var isCurrentLevelChallenge = false;
+var difficulty = "normal"; // "casual", "normal", "hard"
+var isDeadlocked = false;
+
+/**
+ * Set and apply difficulty mode ("casual", "normal", "hard").
+ */
+function setDifficulty(diff) {
+    if (diff === "casual" || diff === "normal" || diff === "hard") {
+        difficulty = diff;
+        loadLevel(currentLevel);
+    }
+}
 
 /**
  * Deterministic pseudo-random number generator (Mulberry32).
@@ -66,46 +78,60 @@ function makePRNG(seed) {
 }
 
 /**
- * Level progression rules with sawtooth difficulty and 1-empty bolt challenge levels.
+ * Level progression rules calibrated for smooth, fair difficulty with difficulty modes.
  */
 function getLevelParameters(lvl) {
-    if (lvl === 1) {
-        return { numColors: 2, numEmpty: 1, isChallenge: false };
+    // 1. Smooth, progressive color ramp
+    var numColors;
+    if (lvl <= 2) {
+        numColors = 2;
+    } else if (lvl <= 5) {
+        numColors = 3;
+    } else if (lvl <= 10) {
+        numColors = 4;
+    } else if (lvl <= 18) {
+        numColors = 5;
+    } else if (lvl <= 28) {
+        numColors = 6;
+    } else if (lvl <= 40) {
+        numColors = 7;
+    } else {
+        numColors = Math.min(8, 5 + Math.floor((lvl - 20) / 10));
     }
-    if (lvl === 2) {
-        return { numColors: 2, numEmpty: 2, isChallenge: false };
+
+    var numEmpty = 2;
+    var isChallenge = false;
+
+    if (difficulty === "casual") {
+        // Casual: Generous buffer, 3 empty bolts on larger boards, zero stress
+        numEmpty = (numColors >= 5) ? 3 : 2;
+        isChallenge = false;
+    } else if (difficulty === "hard") {
+        // Hard: Tight Squeeze 1-buffer challenge from level 3 onwards
+        if (lvl > 2) {
+            numEmpty = 1;
+            isChallenge = true;
+        } else {
+            numEmpty = 2;
+            isChallenge = false;
+        }
+    } else {
+        // Normal: Gentle intro (levels 1-9 have 2 empty bolts), milestone challenges every 10th level
+        if (lvl >= 10 && (lvl % 10 === 0)) {
+            numEmpty = 1;
+            isChallenge = true;
+        } else {
+            numEmpty = 2;
+            isChallenge = false;
+        }
     }
-    if (lvl === 3) {
-        return { numColors: 3, numEmpty: 2, isChallenge: false };
-    }
-    if (lvl === 4) {
-        // Level 4: First introduction of the tight 1-empty bolt challenge!
-        return { numColors: 3, numEmpty: 1, isChallenge: true };
-    }
-    if (lvl <= 6) {
-        return { numColors: 4, numEmpty: 2, isChallenge: false };
-    }
-    if (lvl === 7) {
-        // Level 7: Challenge 4 colors, 1 empty
-        return { numColors: 4, numEmpty: 1, isChallenge: true };
-    }
-    if (lvl <= 9) {
-        return { numColors: 5, numEmpty: 2, isChallenge: false };
-    }
-    if (lvl === 10) {
-        // Level 10: Challenge 5 colors, 1 empty
-        return { numColors: 5, numEmpty: 1, isChallenge: true };
-    }
-    // Sawtooth progression beyond Level 10: challenge every 5th level
-    var isChallenge = (lvl % 5 === 0);
-    var numColors = Math.min(8, 4 + Math.floor((lvl - 5) / 5));
-    var numEmpty = isChallenge ? 1 : 2;
+
     return { numColors: numColors, numEmpty: numEmpty, isChallenge: isChallenge };
 }
 
 /**
- * Generate a procedural solvable level.
- * Uses seeded reverse-walk from the solved state to guarantee 100% solvability.
+ * Generate a procedural solvable level using authentic reverse-legal moves.
+ * Guarantees 100% mathematical solvability from the solved state.
  */
 function generateSolvableLevel(numColors, numEmpty, seed) {
     var prng = makePRNG(seed || 42);
@@ -123,30 +149,76 @@ function generateSolvableLevel(numColors, numEmpty, seed) {
         state.push([]);
     }
 
-    // Scramble backward from solved state with N reverse legal moves
-    var movesCount = numColors * 16 + (numEmpty === 1 ? 14 : 20);
-    for (var step = 0; step < movesCount; step++) {
-        var nonEmpties = [];
-        for (var b = 0; b < numBolts; b++) {
-            if (state[b].length > 0) nonEmpties.push(b);
-        }
-        if (nonEmpties.length === 0) break;
+    // Scramble backward using authentic reverse-legal moves
+    // In reverse, taking nut X off bolt B and putting onto bolt A is legal IF AND ONLY IF:
+    // in forward play, X could legally land on B (i.e. B has length 1 or B[-1] == B[-2]).
+    var targetSteps = Math.min(65, numColors * 8 + (numEmpty === 1 ? 12 : 16));
+    var successfulSteps = 0;
+    var maxAttempts = targetSteps * 20;
 
-        var fromB = nonEmpties[Math.floor(prng() * nonEmpties.length)];
-        var validDests = [];
-        for (var d = 0; d < numBolts; d++) {
-            if (d !== fromB && state[d].length < MAX_CAPACITY) {
-                validDests.push(d);
+    for (var attempt = 0; attempt < maxAttempts && successfulSteps < targetSteps; attempt++) {
+        var candidatesFrom = [];
+        for (var b = 0; b < numBolts; b++) {
+            var stk = state[b];
+            if (stk.length === 1 || (stk.length > 1 && stk[stk.length - 1] === stk[stk.length - 2])) {
+                candidatesFrom.push(b);
             }
         }
-        if (validDests.length === 0) continue;
+        if (candidatesFrom.length === 0) break;
 
-        var toB = validDests[Math.floor(prng() * validDests.length)];
+        var fromB = candidatesFrom[Math.floor(prng() * candidatesFrom.length)];
         var nut = state[fromB].pop();
+
+        var candidatesTo = [];
+        for (var d = 0; d < numBolts; d++) {
+            if (d !== fromB && state[d].length < MAX_CAPACITY) {
+                candidatesTo.push(d);
+            }
+        }
+        if (candidatesTo.length === 0) {
+            state[fromB].push(nut);
+            continue;
+        }
+
+        var toB = candidatesTo[Math.floor(prng() * candidatesTo.length)];
         state[toB].push(nut);
+        successfulSteps++;
     }
 
     return state;
+}
+
+/**
+ * Check if the board has any valid legal moves remaining.
+ */
+function hasAnyValidMoves() {
+    if (checkWinCondition()) return true;
+    for (var from = 0; from < bolts.length; from++) {
+        if (bolts[from].length === 0) continue;
+        if (isBoltComplete(from)) continue;
+
+        for (var to = 0; to < bolts.length; to++) {
+            if (from === to) continue;
+            if (canMove(from, to)) {
+                if (bolts[to].length === 0) {
+                    var fromStk = bolts[from];
+                    var isPure = true;
+                    for (var k = 1; k < fromStk.length; k++) {
+                        if (fromStk[k] !== fromStk[0]) {
+                            isPure = false;
+                            break;
+                        }
+                    }
+                    if (!isPure || fromStk.length < MAX_CAPACITY) {
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 /**
@@ -187,6 +259,7 @@ function loadLevel(lvl) {
     movingNut = null;
     particles = [];
     justCompletedBolts = [];
+    isDeadlocked = false;
     gameState = "playing";
 }
 
@@ -270,8 +343,21 @@ function executeMove(fromIdx, toIdx, callbacks) {
 
     if (checkWinCondition()) {
         gameState = "won";
+        isDeadlocked = false;
+        if (callbacks && callbacks.onDeadlockCleared) callbacks.onDeadlockCleared();
         if (callbacks && callbacks.onWin) callbacks.onWin();
         if (callbacks && callbacks.onSound) callbacks.onSound("win");
+    } else {
+        if (!hasAnyValidMoves()) {
+            isDeadlocked = true;
+            if (callbacks && callbacks.onDeadlock) callbacks.onDeadlock();
+            if (callbacks && callbacks.onSound) callbacks.onSound("error");
+        } else {
+            if (isDeadlocked) {
+                isDeadlocked = false;
+                if (callbacks && callbacks.onDeadlockCleared) callbacks.onDeadlockCleared();
+            }
+        }
     }
 
     return true;
@@ -298,18 +384,28 @@ function selectBolt(idx, callbacks) {
 
         selectedBolt = idx;
         if (callbacks && callbacks.onSound) callbacks.onSound("nut_lift");
+        return;
+    }
+
+    if (selectedBolt === idx) {
+        selectedBolt = -1;
+        if (callbacks && callbacks.onSound) callbacks.onSound("click");
+        return;
+    }
+
+    var from = selectedBolt;
+    var to = idx;
+
+    if (canMove(from, to)) {
+        selectedBolt = -1;
+        executeMove(from, to, callbacks);
     } else {
-        if (idx === selectedBolt) {
-            selectedBolt = -1;
-            if (callbacks && callbacks.onSound) callbacks.onSound("click");
+        if (bolts[idx].length > 0 && !isBoltComplete(idx)) {
+            selectedBolt = idx;
+            if (callbacks && callbacks.onSound) callbacks.onSound("nut_lift");
         } else {
-            var from = selectedBolt;
-            if (canMove(from, idx)) {
-                executeMove(from, idx, callbacks);
-                selectedBolt = -1;
-            } else {
-                if (callbacks && callbacks.onSound) callbacks.onSound("error");
-            }
+            selectedBolt = -1;
+            if (callbacks && callbacks.onSound) callbacks.onSound("error");
         }
     }
 }
@@ -323,6 +419,8 @@ function undo(callbacks) {
     bolts = snap.bolts;
     moves = snap.moves;
     selectedBolt = -1;
+    isDeadlocked = false;
+    if (callbacks && callbacks.onDeadlockCleared) callbacks.onDeadlockCleared();
     if (callbacks && callbacks.onSound) callbacks.onSound("undo");
     return true;
 }
@@ -331,6 +429,8 @@ function undo(callbacks) {
  * Reset current level.
  */
 function resetGame(callbacks) {
+    isDeadlocked = false;
+    if (callbacks && callbacks.onDeadlockCleared) callbacks.onDeadlockCleared();
     loadLevel(currentLevel);
     if (callbacks && callbacks.onSound) callbacks.onSound("click");
 }

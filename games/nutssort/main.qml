@@ -41,6 +41,8 @@ Window {
     property int bestMoves: 0
     property int selectedBoltIndex: -1
     property int cursorIndex: 0
+    property string difficulty: "normal" // "casual", "normal", "hard"
+    property bool isDeadlocked: false
     property bool splashEnabled: true
     property bool isMuted: true
     property bool showHelp: false
@@ -56,7 +58,7 @@ Window {
     property bool _spaceConstrained: root.height < 520 || root.width < 440
     on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
 
-    property string helpText: "• OBJECTIVE: Sort all matching colored nuts onto their own bolts.\n• PICK & PLACE: Click a bolt (or press Space/Enter) to unscrew and lift the top nut, then click the destination bolt.\n• RULES:\n  1. Destination must have space (max 4 nuts per bolt).\n  2. A nut can only land on an EMPTY bolt or on a nut of the SAME COLOR.\n• CONTROLS:\n  - Mouse: Click bolt to lift / drop\n  - Arrows / WASD / Vim (H/J/K/L): Navigate cursor\n  - Space / Enter: Lift / Place nut\n  - 1–9: Direct select bolt #1 to #9\n  - U: Undo move\n  - R: Restart level\n  - L: Level selector\n  - M: Mute audio\n  - Shift+F: Compact / Tiled view"
+    property string helpText: "• OBJECTIVE: Sort all matching colored nuts onto their own bolts.\n• PICK & PLACE: Click a bolt (or press Space/Enter) to unscrew and lift the top nut, then click the destination bolt.\n• RULES:\n  1. Destination must have space (max 4 nuts per bolt).\n  2. A nut can only land on an EMPTY bolt or on a nut of the SAME COLOR.\n• DIFFICULTY:\n  - Casual: Generous buffer (+extra buffer bolts)\n  - Normal: Balanced progression (2 buffer bolts, milestone challenges)\n  - Hard: Tight Squeeze (1 buffer bolt challenges)\n• CONTROLS:\n  - Mouse: Click bolt to lift / drop\n  - Arrows / WASD / Vim (H/J/K/L): Navigate cursor\n  - Space / Enter: Lift / Place nut\n  - 1–9: Direct select bolt #1 to #9\n  - U: Undo move\n  - R: Restart level\n  - L: Level selector\n  - M: Mute audio\n  - Shift+F: Compact / Tiled view"
 
     // Animation ticker (~60 FPS)
     property real animTime: 0
@@ -74,12 +76,20 @@ Window {
     readonly property var callbacks: {
         return {
             onSound: function(name) { root.playSound(name); },
+            onDeadlock: function() {
+                root.isDeadlocked = true;
+                root.playSound("error");
+            },
+            onDeadlockCleared: function() {
+                root.isDeadlocked = false;
+            },
             onBoltComplete: function(boltIdx) {
                 var center = getBoltCenter(boltIdx);
                 Engine.spawnSparkles(center.x, center.y - 100, "#FBBF24");
                 soundToast.show("✨ Bolt Complete!");
             },
             onWin: function() {
+                root.isDeadlocked = false;
                 if (typeof settingsManager !== "undefined" && settingsManager) {
                     settingsManager.setUnlockedLevel(Engine.currentLevel + 1);
                     settingsManager.setBestMoves(Engine.currentLevel, Engine.moves);
@@ -169,12 +179,35 @@ Window {
         updateUI();
     }
 
+    function setDifficulty(diff) {
+        if (diff === "casual" || diff === "normal" || diff === "hard") {
+            root.difficulty = diff;
+            Engine.setDifficulty(diff);
+            if (typeof settingsManager !== "undefined" && settingsManager) {
+                settingsManager.setValue("difficulty", diff);
+            }
+            var toastMsg = "Difficulty: " + (diff === "casual" ? "☕ Casual (+Buffer Bolts)" : (diff === "hard" ? "🔥 Hard (Tight Squeeze)" : "★ Normal (Balanced)"));
+            soundToast.show(toastMsg);
+            playSound("select");
+            updateUI();
+        }
+    }
+
+    function cycleDifficulty() {
+        var next = "normal";
+        if (root.difficulty === "casual") next = "normal";
+        else if (root.difficulty === "normal") next = "hard";
+        else if (root.difficulty === "hard") next = "casual";
+        setDifficulty(next);
+    }
+
     function updateUI() {
         currentLevel = Engine.currentLevel;
         moves = Engine.moves;
         boardBolts = Engine.bolts.slice();
         selectedBoltIndex = Engine.selectedBolt;
         cursorIndex = Engine.cursorIndex;
+        isDeadlocked = Engine.isDeadlocked;
         if (typeof settingsManager !== "undefined" && settingsManager) {
             bestMoves = settingsManager.getBestMoves(currentLevel);
         }
@@ -197,6 +230,11 @@ Window {
         if (typeof settingsManager !== "undefined" && settingsManager) {
             root.unlockedLevel = settingsManager.getUnlockedLevel();
             startLvl = settingsManager.getLastLevel();
+            var savedDiff = settingsManager.getValue("difficulty", "normal");
+            if (savedDiff === "casual" || savedDiff === "normal" || savedDiff === "hard") {
+                root.difficulty = savedDiff;
+                Engine.difficulty = savedDiff;
+            }
         }
         Engine.currentLevel = startLvl;
         Engine.init(boardContainer.width, boardContainer.height);
@@ -446,6 +484,12 @@ Window {
             if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
                 root.fullPlayfield = !root.fullPlayfield;
                 soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_D && (event.modifiers & Qt.ShiftModifier)) {
+                root.cycleDifficulty();
                 event.accepted = true;
                 return;
             }
@@ -729,6 +773,42 @@ Window {
                         onClicked: root.showLevelSelect = !root.showLevelSelect
                     }
                 }
+
+                Rectangle {
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : 98
+                    radius: 8
+                    color: diffMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: root.difficulty === "hard" ? "#EF4444" : (root.difficulty === "casual" ? "#10B981" : (diffMouse.containsMouse ? root.themeAccent : root.themeBorder))
+                    border.width: root.difficulty === "hard" ? 2 : 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: root.difficulty === "casual" ? "☕" : (root.difficulty === "hard" ? "🔥" : "★")
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: root.difficulty === "casual" ? "Casual" : (root.difficulty === "hard" ? "Hard" : "Normal")
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.difficulty === "hard" ? "#EF4444" : (root.difficulty === "casual" ? "#10B981" : root.themeFg)
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: diffMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.cycleDifficulty()
+                    }
+                }
             }
 
             Row {
@@ -740,9 +820,9 @@ Window {
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : 88
                     radius: 8
-                    color: undoMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: undoMouse.containsMouse ? root.themeAccent : root.themeBorder
-                    border.width: 1
+                    color: root.isDeadlocked ? Qt.rgba(0.93, 0.26, 0.26, 0.25) : (undoMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
+                    border.color: root.isDeadlocked ? "#EF4444" : (undoMouse.containsMouse ? root.themeAccent : root.themeBorder)
+                    border.width: root.isDeadlocked ? 2 : 1
                     opacity: Engine.undoStack.length > 0 ? 1.0 : 0.5
                     Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -752,14 +832,14 @@ Window {
                         Text {
                             text: "↶"
                             font.pixelSize: 14
-                            color: root.themeAccent
+                            color: root.isDeadlocked ? "#EF4444" : root.themeAccent
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
-                            text: "Undo (U)"
+                            text: root.isDeadlocked ? "Undo!" : "Undo (U)"
                             font.pixelSize: 11
                             font.bold: true
-                            color: root.themeFg
+                            color: root.isDeadlocked ? "#EF4444" : root.themeFg
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !subheaderItem.isCrowded
                         }
@@ -1337,6 +1417,122 @@ Window {
                             }
                         }
                     }
+
+                    // 6. Deadlock / No Moves Remaining Alert Banner
+                    Rectangle {
+                        id: deadlockBanner
+                        visible: root.isDeadlocked && root.gameState !== "won"
+                        z: 750
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: parent.top
+                        anchors.topMargin: 16
+                        width: Math.min(parent.width - 32, 420)
+                        height: deadlockCol.height + 24
+                        radius: 12
+                        color: root.themeCardBg
+                        border.color: "#EF4444"
+                        border.width: 2
+
+                        // Warning glow
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: parent.radius
+                            color: "#EF4444"
+                            opacity: 0.12
+                        }
+
+                        Column {
+                            id: deadlockCol
+                            anchors.centerIn: parent
+                            width: parent.width - 28
+                            spacing: 8
+
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 8
+                                Text {
+                                    text: "⚠️"
+                                    font.pixelSize: 18
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    text: "NO MOVES POSSIBLE"
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#EF4444"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            Text {
+                                text: "Every bolt is blocked with no matching slots! Step back with Undo or restart the stage."
+                                font.pixelSize: 11
+                                color: root.themeSubtext
+                                horizontalAlignment: Text.AlignHCenter
+                                width: parent.width
+                                wrapMode: Text.WordWrap
+                            }
+
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 12
+
+                                Rectangle {
+                                    width: 120
+                                    height: 32
+                                    radius: 6
+                                    color: undoBannerMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.1) : root.themeAccent
+
+                                    Row {
+                                        anchors.centerIn: parent
+                                        spacing: 5
+                                        Text { text: "↶"; font.pixelSize: 13; color: root.themeBtnFg }
+                                        Text { text: "Undo (U)"; font.bold: true; font.pixelSize: 11; color: root.themeBtnFg }
+                                    }
+
+                                    MouseArea {
+                                        id: undoBannerMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (Engine.undo(callbacks)) {
+                                                root.updateUI();
+                                                soundToast.show("↶ Move Undone");
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    width: 120
+                                    height: 32
+                                    radius: 6
+                                    color: restartBannerMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                                    border.color: root.themeBorder
+                                    border.width: 1
+
+                                    Row {
+                                        anchors.centerIn: parent
+                                        spacing: 5
+                                        Text { text: "🔄"; font.pixelSize: 13; color: root.themeFg }
+                                        Text { text: "Restart (R)"; font.bold: true; font.pixelSize: 11; color: root.themeFg }
+                                    }
+
+                                    MouseArea {
+                                        id: restartBannerMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            root.restartLevel();
+                                            soundToast.show("🔄 Stage Restarted");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1465,6 +1661,43 @@ Window {
                             text: "10,000+ Endless Stages"
                             font.pixelSize: 10
                             color: root.themeSubtext
+                        }
+                    }
+
+                    // Difficulty Mode Selector
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 8
+
+                        Repeater {
+                            model: [
+                                { id: "casual", label: "☕ Casual" },
+                                { id: "normal", label: "★ Normal" },
+                                { id: "hard",   label: "🔥 Hard" }
+                            ]
+
+                            Rectangle {
+                                width: 100
+                                height: 26
+                                radius: 13
+                                color: root.difficulty === modelData.id ? root.themeAccent : root.themeBoardBg
+                                border.color: root.difficulty === modelData.id ? root.themeAccent : root.themeBorder
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: modelData.label
+                                    font.pixelSize: 11
+                                    font.bold: root.difficulty === modelData.id
+                                    color: root.difficulty === modelData.id ? root.themeBtnFg : root.themeFg
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.setDifficulty(modelData.id)
+                                }
+                            }
                         }
                     }
 
