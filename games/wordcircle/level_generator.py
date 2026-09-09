@@ -41,14 +41,25 @@ SEED_ROOTS = [
 
 def load_dictionary():
     """Loads and filters common English words for fair, non-obscure puzzles."""
-    dict_file = Path("/usr/share/dict/words")
+    common_txt = Path(__file__).resolve().parent / "assets" / "common_words.txt"
     valid_words = set()
+
+    if common_txt.exists():
+        with open(common_txt, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                w = line.strip().upper()
+                if 3 <= len(w) <= 7 and w.isalpha():
+                    valid_words.add(w)
+
+    dict_file = Path("/usr/share/dict/words")
     if dict_file.exists():
         with open(dict_file, "r", encoding="utf-8", errors="ignore") as f:
             for line in f:
                 w = line.strip().upper()
-                if 2 <= len(w) <= 7 and w.isalpha() and w.isascii():
-                    valid_words.add(w)
+                # If we have common words list, only include dict words that are in common or length >= 5
+                if 3 <= len(w) <= 7 and w.isalpha() and w.isascii():
+                    if not valid_words or w in valid_words or len(w) >= 6:
+                        valid_words.add(w)
     
     # Core high-frequency supplementary words to ensure common short words exist
     core_common = {
