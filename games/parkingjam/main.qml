@@ -1188,8 +1188,8 @@ Window {
                                     anchors.fill: parent
                                     fillMode: Image.PreserveAspectFit
                                     smooth: true
-                                    mipmap: true
-                                    source: "sprites/" + carDelegate.carId + "/" + carDelegate.dir + "_" + carDelegate.animState + ".png"
+                                    source: "sprites/" + carDelegate.carId + "/" + (carDelegate.dir === "west" ? "east" : carDelegate.dir) + "_" + carDelegate.animState + ".png"
+                                    mirror: carDelegate.dir === "west"
                                 }
 
                                 // Exit Tag
