@@ -232,6 +232,61 @@ Window {
         gravityTimer.restart();
     }
 
+    function doMoveLeft() {
+        if (Engine.moveLeft()) {
+            playSound("move");
+            bottleCanvas.requestPaint();
+            return true;
+        }
+        return false;
+    }
+
+    function doMoveRight() {
+        if (Engine.moveRight()) {
+            playSound("move");
+            bottleCanvas.requestPaint();
+            return true;
+        }
+        return false;
+    }
+
+    function doRotateCW() {
+        if (Engine.rotateCW()) {
+            playSound("rotate");
+            bottleCanvas.requestPaint();
+            return true;
+        }
+        return false;
+    }
+
+    function doRotateCCW() {
+        if (Engine.rotateCCW()) {
+            playSound("rotate");
+            bottleCanvas.requestPaint();
+            return true;
+        }
+        return false;
+    }
+
+    function doSoftDrop() {
+        var resS = Engine.softDrop();
+        if (resS.moved) {
+            root.score = Engine.getState().score;
+            bottleCanvas.requestPaint();
+        } else if (resS.locked) {
+            root.handleLockResult(resS);
+        }
+        return resS;
+    }
+
+    function doHardDrop() {
+        playSound("hard_drop");
+        var resH = Engine.hardDrop();
+        root.score = Engine.getState().score;
+        root.handleLockResult(resH);
+        return resH;
+    }
+
     function nextStage() {
         Engine.nextStage();
         gameState = "playing";
@@ -474,43 +529,22 @@ Window {
             // Directional & Action Inputs
             if (root.gameState === "playing") {
                 if (event.key === Qt.Key_Left || event.key === Qt.Key_A || event.key === Qt.Key_H) {
-                    if (Engine.moveLeft()) {
-                        root.playSound("move");
-                        bottleCanvas.requestPaint();
-                    }
+                    root.doMoveLeft();
                     event.accepted = true;
                 } else if (event.key === Qt.Key_Right || event.key === Qt.Key_D || event.key === Qt.Key_L) {
-                    if (Engine.moveRight()) {
-                        root.playSound("move");
-                        bottleCanvas.requestPaint();
-                    }
+                    root.doMoveRight();
                     event.accepted = true;
                 } else if (event.key === Qt.Key_Up || event.key === Qt.Key_W || event.key === Qt.Key_K || event.key === Qt.Key_X) {
-                    if (Engine.rotateCW()) {
-                        root.playSound("rotate");
-                        bottleCanvas.requestPaint();
-                    }
+                    root.doRotateCW();
                     event.accepted = true;
                 } else if (event.key === Qt.Key_Z) {
-                    if (Engine.rotateCCW()) {
-                        root.playSound("rotate");
-                        bottleCanvas.requestPaint();
-                    }
+                    root.doRotateCCW();
                     event.accepted = true;
                 } else if (event.key === Qt.Key_Down || event.key === Qt.Key_S || event.key === Qt.Key_J) {
-                    var resS = Engine.softDrop();
-                    if (resS.moved) {
-                        root.score = Engine.getState().score;
-                        bottleCanvas.requestPaint();
-                    } else if (resS.locked) {
-                        root.handleLockResult(resS);
-                    }
+                    root.doSoftDrop();
                     event.accepted = true;
                 } else if (event.key === Qt.Key_Space) {
-                    root.playSound("hard_drop");
-                    var resH = Engine.hardDrop();
-                    root.score = Engine.getState().score;
-                    root.handleLockResult(resH);
+                    root.doHardDrop();
                     event.accepted = true;
                 }
             }
