@@ -1300,6 +1300,46 @@
         "logic puzzle",
         "brain teaser"
       ]
+    },
+    {
+      "id": "fold",
+      "title": "Fold",
+      "ref": "OA-036",
+      "category": "Puzzles & Grid Logic",
+      "floppy_color": "#059669",
+      "grid_color": "#1E293B",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Tactile Japanese Origami Crease & Geometric Fold Puzzle",
+      "description": "Fold and unfold sheets of handcrafted washi paper along geometric creases. Solve 100 historical archetypes across Roman, Cosmatesque, Islamic star, Victorian, and Japanese origami tessellations by flipping triangular flaps in sequence.",
+      "instructions": [
+        "Click or tap any paper edge flap or crease line to fold it over along that crease.",
+        "Each fold flips triangular paper flaps, layering vibrant Japanese color palettes and patterns.",
+        "Sequentially fold all paper sections until the entire sheet collapses into a single target tile.",
+        "Use U to undo moves, R to restart the level, L for level select, and ? for help."
+      ],
+      "controls": {
+        "keyboard": "Click flaps to fold, 1-4 for colors, U to undo, R to restart, L for level select, P/N for prev/next, M to mute, ? / Esc for help",
+        "mouse": "Click paper edges or creases to fold inwards"
+      },
+      "folder": "games/fold",
+      "entrypoint": "games/fold/main.py",
+      "cover_image": "assets/covers/fold.png",
+      "size": "1.2 MB",
+      "size_bytes": 1276911,
+      "download_size": "1.2 MB",
+      "keywords": [
+        "fold",
+        "origami",
+        "paper fold",
+        "crease",
+        "geometric puzzle",
+        "washi",
+        "japanese puzzle",
+        "tessellation",
+        "triangles",
+        "logic puzzle"
+      ]
     }
   ]
 }
