@@ -47,6 +47,7 @@ class ArcadeBackend(QObject):
     gameFinished = Signal(str)
     gameInstalled = Signal(str)
     gameInstallFailed = Signal(str, str)
+    gameUninstalled = Signal(str)
     _processExited = Signal(str)
     themeChanged = Signal("QVariantMap")
 
@@ -141,7 +142,12 @@ class ArcadeBackend(QObject):
         if not game_id:
             return False
         game_dir = GAMES_DIR / game_id
-        return (game_dir / "main.py").exists() or (game_dir / "main.qml").exists()
+        if (game_dir / "main.py").exists() or (game_dir / "main.qml").exists():
+            return True
+        user_game_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "games" / game_id
+        if (user_game_dir / "main.py").exists() or (user_game_dir / "main.qml").exists():
+            return True
+        return False
 
     @Slot(str, str, result=bool)
     def hasGameUpdate(self, game_id: str, catalog_version: str) -> bool:
@@ -292,6 +298,42 @@ class ArcadeBackend(QObject):
 
         t = threading.Thread(target=worker, daemon=True)
         t.start()
+
+    @Slot(str)
+    def uninstallGame(self, game_id: str):
+        """Uninstalls/removes local game files for the specified game."""
+        import shutil
+        print(f"[Arcade] Uninstalling game: {game_id}...")
+
+        # 1. Check data dir (~/.local/share/omarchy-arcade/games/<game_id>)
+        data_game_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "games" / game_id
+        if data_game_dir.exists():
+            try:
+                shutil.rmtree(data_game_dir, ignore_errors=True)
+                print(f"[Arcade] Removed from data games dir: {data_game_dir}")
+            except Exception as e:
+                print(f"[Arcade] Error removing {data_game_dir}: {e}")
+
+        # 2. Check GAMES_DIR
+        target_dir = GAMES_DIR / game_id
+        if target_dir.exists():
+            try:
+                # If running in development repository, preserve a backup in trash
+                # so developer files are never permanently destroyed
+                trash_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "trash" / game_id
+                trash_dir.parent.mkdir(parents=True, exist_ok=True)
+                if trash_dir.exists():
+                    shutil.rmtree(trash_dir, ignore_errors=True)
+                shutil.move(str(target_dir), str(trash_dir))
+                print(f"[Arcade] Moved {target_dir} to backup trash: {trash_dir}")
+            except Exception as e:
+                try:
+                    shutil.rmtree(target_dir, ignore_errors=True)
+                    print(f"[Arcade] Removed from games dir: {target_dir}")
+                except Exception as err:
+                    print(f"[Arcade] Error removing {target_dir}: {err}")
+
+        self.gameUninstalled.emit(game_id)
 
     @Slot(str)
     def launchGame(self, game_id: str):

@@ -374,6 +374,26 @@ Item {
                                 Rectangle {
                                     height: 20
                                     radius: 4
+                                    color: "#161926"
+                                    border.color: "#3b4261"
+                                    border.width: 1
+                                    width: verText.implicitWidth + 12
+                                    visible: Boolean(activeGame && activeGame.version)
+
+                                    Text {
+                                        id: verText
+                                        anchors.centerIn: parent
+                                        text: activeGame && activeGame.version ? ("v" + activeGame.version) : ""
+                                        font.family: "monospace"
+                                        font.pixelSize: 9
+                                        font.bold: true
+                                        color: "#93c5fd"
+                                    }
+                                }
+
+                                Rectangle {
+                                    height: 20
+                                    radius: 4
                                     color: "#181d2a"
                                     border.color: "#2c364e"
                                     border.width: 1

@@ -71,6 +71,15 @@ ApplicationWindow {
             root.updateFilter();
             root.launchGame(gameId);
         }
+        function onGameUninstalled(gameId) {
+            if (detailSheet.gameData && detailSheet.gameData.id === gameId) {
+                detailSheet.isDownloading = false;
+                detailSheet.isInstalled = false;
+                detailSheet.hasUpdate = false;
+            }
+            root.refreshCategories();
+            root.updateFilter();
+        }
         function onGameInstallFailed(gameId, errorMsg) {
             if (detailSheet.gameData && detailSheet.gameData.id === gameId) {
                 detailSheet.isDownloading = false;

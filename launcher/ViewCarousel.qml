@@ -165,6 +165,15 @@ Item {
                             Item { Layout.fillWidth: true }
 
                             Text {
+                                text: activeGame && activeGame.version ? ("v" + activeGame.version) : ""
+                                font.family: "monospace"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: "#93c5fd"
+                                visible: Boolean(activeGame && activeGame.version)
+                            }
+
+                            Text {
                                 text: activeGame && activeGame.size ? activeGame.size : ""
                                 font.family: "monospace"
                                 font.pixelSize: 11

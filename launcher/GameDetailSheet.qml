@@ -15,6 +15,13 @@ Rectangle {
     property bool isInstalled: true
     property bool hasUpdate: false
     property bool isDownloading: false
+    property bool confirmingUninstall: false
+
+    Timer {
+        id: confirmTimer
+        interval: 3500
+        onTriggered: detailSheet.confirmingUninstall = false
+    }
 
     signal playRequested(string gameId)
     signal closeRequested()
@@ -28,6 +35,15 @@ Rectangle {
                 detailSheet.isDownloading = false;
                 detailSheet.isInstalled = true;
                 detailSheet.hasUpdate = false;
+                detailSheet.confirmingUninstall = false;
+            }
+        }
+        function onGameUninstalled(gameId) {
+            if (gameData && gameData.id === gameId) {
+                detailSheet.isDownloading = false;
+                detailSheet.isInstalled = false;
+                detailSheet.hasUpdate = false;
+                detailSheet.confirmingUninstall = false;
             }
         }
     }
@@ -35,6 +51,8 @@ Rectangle {
     function open(data) {
         gameData = data;
         isDownloading = false;
+        confirmingUninstall = false;
+        confirmTimer.stop();
         if (typeof arcadeBackend !== "undefined" && data) {
             isInstalled = arcadeBackend.isGameInstalled(data.id);
             hasUpdate = arcadeBackend.hasGameUpdate(data.id, data.version || "");
@@ -48,6 +66,8 @@ Rectangle {
     }
 
     function close() {
+        confirmingUninstall = false;
+        confirmTimer.stop();
         opacity = 0;
         closeRequested();
         if (typeof root !== "undefined" && root.restoreKeyboardFocus) {
@@ -217,6 +237,65 @@ Rectangle {
                 }
 
                 Item { Layout.fillWidth: true }
+
+                // Uninstall Button (Only visible when game is installed and not unreleased)
+                Rectangle {
+                    id: uninstallBtn
+                    visible: detailSheet.isInstalled && !detailSheet.isUnreleased && !detailSheet.isDownloading
+                    Layout.preferredWidth: detailSheet.confirmingUninstall ? 114 : 96
+                    Layout.preferredHeight: 38
+                    radius: 6
+                    clip: true
+
+                    color: detailSheet.confirmingUninstall ? 
+                           (uninstallMouse.pressed ? "#7f1d1d" : (uninstallMouse.containsMouse ? "#991b1b" : "#450a0a")) :
+                           (uninstallMouse.pressed ? "#231518" : (uninstallMouse.containsMouse ? "#2f1920" : "#1a161e"))
+                    border.color: detailSheet.confirmingUninstall ? "#ef4444" : (uninstallMouse.containsMouse ? "#f87171" : "#4a242f")
+                    border.width: 1
+
+                    Behavior on Layout.preferredWidth { NumberAnimation { duration: 120 } }
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 6
+
+                        Text {
+                            text: detailSheet.confirmingUninstall ? "⚠️" : "🗑️"
+                            font.pixelSize: 11
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: detailSheet.confirmingUninstall ? "Confirm?" : "Uninstall"
+                            font.family: "monospace"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: detailSheet.confirmingUninstall ? "#fee2e2" : (uninstallMouse.containsMouse ? "#fca5a5" : "#f87171")
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    MouseArea {
+                        id: uninstallMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (!detailSheet.confirmingUninstall) {
+                                detailSheet.confirmingUninstall = true;
+                                confirmTimer.restart();
+                            } else {
+                                detailSheet.confirmingUninstall = false;
+                                confirmTimer.stop();
+                                if (gameData && typeof arcadeBackend !== "undefined" && arcadeBackend.uninstallGame) {
+                                    arcadeBackend.uninstallGame(gameData.id);
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Secondary Close Button
                 Rectangle {
@@ -571,6 +650,31 @@ Rectangle {
                                         font.pixelSize: 10
                                         font.bold: true
                                         color: "#94a3b8"
+                                    }
+                                }
+
+                                // Version Badge
+                                Rectangle {
+                                    height: 22
+                                    radius: 4
+                                    Layout.preferredWidth: verBadgeRow.implicitWidth + 14
+                                    color: "#161926"
+                                    border.color: "#3b4261"
+                                    border.width: 1
+                                    visible: Boolean(gameData && gameData.version)
+
+                                    Row {
+                                        id: verBadgeRow
+                                        anchors.centerIn: parent
+                                        spacing: 3
+                                        Text {
+                                            text: (gameData && gameData.version) ? ("v" + gameData.version) : ""
+                                            font.family: "monospace"
+                                            font.pixelSize: 10
+                                            font.bold: true
+                                            color: "#93c5fd"
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
                                     }
                                 }
 
