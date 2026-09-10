@@ -45,6 +45,28 @@ Window {
     // =========================================================================
     property string gameStateStr: "ready" // "ready", "playing", "gameover", "won"
     property var gameState: null
+    property string currentEngineState: "countdown"
+    property real summaryTime: 0
+    property int summaryPipesPlaced: 0
+    property int summaryTraversed: 0
+    property int summaryQuota: 0
+    property int summaryCrossBonus: 0
+
+    function updateSummaryStats() {
+        if (!gameState) return;
+        summaryTime = gameState.elapsedTime || 0;
+        summaryPipesPlaced = gameState.pipesPlaced || 0;
+        summaryTraversed = gameState.traversedCount || 0;
+        summaryQuota = gameState.quota || 0;
+        summaryCrossBonus = gameState.crossBonusCount || 0;
+    }
+
+    onCurrentEngineStateChanged: {
+        if (currentEngineState === "round_won" || currentEngineState === "game_over") {
+            updateSummaryStats();
+        }
+    }
+
     property int currentLevel: 1
     property int score: 0
     property int bestScore: 0
@@ -77,6 +99,24 @@ Window {
     property real shakeX: 0
     property real shakeY: 0
     property real flowAnimTime: 0.0
+    property bool modalReady: false
+
+    function formatTime(sec) {
+        if (!sec || sec < 0) sec = 0;
+        var m = Math.floor(sec / 60);
+        var s = Math.floor(sec % 60);
+        var ms = Math.floor((sec % 1) * 10);
+        var mm = m < 10 ? "0" + m : "" + m;
+        var ss = s < 10 ? "0" + s : "" + s;
+        return mm + ":" + ss + "." + ms;
+    }
+
+    Timer {
+        id: modalDebounceTimer
+        interval: 350
+        repeat: false
+        onTriggered: root.modalReady = true
+    }
 
     // =========================================================================
     // THEME & SOUND CONTROLLERS
@@ -170,6 +210,7 @@ Window {
     function startNewGame(lvl) {
         currentLevel = lvl || 1;
         gameState = Engine.createGameState(currentLevel);
+        currentEngineState = gameState.state;
         score = 0;
         queueList = gameState.queue.slice();
         cursorR = gameState.valveRow;
@@ -190,6 +231,7 @@ Window {
         var currentScore = score;
         gameState = Engine.createGameState(currentLevel);
         gameState.score = currentScore;
+        currentEngineState = gameState.state;
         queueList = gameState.queue.slice();
         cursorR = gameState.valveRow;
         cursorC = gameState.valveCol + 1;
@@ -240,12 +282,60 @@ Window {
             gameState.grid[vr+2][vc+4].type = "reservoir";
         }
         gameState.state = "flowing";
+        currentEngineState = "flowing";
         gameState.traversedCount = 4;
         gameState.psi = 46.5;
         score = 850;
         queueList = gameState.queue.slice();
         gridRevision++;
         gridCanvas.requestPaint();
+    }
+
+    function setupFloodDemo(outcome, progress) {
+        setupDemoBoard();
+        var gs = gameState;
+        var vr = gs.valveRow;
+        var vc = gs.valveCol;
+        if (outcome === "round_won") {
+            gs.traversedCount = 12;
+            gs.quota = 10;
+            gs.pipesPlaced = 14;
+            gs.crossBonusCount = 2;
+            gs.elapsedTime = 64.8;
+            score = 4250;
+            gs.score = 4250;
+            gs.leakPos = { r: vr + 2, c: vc + 2 };
+            if (progress >= 1.0) {
+                gs.state = "round_won";
+                gs.floodProgress = 1.0;
+                root.modalReady = true;
+            } else {
+                gs.state = "flooding";
+                gs.floodProgress = progress || 0.6;
+            }
+        } else {
+            gs.traversedCount = 4;
+            gs.quota = 10;
+            gs.pipesPlaced = 6;
+            gs.crossBonusCount = 0;
+            gs.elapsedTime = 23.4;
+            score = 650;
+            gs.score = 650;
+            gs.leakPos = { r: vr + 2, c: vc + 2 };
+            if (progress >= 1.0) {
+                gs.state = "game_over";
+                gs.floodProgress = 1.0;
+                root.modalReady = true;
+            } else {
+                gs.state = "flooding";
+                gs.floodProgress = progress || 0.6;
+            }
+        }
+        gameState = gs;
+        currentEngineState = gs.state;
+        gridRevision++;
+        if (gridCanvas) gridCanvas.requestPaint();
+        if (typeof floodCanvas !== "undefined" && floodCanvas) floodCanvas.requestPaint();
     }
 
     Component.onCompleted: {
@@ -261,7 +351,7 @@ Window {
     Timer {
         id: simTimer
         interval: 16
-        running: gameState && gameState.state !== "game_over" && gameState.state !== "round_won" && (!splashScreen || !splashScreen.visible || splashScreen.opacity === 0)
+        running: gameState && (!splashScreen || !splashScreen.visible || splashScreen.opacity === 0)
         repeat: true
         onTriggered: {
             if (!gameState) return;
@@ -270,6 +360,9 @@ Window {
 
             Engine.updateSimulation(gameState, 0.016);
             root.flowAnimTime += 0.016 * (gameState.isRushing ? 3.5 : 1.0);
+            if (root.currentEngineState !== gameState.state) {
+                root.currentEngineState = gameState.state;
+            }
 
             score = gameState.score;
             if (score > bestScore) {
@@ -279,7 +372,7 @@ Window {
                 }
             }
 
-            // Audio cues
+            // Audio cues & transitions
             if (gameState.traversedCount > prevTraversed) {
                 playSound("water_flow");
             }
@@ -288,15 +381,32 @@ Window {
                 playSound("water_flow");
             }
 
-            if (gameState.state === "game_over" && prevState !== "game_over") {
+            if (prevState === "flowing" && gameState.state === "flooding") {
                 playSound("steam_hiss");
+                playSound("water_flow");
                 shakeAnim.start();
-            } else if (gameState.state === "round_won" && prevState !== "round_won") {
+                root.modalReady = false;
+            } else if (prevState === "flooding" && gameState.state === "round_won") {
                 playSound("level_clear");
+                shakeX = 0;
+                shakeY = 0;
+                modalDebounceTimer.restart();
+            } else if (prevState === "flooding" && gameState.state === "game_over") {
+                playSound("steam_hiss");
+                shakeX = 0;
+                shakeY = 0;
+                modalDebounceTimer.restart();
+            } else if (gameState.state === "round_won" && prevState !== "round_won" && prevState !== "flooding") {
+                playSound("level_clear");
+                modalDebounceTimer.restart();
             }
 
-            // Screen shake when rushing
-            if (gameState.isRushing) {
+            // Screen shake when rushing or flooding
+            if (gameState.state === "flooding") {
+                var floodIntensity = Math.max(0.2, 1.0 - gameState.floodProgress * 0.5);
+                shakeX = (Math.random() - 0.5) * 8 * floodIntensity;
+                shakeY = (Math.random() - 0.5) * 8 * floodIntensity;
+            } else if (gameState.isRushing) {
                 shakeX = (Math.random() - 0.5) * 4;
                 shakeY = (Math.random() - 0.5) * 4;
             } else if (gameState.state !== "game_over") {
@@ -305,6 +415,9 @@ Window {
             }
 
             gridCanvas.requestPaint();
+            if (typeof floodCanvas !== "undefined" && floodCanvas) {
+                floodCanvas.requestPaint();
+            }
         }
     }
 
@@ -346,14 +459,30 @@ Window {
                 }
             }
 
-            // Game over / Won restart or advance
+            // Game over / Won restart or advance (requires modalReady to prevent skip from rush)
             if (gameState && (gameState.state === "game_over" || gameState.state === "round_won")) {
-                if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_R) {
-                    if (gameState.state === "round_won") root.advanceToNextLevel();
-                    else root.startNewGame(1);
-                    event.accepted = true;
-                    return;
+                if (root.modalReady) {
+                    if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        if (gameState.state === "round_won") root.advanceToNextLevel();
+                        else root.startNewGame(gameState ? gameState.level : 1);
+                        event.accepted = true;
+                        return;
+                    }
+                    if (event.key === Qt.Key_R) {
+                        if (gameState.state === "round_won") root.startNewGame(gameState ? gameState.level : 1);
+                        else root.startNewGame(1);
+                        event.accepted = true;
+                        return;
+                    }
                 }
+                event.accepted = true;
+                return;
+            }
+
+            // During flooding animation, swallow space/enter so it finishes smoothly
+            if (gameState && gameState.state === "flooding") {
+                event.accepted = true;
+                return;
             }
 
             // Sound Toggle
@@ -1483,6 +1612,105 @@ Window {
                         }
                     }
 
+                    // Layer 4: High-Pressure Blowout Water Flood Effect
+                    Canvas {
+                        id: floodCanvas
+                        anchors.fill: parent
+                        z: 45
+                        visible: currentEngineState === "flooding" || currentEngineState === "round_won" || currentEngineState === "game_over" || (gameState && gameState.floodProgress > 0)
+
+                        onPaint: {
+                            var ctx = getContext("2d");
+                            if (typeof ctx.reset === "function") ctx.reset();
+                            ctx.clearRect(0, 0, width, height);
+
+                            if (!gameState || (!gameState.floodProgress && currentEngineState !== "flooding" && currentEngineState !== "round_won" && currentEngineState !== "game_over")) return;
+
+                            var fp = Math.max(0.0, Math.min(1.0, gameState.floodProgress));
+                            var cw = gridMatrix.cellW;
+                            var ch = gridMatrix.cellH;
+
+                            // Leak position in pixels
+                            var leakR = gameState.leakPos ? gameState.leakPos.r : gameState.currentR;
+                            var leakC = gameState.leakPos ? gameState.leakPos.c : gameState.currentC;
+                            var lx = (Math.max(0, Math.min(Engine.COLS - 1, leakC)) + 0.5) * cw;
+                            var ly = (Math.max(0, Math.min(Engine.ROWS - 1, leakR)) + 0.5) * ch;
+
+                            ctx.save();
+
+                            // 1. Rising flood water layer across the playfield
+                            var waterH = height * fp;
+                            var surfaceY = height - waterH;
+
+                            ctx.beginPath();
+                            ctx.moveTo(0, height);
+                            ctx.lineTo(0, surfaceY);
+
+                            var waveAmp = (1.0 - fp * 0.4) * 8.0;
+                            for (var wx = 0; wx <= width; wx += 16) {
+                                var wy = surfaceY + Math.sin(wx * 0.04 + root.flowAnimTime * 8.0) * waveAmp;
+                                ctx.lineTo(wx, wy);
+                            }
+                            ctx.lineTo(width, height);
+                            ctx.closePath();
+
+                            var floodGrad = ctx.createLinearGradient(0, surfaceY, 0, height);
+                            floodGrad.addColorStop(0, "rgba(16, 185, 129, 0.65)");
+                            floodGrad.addColorStop(0.3, "rgba(5, 150, 105, 0.78)");
+                            floodGrad.addColorStop(1, "rgba(4, 120, 87, 0.90)");
+                            ctx.fillStyle = floodGrad;
+                            ctx.fill();
+
+                            // Foam surface crest line
+                            ctx.strokeStyle = "rgba(209, 250, 229, 0.90)";
+                            ctx.lineWidth = 3;
+                            ctx.stroke();
+
+                            // 2. High-pressure blowout spray from leak nozzle
+                            var maxBurstR = Math.min(width, height) * 0.55;
+                            var burstR = maxBurstR * Math.min(1.0, fp * 1.4);
+
+                            ctx.beginPath();
+                            ctx.arc(lx, ly, burstR, 0, Math.PI * 2);
+                            ctx.strokeStyle = Qt.rgba(0.7, 1.0, 0.85, (1.0 - fp * 0.8) * 0.75);
+                            ctx.lineWidth = 4;
+                            ctx.stroke();
+
+                            if (burstR > 20) {
+                                ctx.beginPath();
+                                ctx.arc(lx, ly, burstR * 0.6, 0, Math.PI * 2);
+                                ctx.strokeStyle = Qt.rgba(0.9, 1.0, 0.95, (1.0 - fp * 0.7) * 0.6);
+                                ctx.lineWidth = 2.5;
+                                ctx.stroke();
+                            }
+
+                            // Frothing splashing particles at blowout point
+                            for (var pi = 0; pi < 8; pi++) {
+                                var pAngle = pi * (Math.PI / 4) + root.flowAnimTime * 6.0;
+                                var pDist = (burstR * 0.4) * (0.4 + 0.6 * ((pi % 2) ? 0.9 : 0.4));
+                                var px = lx + Math.cos(pAngle) * pDist;
+                                var py = ly + Math.sin(pAngle) * (pDist * 0.8);
+                                ctx.beginPath();
+                                ctx.arc(px, py, 4 + (pi % 3) * 2, 0, Math.PI * 2);
+                                ctx.fillStyle = "rgba(240, 253, 244, 0.85)";
+                                ctx.fill();
+                            }
+
+                            // Rising bubbles through the flooded water
+                            for (var bi = 0; bi < 16; bi++) {
+                                var bx = (bi * 67 + Math.sin(root.flowAnimTime * 2 + bi) * 30) % width;
+                                var by = height - ((root.flowAnimTime * 80 + bi * 45) % Math.max(20, waterH));
+                                var brad = 2.5 + (bi % 4);
+                                ctx.beginPath();
+                                ctx.arc(bx, by, brad, 0, Math.PI * 2);
+                                ctx.fillStyle = "rgba(220, 255, 240, 0.65)";
+                                ctx.fill();
+                            }
+
+                            ctx.restore();
+                        }
+                    }
+
                     // Reticle Cursor for Keyboard Nav
                     Rectangle {
                         id: cursorReticle
@@ -1684,76 +1912,420 @@ Window {
             }
         }
 
-        // Standardized Game Over / Level Clear Overlay
+        // =====================================================================
+        // VICTORIAN STEAMPUNK RESULTS MODAL (Sector Clear / Pressure Blowout)
+        // =====================================================================
         Rectangle {
-            id: gameOverOverlay
+            id: resultsModal
             anchors.fill: parent
-            color: "#b3000000"
-            visible: gameState && (gameState.state === "game_over" || gameState.state === "round_won")
+            color: "#d90b0e14"
+            visible: currentEngineState === "game_over" || currentEngineState === "round_won"
             z: 950
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 250 } }
 
+            // Backdrop click absorber: prevents accidental dismissals by clicking outside buttons
             MouseArea {
                 anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    if (gameState.state === "round_won") root.advanceToNextLevel();
-                    else root.startNewGame(1);
-                }
+                hoverEnabled: false
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: {}
             }
 
-            Column {
+            Rectangle {
+                id: modalFrame
+                width: Math.min(parent.width * 0.92, 540)
+                height: Math.min(parent.height * 0.94, modalContent.implicitHeight + 48)
                 anchors.centerIn: parent
-                spacing: 14
+                color: root.themeCardBg
+                border.color: currentEngineState === "round_won" ? "#10b981" : (root.themeAccent || "#d97706")
+                border.width: 2
+                radius: 14
 
-                Text {
-                    text: gameState ? (gameState.state === "round_won" ? "SECTOR CLEARED!" : "BOILER BLOWOUT!") : ""
-                    color: gameState && gameState.state === "round_won" ? "#10b981" : "#ef4444"
-                    font.pixelSize: 28
-                    font.bold: true
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-
-                Text {
-                    text: gameState ? (gameState.state === "round_won" ?
-                          ("Pipes Used: " + gameState.traversedCount + " / " + gameState.quota + "  •  Score: " + root.score) :
-                          ("Pipes Routed: " + gameState.traversedCount + " (Required " + gameState.quota + ")  •  Final Score: " + root.score)) : ""
-                    color: root.themeFg
-                    font.pixelSize: 15
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-
+                // Subtle inner metallic highlight
                 Rectangle {
-                    width: 140
-                    height: 40
-                    radius: 8
-                    color: playAgainMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.fill: parent
+                    radius: parent.radius
+                    color: "transparent"
+                    border.color: Qt.rgba(1, 1, 1, 0.08)
+                    border.width: 1
+                }
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: gameState && gameState.state === "round_won" ? "NEXT SECTOR" : "PLAY AGAIN"
-                        color: root.themeBtnFg
-                        font.bold: true
-                        font.pixelSize: 12
-                    }
+                // Steampunk Corner Rivets
+                Rectangle { width: 6; height: 6; radius: 3; color: root.themeAccent; x: 6; y: 6 }
+                Rectangle { width: 6; height: 6; radius: 3; color: root.themeAccent; x: parent.width - 12; y: 6 }
+                Rectangle { width: 6; height: 6; radius: 3; color: root.themeAccent; x: 6; y: parent.height - 12 }
+                Rectangle { width: 6; height: 6; radius: 3; color: root.themeAccent; x: parent.width - 12; y: parent.height - 12 }
 
-                    MouseArea {
-                        id: playAgainMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (gameState.state === "round_won") root.advanceToNextLevel();
-                            else root.startNewGame(1);
+                Column {
+                    id: modalContent
+                    anchors.centerIn: parent
+                    width: parent.width - 44
+                    spacing: 14
+
+                    // 1. Status Pill Badge
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: badgeRow.implicitWidth + 28
+                        height: 28
+                        radius: 14
+                        color: currentEngineState === "round_won" ? "#2210b981" : "#22ef4444"
+                        border.color: currentEngineState === "round_won" ? "#10b981" : "#ef4444"
+                        border.width: 1.5
+
+                        Row {
+                            id: badgeRow
+                            anchors.centerIn: parent
+                            spacing: 8
+                            Text {
+                                text: currentEngineState === "round_won" ? "🏆" : "⚠️"
+                                font.pixelSize: 13
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: currentEngineState === "round_won" ? "SECTOR COMPLETED" : "PRESSURE BLOWOUT"
+                                font.bold: true
+                                font.pixelSize: 12
+                                font.letterSpacing: 1.2
+                                color: currentEngineState === "round_won" ? "#10b981" : "#ef4444"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                         }
                     }
-                }
 
-                Text {
-                    text: "Or press Space / Enter / R"
-                    color: root.themeSubtext
-                    font.pixelSize: 11
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    // 2. Title & Subtitle Header
+                    Column {
+                        width: parent.width
+                        spacing: 4
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: currentEngineState === "round_won" ?
+                                  ("SECTOR " + (gameState && gameState.level < 10 ? "0" + gameState.level : (gameState ? gameState.level : "1")) + " CLEARED") :
+                                  "PIPELINE RUPTURE!"
+                            font.pixelSize: 24
+                            font.bold: true
+                            color: currentEngineState === "round_won" ? "#34d399" : "#f87171"
+                        }
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: currentEngineState === "round_won" ?
+                                  "Municipal pressure stabilized. Pipeline integrity verified." :
+                                  ("Stream escaped at open fitting before meeting the " + (gameState ? gameState.quota : 10) + "-pipe quota.")
+                            font.pixelSize: 12
+                            color: root.themeSubtext
+                            wrapMode: Text.WordWrap
+                            width: parent.width
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                    }
+
+                    // 3. Stats 2x2 Grid (Time, Parts Used, Routed Quota, Cross Loops)
+                    Grid {
+                        width: parent.width
+                        columns: 2
+                        spacing: 10
+
+                        // Stat 1: Flow Time
+                        Rectangle {
+                            width: (parent.width - 10) / 2
+                            height: 58
+                            radius: 8
+                            color: "#161922"
+                            border.color: Qt.rgba(1, 1, 1, 0.08)
+                            border.width: 1
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "FLOW TIME"
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    font.letterSpacing: 1.0
+                                    color: root.themeSubtext
+                                }
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: root.formatTime(root.summaryTime)
+                                    font.pixelSize: 18
+                                    font.bold: true
+                                    font.family: root.monoFontFamily
+                                    color: root.themeFg
+                                }
+                            }
+                        }
+
+                        // Stat 2: Parts Placed / Used
+                        Rectangle {
+                            width: (parent.width - 10) / 2
+                            height: 58
+                            radius: 8
+                            color: "#161922"
+                            border.color: Qt.rgba(1, 1, 1, 0.08)
+                            border.width: 1
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "PARTS USED"
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    font.letterSpacing: 1.0
+                                    color: root.themeSubtext
+                                }
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: root.summaryPipesPlaced.toString()
+                                    font.pixelSize: 18
+                                    font.bold: true
+                                    font.family: root.monoFontFamily
+                                    color: root.themeAccent
+                                }
+                            }
+                        }
+
+                        // Stat 3: Pipes Routed vs Quota
+                        Rectangle {
+                            width: (parent.width - 10) / 2
+                            height: 58
+                            radius: 8
+                            color: "#161922"
+                            border.color: Qt.rgba(1, 1, 1, 0.08)
+                            border.width: 1
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "PIPES ROUTED"
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    font.letterSpacing: 1.0
+                                    color: root.themeSubtext
+                                }
+                                Row {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    spacing: 4
+                                    Text {
+                                        text: root.summaryTraversed + " / " + root.summaryQuota
+                                        font.pixelSize: 18
+                                        font.bold: true
+                                        font.family: root.monoFontFamily
+                                        color: root.summaryTraversed >= root.summaryQuota ? "#10b981" : "#f87171"
+                                    }
+                                    Text {
+                                        text: root.summaryTraversed >= root.summaryQuota ? "✔" : "✗"
+                                        font.pixelSize: 14
+                                        font.bold: true
+                                        color: root.summaryTraversed >= root.summaryQuota ? "#10b981" : "#f87171"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+                            }
+                        }
+
+                        // Stat 4: Cross Double Traversal Bonus
+                        Rectangle {
+                            width: (parent.width - 10) / 2
+                            height: 58
+                            radius: 8
+                            color: "#161922"
+                            border.color: Qt.rgba(1, 1, 1, 0.08)
+                            border.width: 1
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "CROSS LOOPS"
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    font.letterSpacing: 1.0
+                                    color: root.themeSubtext
+                                }
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: root.summaryCrossBonus + " (+" + (root.summaryCrossBonus * 500) + ")"
+                                    font.pixelSize: 18
+                                    font.bold: true
+                                    font.family: root.monoFontFamily
+                                    color: root.summaryCrossBonus > 0 ? "#fbbf24" : root.themeFg
+                                }
+                            }
+                        }
+                    }
+
+                    // 4. Score Banner Box
+                    Rectangle {
+                        width: parent.width
+                        height: 52
+                        radius: 8
+                        color: "#1e2230"
+                        border.color: Qt.rgba(1, 1, 1, 0.12)
+                        border.width: 1
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 24
+
+                            Column {
+                                spacing: 2
+                                Text {
+                                    text: "ROUND SCORE"
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    font.letterSpacing: 1.0
+                                    color: root.themeSubtext
+                                }
+                                Text {
+                                    text: root.score.toLocaleString()
+                                    font.pixelSize: 18
+                                    font.bold: true
+                                    font.family: root.monoFontFamily
+                                    color: root.themeAccent
+                                }
+                            }
+
+                            Rectangle {
+                                width: 1
+                                height: 32
+                                color: Qt.rgba(1, 1, 1, 0.15)
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Column {
+                                spacing: 2
+                                Row {
+                                    spacing: 6
+                                    Text {
+                                        text: "BEST SCORE"
+                                        font.pixelSize: 9
+                                        font.bold: true
+                                        font.letterSpacing: 1.0
+                                        color: root.themeSubtext
+                                    }
+                                    Text {
+                                        visible: root.score >= root.bestScore && root.score > 0
+                                        text: "★ NEW RECORD"
+                                        font.pixelSize: 9
+                                        font.bold: true
+                                        color: "#fbbf24"
+                                    }
+                                }
+                                Text {
+                                    text: root.bestScore.toLocaleString()
+                                    font.pixelSize: 18
+                                    font.bold: true
+                                    font.family: root.monoFontFamily
+                                    color: root.themeFg
+                                }
+                            }
+                        }
+                    }
+
+                    // 5. Action Buttons (Try Again or Next Game / Sector)
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 14
+
+                        // Primary Action Button (Next Sector or Try Again)
+                        Rectangle {
+                            id: primaryActionBtn
+                            width: 190
+                            height: 44
+                            radius: 8
+                            color: currentEngineState === "round_won" ?
+                                   (primaryBtnMouse.containsMouse ? "#059669" : "#10b981") :
+                                   (primaryBtnMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent)
+                            border.color: Qt.rgba(1, 1, 1, 0.2)
+                            border.width: 1
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: currentEngineState === "round_won" ? "NEXT SECTOR ➜" : "TRY AGAIN ↻"
+                                    color: root.themeBtnFg
+                                    font.bold: true
+                                    font.pixelSize: 13
+                                    font.letterSpacing: 0.8
+                                }
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "SPACE / ENTER"
+                                    color: root.themeBtnFg
+                                    opacity: 0.75
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                }
+                            }
+
+                            MouseArea {
+                                id: primaryBtnMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (currentEngineState === "round_won") root.advanceToNextLevel();
+                                    else root.startNewGame(gameState ? gameState.level : 1);
+                                }
+                            }
+                        }
+
+                        // Secondary Action Button (Replay Sector or New Game)
+                        Rectangle {
+                            id: secondaryActionBtn
+                            width: 160
+                            height: 44
+                            radius: 8
+                            color: secondaryBtnMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : "#1f2430"
+                            border.color: root.themeBorder
+                            border.width: 1
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: currentEngineState === "round_won" ? "REPLAY SECTOR" : "NEW GAME"
+                                    color: root.themeFg
+                                    font.bold: true
+                                    font.pixelSize: 12
+                                    font.letterSpacing: 0.5
+                                }
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "PRESS R"
+                                    color: root.themeSubtext
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                }
+                            }
+
+                            MouseArea {
+                                id: secondaryBtnMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (currentEngineState === "round_won") root.startNewGame(gameState ? gameState.level : 1);
+                                    else root.startNewGame(1);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

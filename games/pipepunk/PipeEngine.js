@@ -118,8 +118,13 @@ function createGameState(level) {
         level: level,
         quota: quota,
         traversedCount: 0,
+        pipesPlaced: 0,
+        crossBonusCount: 0,
+        elapsedTime: 0.0,
+        floodProgress: 0.0,
+        targetOutcome: "",
         score: 0,
-        state: "countdown", // "countdown", "flowing", "round_won", "game_over"
+        state: "countdown", // "countdown", "flowing", "flooding", "round_won", "game_over"
         countdown: countdownDuration,
         grid: grid,
         queue: queue,
@@ -164,6 +169,7 @@ function placeNextPiece(game, r, c) {
     cell.crossFillProgress = 0.0;
     cell.crossEntryPort = "";
     cell.crossExitPort = "";
+    game.pipesPlaced++;
     
     return true;
 }
@@ -196,6 +202,7 @@ function updateSimulation(game, dt) {
     
     // 2. FLOWING STAGE
     if (game.state === "flowing") {
+        game.elapsedTime += dt;
         var baseDuration = Math.max(1.4, 3.8 - (game.level - 1) * 0.35);
         var currentCell = game.grid[game.currentR][game.currentC];
         
@@ -223,6 +230,16 @@ function updateSimulation(game, dt) {
         if (game.fillProgress >= 1.0) {
             advanceFlow(game);
         }
+        return;
+    }
+
+    // 3. FLOODING STAGE (Blowout water surge covers the grid)
+    if (game.state === "flooding") {
+        game.floodProgress = Math.min(1.0, game.floodProgress + dt / 1.4);
+        if (game.floodProgress >= 1.0) {
+            game.state = game.targetOutcome;
+        }
+        return;
     }
 }
 
@@ -249,6 +266,7 @@ function advanceFlow(game) {
     // Cross pipe double traversal bonus
     if (currCell.type === "cross" && currCell.isSecondPass) {
         game.score += 500; // Big cross-loop bonus!
+        game.crossBonusCount++;
     }
     
     // Compute next coordinates
@@ -335,12 +353,15 @@ function advanceFlow(game) {
 function handleBlowout(game, leakR, leakC) {
     game.leakPos = { r: leakR, c: leakC };
     game.targetPsi = 0.0;
+    game.isRushing = false;
     
     if (game.traversedCount >= game.quota) {
-        game.state = "round_won";
+        game.targetOutcome = "round_won";
         var bonus = (game.traversedCount - game.quota) * 250 + game.level * 1000;
         game.score += bonus;
     } else {
-        game.state = "game_over";
+        game.targetOutcome = "game_over";
     }
+    game.state = "flooding";
+    game.floodProgress = 0.0;
 }
