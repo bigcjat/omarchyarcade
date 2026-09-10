@@ -383,7 +383,7 @@ Window {
                 return;
             }
 
-            // Space to Rush Pump (or place during countdown)
+            // Space to Rush Pump (or release pump early during countdown)
             if (event.key === Qt.Key_Space) {
                 if (gameState && gameState.state === "flowing") {
                     gameState.isRushing = true;
@@ -391,7 +391,8 @@ Window {
                     event.accepted = true;
                     return;
                 } else if (gameState && gameState.state === "countdown") {
-                    placePipeAt(cursorR, cursorC);
+                    gameState.countdown = 0.0;
+                    playSound("rush");
                     event.accepted = true;
                     return;
                 }
@@ -1383,7 +1384,8 @@ Window {
                             spacing: 6
                             Text { text: "⚡"; font.pixelSize: 13 }
                             Text {
-                                text: (gameState && gameState.isRushing) ? "RUSHING 5X!" : "RUSH PUMP (SPACE)"
+                                text: (gameState && gameState.state === "countdown") ? "RELEASE NOW (SPACE)" :
+                                      (gameState && gameState.isRushing) ? "RUSHING 5X!" : "RUSH PUMP (SPACE)"
                                 color: root.themeBtnFg
                                 font.family: monoFontFamily
                                 font.pixelSize: 10
@@ -1399,6 +1401,9 @@ Window {
                             onPressed: {
                                 if (gameState && gameState.state === "flowing") {
                                     gameState.isRushing = true;
+                                    playSound("rush");
+                                } else if (gameState && gameState.state === "countdown") {
+                                    gameState.countdown = 0.0;
                                     playSound("rush");
                                 }
                             }

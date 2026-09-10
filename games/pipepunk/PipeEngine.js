@@ -100,19 +100,23 @@ function createGameState(level) {
         isFlowing: false
     };
     
-    // Initial 5-piece queue
+    // Initial 5-piece queue (guarantee first piece connects to East-facing valve)
     var queue = [];
-    for (var q = 0; q < 5; q++) {
+    var validFirstPieces = ["pipe_h", "corner_2", "corner_4", "cross", "reservoir"];
+    queue.push(validFirstPieces[Math.floor(Math.random() * validFirstPieces.length)]);
+    for (var q = 1; q < 5; q++) {
         queue.push(getRandomPiece());
     }
     
+    var countdownDuration = Math.max(8.0, 18.0 - (level - 1) * 2.0);
+
     return {
         level: level,
         quota: quota,
         traversedCount: 0,
         score: 0,
         state: "countdown", // "countdown", "flowing", "round_won", "game_over"
-        countdown: 10.0,
+        countdown: countdownDuration,
         grid: grid,
         queue: queue,
         valveRow: valveRow,
@@ -184,14 +188,14 @@ function updateSimulation(game, dt) {
     
     // 2. FLOWING STAGE
     if (game.state === "flowing") {
-        var baseDuration = 1.6 - Math.min(0.6, (game.level - 1) * 0.1);
+        var baseDuration = Math.max(1.4, 3.8 - (game.level - 1) * 0.35);
         var currentCell = game.grid[game.currentR][game.currentC];
         
         if (currentCell.type === "reservoir") {
-            baseDuration *= 2.8; // Reservoir takes longer to fill
+            baseDuration *= 2.6; // Reservoir serves as tactical pressure buffer
         }
         
-        var stepDuration = game.isRushing ? 0.22 : baseDuration;
+        var stepDuration = game.isRushing ? 0.25 : baseDuration;
         var progressDelta = dt / stepDuration;
         
         game.fillProgress += progressDelta;
@@ -216,8 +220,11 @@ function advanceFlow(game) {
     currCell.isFlowing = false;
     currCell.fillProgress = 1.0;
     
-    game.traversedCount++;
-    game.score += 100;
+    // Only player-placed pipes count towards the level quota (valve is the source spout)
+    if (currCell.type !== "valve") {
+        game.traversedCount++;
+        game.score += 100;
+    }
     
     // Cross pipe double traversal bonus
     if (currCell.type === "cross") {
