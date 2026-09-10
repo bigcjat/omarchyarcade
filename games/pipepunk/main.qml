@@ -1082,62 +1082,24 @@ Window {
                     readonly property real cellW: width / Engine.COLS
                     readonly property real cellH: height / Engine.ROWS
 
-                    // Base Plates and Pipes
+                    // Layer 1: Steel Base Plates
                     Repeater {
                         model: Engine.ROWS * Engine.COLS
 
-                        Item {
+                        Image {
                             readonly property int r: Math.floor(index / Engine.COLS)
                             readonly property int c: index % Engine.COLS
                             x: c * gridMatrix.cellW
                             y: r * gridMatrix.cellH
                             width: gridMatrix.cellW
                             height: gridMatrix.cellH
-
-                            // Steel Base Plate
-                            Image {
-                                anchors.fill: parent
-                                anchors.margins: 1
-                                source: "assets/plate.png"
-                                fillMode: Image.Stretch
-                                smooth: true
-                            }
-
-                            // Placed Pipe Fitting
-                            Image {
-                                id: pipeSprite
-                                anchors.fill: parent
-                                anchors.margins: 1
-                                fillMode: Image.Stretch
-                                smooth: true
-                                mipmap: true
-                                source: {
-                                    if (gridRevision < 0 || !gameState || !gameState.grid) return "";
-                                    var cell = gameState.grid[r][c];
-                                    if (!cell || cell.type === "empty") return "";
-                                    return "assets/" + cell.type + ".png";
-                                }
-                            }
-
-                            // Cell Mouse Click Handler
-                            MouseArea {
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    cursorR = r;
-                                    cursorC = c;
-                                    placePipeAt(r, c);
-                                }
-                                onEntered: {
-                                    cursorR = r;
-                                    cursorC = c;
-                                }
-                            }
+                            source: "assets/plate.png"
+                            fillMode: Image.Stretch
+                            smooth: true
                         }
                     }
 
-                    // Fluid Simulation Overlay Canvas
+                    // Layer 2: Fluid Simulation Canvas (flows INSIDE the pipe bore)
                     Canvas {
                         id: gridCanvas
                         anchors.fill: parent
@@ -1182,7 +1144,7 @@ Window {
                             grad.addColorStop(1, "#065f46");
 
                             ctx.strokeStyle = grad;
-                            ctx.lineWidth = cw * 0.22;
+                            ctx.lineWidth = cw * 0.18;
                             ctx.lineCap = "butt";
                             ctx.lineJoin = "miter";
 
@@ -1290,7 +1252,7 @@ Window {
                             grad.addColorStop(1, "#075985");
 
                             ctx.strokeStyle = grad;
-                            ctx.lineWidth = cw * 0.22;
+                            ctx.lineWidth = cw * 0.18;
                             ctx.lineCap = "butt";
 
                             ctx.beginPath();
@@ -1317,6 +1279,51 @@ Window {
                             ctx.stroke();
 
                             ctx.restore();
+                        }
+                    }
+
+                    // Layer 3: Placed Pipe Fittings (ON TOP of fluid, clamping fluid into the cutaway bore)
+                    Repeater {
+                        model: Engine.ROWS * Engine.COLS
+
+                        Item {
+                            readonly property int r: Math.floor(index / Engine.COLS)
+                            readonly property int c: index % Engine.COLS
+                            x: c * gridMatrix.cellW
+                            y: r * gridMatrix.cellH
+                            width: gridMatrix.cellW
+                            height: gridMatrix.cellH
+
+                            // Placed Pipe Fitting
+                            Image {
+                                id: pipeSprite
+                                anchors.fill: parent
+                                fillMode: Image.Stretch
+                                smooth: true
+                                mipmap: true
+                                source: {
+                                    if (gridRevision < 0 || !gameState || !gameState.grid) return "";
+                                    var cell = gameState.grid[r][c];
+                                    if (!cell || cell.type === "empty") return "";
+                                    return "assets/" + cell.type + ".png";
+                                }
+                            }
+
+                            // Cell Mouse Click Handler
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    cursorR = r;
+                                    cursorC = c;
+                                    placePipeAt(r, c);
+                                }
+                                onEntered: {
+                                    cursorR = r;
+                                    cursorC = c;
+                                }
+                            }
                         }
                     }
 
