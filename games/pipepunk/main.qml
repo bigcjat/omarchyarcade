@@ -71,6 +71,7 @@ Window {
     property int cursorR: 3
     property int cursorC: 4
     property int gridRevision: 0
+    property var queueList: []
 
     // Screen Shake effect on blowout or rush
     property real shakeX: 0
@@ -152,6 +153,16 @@ Window {
         });
     }
 
+    function placePipeAt(r, c) {
+        if (!gameState || (gameState.state !== "countdown" && gameState.state !== "flowing")) return;
+        if (Engine.placeNextPiece(gameState, r, c)) {
+            playSound("pipe_clank");
+            queueList = gameState.queue.slice();
+            gridRevision++;
+            if (gridCanvas) gridCanvas.requestPaint();
+        }
+    }
+
     // =========================================================================
     // GAME INITIALIZATION
     // =========================================================================
@@ -159,12 +170,14 @@ Window {
         currentLevel = lvl || 1;
         gameState = Engine.createGameState(currentLevel);
         score = 0;
+        queueList = gameState.queue.slice();
         cursorR = gameState.valveRow;
         cursorC = gameState.valveCol + 1;
         if (cursorC >= Engine.COLS) cursorC = Engine.COLS - 1;
         shakeX = 0;
         shakeY = 0;
         gridRevision++;
+        if (gridCanvas) gridCanvas.requestPaint();
         playSound("pipe_clank");
     }
 
@@ -176,12 +189,14 @@ Window {
         var currentScore = score;
         gameState = Engine.createGameState(currentLevel);
         gameState.score = currentScore;
+        queueList = gameState.queue.slice();
         cursorR = gameState.valveRow;
         cursorC = gameState.valveCol + 1;
         if (cursorC >= Engine.COLS) cursorC = Engine.COLS - 1;
         shakeX = 0;
         shakeY = 0;
         gridRevision++;
+        if (gridCanvas) gridCanvas.requestPaint();
         playSound("pipe_clank");
     }
 
@@ -227,6 +242,7 @@ Window {
         gameState.traversedCount = 4;
         gameState.psi = 46.5;
         score = 850;
+        queueList = gameState.queue.slice();
         gridRevision++;
         gridCanvas.requestPaint();
     }
@@ -367,11 +383,15 @@ Window {
                 return;
             }
 
-            // Space to Rush Pump
+            // Space to Rush Pump (or place during countdown)
             if (event.key === Qt.Key_Space) {
                 if (gameState && gameState.state === "flowing") {
                     gameState.isRushing = true;
                     playSound("rush");
+                    event.accepted = true;
+                    return;
+                } else if (gameState && gameState.state === "countdown") {
+                    placePipeAt(cursorR, cursorC);
                     event.accepted = true;
                     return;
                 }
@@ -379,13 +399,7 @@ Window {
 
             // Enter to place pipe at cursor
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                if (gameState && (gameState.state === "countdown" || gameState.state === "flowing")) {
-                    if (Engine.placeNextPiece(gameState, cursorR, cursorC)) {
-                        playSound("pipe_clank");
-                        gridRevision++;
-                        gridCanvas.requestPaint();
-                    }
-                }
+                placePipeAt(cursorR, cursorC);
                 event.accepted = true;
                 return;
             }
@@ -998,7 +1012,7 @@ Window {
                     spacing: 8
 
                     Repeater {
-                        model: gameState ? gameState.queue : []
+                        model: root.queueList
 
                         Rectangle {
                             width: 96
@@ -1113,13 +1127,7 @@ Window {
                                 onClicked: {
                                     cursorR = r;
                                     cursorC = c;
-                                    if (gameState && (gameState.state === "countdown" || gameState.state === "flowing")) {
-                                        if (Engine.placeNextPiece(gameState, r, c)) {
-                                            playSound("pipe_clank");
-                                            gridRevision++;
-                                            gridCanvas.requestPaint();
-                                        }
-                                    }
+                                    placePipeAt(r, c);
                                 }
                                 onEntered: {
                                     cursorR = r;
@@ -1133,14 +1141,13 @@ Window {
                     Canvas {
                         id: gridCanvas
                         anchors.fill: parent
-                        renderTarget: Canvas.FramebufferObject
-                        renderStrategy: Canvas.Threaded
 
                         onPaint: {
                             var ctx = getContext("2d");
+                            if (typeof ctx.reset === "function") ctx.reset();
                             ctx.clearRect(0, 0, width, height);
 
-                            if (!gameState || !gameState.grid) return;
+                            if (!gameState || !gameState.grid || gameState.state === "countdown") return;
 
                             var cw = gridMatrix.cellW;
                             var ch = gridMatrix.cellH;
@@ -1165,26 +1172,21 @@ Window {
                         }
 
                         function drawFluidInCell(ctx, cell, cx, cy, cw, ch) {
-                            var p = cell.fillProgress;
+                            var p = Math.max(0.0, Math.min(1.0, cell.fillProgress));
                             var entry = cell.entryPort;
-                            var exit = cell.exitPort;
 
                             ctx.save();
                             var grad = ctx.createLinearGradient(cx, cy, cx + cw, cy + ch);
-                            grad.addColorStop(0, "#10b981");
-                            grad.addColorStop(0.5, "#059669");
-                            grad.addColorStop(1, "#34d399");
+                            grad.addColorStop(0, "#059669");
+                            grad.addColorStop(0.5, "#047857");
+                            grad.addColorStop(1, "#065f46");
 
                             ctx.strokeStyle = grad;
-                            ctx.lineWidth = cw * 0.28;
-                            ctx.lineCap = "round";
-                            ctx.lineJoin = "round";
-
-                            ctx.shadowColor = "#34d399";
-                            ctx.shadowBlur = 8;
+                            ctx.lineWidth = cw * 0.22;
+                            ctx.lineCap = "butt";
+                            ctx.lineJoin = "miter";
 
                             ctx.beginPath();
-
                             var midX = cx + cw / 2;
                             var midY = cy + ch / 2;
 
@@ -1205,44 +1207,32 @@ Window {
                                     ctx.lineTo(midX, cy + ch * (1 - p));
                                 }
                             } else if (cell.type === "corner_1") {
+                                // N <-> E, Center at (cx + cw, cy)
                                 if (entry === "N") {
-                                    var startA = Math.PI;
-                                    var endA = Math.PI - (Math.PI / 2) * p;
-                                    ctx.arc(cx + cw, cy, cw / 2, startA, endA, true);
+                                    ctx.arc(cx + cw, cy, cw / 2, Math.PI, Math.PI - (Math.PI / 2) * p, true);
                                 } else {
-                                    var startA = Math.PI / 2;
-                                    var endA = Math.PI / 2 + (Math.PI / 2) * p;
-                                    ctx.arc(cx + cw, cy, cw / 2, startA, endA, false);
+                                    ctx.arc(cx + cw, cy, cw / 2, Math.PI / 2, Math.PI / 2 + (Math.PI / 2) * p, false);
                                 }
                             } else if (cell.type === "corner_2") {
+                                // N <-> W, Center at (cx, cy)
                                 if (entry === "N") {
-                                    var startA = 0;
-                                    var endA = (Math.PI / 2) * p;
-                                    ctx.arc(cx, cy, cw / 2, startA, endA, false);
+                                    ctx.arc(cx, cy, cw / 2, 0, (Math.PI / 2) * p, false);
                                 } else {
-                                    var startA = Math.PI / 2;
-                                    var endA = Math.PI / 2 - (Math.PI / 2) * p;
-                                    ctx.arc(cx, cy, cw / 2, startA, endA, true);
+                                    ctx.arc(cx, cy, cw / 2, Math.PI / 2, Math.PI / 2 - (Math.PI / 2) * p, true);
                                 }
                             } else if (cell.type === "corner_3") {
+                                // S <-> E, Center at (cx + cw, cy + ch)
                                 if (entry === "S") {
-                                    var startA = 0;
-                                    var endA = - (Math.PI / 2) * p;
-                                    ctx.arc(cx, cy + ch, cw / 2, startA, endA, true);
+                                    ctx.arc(cx + cw, cy + ch, cw / 2, Math.PI, Math.PI + (Math.PI / 2) * p, false);
                                 } else {
-                                    var startA = - Math.PI / 2;
-                                    var endA = - Math.PI / 2 + (Math.PI / 2) * p;
-                                    ctx.arc(cx, cy + ch, cw / 2, startA, endA, false);
+                                    ctx.arc(cx + cw, cy + ch, cw / 2, -Math.PI / 2, -Math.PI / 2 - (Math.PI / 2) * p, true);
                                 }
                             } else if (cell.type === "corner_4") {
+                                // S <-> W, Center at (cx, cy + ch)
                                 if (entry === "S") {
-                                    var startA = Math.PI;
-                                    var endA = Math.PI + (Math.PI / 2) * p;
-                                    ctx.arc(cx + cw, cy + ch, cw / 2, startA, endA, false);
+                                    ctx.arc(cx, cy + ch, cw / 2, 0, - (Math.PI / 2) * p, true);
                                 } else {
-                                    var startA = - Math.PI / 2;
-                                    var endA = - Math.PI / 2 - (Math.PI / 2) * p;
-                                    ctx.arc(cx + cw, cy + ch, cw / 2, startA, endA, true);
+                                    ctx.arc(cx, cy + ch, cw / 2, -Math.PI / 2, -Math.PI / 2 + (Math.PI / 2) * p, false);
                                 }
                             } else if (cell.type === "cross") {
                                 if (entry === "W") {
@@ -1259,34 +1249,49 @@ Window {
                                     ctx.lineTo(midX, cy + ch * (1 - p));
                                 }
                             } else if (cell.type === "reservoir") {
-                                ctx.arc(midX, midY, (cw * 0.35) * Math.min(1.0, p * 1.5), 0, Math.PI * 2);
+                                if (entry === "W") {
+                                    ctx.moveTo(cx, midY);
+                                    ctx.lineTo(cx + cw * p, midY);
+                                } else {
+                                    ctx.moveTo(cx + cw, midY);
+                                    ctx.lineTo(cx + cw * (1 - p), midY);
+                                }
                             }
 
                             ctx.stroke();
 
-                            // Bright flowing core stream
-                            ctx.lineWidth = cw * 0.12;
-                            ctx.strokeStyle = "#a7f3d0";
-                            ctx.shadowBlur = 0;
-                            ctx.stroke();
+                            // Reservoir liquid chamber fill
+                            if (cell.type === "reservoir" && p > 0.15) {
+                                ctx.beginPath();
+                                var chamberRad = (cw * 0.22) * Math.min(1.0, (p - 0.15) / 0.6);
+                                ctx.arc(midX, midY, chamberRad, 0, Math.PI * 2);
+                                ctx.fillStyle = "#047857";
+                                ctx.fill();
+                            }
+
+                            // Subtle water core stream highlight
+                            if (cell.type !== "reservoir") {
+                                ctx.lineWidth = cw * 0.07;
+                                ctx.strokeStyle = Qt.rgba(0.5, 0.95, 0.7, 0.40);
+                                ctx.stroke();
+                            }
 
                             ctx.restore();
                         }
 
                         function drawCrossSecondPass(ctx, cell, cx, cy, cw, ch) {
-                            var p = cell.crossFillProgress;
+                            var p = Math.max(0.0, Math.min(1.0, cell.crossFillProgress));
                             var entry = cell.crossEntryPort;
 
                             ctx.save();
                             var grad = ctx.createLinearGradient(cx, cy, cx + cw, cy + ch);
-                            grad.addColorStop(0, "#06b6d4");
-                            grad.addColorStop(1, "#22d3ee");
+                            grad.addColorStop(0, "#0284c7");
+                            grad.addColorStop(0.5, "#0369a1");
+                            grad.addColorStop(1, "#075985");
 
                             ctx.strokeStyle = grad;
-                            ctx.lineWidth = cw * 0.28;
-                            ctx.lineCap = "round";
-                            ctx.shadowColor = "#22d3ee";
-                            ctx.shadowBlur = 8;
+                            ctx.lineWidth = cw * 0.22;
+                            ctx.lineCap = "butt";
 
                             ctx.beginPath();
                             var midX = cx + cw / 2;
@@ -1307,8 +1312,8 @@ Window {
                             }
                             ctx.stroke();
 
-                            ctx.lineWidth = cw * 0.12;
-                            ctx.strokeStyle = "#cffafe";
+                            ctx.lineWidth = cw * 0.07;
+                            ctx.strokeStyle = Qt.rgba(0.5, 0.85, 1.0, 0.40);
                             ctx.stroke();
 
                             ctx.restore();
