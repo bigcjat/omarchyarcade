@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Offline-Forever-00f0ff?style=flat-square" alt="Offline Forever"/>
   <img src="https://img.shields.io/badge/Telemetry-Zero-10b981?style=flat-square" alt="Zero Telemetry"/>
   <img src="https://img.shields.io/badge/Ads-Zero-f59e0b?style=flat-square" alt="Zero Ads"/>
-  <img src="https://img.shields.io/badge/Games-36%20Included-ec4899?style=flat-square" alt="36 Games"/>
+  <img src="https://img.shields.io/badge/Games-37%20Included-ec4899?style=flat-square" alt="37 Games"/>
   <img src="https://img.shields.io/badge/Interface-Keyboard--Primary-8b5cf6?style=flat-square" alt="Keyboard-Primary"/>
   <img src="https://img.shields.io/badge/Platform-Omarchy%20Linux%20(Hyprland)-38bdf8?style=flat-square" alt="Omarchy Linux"/>
 </p>
@@ -111,7 +111,7 @@ sudo pacman -U omarchy-arcade-1.0.0-1-any.pkg.tar.zst
 
 ---
 
-## The 36 Games Included
+## The 37 Games Included
 
 Every game includes full offline documentation, keyboard controls mappings, and standalone launch capabilities:
 
@@ -153,6 +153,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **Parking Jam** | Puzzles & Logic | **1.3 MB** | Tactile sliding Japanese vehicle escape puzzle with 56 verified multi-step levels. | [Manual](games/parkingjam/README.md) |
 | **Nuts Sort** | Puzzles & Logic | **1.0 MB** | Tactile isometric nut & bolt color sorting puzzle with 10,000+ solvable levels. | [Manual](games/nutssort/README.md) |
 | **Fold** | Puzzles & Logic | **1.2 MB** | Tactile geometric paper folding & crease logic puzzle with 100 historical archetypes. | [Manual](games/fold/README.md) |
+| **Mahjong Solitaire** | Puzzles & Logic | **1.0 MB** | True 3D hardware-accelerated obsidian tile matching with 5-tier elevation depth. | [Manual](games/mahjongsolitaire/README.md) |
 
 ---
 

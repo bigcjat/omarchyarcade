@@ -1,7 +1,7 @@
 {
   "version": 5,
   "app_name": "Omarchy Arcade",
-  "updated_at": "2026-09-09T22:41:00Z",
+  "updated_at": "2026-09-10T11:00:00Z",
   "games": [
     {
       "id": "2048",
@@ -1339,6 +1339,46 @@
         "tessellation",
         "triangles",
         "logic puzzle"
+      ]
+    },
+    {
+      "id": "mahjongsolitaire",
+      "title": "Mahjong Solitaire",
+      "ref": "OA-037",
+      "category": "Puzzles & Grid Logic",
+      "floppy_color": "#059669",
+      "grid_color": "#1E293B",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "True 3D Hardware-Accelerated Obsidian Tile Matching Solitaire",
+      "description": "Match pairs of free obsidian domino slabs etched with luminescent neon glyphs. Features true hardware-accelerated QtQuick3D spatial rendering, 5-tier elevation depth spectrum, guaranteed solvable boards (Turtle, Fortress, Dragon), and smooth orbital camera.",
+      "instructions": [
+        "Select matching pairs of identical free tiles to clear them from the board.",
+        "A tile is free if no tile is resting on top of it and either its left or right side is open.",
+        "Special tiles: Any Flower matches any Flower; any Season matches any Season.",
+        "Clear all 144 tiles to win. Use 3D orbit (A/D or trackpad drag) or overhead mode (V) to inspect depth."
+      ],
+      "controls": {
+        "keyboard": "Click / Space to match, A/D or Left/Right to orbit, W/S to tilt, +/- to zoom, V for overhead, H for hint, U to undo, 1-3 for layouts, R to restart, ? for help",
+        "mouse": "Click tile to select/match, two-finger drag or left-click drag to orbit camera, wheel to zoom"
+      },
+      "folder": "games/mahjongsolitaire",
+      "entrypoint": "games/mahjongsolitaire/main.py",
+      "cover_image": "assets/covers/mahjongsolitaire.png",
+      "size": "1.0 MB",
+      "size_bytes": 1081568,
+      "download_size": "1.0 MB",
+      "keywords": [
+        "mahjong",
+        "mahjong solitaire",
+        "shanghai",
+        "tile matching",
+        "3d puzzle",
+        "obsidian",
+        "neon",
+        "qtquick3d",
+        "board game",
+        "solitaire"
       ]
     }
   ]
