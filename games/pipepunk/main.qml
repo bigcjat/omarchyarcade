@@ -1368,7 +1368,14 @@ Window {
                         function getPathPoint(type, entry, cx, cy, cw, ch, t) {
                             var midX = cx + cw / 2;
                             var midY = cy + ch / 2;
-                            if (type === "pipe_h" || type === "valve") {
+                            if (type === "valve") {
+                                // Valve liquid begins inside the valve body casing and exits East into the pipe
+                                var startVx = cx + cw * 0.45;
+                                var endVx = cx + cw;
+                                var vx = startVx + (endVx - startVx) * t;
+                                var vy = midY + Math.sin(t * 12) * (cw * 0.02);
+                                return { x: vx, y: vy };
+                            } else if (type === "pipe_h") {
                                 var x = (entry === "W") ? (cx + cw * t) : (cx + cw * (1 - t));
                                 var y = midY + Math.sin(t * 12) * (cw * 0.02);
                                 return { x: x, y: y };
@@ -1425,7 +1432,14 @@ Window {
                             var midX = cx + cw / 2;
                             var midY = cy + ch / 2;
 
-                            if (cell.type === "pipe_h" || cell.type === "valve") {
+                            if (cell.type === "valve") {
+                                // Liquid originates from inside the valve body and travels East into the pipeline
+                                var startX = cx + cw * 0.45;
+                                var targetX = cx + cw;
+                                var curX = startX + (targetX - startX) * p;
+                                ctx.moveTo(startX, midY);
+                                ctx.lineTo(curX, midY);
+                            } else if (cell.type === "pipe_h") {
                                 if (entry === "W") {
                                     ctx.moveTo(cx, midY);
                                     ctx.lineTo(cx + cw * p, midY);
