@@ -154,7 +154,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **Nuts Sort** | Puzzles & Logic | **1.0 MB** | Tactile isometric nut & bolt color sorting puzzle with 10,000+ solvable levels. | [Manual](games/nutssort/README.md) |
 | **Fold** | Puzzles & Logic | **1.2 MB** | Tactile geometric paper folding & crease logic puzzle with 100 historical archetypes. | [Manual](games/fold/README.md) |
 | **Mahjong Solitaire** | Puzzles & Logic | **1.0 MB** | True 3D hardware-accelerated obsidian tile matching with 5-tier elevation depth. | [Manual](games/mahjongsolitaire/README.md) |
-| **Pipe Punk** | Puzzles & Logic | **740 KB** | Victorian steampunk boiler pipe puzzle with real-time fluid dynamics & analog gauges. | [Manual](games/pipepunk/README.md) |
+| **Pipe Punk** | Puzzles & Logic | **800 KB** | Victorian steampunk boiler pipe puzzle with real-time fluid dynamics & analog gauges. | [Manual](games/pipepunk/README.md) |
 
 ---
 

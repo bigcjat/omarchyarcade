@@ -1405,9 +1405,9 @@
       "folder": "games/pipepunk",
       "entrypoint": "games/pipepunk/main.py",
       "cover_image": "assets/covers/pipepunk.png",
-      "size": "740 KB",
-      "size_bytes": 757667,
-      "download_size": "740 KB",
+      "size": "800 KB",
+      "size_bytes": 819277,
+      "download_size": "800 KB",
       "keywords": [
         "pipe",
         "pipe dream",

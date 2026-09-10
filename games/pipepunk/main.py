@@ -312,22 +312,26 @@ def main():
                 apply_theme(t)
         watcher.fileChanged.connect(on_file_changed)
 
+    if args.no_splash:
+        root_window.setProperty("splashEnabled", False)
+
     # Screenshot handling
     if args.screenshot or args.screenshot_help:
+        root_window.setProperty("splashEnabled", False)
         def capture_screenshot():
             include_help = bool(args.screenshot_help)
             if include_help:
-                root_window.setProperty("showHelpModal", True)
+                root_window.setProperty("showHelp", True)
             else:
                 root_window.setupDemoBoard()
             app.processEvents()
 
             target_path = Path(args.screenshot_help if args.screenshot_help else args.screenshot).resolve()
             target_path.parent.mkdir(parents=True, exist_ok=True)
-            root_window.captureScreenshot(str(target_path), include_help)
+            root_window.captureScreenshot(str(target_path), False)
             QTimer.singleShot(400, app.quit)
 
-        QTimer.singleShot(800, capture_screenshot)
+        QTimer.singleShot(500, capture_screenshot)
 
     sys.exit(app.exec())
 

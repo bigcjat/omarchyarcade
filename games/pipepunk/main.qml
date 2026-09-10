@@ -7,9 +7,9 @@ Window {
     visible: true
     width: 960
     height: 720
-    minimumWidth: 680
-    minimumHeight: 520
-    title: "Pipe Punk • Steampunk Municipal Waterworks"
+    minimumWidth: 500
+    minimumHeight: 400
+    title: "Pipe Punk"
 
     // =========================================================================
     // OMARCHY THEME TOKENS (Auto-synchronized from colors.toml)
@@ -21,6 +21,9 @@ Window {
     property color themeFg: "#e2e8f0"
     property color themeSubtext: "#94a3b8"
     property color themeAccent: "#f59e0b" // Steampunk warm amber / brass
+    property color themeBtnBg: themeAccent
+    property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
+
     property color themeColor0: "#1a1d26"
     property color themeColor1: "#ef4444"
     property color themeColor2: "#10b981"
@@ -29,20 +32,40 @@ Window {
     property color themeColor5: "#8b5cf6"
     property color themeColor6: "#06b6d4"
 
-    property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
+    // WCAG contrast helper ensuring buttons are always readable in light/dark themes
+    function colorLuminance(col) {
+        var c = Qt.color(col);
+        return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+    }
 
     color: themeBg
 
     // =========================================================================
-    // DECLARATIVE GAME STATE
+    // DECLARATIVE GAME STATE PROPERTIES
     // =========================================================================
+    property string gameStateStr: "ready" // "ready", "playing", "gameover", "won"
     property var gameState: null
     property int currentLevel: 1
     property int score: 0
     property int bestScore: 0
-    property bool isMuted: false
-    property bool showHelpModal: false
-    property bool splashActive: typeof noSplash !== "undefined" ? !noSplash : true
+    property bool splashEnabled: true
+    property bool isMuted: true
+    property bool showHelp: false
+    property alias showHelpModal: root.showHelp
+    property bool isTiledDesktopMode: root.height < 520 || root.width < 440
+    property alias fullPlayfield: root.isTiledDesktopMode
+    property bool _spaceConstrained: root.height < 520 || root.width < 440
+    on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
+    property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
+
+    property string helpText: "• Objective: Route pressurized municipal water from the starting valve across the grid without letting it spill.\n\n" +
+                              "• Pipe Connections: Place upcoming pipe fittings (straight, corners, cross) from the vertical dispenser hopper onto the grid.\n\n" +
+                              "• Quota Requirement: Meet or exceed the sector's required pipe quota before the chemical stream reaches an open pipe end.\n\n" +
+                              "• Cross Bonus: Cross pieces can be traversed TWICE (both horizontally and vertically) for +500 bonus points!\n\n" +
+                              "• Rush Pump: Hold SPACE to rush the pump at 5× speed once your pipeline is safely connected for massive score multipliers and high pressure.\n\n" +
+                              "• Navigation: Arrows, WASD, or Vim (H / J / K / L) to move cursor.\n\n" +
+                              "• Placement: Enter, Space, or Left Click to place current pipe.\n\n" +
+                              "• Shortcuts: Restart (R), Mute (M), Full/Standard View (⇧F), Help (? or Esc)."
 
     // Cursor grid selection for keyboard navigation
     property int cursorR: 3
@@ -53,21 +76,79 @@ Window {
     property real shakeX: 0
     property real shakeY: 0
 
-    // Sound dispatcher helper
-    function playSfx(name) {
+    // =========================================================================
+    // THEME & SOUND CONTROLLERS
+    // =========================================================================
+    signal screenshotSaved(string filePath)
+
+    function applyTheme(data, name) {
+        if (!data || typeof data !== "object") return;
+
+        var bg = data.background || data.bg || "#12141a";
+        var fg = data.foreground || data.fg || "#e2e8f0";
+        var accent = data.accent || "#f59e0b";
+        var c0 = data.color0 || "#1a1d26";
+        var c8 = data.color8 || data.color0 || "#2a2e3d";
+
+        themeBg = bg;
+        themeFg = fg;
+        themeAccent = accent;
+        themeBorder = c8;
+
+        var lum = colorLuminance(bg);
+        if (lum > 0.5) {
+            themeBoardBg = Qt.darker(bg, 1.06);
+            themeCardBg = Qt.darker(bg, 1.03);
+            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
+            themeBorder = c8 || Qt.darker(bg, 1.15);
+            themeBtnBg = accent;
+            themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+        } else {
+            themeBoardBg = Qt.darker(bg, 1.25);
+            themeCardBg = c0;
+            themeSubtext = "#94a3b8";
+            themeBorder = c8;
+            themeBtnBg = accent;
+            themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+        }
+
+        if (data.boardBg) themeBoardBg = data.boardBg;
+        if (data.cardBg) themeCardBg = data.cardBg;
+        if (data.border) themeBorder = data.border;
+        if (data.subtext) themeSubtext = data.subtext;
+
+        gridCanvas.requestPaint();
+    }
+
+    function playSound(name) {
         if (!isMuted && typeof soundManager !== "undefined" && soundManager) {
             soundManager.playSound(name);
         }
     }
 
-    // Capture screenshot for automated tests and arcade gallery
-    function captureScreenshot(filePath, includeHelp) {
-        showHelpModal = Boolean(includeHelp);
-        root.requestUpdate();
-        var grabItem = root.contentItem;
-        grabItem.grabToImage(function(result) {
+    function playSfx(name) {
+        playSound(name);
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        if (!isMuted) playSound("pipe_clank");
+        soundToast.show(isMuted ? "🔇 Audio Muted" : "🔊 Audio Enabled");
+    }
+
+    function restartGame() {
+        startNewGame(1);
+    }
+
+    function captureScreenshot(filePath, shouldQuit) {
+        var targetItem = (splashScreen && splashScreen.visible && splashScreen.opacity > 0) ? splashScreen : mainContainer;
+        targetItem.grabToImage(function(result) {
             result.saveToFile(filePath);
-            console.log("Screenshot saved to:", filePath);
+            console.log("Screenshot saved successfully to " + filePath);
+            root.screenshotSaved(filePath);
+            if (shouldQuit) {
+                Qt.quit();
+            }
         });
     }
 
@@ -84,7 +165,7 @@ Window {
         shakeX = 0;
         shakeY = 0;
         gridRevision++;
-        playSfx("pipe_clank");
+        playSound("pipe_clank");
     }
 
     function advanceToNextLevel() {
@@ -98,14 +179,16 @@ Window {
         cursorR = gameState.valveRow;
         cursorC = gameState.valveCol + 1;
         if (cursorC >= Engine.COLS) cursorC = Engine.COLS - 1;
-        playSfx("level_clear");
+        shakeX = 0;
+        shakeY = 0;
+        gridRevision++;
+        playSound("pipe_clank");
     }
 
     function setupDemoBoard() {
         startNewGame(1);
         var vr = gameState.valveRow;
         var vc = gameState.valveCol;
-        // Pipe 1: horizontal from valve
         if (vc + 1 < Engine.COLS) {
             gameState.grid[vr][vc+1].type = "pipe_h";
             gameState.grid[vr][vc+1].entryPort = "W";
@@ -113,7 +196,6 @@ Window {
             gameState.grid[vr][vc+1].filled = true;
             gameState.grid[vr][vc+1].fillProgress = 1.0;
         }
-        // Pipe 2: corner 4 (W to S)
         if (vc + 2 < Engine.COLS) {
             gameState.grid[vr][vc+2].type = "corner_4";
             gameState.grid[vr][vc+2].entryPort = "W";
@@ -121,7 +203,6 @@ Window {
             gameState.grid[vr][vc+2].filled = true;
             gameState.grid[vr][vc+2].fillProgress = 1.0;
         }
-        // Pipe 3: vertical straight down
         if (vr + 1 < Engine.ROWS && vc + 2 < Engine.COLS) {
             gameState.grid[vr+1][vc+2].type = "pipe_v";
             gameState.grid[vr+1][vc+2].entryPort = "N";
@@ -129,7 +210,6 @@ Window {
             gameState.grid[vr+1][vc+2].filled = true;
             gameState.grid[vr+1][vc+2].fillProgress = 1.0;
         }
-        // Pipe 4: corner 1 (N to E) flowing
         if (vr + 2 < Engine.ROWS && vc + 2 < Engine.COLS) {
             gameState.grid[vr+2][vc+2].type = "corner_1";
             gameState.grid[vr+2][vc+2].entryPort = "N";
@@ -137,40 +217,34 @@ Window {
             gameState.grid[vr+2][vc+2].isFlowing = true;
             gameState.grid[vr+2][vc+2].fillProgress = 0.65;
         }
-        // Pipe 5: cross ahead
         if (vr + 2 < Engine.ROWS && vc + 3 < Engine.COLS) {
             gameState.grid[vr+2][vc+3].type = "cross";
         }
-        // Pipe 6: reservoir ahead
         if (vr + 2 < Engine.ROWS && vc + 4 < Engine.COLS) {
             gameState.grid[vr+2][vc+4].type = "reservoir";
         }
-
         gameState.state = "flowing";
-        gameState.traversedCount = 3;
-        gameState.score = 420;
-        root.score = 420;
-        gameState.psi = 64.0;
-        cursorR = Math.min(Engine.ROWS - 1, vr + 2);
-        cursorC = Math.min(Engine.COLS - 1, vc + 5);
+        gameState.traversedCount = 4;
+        gameState.psi = 46.5;
+        score = 850;
         gridRevision++;
         gridCanvas.requestPaint();
     }
 
     Component.onCompleted: {
         if (typeof settingsManager !== "undefined" && settingsManager) {
-            bestScore = settingsManager.getBestScore();
+            root.bestScore = settingsManager.getBestScore();
         }
         startNewGame(1);
     }
 
     // =========================================================================
-    // GAME SIMULATION LOOP (60 FPS)
+    // GAME SIMULATION LOOP
     // =========================================================================
     Timer {
         id: simTimer
         interval: 16
-        running: gameState && gameState.state !== "game_over" && gameState.state !== "round_won" && !splashActive
+        running: gameState && gameState.state !== "game_over" && gameState.state !== "round_won" && (!splashScreen || !splashScreen.visible || splashScreen.opacity === 0)
         repeat: true
         onTriggered: {
             if (!gameState) return;
@@ -189,18 +263,18 @@ Window {
 
             // Audio cues
             if (gameState.traversedCount > prevTraversed) {
-                playSfx("water_flow");
+                playSound("water_flow");
             }
 
             if (prevState === "countdown" && gameState.state === "flowing") {
-                playSfx("water_flow");
+                playSound("water_flow");
             }
 
             if (gameState.state === "game_over" && prevState !== "game_over") {
-                playSfx("steam_hiss");
+                playSound("steam_hiss");
                 shakeAnim.start();
             } else if (gameState.state === "round_won" && prevState !== "round_won") {
-                playSfx("level_clear");
+                playSound("level_clear");
             }
 
             // Screen shake when rushing
@@ -228,16 +302,67 @@ Window {
     }
 
     // =========================================================================
-    // KEYBOARD INPUT HANDLING
+    // MAIN CONTAINER & KEYBOARD HANDLERS
     // =========================================================================
-    Item {
-        id: keyboardHandler
-        focus: true
+    Rectangle {
+        id: mainContainer
         anchors.fill: parent
+        color: root.themeBg
+        focus: true
+        Behavior on color { ColorAnimation { duration: 150 } }
 
         Keys.onPressed: function(event) {
-            if (splashActive) {
-                splashActive = false;
+            // Dismiss Splash on any key
+            if (splashEnabled && splashScreen && splashScreen.visible && splashScreen.opacity > 0) {
+                splashScreen.dismiss();
+                event.accepted = true;
+                return;
+            }
+
+            // Help Modal dismiss
+            if (root.showHelp) {
+                if (event.key === Qt.Key_Escape || event.key === Qt.Key_Question || event.key === Qt.Key_Slash) {
+                    root.showHelp = false;
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            // Game over / Won restart or advance
+            if (gameState && (gameState.state === "game_over" || gameState.state === "round_won")) {
+                if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_R) {
+                    if (gameState.state === "round_won") root.advanceToNextLevel();
+                    else root.startNewGame(1);
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            // Sound Toggle
+            if (event.key === Qt.Key_M) {
+                root.toggleMute();
+                event.accepted = true;
+                return;
+            }
+
+            // Full Window View Toggle
+            if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
+                root.fullPlayfield = !root.fullPlayfield;
+                soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Windowed View");
+                event.accepted = true;
+                return;
+            }
+
+            // Restart Hotkey
+            if (event.key === Qt.Key_R) {
+                root.restartGame();
+                event.accepted = true;
+                return;
+            }
+
+            // Help Toggle
+            if (event.key === Qt.Key_Question || event.key === Qt.Key_Slash) {
+                root.showHelp = !root.showHelp;
                 event.accepted = true;
                 return;
             }
@@ -246,21 +371,17 @@ Window {
             if (event.key === Qt.Key_Space) {
                 if (gameState && gameState.state === "flowing") {
                     gameState.isRushing = true;
-                    playSfx("rush");
-                } else if (gameState && gameState.state === "round_won") {
-                    advanceToNextLevel();
-                } else if (gameState && gameState.state === "game_over") {
-                    startNewGame(1);
+                    playSound("rush");
+                    event.accepted = true;
+                    return;
                 }
-                event.accepted = true;
-                return;
             }
 
             // Enter to place pipe at cursor
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                 if (gameState && (gameState.state === "countdown" || gameState.state === "flowing")) {
                     if (Engine.placeNextPiece(gameState, cursorR, cursorC)) {
-                        playSfx("pipe_clank");
+                        playSound("pipe_clank");
                         gridRevision++;
                         gridCanvas.requestPaint();
                     }
@@ -282,18 +403,6 @@ Window {
             } else if (event.key === Qt.Key_Down || event.key === Qt.Key_J || event.key === Qt.Key_S) {
                 cursorR = Math.min(Engine.ROWS - 1, cursorR + 1);
                 event.accepted = true;
-            } else if (event.key === Qt.Key_R) {
-                startNewGame(1);
-                event.accepted = true;
-            } else if (event.key === Qt.Key_M) {
-                isMuted = !isMuted;
-                event.accepted = true;
-            } else if (event.key === Qt.Key_Question || event.key === Qt.Key_Slash) {
-                showHelpModal = !showHelpModal;
-                event.accepted = true;
-            } else if (event.key === Qt.Key_Escape) {
-                if (showHelpModal) showHelpModal = false;
-                event.accepted = true;
             }
         }
 
@@ -303,413 +412,555 @@ Window {
                 event.accepted = true;
             }
         }
-    }
 
-    // =========================================================================
-    // MAIN APP LAYOUT
-    // =========================================================================
-    Item {
-        id: container
-        anchors.fill: parent
-        anchors.margins: 14
-        x: root.shakeX
-        y: root.shakeY
-
-        // ---------------------------------------------------------------------
-        // TIER 1: MAIN HEADER ROW (Template Standard: Title & Stats)
-        // ---------------------------------------------------------------------
-        Row {
+        // =====================================================================
+        // 2048 DESIGN STANDARD: ROW 1 (Header Item)
+        // =====================================================================
+        Item {
             id: headerItem
+            visible: !root.isTiledDesktopMode
+            anchors.top: parent.top
+            anchors.topMargin: visible ? 16 : 0
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: visible ? Math.max(titleCol.height, scoreRow.height) : 0
+
+            Column {
+                id: titleCol
+                anchors.left: parent.left
+                anchors.right: scoreRow.left
+                anchors.rightMargin: 12
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 2
+
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: root.title
+                    font.pixelSize: Math.max(20, Math.min(32, headerItem.width * 0.075))
+                    font.bold: true
+                    color: root.themeAccent
+                    Behavior on color { ColorAnimation { duration: 250 } }
+                }
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: "Victorian steampunk municipal waterworks"
+                    font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
+                    color: root.themeSubtext
+                    Behavior on color { ColorAnimation { duration: 250 } }
+                }
+            }
+
+            // Stat Cards on the right
+            Row {
+                id: scoreRow
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
+
+                // ANALOG BRASS PRESSURE GAUGE Card
+                Rectangle {
+                    width: Math.max(54, Math.min(64, headerItem.width * 0.12))
+                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                    radius: 8
+                    color: root.themeCardBg
+                    border.color: (gameState && gameState.isRushing) ? "#ef4444" : root.themeBorder
+                    border.width: 1
+
+                    Item {
+                        anchors.fill: parent
+                        anchors.margins: 4
+
+                        Image {
+                            anchors.fill: parent
+                            source: "assets/gauge_dial.png"
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                        }
+
+                        Image {
+                            id: needleImg
+                            width: Math.round(parent.width * 0.22)
+                            height: Math.round(parent.height * 0.58)
+                            x: parent.width / 2 - width / 2
+                            y: parent.height / 2 - height + 2
+                            source: "assets/needle.png"
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            transformOrigin: Item.Bottom
+
+                            rotation: {
+                                var currentPsi = gameState ? gameState.psi : 24.0;
+                                var clamped = Math.max(0, Math.min(120, currentPsi));
+                                var baseDeg = -120 + (clamped / 120.0) * 240.0;
+                                return baseDeg + (gameState && gameState.isRushing ? (Math.random() - 0.5) * 6 : 0);
+                            }
+                            Behavior on rotation {
+                                NumberAnimation { duration: 70 }
+                            }
+                        }
+                    }
+                }
+
+                // PIPES / QUOTA Card
+                Rectangle {
+                    width: Math.max(64, Math.min(84, headerItem.width * 0.16))
+                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                    radius: 8
+                    color: root.themeCardBg
+                    border.color: (gameState && gameState.traversedCount >= gameState.quota) ? "#10b981" : root.themeBorder
+                    border.width: (gameState && gameState.traversedCount >= gameState.quota) ? 2 : 1
+                    Behavior on color { ColorAnimation { duration: 250 } }
+
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "PIPES"
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: gameState ? (gameState.traversedCount + "/" + gameState.quota) : "0/15"
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: (gameState && gameState.traversedCount >= gameState.quota) ? "#10b981" : root.themeFg
+                        }
+                    }
+                }
+
+                // SCORE Card
+                Rectangle {
+                    width: Math.max(64, Math.min(84, headerItem.width * 0.16))
+                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                    radius: 8
+                    color: root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 250 } }
+
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "SCORE"
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.score.toString()
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: root.themeFg
+                        }
+                    }
+                }
+
+                // BEST Card
+                Rectangle {
+                    width: Math.max(64, Math.min(84, headerItem.width * 0.16))
+                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                    radius: 8
+                    color: root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 250 } }
+
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "BEST"
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.bestScore.toString()
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: root.bestScore > 0 ? root.themeAccent : root.themeSubtext
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // 2048 DESIGN STANDARD: ROW 2 (Subheader Action Bar)
+        // =====================================================================
+        Item {
+            id: subheaderItem
+            visible: !root.isTiledDesktopMode
+            anchors.top: headerItem.bottom
+            anchors.topMargin: visible ? 10 : 0
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: visible ? 34 : 0
+
+            readonly property bool isCrowded: subheaderItem.width < 500
+
+            // Left cluster (Help button & Status Pill)
+            Row {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: subheaderItem.isCrowded ? 6 : 8
+
+                // Help Button
+                Rectangle {
+                    id: helpBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
+                    radius: 8
+                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        id: helpRow
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Text {
+                            text: "?"
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: root.themeAccent
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "How to Play"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: helpMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showHelp = !root.showHelp
+                    }
+                }
+
+                // Status Indicator Pill
+                Rectangle {
+                    id: statusPill
+                    height: 32
+                    width: statusRow.implicitWidth + 16
+                    radius: 8
+                    color: root.themeBoardBg
+                    border.color: (gameState && gameState.state === "game_over") ? "#ef4444" :
+                                  (gameState && gameState.state === "round_won") ? "#10b981" :
+                                  (gameState && gameState.state === "flowing") ? root.themeAccent : root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: statusRow
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Text {
+                            text: (gameState && gameState.state === "countdown") ? "⏳" :
+                                  (gameState && gameState.state === "round_won") ? "🏆" :
+                                  (gameState && gameState.state === "game_over") ? "💥" : "🌊"
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: {
+                                if (!gameState) return "STANDBY";
+                                if (gameState.state === "countdown") return "RELEASE: " + Math.ceil(gameState.countdown) + "s";
+                                if (gameState.state === "flowing") return gameState.isRushing ? "RUSHING (5X)" : (Math.round(gameState.psi) + " PSI");
+                                if (gameState.state === "round_won") return "SECTOR CLEARED";
+                                if (gameState.state === "game_over") return "BLOWOUT";
+                                return "OPERATIONAL";
+                            }
+                            color: (gameState && gameState.state === "countdown") ? root.themeAccent :
+                                   (gameState && gameState.state === "round_won") ? "#10b981" :
+                                   (gameState && gameState.state === "game_over") ? "#ef4444" : root.themeFg
+                            font.pixelSize: 11
+                            font.bold: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+                }
+            }
+
+            // Right cluster (Actions: Mute, View Mode, Restart)
+            Row {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: subheaderItem.isCrowded ? 6 : 8
+
+                // Mute Button
+                Rectangle {
+                    id: muteBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
+                    radius: 8
+                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    border.color: root.isMuted ? root.themeBorder : root.themeAccent
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        id: muteRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: root.isMuted ? "🔇" : "🔊"
+                            font.pixelSize: 13
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: root.isMuted ? "Muted" : "Sound"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.isMuted ? root.themeSubtext : root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: muteMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
+                }
+
+                // View Mode Pill (Windowed vs Full Field)
+                Rectangle {
+                    id: viewModeBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (viewModeRow.implicitWidth + 18)
+                    radius: 8
+                    color: root.fullPlayfield ? root.themeCardBg : (viewModeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
+                    border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        id: viewModeRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: root.fullPlayfield ? "🔲" : "⛶"
+                            font.pixelSize: 13
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: root.fullPlayfield ? "Standard (⇧F)" : "Full (⇧F)"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.fullPlayfield ? root.themeAccent : root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: viewModeMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.fullPlayfield = !root.fullPlayfield;
+                            soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Windowed View");
+                        }
+                    }
+                }
+
+                // Primary Action Button (Restart / New Game)
+                Rectangle {
+                    id: restartBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
+                    radius: 8
+                    color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    Row {
+                        id: restartRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "🔄"
+                            font.pixelSize: 13
+                            visible: subheaderItem.isCrowded
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "New Game (R)"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeBtnFg
+                            visible: !subheaderItem.isCrowded
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    MouseArea {
+                        id: restartMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.startNewGame(1)
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
+        // =====================================================================
+        Rectangle {
+            id: floatingTiledHUD
+            visible: root.isTiledDesktopMode
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            height: 64
-            spacing: 12
-
-            // Title Box (Brushed Brass Aesthetic)
-            Rectangle {
-                width: 280
-                height: parent.height
-                color: themeCardBg
-                radius: 8
-                border.color: themeBorder
-                border.width: 1.5
-
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 10
-
-                    Text {
-                        text: "⚙️"
-                        font.pixelSize: 28
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    Column {
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 2
-
-                        Text {
-                            text: "PIPE PUNK"
-                            color: themeAccent
-                            font.family: monoFontFamily
-                            font.pixelSize: 20
-                            font.bold: true
-                            font.letterSpacing: 2
-                        }
-                        Text {
-                            text: "STEAM WATERWORKS • OA-038"
-                            color: themeSubtext
-                            font.family: monoFontFamily
-                            font.pixelSize: 10
-                            font.bold: true
-                        }
-                    }
-                }
-            }
-
-            // Center: Analog Circular Brass Pressure Gauge
-            Item {
-                id: headerGauge
-                width: 66
-                height: 66
-                anchors.verticalCenter: parent.verticalCenter
-
-                Image {
-                    anchors.fill: parent
-                    source: "assets/gauge_dial.png"
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
-                    mipmap: true
-                }
-
-                Image {
-                    id: needleImg
-                    width: 14
-                    height: 38
-                    x: parent.width / 2 - width / 2
-                    y: parent.height / 2 - height + 4
-                    source: "assets/needle.png"
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
-                    transformOrigin: Item.Bottom
-
-                    rotation: {
-                        var currentPsi = gameState ? gameState.psi : 24.0;
-                        var clamped = Math.max(0, Math.min(120, currentPsi));
-                        var baseDeg = -120 + (clamped / 120.0) * 240.0;
-                        return baseDeg + (gameState && gameState.isRushing ? (Math.random() - 0.5) * 6 : 0);
-                    }
-                    Behavior on rotation {
-                        NumberAnimation { duration: 70 }
-                    }
-                }
-            }
-
-            Item { width: Math.max(10, headerItem.width - 280 - 66 - 24 - 360); height: 1 }
-
-            // Stats Group: PIPES / QUOTA, SCORE, BEST
-            Row {
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 10
-
-                // Pipes / Quota Gauge
-                Rectangle {
-                    width: 120
-                    height: 56
-                    color: themeCardBg
-                    radius: 8
-                    border.color: (gameState && gameState.traversedCount >= gameState.quota) ? "#10b981" : themeBorder
-                    border.width: (gameState && gameState.traversedCount >= gameState.quota) ? 2 : 1
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 2
-                        Text {
-                            text: "PIPES / QUOTA"
-                            color: themeSubtext
-                            font.family: monoFontFamily
-                            font.pixelSize: 9
-                            font.bold: true
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                        Text {
-                            text: gameState ? (gameState.traversedCount + " / " + gameState.quota) : "0 / 5"
-                            color: (gameState && gameState.traversedCount >= gameState.quota) ? "#10b981" : themeFg
-                            font.family: monoFontFamily
-                            font.pixelSize: 18
-                            font.bold: true
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                }
-
-                // Current Score
-                Rectangle {
-                    width: 110
-                    height: 56
-                    color: themeCardBg
-                    radius: 8
-                    border.color: themeBorder
-                    border.width: 1
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 2
-                        Text {
-                            text: "SCORE"
-                            color: themeSubtext
-                            font.family: monoFontFamily
-                            font.pixelSize: 9
-                            font.bold: true
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                        Text {
-                            text: root.score.toString()
-                            color: themeFg
-                            font.family: monoFontFamily
-                            font.pixelSize: 18
-                            font.bold: true
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                }
-
-                // Best Score
-                Rectangle {
-                    width: 110
-                    height: 56
-                    color: themeCardBg
-                    radius: 8
-                    border.color: themeBorder
-                    border.width: 1
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 2
-                        Text {
-                            text: "BEST"
-                            color: themeSubtext
-                            font.family: monoFontFamily
-                            font.pixelSize: 9
-                            font.bold: true
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                        Text {
-                            text: root.bestScore.toString()
-                            color: themeAccent
-                            font.family: monoFontFamily
-                            font.pixelSize: 18
-                            font.bold: true
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                }
-            }
-        }
-
-        // ---------------------------------------------------------------------
-        // TIER 2: SUBHEADER ROW (Template Standard: Help, Status, Actions)
-        // ---------------------------------------------------------------------
-        Row {
-            id: subheaderItem
-            anchors.top: headerItem.bottom
-            anchors.topMargin: 10
-            anchors.left: parent.left
-            anchors.right: parent.right
+            anchors.topMargin: 8
+            anchors.leftMargin: 12
+            anchors.rightMargin: 12
             height: 38
-            spacing: 8
+            radius: 8
+            z: 90
+            color: root.themeCardBg
+            border.color: root.themeBorder
+            border.width: 1
 
-            // Left: How to Play Button
-            Rectangle {
-                id: helpBtn
-                height: parent.height
-                width: 120
-                color: helpMouse.containsMouse ? "#282c37" : themeCardBg
-                radius: 6
-                border.color: themeBorder
-                border.width: 1
+            Row {
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
 
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 6
-                    Text { text: "❓"; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
-                    Text {
-                        text: "How to Play"
-                        color: themeFg
-                        font.family: monoFontFamily
-                        font.pixelSize: 11
-                        font.bold: true
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
+                Text {
+                    text: root.title
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeAccent
                 }
 
-                MouseArea {
-                    id: helpMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: showHelpModal = true
+                Text {
+                    text: "• SCORE: " + root.score
+                    font.pixelSize: 11
+                    font.bold: true
+                    color: root.themeFg
+                }
+
+                Text {
+                    text: "(BEST: " + root.bestScore + ")"
+                    font.pixelSize: 10
+                    color: root.themeSubtext
                 }
             }
 
-            // Center: Valve / Pressure Status Box
-            Rectangle {
-                width: Math.max(180, subheaderItem.width - 450)
-                height: parent.height
-                color: themeCardBg
-                radius: 6
-                border.color: themeBorder
-                border.width: 1
+            Row {
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 6
 
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 8
-                    Text {
-                        text: (gameState && gameState.state === "countdown") ? "⏳" :
-                              (gameState && gameState.state === "round_won") ? "🏆" :
-                              (gameState && gameState.state === "game_over") ? "💥" : "🌊"
-                        font.pixelSize: 14
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: {
-                            if (!gameState) return "STANDBY";
-                            if (gameState.state === "countdown") {
-                                return "VALVE RELEASE IN: " + Math.ceil(gameState.countdown) + "s";
-                            }
-                            if (gameState.state === "flowing") {
-                                return gameState.isRushing ? "⚡ PUMP RUSHING (5X)" : "FLOW PRESSURE: " + Math.round(gameState.psi) + " PSI";
-                            }
-                            if (gameState.state === "round_won") {
-                                return "SECTOR CLEARED! PRESS SPACE";
-                            }
-                            if (gameState.state === "game_over") {
-                                return "BOILER BLOWOUT! PRESS SPACE";
-                            }
-                            return "OPERATIONAL";
+                // Full Window Toggle
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "🔲"; font.pixelSize: 10; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.fullPlayfield = false;
+                            soundToast.show("🔲 Standard Windowed View");
                         }
-                        color: (gameState && gameState.state === "countdown") ? "#f59e0b" :
-                               (gameState && gameState.state === "round_won") ? "#10b981" :
-                               (gameState && gameState.state === "game_over") ? "#ef4444" : themeFg
-                        font.family: monoFontFamily
-                        font.pixelSize: 11
-                        font.bold: true
-                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
-            }
 
-            Item { width: 1; height: parent.height }
-
-            // Right Action Buttons: Mute, Full Window, New Game
-            Rectangle {
-                id: muteBtn
-                height: parent.height
-                width: 80
-                color: muteMouse.containsMouse ? "#282c37" : themeCardBg
-                radius: 6
-                border.color: themeBorder
-                border.width: 1
-
-                Text {
-                    anchors.centerIn: parent
-                    text: isMuted ? "🔇 Muted" : "🔊 Sound"
-                    color: isMuted ? themeSubtext : themeFg
-                    font.family: monoFontFamily
-                    font.pixelSize: 11
-                    font.bold: true
-                }
-
-                MouseArea {
-                    id: muteMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: isMuted = !isMuted
-                }
-            }
-
-            Rectangle {
-                id: viewBtn
-                height: parent.height
-                width: 90
-                color: viewMouse.containsMouse ? "#282c37" : themeCardBg
-                radius: 6
-                border.color: themeBorder
-                border.width: 1
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "Full (⇧F)"
-                    color: themeFg
-                    font.family: monoFontFamily
-                    font.pixelSize: 11
-                    font.bold: true
-                }
-
-                MouseArea {
-                    id: viewMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (root.visibility === Window.FullScreen) root.showNormal();
-                        else root.showFullScreen();
+                // Help
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "?"; font.pixelSize: 11; font.bold: true; color: root.themeAccent; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showHelp = !root.showHelp
                     }
                 }
-            }
 
-            Rectangle {
-                id: restartBtn
-                height: parent.height
-                width: 106
-                color: restartMouse.containsMouse ? "#9a3412" : "#c2410c"
-                radius: 6
-                border.color: "#ea580c"
-                border.width: 1
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "New Game (R)"
-                    color: "#ffffff"
-                    font.family: monoFontFamily
-                    font.pixelSize: 11
-                    font.bold: true
+                // Mute
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
                 }
 
-                MouseArea {
-                    id: restartMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: startNewGame(1)
+                // Restart
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    Text { text: "↺"; font.pixelSize: 12; font.bold: true; color: root.themeAccent; anchors.centerIn: parent }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.startNewGame(1)
+                    }
                 }
             }
         }
 
-        // ---------------------------------------------------------------------
-        // TIER 3: PLAYFIELD (Left Hopper Dispenser + Center 10×8 Grid + Gauge)
-        // ---------------------------------------------------------------------
+        // =====================================================================
+        // TIER 3: PLAYFIELD CONTAINER (Left Hopper Dispenser + Center 10×8 Grid)
+        // =====================================================================
         Item {
-            id: playfield
-            anchors.top: subheaderItem.bottom
-            anchors.topMargin: 12
-            anchors.bottom: bottomBar.top
-            anchors.bottomMargin: 10
+            id: playfieldContainer
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 8 : 12
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 14
             anchors.left: parent.left
             anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            x: root.shakeX
+            y: root.shakeY
 
             // 1. LEFT COLUMN: MECHANICAL HOPPER DISPENSER
             Rectangle {
                 id: hopperColumn
                 anchors.left: parent.left
                 anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 140
-                color: themeCardBg
+                anchors.bottom: bottomBar.top
+                anchors.bottomMargin: 10
+                width: 130
+                color: root.themeCardBg
                 radius: 8
-                border.color: themeBorder
+                border.color: root.themeBorder
                 border.width: 1.5
 
                 // Top Hopper Funnel Header
@@ -718,17 +969,17 @@ Window {
                     anchors.top: parent.top
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    height: 38
-                    color: "#181a22"
+                    height: 36
+                    color: root.themeBoardBg
                     radius: 8
 
                     Row {
                         anchors.centerIn: parent
                         spacing: 6
-                        Text { text: "🔩"; font.pixelSize: 14 }
+                        Text { text: "🔩"; font.pixelSize: 13 }
                         Text {
                             text: "NEXT FITTINGS"
-                            color: themeAccent
+                            color: root.themeAccent
                             font.family: monoFontFamily
                             font.pixelSize: 10
                             font.bold: true
@@ -740,9 +991,9 @@ Window {
                 // 5-Slot Pipe Queue
                 Column {
                     anchors.top: hopperHeader.bottom
-                    anchors.topMargin: 10
+                    anchors.topMargin: 8
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 10
+                    anchors.bottomMargin: 8
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: 8
 
@@ -750,11 +1001,11 @@ Window {
                         model: gameState ? gameState.queue : []
 
                         Rectangle {
-                            width: 100
-                            height: Math.min(84, (hopperColumn.height - 70) / 5 - 8)
-                            color: index === 0 ? "#241f17" : "#14151a"
+                            width: 96
+                            height: Math.min(80, (hopperColumn.height - 66) / 5 - 8)
+                            color: index === 0 ? Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.12) : root.themeBoardBg
                             radius: 6
-                            border.color: index === 0 ? themeAccent : themeBorder
+                            border.color: index === 0 ? root.themeAccent : root.themeBorder
                             border.width: index === 0 ? 2 : 1
 
                             // Pipe Sprite Preview
@@ -776,13 +1027,13 @@ Window {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 width: 42
                                 height: 14
-                                color: themeAccent
+                                color: root.themeAccent
                                 radius: 3
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: "NEXT"
-                                    color: "#11111b"
+                                    color: root.themeBtnFg
                                     font.family: monoFontFamily
                                     font.pixelSize: 8
                                     font.bold: true
@@ -800,13 +1051,13 @@ Window {
                 anchors.leftMargin: 12
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                color: themeBoardBg
+                anchors.bottom: bottomBar.top
+                anchors.bottomMargin: 10
+                color: root.themeBoardBg
                 radius: 8
-                border.color: themeBorder
+                border.color: root.themeBorder
                 border.width: 1.5
                 clip: true
-
 
                 // Grid Cells Matrix (10 Cols × 8 Rows)
                 Item {
@@ -854,175 +1105,217 @@ Window {
                                 }
                             }
 
-                            // Interactive Mouse Click to Place Pipe
+                            // Cell Mouse Click Handler
                             MouseArea {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onEntered: {
-                                    cursorR = r;
-                                    cursorC = c;
-                                }
                                 onClicked: {
                                     cursorR = r;
                                     cursorC = c;
                                     if (gameState && (gameState.state === "countdown" || gameState.state === "flowing")) {
                                         if (Engine.placeNextPiece(gameState, r, c)) {
-                                            playSfx("pipe_clank");
+                                            playSound("pipe_clank");
                                             gridRevision++;
                                             gridCanvas.requestPaint();
                                         }
                                     }
                                 }
+                                onEntered: {
+                                    cursorR = r;
+                                    cursorC = c;
+                                }
                             }
                         }
                     }
 
-                    // Dynamic Liquid Overlay Canvas
+                    // Fluid Simulation Overlay Canvas
                     Canvas {
                         id: gridCanvas
                         anchors.fill: parent
+                        renderTarget: Canvas.FramebufferObject
                         renderStrategy: Canvas.Threaded
 
                         onPaint: {
                             var ctx = getContext("2d");
                             ctx.clearRect(0, 0, width, height);
 
-                            if (!gameState) return;
+                            if (!gameState || !gameState.grid) return;
 
                             var cw = gridMatrix.cellW;
                             var ch = gridMatrix.cellH;
 
-                            ctx.lineCap = "round";
-                            ctx.lineJoin = "round";
-
                             for (var r = 0; r < Engine.ROWS; r++) {
                                 for (var c = 0; c < Engine.COLS; c++) {
                                     var cell = gameState.grid[r][c];
-                                    if (!cell || cell.type === "empty" || cell.type === "hazard") continue;
-                                    if (!cell.filled && !cell.isFlowing) continue;
+                                    if (!cell || cell.type === "empty") continue;
 
-                                    var cx = c * cw + cw / 2;
-                                    var cy = r * ch + ch / 2;
-                                    var prog = cell.filled ? 1.0 : cell.fillProgress;
+                                    var cx = c * cw;
+                                    var cy = r * ch;
 
-                                    // Water gradient
-                                    ctx.strokeStyle = "#10b981"; // Vibrant emerald
-                                    ctx.lineWidth = 14;
+                                    if (cell.fillProgress > 0) {
+                                        drawFluidInCell(ctx, cell, cx, cy, cw, ch);
+                                    }
 
-                                    if (cell.type === "pipe_h" || cell.type === "reservoir" || (cell.type === "valve" && cell.exitPort === "E")) {
-                                        var x1 = (cell.entryPort === "W") ? (c * cw) : (c * cw + cw);
-                                        var x2 = (cell.entryPort === "W") ? (c * cw + cw * prog) : (c * cw + cw - cw * prog);
-                                        ctx.beginPath();
-                                        ctx.moveTo(x1, cy);
-                                        ctx.lineTo(x2, cy);
-                                        ctx.stroke();
-
-                                        // Bright Core Stream
-                                        ctx.strokeStyle = "#6ee7b7";
-                                        ctx.lineWidth = 6;
-                                        ctx.beginPath();
-                                        ctx.moveTo(x1, cy);
-                                        ctx.lineTo(x2, cy);
-                                        ctx.stroke();
-                                    } else if (cell.type === "pipe_v") {
-                                        var y1 = (cell.entryPort === "N") ? (r * ch) : (r * ch + ch);
-                                        var y2 = (cell.entryPort === "N") ? (r * ch + ch * prog) : (r * ch + ch - ch * prog);
-                                        ctx.beginPath();
-                                        ctx.moveTo(cx, y1);
-                                        ctx.lineTo(cx, y2);
-                                        ctx.stroke();
-
-                                        ctx.strokeStyle = "#6ee7b7";
-                                        ctx.lineWidth = 6;
-                                        ctx.beginPath();
-                                        ctx.moveTo(cx, y1);
-                                        ctx.lineTo(cx, y2);
-                                        ctx.stroke();
-                                    } else if (cell.type.indexOf("corner_") === 0) {
-                                        // Corner Arc Fluid
-                                        var arcX = 0, arcY = 0, startA = 0, sweepA = 0;
-                                        if (cell.type === "corner_1") { // North <-> East
-                                            arcX = c * cw + cw;
-                                            arcY = r * ch;
-                                            if (cell.entryPort === "N") {
-                                                startA = Math.PI;
-                                                sweepA = -Math.PI / 2;
-                                            } else {
-                                                startA = Math.PI / 2;
-                                                sweepA = Math.PI / 2;
-                                            }
-                                        } else if (cell.type === "corner_2") { // North <-> West
-                                            arcX = c * cw;
-                                            arcY = r * ch;
-                                            if (cell.entryPort === "N") {
-                                                startA = 0;
-                                                sweepA = Math.PI / 2;
-                                            } else {
-                                                startA = Math.PI / 2;
-                                                sweepA = -Math.PI / 2;
-                                            }
-                                        } else if (cell.type === "corner_3") { // South <-> East
-                                            arcX = c * cw + cw;
-                                            arcY = r * ch + ch;
-                                            if (cell.entryPort === "S") {
-                                                startA = Math.PI;
-                                                sweepA = Math.PI / 2;
-                                            } else {
-                                                startA = 1.5 * Math.PI;
-                                                sweepA = -Math.PI / 2;
-                                            }
-                                        } else if (cell.type === "corner_4") { // South <-> West
-                                            arcX = c * cw;
-                                            arcY = r * ch + ch;
-                                            if (cell.entryPort === "S") {
-                                                startA = 0;
-                                                sweepA = -Math.PI / 2;
-                                            } else {
-                                                startA = 1.5 * Math.PI;
-                                                sweepA = Math.PI / 2;
-                                            }
-                                        }
-
-                                        var curEndA = startA + sweepA * prog;
-                                        var isAnticlockwise = sweepA < 0;
-
-                                        ctx.strokeStyle = "#10b981";
-                                        ctx.lineWidth = 14;
-                                        ctx.beginPath();
-                                        ctx.arc(arcX, arcY, cw / 2, startA, curEndA, isAnticlockwise);
-                                        ctx.stroke();
-
-                                        ctx.strokeStyle = "#6ee7b7";
-                                        ctx.lineWidth = 6;
-                                        ctx.beginPath();
-                                        ctx.arc(arcX, arcY, cw / 2, startA, curEndA, isAnticlockwise);
-                                        ctx.stroke();
-                                    } else if (cell.type === "cross") {
-                                        // Cross can be traversed horizontally or vertically
-                                        var isH = (cell.entryPort === "W" || cell.entryPort === "E");
-                                        if (isH) {
-                                            var hx1 = (cell.entryPort === "W") ? (c * cw) : (c * cw + cw);
-                                            var hx2 = (cell.entryPort === "W") ? (c * cw + cw * prog) : (c * cw + cw - cw * prog);
-                                            ctx.beginPath();
-                                            ctx.moveTo(hx1, cy);
-                                            ctx.lineTo(hx2, cy);
-                                            ctx.stroke();
-                                        } else {
-                                            var vy1 = (cell.entryPort === "N") ? (r * ch) : (r * ch + ch);
-                                            var vy2 = (cell.entryPort === "N") ? (r * ch + ch * prog) : (r * ch + ch - ch * prog);
-                                            ctx.beginPath();
-                                            ctx.moveTo(cx, vy1);
-                                            ctx.lineTo(cx, vy2);
-                                            ctx.stroke();
-                                        }
+                                    if (cell.isCross && cell.crossFillProgress > 0) {
+                                        drawCrossSecondPass(ctx, cell, cx, cy, cw, ch);
                                     }
                                 }
                             }
                         }
+
+                        function drawFluidInCell(ctx, cell, cx, cy, cw, ch) {
+                            var p = cell.fillProgress;
+                            var entry = cell.entryPort;
+                            var exit = cell.exitPort;
+
+                            ctx.save();
+                            var grad = ctx.createLinearGradient(cx, cy, cx + cw, cy + ch);
+                            grad.addColorStop(0, "#10b981");
+                            grad.addColorStop(0.5, "#059669");
+                            grad.addColorStop(1, "#34d399");
+
+                            ctx.strokeStyle = grad;
+                            ctx.lineWidth = cw * 0.28;
+                            ctx.lineCap = "round";
+                            ctx.lineJoin = "round";
+
+                            ctx.shadowColor = "#34d399";
+                            ctx.shadowBlur = 8;
+
+                            ctx.beginPath();
+
+                            var midX = cx + cw / 2;
+                            var midY = cy + ch / 2;
+
+                            if (cell.type === "pipe_h") {
+                                if (entry === "W") {
+                                    ctx.moveTo(cx, midY);
+                                    ctx.lineTo(cx + cw * p, midY);
+                                } else {
+                                    ctx.moveTo(cx + cw, midY);
+                                    ctx.lineTo(cx + cw * (1 - p), midY);
+                                }
+                            } else if (cell.type === "pipe_v") {
+                                if (entry === "N") {
+                                    ctx.moveTo(midX, cy);
+                                    ctx.lineTo(midX, cy + ch * p);
+                                } else {
+                                    ctx.moveTo(midX, cy + ch);
+                                    ctx.lineTo(midX, cy + ch * (1 - p));
+                                }
+                            } else if (cell.type === "corner_1") {
+                                if (entry === "N") {
+                                    var startA = Math.PI;
+                                    var endA = Math.PI - (Math.PI / 2) * p;
+                                    ctx.arc(cx + cw, cy, cw / 2, startA, endA, true);
+                                } else {
+                                    var startA = Math.PI / 2;
+                                    var endA = Math.PI / 2 + (Math.PI / 2) * p;
+                                    ctx.arc(cx + cw, cy, cw / 2, startA, endA, false);
+                                }
+                            } else if (cell.type === "corner_2") {
+                                if (entry === "N") {
+                                    var startA = 0;
+                                    var endA = (Math.PI / 2) * p;
+                                    ctx.arc(cx, cy, cw / 2, startA, endA, false);
+                                } else {
+                                    var startA = Math.PI / 2;
+                                    var endA = Math.PI / 2 - (Math.PI / 2) * p;
+                                    ctx.arc(cx, cy, cw / 2, startA, endA, true);
+                                }
+                            } else if (cell.type === "corner_3") {
+                                if (entry === "S") {
+                                    var startA = 0;
+                                    var endA = - (Math.PI / 2) * p;
+                                    ctx.arc(cx, cy + ch, cw / 2, startA, endA, true);
+                                } else {
+                                    var startA = - Math.PI / 2;
+                                    var endA = - Math.PI / 2 + (Math.PI / 2) * p;
+                                    ctx.arc(cx, cy + ch, cw / 2, startA, endA, false);
+                                }
+                            } else if (cell.type === "corner_4") {
+                                if (entry === "S") {
+                                    var startA = Math.PI;
+                                    var endA = Math.PI + (Math.PI / 2) * p;
+                                    ctx.arc(cx + cw, cy + ch, cw / 2, startA, endA, false);
+                                } else {
+                                    var startA = - Math.PI / 2;
+                                    var endA = - Math.PI / 2 - (Math.PI / 2) * p;
+                                    ctx.arc(cx + cw, cy + ch, cw / 2, startA, endA, true);
+                                }
+                            } else if (cell.type === "cross") {
+                                if (entry === "W") {
+                                    ctx.moveTo(cx, midY);
+                                    ctx.lineTo(cx + cw * p, midY);
+                                } else if (entry === "E") {
+                                    ctx.moveTo(cx + cw, midY);
+                                    ctx.lineTo(cx + cw * (1 - p), midY);
+                                } else if (entry === "N") {
+                                    ctx.moveTo(midX, cy);
+                                    ctx.lineTo(midX, cy + ch * p);
+                                } else {
+                                    ctx.moveTo(midX, cy + ch);
+                                    ctx.lineTo(midX, cy + ch * (1 - p));
+                                }
+                            } else if (cell.type === "reservoir") {
+                                ctx.arc(midX, midY, (cw * 0.35) * Math.min(1.0, p * 1.5), 0, Math.PI * 2);
+                            }
+
+                            ctx.stroke();
+
+                            // Bright flowing core stream
+                            ctx.lineWidth = cw * 0.12;
+                            ctx.strokeStyle = "#a7f3d0";
+                            ctx.shadowBlur = 0;
+                            ctx.stroke();
+
+                            ctx.restore();
+                        }
+
+                        function drawCrossSecondPass(ctx, cell, cx, cy, cw, ch) {
+                            var p = cell.crossFillProgress;
+                            var entry = cell.crossEntryPort;
+
+                            ctx.save();
+                            var grad = ctx.createLinearGradient(cx, cy, cx + cw, cy + ch);
+                            grad.addColorStop(0, "#06b6d4");
+                            grad.addColorStop(1, "#22d3ee");
+
+                            ctx.strokeStyle = grad;
+                            ctx.lineWidth = cw * 0.28;
+                            ctx.lineCap = "round";
+                            ctx.shadowColor = "#22d3ee";
+                            ctx.shadowBlur = 8;
+
+                            ctx.beginPath();
+                            var midX = cx + cw / 2;
+                            var midY = cy + ch / 2;
+
+                            if (entry === "W") {
+                                ctx.moveTo(cx, midY);
+                                ctx.lineTo(cx + cw * p, midY);
+                            } else if (entry === "E") {
+                                ctx.moveTo(cx + cw, midY);
+                                ctx.lineTo(cx + cw * (1 - p), midY);
+                            } else if (entry === "N") {
+                                ctx.moveTo(midX, cy);
+                                ctx.lineTo(midX, cy + ch * p);
+                            } else {
+                                ctx.moveTo(midX, cy + ch);
+                                ctx.lineTo(midX, cy + ch * (1 - p));
+                            }
+                            ctx.stroke();
+
+                            ctx.lineWidth = cw * 0.12;
+                            ctx.strokeStyle = "#cffafe";
+                            ctx.stroke();
+
+                            ctx.restore();
+                        }
                     }
 
-                    // Keyboard / Mouse Cursor Reticle
+                    // Reticle Cursor for Keyboard Nav
                     Rectangle {
                         id: cursorReticle
                         x: cursorC * gridMatrix.cellW
@@ -1030,366 +1323,313 @@ Window {
                         width: gridMatrix.cellW
                         height: gridMatrix.cellH
                         color: "transparent"
-                        border.color: themeAccent
+                        border.color: root.themeAccent
                         border.width: 2.5
                         radius: 4
+                        z: 50
 
-                        // Brass Corner Accents
-                        Rectangle { anchors.top: parent.top; anchors.left: parent.left; width: 6; height: 6; color: themeAccent }
-                        Rectangle { anchors.top: parent.top; anchors.right: parent.right; width: 6; height: 6; color: themeAccent }
-                        Rectangle { anchors.bottom: parent.bottom; anchors.left: parent.left; width: 6; height: 6; color: themeAccent }
-                        Rectangle { anchors.bottom: parent.bottom; anchors.right: parent.right; width: 6; height: 6; color: themeAccent }
+                        Behavior on x { NumberAnimation { duration: 50 } }
+                        Behavior on y { NumberAnimation { duration: 50 } }
 
-                        Behavior on x { NumberAnimation { duration: 60 } }
-                        Behavior on y { NumberAnimation { duration: 60 } }
+                        // Subtle corner rivets for steampunk feel
+                        Rectangle { width: 4; height: 4; radius: 2; color: root.themeAccent; x: 2; y: 2 }
+                        Rectangle { width: 4; height: 4; radius: 2; color: root.themeAccent; x: parent.width - 6; y: 2 }
+                        Rectangle { width: 4; height: 4; radius: 2; color: root.themeAccent; x: 2; y: parent.height - 6 }
+                        Rectangle { width: 4; height: 4; radius: 2; color: root.themeAccent; x: parent.width - 6; y: parent.height - 6 }
                     }
                 }
             }
-        }
 
-        // ---------------------------------------------------------------------
-        // TIER 4: BOTTOM ACTION BAR (Template Standard: Quick Actions & Status)
-        // ---------------------------------------------------------------------
-        Row {
-            id: bottomBar
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: 44
-            spacing: 12
-
-            // Fast-Forward Rush Pump Button
+            // 3. BOTTOM BAR: Rush Pump Trigger & Keyboard Control Hints
             Rectangle {
-                id: rushBtn
-                width: 220
-                height: parent.height
-                color: (gameState && gameState.isRushing) ? "#b91c1c" : (rushMouse.containsMouse ? "#ea580c" : "#c2410c")
+                id: bottomBar
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 44
+                color: root.themeCardBg
                 radius: 8
-                border.color: "#f97316"
-                border.width: 1.5
+                border.color: root.themeBorder
+                border.width: 1
 
                 Row {
-                    anchors.centerIn: parent
-                    spacing: 8
-                    Text { text: "⚡"; font.pixelSize: 16; anchors.verticalCenter: parent.verticalCenter }
+                    anchors.left: parent.left
+                    anchors.leftMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 12
+
+                    // Rush Pump Button
+                    Rectangle {
+                        id: rushBtn
+                        width: 170
+                        height: 32
+                        color: (gameState && gameState.isRushing) ? "#b91c1c" : (rushMouse.containsMouse ? "#ea580c" : root.themeAccent)
+                        radius: 6
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 6
+                            Text { text: "⚡"; font.pixelSize: 13 }
+                            Text {
+                                text: (gameState && gameState.isRushing) ? "RUSHING 5X!" : "RUSH PUMP (SPACE)"
+                                color: root.themeBtnFg
+                                font.family: monoFontFamily
+                                font.pixelSize: 10
+                                font.bold: true
+                            }
+                        }
+
+                        MouseArea {
+                            id: rushMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onPressed: {
+                                if (gameState && gameState.state === "flowing") {
+                                    gameState.isRushing = true;
+                                    playSound("rush");
+                                }
+                            }
+                            onReleased: {
+                                if (gameState) gameState.isRushing = false;
+                            }
+                        }
+                    }
+
+                    // Keyboard shortcuts reminder
                     Text {
-                        text: "RUSH PUMP (SPACE)"
-                        color: "#ffffff"
+                        text: "⌨️ Move: Arrows / WASD / Vim HJKL  •  Place: Enter / Click  •  Restart: R  •  Help: ?"
+                        color: root.themeSubtext
                         font.family: monoFontFamily
-                        font.pixelSize: 12
-                        font.bold: true
+                        font.pixelSize: 10
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
 
-                MouseArea {
-                    id: rushMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onPressed: {
-                        if (gameState) {
-                            gameState.isRushing = true;
-                            playSfx("rush");
-                        }
-                    }
-                    onReleased: {
-                        if (gameState) gameState.isRushing = false;
-                    }
-                }
-            }
-
-            // Keyboard hints
-            Rectangle {
-                width: parent.width - 220 - 180 - 12
-                height: parent.height
-                color: themeCardBg
-                radius: 8
-                border.color: themeBorder
-                border.width: 1
-
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 14
+                // Sector Badge on Right
+                Rectangle {
+                    anchors.right: parent.right
+                    anchors.rightMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 26
+                    width: sectorText.implicitWidth + 18
+                    color: root.themeBoardBg
+                    radius: 4
+                    border.color: root.themeBorder
+                    border.width: 1
 
                     Text {
-                        text: "🎮 Move: Arrows / HJKL / WASD"
-                        color: themeSubtext
+                        id: sectorText
+                        anchors.centerIn: parent
+                        text: "SECTOR " + root.currentLevel
+                        color: root.themeAccent
                         font.family: monoFontFamily
                         font.pixelSize: 10
                         font.bold: true
-                    }
-                    Text {
-                        text: "• Place: Enter / Click"
-                        color: themeSubtext
-                        font.family: monoFontFamily
-                        font.pixelSize: 10
-                        font.bold: true
-                    }
-                    Text {
-                        text: "• Fast-Forward: Hold Space"
-                        color: themeSubtext
-                        font.family: monoFontFamily
-                        font.pixelSize: 10
-                        font.bold: true
-                    }
-                }
-            }
-
-            // Sector / Round Badge
-            Rectangle {
-                width: 180
-                height: parent.height
-                color: themeCardBg
-                radius: 8
-                border.color: themeAccent
-                border.width: 1.5
-
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 6
-
-                    Text { text: "🏭"; font.pixelSize: 14 }
-                    Text {
-                        text: "SECTOR " + (currentLevel < 10 ? "0" + currentLevel : currentLevel)
-                        color: themeAccent
-                        font.family: monoFontFamily
-                        font.pixelSize: 12
-                        font.bold: true
-                        font.letterSpacing: 1
                     }
                 }
             }
         }
-    }
 
-    // =========================================================================
-    // STANDARD ARCADE HELP MODAL
-    // =========================================================================
-    Rectangle {
-        id: helpModal
-        visible: showHelpModal
-        anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.75)
-        z: 100
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: showHelpModal = false
-        }
-
+        // =====================================================================
+        // MODALS & OVERLAYS (Help, Game Over, Sound Toast)
+        // =====================================================================
+        // Help Modal (Canonical Omarchy Template Standard)
         Rectangle {
-            width: Math.min(540, parent.width - 40)
-            height: Math.min(480, parent.height - 40)
-            anchors.centerIn: parent
-            color: themeCardBg
-            radius: 12
-            border.color: themeAccent
-            border.width: 2
+            id: helpModal
+            anchors.fill: parent
+            color: "#b3000000"
+            visible: root.showHelp
+            z: 900
 
-            Column {
+            MouseArea {
                 anchors.fill: parent
-                anchors.margins: 24
-                spacing: 16
+                onClicked: root.showHelp = false
+            }
 
-                // Modal Header
-                Row {
-                    width: parent.width
+            Rectangle {
+                width: Math.min(parent.width * 0.90, 520)
+                height: helpCol.height + 40
+                anchors.centerIn: parent
+                color: root.themeCardBg
+                border.color: root.themeBorder
+                border.width: 1
+                radius: 12
+
+                Column {
+                    id: helpCol
+                    anchors.centerIn: parent
+                    width: parent.width - 40
+                    spacing: 12
+
                     Text {
-                        text: "HOW TO PLAY • PIPE PUNK"
-                        color: themeAccent
-                        font.family: monoFontFamily
+                        text: "HOW TO PLAY"
                         font.pixelSize: 16
                         font.bold: true
-                        font.letterSpacing: 1
+                        color: root.themeAccent
+                        anchors.horizontalCenter: parent.horizontalCenter
                     }
-                    Item { width: parent.width - 240 - 24; height: 1 }
+
                     Text {
-                        text: "✕"
-                        color: themeSubtext
-                        font.pixelSize: 16
-                        font.bold: true
+                        text: root.helpText
+                        font.pixelSize: 12
+                        color: root.themeFg
+                        lineHeight: 1.4
+                        width: parent.width
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Rectangle {
+                        width: 120
+                        height: 32
+                        radius: 6
+                        color: root.themeAccent
+                        anchors.horizontalCenter: parent.horizontalCenter
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "GOT IT"
+                            font.bold: true
+                            font.pixelSize: 11
+                            color: root.themeBtnFg
+                        }
+
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: showHelpModal = false
+                            onClicked: root.showHelp = false
+                        }
+                    }
+
+                    Text {
+                        text: "Created by Chris Thompson (@bigcjat) with Gemini"
+                        font.pixelSize: 9
+                        color: root.themeSubtext
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        opacity: 0.75
+                    }
+                }
+            }
+        }
+
+        // Standardized Game Over / Level Clear Overlay
+        Rectangle {
+            id: gameOverOverlay
+            anchors.fill: parent
+            color: "#b3000000"
+            visible: gameState && (gameState.state === "game_over" || gameState.state === "round_won")
+            z: 950
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (gameState.state === "round_won") root.advanceToNextLevel();
+                    else root.startNewGame(1);
+                }
+            }
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 14
+
+                Text {
+                    text: gameState ? (gameState.state === "round_won" ? "SECTOR CLEARED!" : "BOILER BLOWOUT!") : ""
+                    color: gameState && gameState.state === "round_won" ? "#10b981" : "#ef4444"
+                    font.pixelSize: 28
+                    font.bold: true
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+
+                Text {
+                    text: gameState ? (gameState.state === "round_won" ?
+                          ("Pipes Used: " + gameState.traversedCount + " / " + gameState.quota + "  •  Score: " + root.score) :
+                          ("Pipes Routed: " + gameState.traversedCount + " (Required " + gameState.quota + ")  •  Final Score: " + root.score)) : ""
+                    color: root.themeFg
+                    font.pixelSize: 15
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+
+                Rectangle {
+                    width: 140
+                    height: 40
+                    radius: 8
+                    color: playAgainMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+                    anchors.horizontalCenter: parent.horizontalCenter
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: gameState && gameState.state === "round_won" ? "NEXT SECTOR" : "PLAY AGAIN"
+                        color: root.themeBtnFg
+                        font.bold: true
+                        font.pixelSize: 12
+                    }
+
+                    MouseArea {
+                        id: playAgainMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (gameState.state === "round_won") root.advanceToNextLevel();
+                            else root.startNewGame(1);
                         }
                     }
                 }
 
-                Rectangle { width: parent.width; height: 1; color: themeBorder }
-
-                // Rules
-                Column {
-                    width: parent.width
-                    spacing: 8
-
-                    Text {
-                        width: parent.width
-                        text: "• Route the pressurized boiler water from the starting valve across the grid without letting it spill."
-                        color: themeFg
-                        font.family: monoFontFamily
-                        font.pixelSize: 11
-                        wrapMode: Text.Wrap
-                    }
-                    Text {
-                        width: parent.width
-                        text: "• Connect matching pipe ends (Horizontal, Vertical, Corners, Cross, and Delay Reservoirs)."
-                        color: themeFg
-                        font.family: monoFontFamily
-                        font.pixelSize: 11
-                        wrapMode: Text.Wrap
-                    }
-                    Text {
-                        width: parent.width
-                        text: "• Cross Junctions can be traversed TWICE (horizontally and vertically) for +500 bonus points!"
-                        color: themeFg
-                        font.family: monoFontFamily
-                        font.pixelSize: 11
-                        wrapMode: Text.Wrap
-                    }
-                    Text {
-                        width: parent.width
-                        text: "• Meet or exceed the sector's PIPE QUOTA to qualify for the next level."
-                        color: themeFg
-                        font.family: monoFontFamily
-                        font.pixelSize: 11
-                        wrapMode: Text.Wrap
-                    }
-                    Text {
-                        width: parent.width
-                        text: "• Hold SPACE to rush the pump at 5× speed when your pipeline is secure for massive score multipliers."
-                        color: themeFg
-                        font.family: monoFontFamily
-                        font.pixelSize: 11
-                        wrapMode: Text.Wrap
-                    }
-                }
-
-                Rectangle { width: parent.width; height: 1; color: themeBorder }
-
-                // Controls Cheatsheet
-                Column {
-                    width: parent.width
-                    spacing: 4
-
-                    Text {
-                        text: "KEYBOARD CONTROLS"
-                        color: themeAccent
-                        font.family: monoFontFamily
-                        font.pixelSize: 10
-                        font.bold: true
-                    }
-                    Text {
-                        text: "• Move Cursor: Arrows / WASD / Vim (H, J, K, L)"
-                        color: themeSubtext
-                        font.family: monoFontFamily
-                        font.pixelSize: 10
-                    }
-                    Text {
-                        text: "• Place Pipe: Enter or Left Mouse Click"
-                        color: themeSubtext
-                        font.family: monoFontFamily
-                        font.pixelSize: 10
-                    }
-                    Text {
-                        text: "• Rush Pump: Hold Space"
-                        color: themeSubtext
-                        font.family: monoFontFamily
-                        font.pixelSize: 10
-                    }
-                    Text {
-                        text: "• New Game: R  |  Mute: M  |  Full Window: Shift+F"
-                        color: themeSubtext
-                        font.family: monoFontFamily
-                        font.pixelSize: 10
-                    }
-                }
-
-                Rectangle {
+                Text {
+                    text: "Or press Space / Enter / R"
+                    color: root.themeSubtext
+                    font.pixelSize: 11
                     anchors.horizontalCenter: parent.horizontalCenter
-                    width: 140
-                    height: 36
-                    color: themeAccent
-                    radius: 6
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "GOT IT"
-                        color: "#11111b"
-                        font.family: monoFontFamily
-                        font.pixelSize: 12
-                        font.bold: true
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: showHelpModal = false
-                    }
                 }
+            }
+        }
+
+        // Sound Toast
+        Rectangle {
+            id: soundToast
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: subheaderItem.bottom
+            anchors.topMargin: 16
+            width: toastText.implicitWidth + 24
+            height: 28
+            radius: 14
+            color: root.themeCardBg
+            border.color: root.themeBorder
+            border.width: 1
+            opacity: 0
+            z: 800
+
+            Text {
+                id: toastText
+                anchors.centerIn: parent
+                font.pixelSize: 11
+                font.bold: true
+                color: root.themeFg
+            }
+
+            function show(msg) {
+                toastText.text = msg;
+                toastAnim.restart();
+            }
+
+            SequentialAnimation {
+                id: toastAnim
+                NumberAnimation { target: soundToast; property: "opacity"; from: 0; to: 1; duration: 150 }
+                PauseAnimation { duration: 900 }
+                NumberAnimation { target: soundToast; property: "opacity"; from: 1; to: 0; duration: 250 }
             }
         }
     }
 
     // =========================================================================
-    // STARTUP RETRO SPLASH
+    // CANONICAL OMARCHY ARCADE SPLASH SCREEN
     // =========================================================================
-    Rectangle {
+    SplashScreen {
         id: splashScreen
-        visible: splashActive
         anchors.fill: parent
-        color: "#0a0c10"
-        z: 200
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: splashActive = false
-        }
-
-        Column {
-            anchors.centerIn: parent
-            spacing: 12
-
-            Text {
-                text: "⚙️"
-                font.pixelSize: 48
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-
-            Text {
-                text: "PIPE PUNK"
-                color: themeAccent
-                font.family: monoFontFamily
-                font.pixelSize: 32
-                font.bold: true
-                font.letterSpacing: 4
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-
-            Text {
-                text: "OMARCHY ARCADE • SUITE NO. 38"
-                color: themeSubtext
-                font.family: monoFontFamily
-                font.pixelSize: 11
-                font.bold: true
-                font.letterSpacing: 2
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-
-            Text {
-                text: "Press any key to start"
-                color: Qt.rgba(1, 1, 1, 0.4)
-                font.family: monoFontFamily
-                font.pixelSize: 10
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-        }
-
-        Timer {
-            interval: 900
-            running: splashActive
-            onTriggered: splashActive = false
-        }
+        visible: root.splashEnabled && opacity > 0
+        z: 1000
     }
 }
