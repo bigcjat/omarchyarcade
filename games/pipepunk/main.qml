@@ -82,6 +82,7 @@ Window {
 
     property string helpText: "• Objective: Route pressurized municipal water from the starting valve across the grid without letting it spill.\n\n" +
                               "• Pipe Connections: Place upcoming pipe fittings (straight, corners, cross) from the vertical dispenser hopper onto the grid.\n\n" +
+                              "• Pre-Placed Pipes: Each round spawns 6–12 pre-placed pipes! Moveable copper pipes can be replaced (-50 pts). Permanent cast iron pipes (starting in Round 2, +1 per round) are bolted down and unchangeable!\n\n" +
                               "• Quota Requirement: Meet or exceed the sector's required pipe quota before the chemical stream reaches an open pipe end.\n\n" +
                               "• Cross Bonus: Cross pieces can be traversed TWICE (both horizontally and vertically) for +500 bonus points!\n\n" +
                               "• Rush Pump: Hold SPACE to rush the pump at 5× speed once your pipeline is safely connected for massive score multipliers and high pressure.\n\n" +
@@ -1593,7 +1594,7 @@ Window {
                             width: gridMatrix.cellW
                             height: gridMatrix.cellH
 
-                            // Placed Pipe Fitting
+                            // Placed Pipe Fitting (Copper standard, Dark Cast Iron for permanent unchangeable pieces)
                             Image {
                                 id: pipeSprite
                                 anchors.fill: parent
@@ -1604,6 +1605,9 @@ Window {
                                     if (gridRevision < 0 || !gameState || !gameState.grid) return "";
                                     var cell = gameState.grid[r][c];
                                     if (!cell || cell.type === "empty") return "";
+                                    if (cell.isPermanent && cell.type !== "valve") {
+                                        return "assets/" + cell.type + "_iron.png";
+                                    }
                                     return "assets/" + cell.type + ".png";
                                 }
                             }
@@ -1612,7 +1616,14 @@ Window {
                             MouseArea {
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
+                                cursorShape: {
+                                    if (!gameState || !gameState.grid) return Qt.PointingHandCursor;
+                                    var cell = gameState.grid[r][c];
+                                    if (cell && (cell.isPermanent || cell.hazard || cell.type === "hazard" || cell.type === "valve" || cell.filled || cell.isFlowing)) {
+                                        return Qt.ForbiddenCursor;
+                                    }
+                                    return Qt.PointingHandCursor;
+                                }
                                 onClicked: {
                                     cursorR = r;
                                     cursorC = c;
@@ -1733,7 +1744,14 @@ Window {
                         width: gridMatrix.cellW
                         height: gridMatrix.cellH
                         color: "transparent"
-                        border.color: root.themeAccent
+                        readonly property bool isCellLocked: {
+                            if (gridRevision < 0 || !gameState || !gameState.grid) return false;
+                            var row = gameState.grid[cursorR];
+                            if (!row) return false;
+                            var cell = row[cursorC];
+                            return cell && (cell.isPermanent || cell.hazard || cell.type === "hazard" || cell.type === "valve" || cell.filled || cell.isFlowing);
+                        }
+                        border.color: isCellLocked ? "#e74c3c" : root.themeAccent
                         border.width: 2.5
                         radius: 4
                         z: 50
@@ -1742,10 +1760,10 @@ Window {
                         Behavior on y { NumberAnimation { duration: 50 } }
 
                         // Subtle corner rivets for steampunk feel
-                        Rectangle { width: 4; height: 4; radius: 2; color: root.themeAccent; x: 2; y: 2 }
-                        Rectangle { width: 4; height: 4; radius: 2; color: root.themeAccent; x: parent.width - 6; y: 2 }
-                        Rectangle { width: 4; height: 4; radius: 2; color: root.themeAccent; x: 2; y: parent.height - 6 }
-                        Rectangle { width: 4; height: 4; radius: 2; color: root.themeAccent; x: parent.width - 6; y: parent.height - 6 }
+                        Rectangle { width: 4; height: 4; radius: 2; color: cursorReticle.border.color; x: 2; y: 2 }
+                        Rectangle { width: 4; height: 4; radius: 2; color: cursorReticle.border.color; x: parent.width - 6; y: 2 }
+                        Rectangle { width: 4; height: 4; radius: 2; color: cursorReticle.border.color; x: 2; y: parent.height - 6 }
+                        Rectangle { width: 4; height: 4; radius: 2; color: cursorReticle.border.color; x: parent.width - 6; y: parent.height - 6 }
                     }
                 }
             }

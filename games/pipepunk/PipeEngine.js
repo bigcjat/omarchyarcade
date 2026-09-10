@@ -53,6 +53,85 @@ function getRandomPiece() {
     return "pipe_h";
 }
 
+function isValidPreplacedPipe(grid, r, c, pieceType, isIron, valveRow, valveCol) {
+    if (grid[r][c].type !== "empty") return false;
+    if (r === valveRow && c === valveCol + 1) return false;
+    
+    var ports = CONNECTIONS[pieceType] || [];
+    
+    // 1. Ports cannot point into outer walls, hazards, or valve
+    for (var p = 0; p < ports.length; p++) {
+        var port = ports[p];
+        var nr = r + DELTAS[port].r;
+        var nc = c + DELTAS[port].c;
+        if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) return false; // Outer wall deadend
+        var nCell = grid[nr][nc];
+        if (nCell.type === "hazard" || nCell.type === "valve") return false; // Hazard or valve deadend
+    }
+    
+    // 2. Neighbor checks:
+    // Unchangeable pipes cannot make deadends into other pipes or walls, but CAN link together
+    var ALL_DIRS = ["N", "S", "E", "W"];
+    for (var d = 0; d < ALL_DIRS.length; d++) {
+        var dir = ALL_DIRS[d];
+        var nr = r + DELTAS[dir].r;
+        var nc = c + DELTAS[dir].c;
+        if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
+        var nCell = grid[nr][nc];
+        if (nCell.type === "empty" || nCell.type === "hazard" || nCell.type === "valve") continue;
+        
+        var opp = OPPOSITE_PORT[dir];
+        var nPorts = CONNECTIONS[nCell.type] || [];
+        var nPointsToMe = (nPorts.indexOf(opp) !== -1);
+        var mePointsToN = (ports.indexOf(dir) !== -1);
+        
+        // If either this piece or neighbor is an unchangeable iron pipe,
+        // they must link together cleanly if facing each other, and cannot point into casing
+        if (isIron || nCell.isPermanent) {
+            if (nPointsToMe !== mePointsToN) return false;
+        }
+    }
+    
+    // 3. If placing iron pipe, cluster open-ports check (connected iron pipes must have >= 2 open exits)
+    if (isIron) {
+        var oldCell = grid[r][c];
+        grid[r][c] = { type: pieceType, isPermanent: true };
+        
+        var queue = [{r: r, c: c}];
+        var visited = {};
+        visited[r + "," + c] = true;
+        var openPorts = 0;
+        
+        while (queue.length > 0) {
+            var curr = queue.shift();
+            var cType = grid[curr.r][curr.c].type;
+            var cPorts = CONNECTIONS[cType] || [];
+            
+            for (var pi = 0; pi < cPorts.length; pi++) {
+                var pDir = cPorts[pi];
+                var cnr = curr.r + DELTAS[pDir].r;
+                var cnc = curr.c + DELTAS[pDir].c;
+                if (cnr < 0 || cnr >= ROWS || cnc < 0 || cnc >= COLS) continue;
+                var cNeighbor = grid[cnr][cnc];
+                if (cNeighbor.isPermanent && cNeighbor.type !== "valve" && cNeighbor.type !== "empty") {
+                    var key = cnr + "," + cnc;
+                    if (!visited[key]) {
+                        visited[key] = true;
+                        queue.push({r: cnr, c: cnc});
+                    }
+                } else if (cNeighbor.type === "empty") {
+                    openPorts++;
+                }
+            }
+        }
+        
+        grid[r][c] = oldCell;
+        if (openPorts < 2) return false;
+    }
+    
+    return true;
+}
+
 function createGameState(level) {
     level = level || 1;
     var quota = 5 + (level - 1) * 3; // L1: 5, L2: 8, L3: 11, L4: 14...
@@ -73,22 +152,11 @@ function createGameState(level) {
                 isSecondPass: false,
                 crossFillProgress: 0.0,
                 crossEntryPort: "",
-                crossExitPort: ""
+                crossExitPort: "",
+                isPermanent: false
             });
         }
         grid.push(row);
-    }
-    
-    // Add boiler hazard blocks for higher levels
-    var hazardCount = Math.min(6, Math.max(0, level - 2));
-    var placedHazards = 0;
-    while (placedHazards < hazardCount) {
-        var hr = Math.floor(Math.random() * (ROWS - 2)) + 1;
-        var hc = Math.floor(Math.random() * (COLS - 4)) + 2;
-        if (grid[hr][hc].type === "empty") {
-            grid[hr][hc].type = "hazard";
-            placedHazards++;
-        }
     }
     
     // Place starting Valve on left border pointing East
@@ -101,8 +169,85 @@ function createGameState(level) {
         entryPort: "W",
         exitPort: "E",
         crossPasses: 0,
-        isFlowing: false
+        isFlowing: false,
+        isPermanent: true
     };
+
+    // Add boiler hazard blocks for higher levels (never at valve or valve exit cell)
+    var hazardCount = Math.min(6, Math.max(0, level - 2));
+    var placedHazards = 0;
+    var hAttempts = 0;
+    while (placedHazards < hazardCount && hAttempts < 200) {
+        hAttempts++;
+        var hr = Math.floor(Math.random() * (ROWS - 2)) + 1;
+        var hc = Math.floor(Math.random() * (COLS - 4)) + 2;
+        if (hr === valveRow && (hc === valveCol || hc === valveCol + 1)) continue;
+        if (grid[hr][hc].type === "empty") {
+            grid[hr][hc].type = "hazard";
+            placedHazards++;
+        }
+    }
+
+    // Pre-placed pipe pieces (6 to 12 total pieces on every level)
+    // Starting in round 2, 1 is unchangeable cast iron, increasing by 1 every round (max 12 total)
+    // Unchangeable pipes can link together but never make deadends into walls or other pipes!
+    var totalPreplaced = 6 + Math.floor(Math.random() * 7); // Random 6 to 12
+    var unmoveableCount = Math.min(totalPreplaced, Math.max(0, level - 1));
+    
+    // Phase 1: Place unmoveable cast iron pipes
+    var ironPlaced = 0;
+    var attempts = 0;
+    while (ironPlaced < unmoveableCount && attempts < 1000) {
+        attempts++;
+        var pr = Math.floor(Math.random() * ROWS);
+        var pc = Math.floor(Math.random() * COLS);
+        var pType = getRandomPiece();
+        if (isValidPreplacedPipe(grid, pr, pc, pType, true, valveRow, valveCol)) {
+            grid[pr][pc] = {
+                type: pType,
+                filled: false,
+                fillProgress: 0.0,
+                entryPort: "",
+                exitPort: "",
+                crossPasses: 0,
+                isFlowing: false,
+                isSecondPass: false,
+                crossFillProgress: 0.0,
+                crossEntryPort: "",
+                crossExitPort: "",
+                isPermanent: true
+            };
+            ironPlaced++;
+        }
+    }
+    
+    // Phase 2: Place moveable copper pipes to reach totalPreplaced
+    var copperPlaced = 0;
+    var copperTarget = totalPreplaced - ironPlaced;
+    attempts = 0;
+    while (copperPlaced < copperTarget && attempts < 1000) {
+        attempts++;
+        var pr = Math.floor(Math.random() * ROWS);
+        var pc = Math.floor(Math.random() * COLS);
+        var pType = getRandomPiece();
+        if (isValidPreplacedPipe(grid, pr, pc, pType, false, valveRow, valveCol)) {
+            grid[pr][pc] = {
+                type: pType,
+                filled: false,
+                fillProgress: 0.0,
+                entryPort: "",
+                exitPort: "",
+                crossPasses: 0,
+                isFlowing: false,
+                isSecondPass: false,
+                crossFillProgress: 0.0,
+                crossEntryPort: "",
+                crossExitPort: "",
+                isPermanent: false
+            };
+            copperPlaced++;
+        }
+    }
     
     // Initial 5-piece queue (guarantee first piece connects to East-facing valve)
     var queue = [];
@@ -147,7 +292,8 @@ function placeNextPiece(game, r, c) {
     var cell = game.grid[r][c];
     
     // Can only place on empty cells or un-filled pipes (replacing costs 50 pts)
-    if (cell.type === "hazard" || cell.type === "valve" || cell.filled || cell.isFlowing) {
+    // Permanent/iron pipes, hazards, valves, and filled/flowing pipes cannot be replaced
+    if (cell.type === "hazard" || cell.type === "valve" || cell.filled || cell.isFlowing || cell.isPermanent) {
         return false;
     }
     
