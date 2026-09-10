@@ -10,7 +10,9 @@ Inspired by Lucasfilm's 1989 classic *Pipe Mania* / *Pipe Dream*, redesigned wit
 
 ## Features
 
-* **Authentic Steampunk Plumbing:** Modular brushed copper pipes with cast-iron flange couplings, brass hex rivets, and dark riveted boiler plates.
+* **Authentic Steampunk Plumbing:** Modular brushed copper pipes alongside heavy dark cast-iron flange couplings, silver/brass hex rivets, and dark riveted boiler plates.
+* **Pre-Placed & Cast-Iron Pipe Hazards:** Every sector starts with 6–12 pre-placed pipe fittings on the board. Changeable copper pipes can be replaced (-50 pts), while bolted cast-iron pipes (starting with 1 in Sector 2, +1 every round, max 12) are permanent obstacles!
+* **Guaranteed Routing & Deadend Avoidance:** Smart board generation ensures unchangeable cast-iron pipes never point into outer walls, boiler hazards, or the starting valve. Adjacent iron pipes link together cleanly without dead-ending into pipe casings.
 * **Cutaway Glass Fluid Dynamics:** Real-time bubbling emerald reservoir fluid flowing through straight pipes and radial elbow curves.
 * **Quivering Analog Pressure Gauge:** High-precision circular brass dial with a real-time quivering needle that surges into the red zone as boiler pressure builds.
 * **Mechanical Next-Pieces Hopper:** Vertical 5-slot dispenser hopper on the left with tactile copper fittings.
@@ -19,7 +21,7 @@ Inspired by Lucasfilm's 1989 classic *Pipe Mania* / *Pipe Dream*, redesigned wit
 * **Delay Reservoirs & Sector Hazards:** Higher sectors introduce brass expansion bulbs that buy valuable time, alongside impassable rusted boiler grates.
 * **100% True Offline Play:** Zero network requests, zero telemetry, zero ads, zero DRM. Plays completely offline forever.
 * **Dynamic Omarchy Theming:** Live hot-reloading synchronizing with all 22 Omarchy desktop themes (`colors.toml`).
-* **Ultra-Lean Floppy Disk Footprint:** Entire game package is **737 KB**, leaving ~700 KB free on a standard 1.44 MB floppy diskette!
+* **Ultra-Lean Floppy Disk Footprint:** Entire game package is **1.1 MB**, fitting on a standard 1.44 MB 3.5" floppy diskette!
 
 ---
 

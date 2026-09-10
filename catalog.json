@@ -1393,10 +1393,10 @@
       "tagline": "Steampunk Victorian Municipal Boiler Pipe Routing Puzzle",
       "description": "Route pressurized boiling reservoir water through Victorian municipal plumbing before pressure blows the boiler line. Place modular copper and cast-iron pipe fittings, navigate obstacles, and rush the pump to survive escalating sector quotas.",
       "instructions": [
-        "Place upcoming pipe fittings from the hopper onto the grid to form an unbroken pipeline.",
-        "The pressurized boiler valve opens after a 10-second countdown, sending emerald water down the line.",
-        "Cross Junctions can be traversed twice (horizontal and vertical) for big score multipliers.",
-        "Meet or exceed the sector's pipe quota to qualify for the next level. Hold Space to rush the flow."
+        "Each sector features 6–12 pre-installed pipe fittings: moveable copper pipes can be replaced (-50 pts), while bolted cast-iron pipes (starting in Sector 2) are permanent!",
+        "Place upcoming pipe fittings from the hopper onto the grid to form an unbroken pipeline without leaking.",
+        "The pressurized boiler valve opens after countdown, sending emerald water down the line. Dual-pass Cross Junctions grant +500 bonus points.",
+        "Meet or exceed the sector's required pipe quota before the chemical stream reaches an open end. Hold Space to rush the pump at 5× speed."
       ],
       "controls": {
         "keyboard": "Arrows / WASD / Vim (HJKL) to move, Enter or Click to place pipe, Hold Space to rush pump, R to restart, ? for help",
@@ -1405,9 +1405,9 @@
       "folder": "games/pipepunk",
       "entrypoint": "games/pipepunk/main.py",
       "cover_image": "assets/covers/pipepunk.png",
-      "size": "800 KB",
-      "size_bytes": 819277,
-      "download_size": "800 KB",
+      "size": "1.1 MB",
+      "size_bytes": 1142784,
+      "download_size": "1.1 MB",
       "keywords": [
         "pipe",
         "pipe dream",

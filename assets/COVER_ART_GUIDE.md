@@ -275,3 +275,66 @@ This generates `games/<game_id>/assets/disk_icon.png` (256×256 RGBA transparent
 * **Illustration:** Island archipelago battlefield painted in classic 1980s computer box art style: M4 battle tank maneuvering through pine forests, tactical pillbox bunkers firing defensive salvos, naval aircraft carrier on ocean waterways, and tactical radar rings.
 * **Bottom Text:** `ACTION ARCADE • OA-029`
 
+### 30. `Starframe` (Ref: `OA-030`)
+* **Category:** Action Arcade
+* **Floppy Color:** Matte Black (`#232328`) with flat silver shutter
+* **Grid Color:** Neon Cyan (`#00E5FF`)
+* **Illustration:** High-speed vector wireframe starfighter engaging alien dreadnoughts in deep cosmos with neon shield flares.
+* **Bottom Text:** `ACTION ARCADE • OA-030`
+
+### 31. `Slime's Adventure` (Ref: `OA-031`)
+* **Category:** Action Arcade
+* **Floppy Color:** Matte Black (`#232328`) with flat silver shutter
+* **Grid Color:** Neon Cyan (`#00E5FF`)
+* **Illustration:** Vibrant Japanese dough-rolling blue slime bounding through subterranean crystal caverns and leaping over stalagmites.
+* **Bottom Text:** `ACTION ARCADE • OA-031`
+
+### 32. `Dr. Virus` (Ref: `OA-032`)
+* **Category:** Blocks & Merging
+* **Floppy Color:** Tangerine Orange (`#EA580C`) with flat silver shutter
+* **Grid Color:** Rose Pink (`#F38BA8`)
+* **Illustration:** Two-tone vitamin capsules tumbling into a glass beaker targeting mischievous animated viral microbes.
+* **Bottom Text:** `BLOCKS & MERGING • OA-032`
+
+### 33. `WordCircle` (Ref: `OA-033`)
+* **Category:** Word & Trivia
+* **Floppy Color:** Clean Pure White (`#F0F0F2`) with flat silver shutter
+* **Grid Color:** Sky Blue (`#38BDF8`)
+* **Illustration:** Circular brass compass anagram disc projecting illuminated letter tiles into an interlocking crossword grid.
+* **Bottom Text:** `WORD & TRIVIA • OA-033`
+
+### 34. `Parking Jam` (Ref: `OA-034`)
+* **Category:** Puzzles & Grid Logic
+* **Floppy Color:** Emerald Green (`#059669`) with flat silver shutter
+* **Grid Color:** Sky Blue (`#38BDF8`)
+* **Illustration:** Colorful isometric retro Japanese city parking lot with mini vans, kei cars, and ambulances maneuvering out of gridlock.
+* **Bottom Text:** `PUZZLES & GRID • OA-034`
+
+### 35. `Nuts Sort` (Ref: `OA-035`)
+* **Category:** Puzzles & Grid Logic
+* **Floppy Color:** Amber Gold (`#F59E0B`) with flat silver shutter
+* **Grid Color:** Sapphire Blue (`#3B82F6`)
+* **Illustration:** Tactile industrial workshop bench with vertical threaded brass and steel bolts holding colorful hexagonal nuts.
+* **Bottom Text:** `PUZZLES & GRID • OA-035`
+
+### 36. `Fold` (Ref: `OA-036`)
+* **Category:** Puzzles & Grid Logic
+* **Floppy Color:** Emerald Green (`#059669`) with flat silver shutter
+* **Grid Color:** Slate Navy (`#1E293B`)
+* **Illustration:** Delicate origami washi paper geometry creasing and folding in dramatic perspective on a minimalist studio surface.
+* **Bottom Text:** `PUZZLES & GRID • OA-036`
+
+### 37. `Mahjong Solitaire` (Ref: `OA-037`)
+* **Category:** Puzzles & Grid Logic
+* **Floppy Color:** Emerald Green (`#059669`) with flat silver shutter
+* **Grid Color:** Slate Navy (`#1E293B`)
+* **Illustration:** Intricately carved ivory and obsidian Mahjong tiles in five-tier pyramidal elevation with gold leaf engravings.
+* **Bottom Text:** `PUZZLES & GRID • OA-037`
+
+### 38. `Pipe Punk` (Ref: `OA-038`)
+* **Category:** Puzzles & Grid Logic
+* **Floppy Color:** Terracotta / Boiler Rust (`#C2410C`) with flat silver shutter
+* **Grid Color:** Slate Navy (`#1E293B`)
+* **Illustration:** Victorian steampunk boiler subterranean engine room with glowing emerald fluid pumping through polished copper and dark cast-iron piping, analog brass gauges, and steam valves.
+* **Bottom Text:** `PUZZLES & GRID LOGIC • OA-038`
+
