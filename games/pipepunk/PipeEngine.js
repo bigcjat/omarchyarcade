@@ -69,7 +69,11 @@ function createGameState(level) {
                 entryPort: "",
                 exitPort: "",
                 crossPasses: 0,
-                isFlowing: false
+                isFlowing: false,
+                isSecondPass: false,
+                crossFillProgress: 0.0,
+                crossEntryPort: "",
+                crossExitPort: ""
             });
         }
         grid.push(row);
@@ -156,6 +160,10 @@ function placeNextPiece(game, r, c) {
     cell.exitPort = "";
     cell.crossPasses = 0;
     cell.isFlowing = false;
+    cell.isSecondPass = false;
+    cell.crossFillProgress = 0.0;
+    cell.crossEntryPort = "";
+    cell.crossExitPort = "";
     
     return true;
 }
@@ -199,7 +207,11 @@ function updateSimulation(game, dt) {
         var progressDelta = dt / stepDuration;
         
         game.fillProgress += progressDelta;
-        currentCell.fillProgress = Math.min(1.0, game.fillProgress);
+        if (currentCell.isSecondPass) {
+            currentCell.crossFillProgress = Math.min(1.0, game.fillProgress);
+        } else {
+            currentCell.fillProgress = Math.min(1.0, game.fillProgress);
+        }
         
         if (game.isRushing) {
             game.score += Math.round(dt * 60);
@@ -216,9 +228,17 @@ function updateSimulation(game, dt) {
 
 function advanceFlow(game) {
     var currCell = game.grid[game.currentR][game.currentC];
-    currCell.filled = true;
-    currCell.isFlowing = false;
-    currCell.fillProgress = 1.0;
+    if (currCell.isSecondPass) {
+        currCell.crossFillProgress = 1.0;
+        currCell.crossPasses = 2;
+    } else {
+        currCell.filled = true;
+        currCell.isFlowing = false;
+        currCell.fillProgress = 1.0;
+        if (currCell.type === "cross") {
+            currCell.crossPasses = 1;
+        }
+    }
     
     // Only player-placed pipes count towards the level quota (valve is the source spout)
     if (currCell.type !== "valve") {
@@ -227,11 +247,8 @@ function advanceFlow(game) {
     }
     
     // Cross pipe double traversal bonus
-    if (currCell.type === "cross") {
-        currCell.crossPasses++;
-        if (currCell.crossPasses >= 2) {
-            game.score += 500; // Big cross-loop bonus!
-        }
+    if (currCell.type === "cross" && currCell.isSecondPass) {
+        game.score += 500; // Big cross-loop bonus!
     }
     
     // Compute next coordinates
@@ -262,10 +279,16 @@ function advanceFlow(game) {
     }
     
     // If it is a cross pipe already filled in the same orientation, cannot reuse same path
-    if (nextCell.type === "cross" && nextCell.crossPasses >= 2) {
-        handleBlowout(game, nextR, nextC);
-        return;
-    } else if (nextCell.type !== "cross" && nextCell.filled) {
+    if (nextCell.type === "cross") {
+        if (nextCell.crossPasses >= 2) {
+            handleBlowout(game, nextR, nextC);
+            return;
+        }
+        if (nextCell.crossPasses === 1 && (expectedEntry === nextCell.entryPort || expectedEntry === nextCell.exitPort)) {
+            handleBlowout(game, nextR, nextC);
+            return;
+        }
+    } else if (nextCell.filled) {
         handleBlowout(game, nextR, nextC);
         return;
     }
@@ -293,9 +316,20 @@ function advanceFlow(game) {
     game.entryPort = expectedEntry;
     game.exitPort = nextExit;
     game.fillProgress = 0.0;
-    nextCell.entryPort = expectedEntry;
-    nextCell.exitPort = nextExit;
-    nextCell.isFlowing = true;
+    
+    if (nextCell.type === "cross" && (nextCell.filled || nextCell.fillProgress >= 1.0)) {
+        nextCell.isSecondPass = true;
+        nextCell.crossEntryPort = expectedEntry;
+        nextCell.crossExitPort = nextExit;
+        nextCell.crossFillProgress = 0.0;
+        nextCell.isFlowing = true;
+    } else {
+        nextCell.isSecondPass = false;
+        nextCell.entryPort = expectedEntry;
+        nextCell.exitPort = nextExit;
+        nextCell.fillProgress = 0.0;
+        nextCell.isFlowing = true;
+    }
 }
 
 function handleBlowout(game, leakR, leakC) {

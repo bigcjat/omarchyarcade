@@ -76,6 +76,7 @@ Window {
     // Screen Shake effect on blowout or rush
     property real shakeX: 0
     property real shakeY: 0
+    property real flowAnimTime: 0.0
 
     // =========================================================================
     // THEME & SOUND CONTROLLERS
@@ -268,6 +269,7 @@ Window {
             var prevTraversed = gameState.traversedCount;
 
             Engine.updateSimulation(gameState, 0.016);
+            root.flowAnimTime += 0.016 * (gameState.isRushing ? 3.5 : 1.0);
 
             score = gameState.score;
             if (score > bestScore) {
@@ -1127,11 +1129,152 @@ Window {
                                         drawFluidInCell(ctx, cell, cx, cy, cw, ch);
                                     }
 
-                                    if (cell.isCross && cell.crossFillProgress > 0) {
+                                    if (cell.type === "cross" && cell.crossFillProgress > 0) {
                                         drawCrossSecondPass(ctx, cell, cx, cy, cw, ch);
                                     }
                                 }
                             }
+                        }
+
+                        function drawBezierSub(ctx, p0, p1, p2, p3, p) {
+                            if (p <= 0.001) return;
+                            if (p >= 0.999) {
+                                ctx.moveTo(p0.x, p0.y);
+                                ctx.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+                                return;
+                            }
+                            var q1x = p0.x + p * (p1.x - p0.x);
+                            var q1y = p0.y + p * (p1.y - p0.y);
+                            var q2x = p1.x + p * (p2.x - p1.x);
+                            var q2y = p1.y + p * (p2.y - p1.y);
+                            var q3x = p2.x + p * (p3.x - p2.x);
+                            var q3y = p2.y + p * (p3.y - p2.y);
+
+                            var r1x = q1x + p * (q2x - q1x);
+                            var r1y = q1y + p * (q2y - q1y);
+                            var r2x = q2x + p * (q3x - q2x);
+                            var r2y = q2y + p * (q3y - q2y);
+
+                            var s0x = r1x + p * (r2x - r1x);
+                            var s0y = r1y + p * (r2y - r1y);
+
+                            ctx.moveTo(p0.x, p0.y);
+                            ctx.bezierCurveTo(q1x, q1y, r1x, r1y, s0x, s0y);
+                        }
+
+                        function getBezierPoint(p0, p1, p2, p3, t) {
+                            var omt = 1 - t;
+                            var omt2 = omt * omt;
+                            var omt3 = omt2 * omt;
+                            var t2 = t * t;
+                            var t3 = t2 * t;
+                            return {
+                                x: omt3 * p0.x + 3 * omt2 * t * p1.x + 3 * omt * t2 * p2.x + t3 * p3.x,
+                                y: omt3 * p0.y + 3 * omt2 * t * p1.y + 3 * omt * t2 * p2.y + t3 * p3.y
+                            };
+                        }
+
+                        function getCornerControlPoints(type, entry, cx, cy, cw, ch) {
+                            var k = cw * 0.276;
+                            var midX = cx + cw / 2;
+                            var midY = cy + ch / 2;
+                            var p0, p1, p2, p3;
+
+                            if (type === "corner_1") {
+                                // N <-> E
+                                if (entry === "N") {
+                                    p0 = { x: midX, y: cy };
+                                    p1 = { x: midX, y: cy + k };
+                                    p2 = { x: cx + cw - k, y: midY };
+                                    p3 = { x: cx + cw, y: midY };
+                                } else {
+                                    p0 = { x: cx + cw, y: midY };
+                                    p1 = { x: cx + cw - k, y: midY };
+                                    p2 = { x: midX, y: cy + k };
+                                    p3 = { x: midX, y: cy };
+                                }
+                            } else if (type === "corner_2") {
+                                // N <-> W
+                                if (entry === "N") {
+                                    p0 = { x: midX, y: cy };
+                                    p1 = { x: midX, y: cy + k };
+                                    p2 = { x: cx + k, y: midY };
+                                    p3 = { x: cx, y: midY };
+                                } else {
+                                    p0 = { x: cx, y: midY };
+                                    p1 = { x: cx + k, y: midY };
+                                    p2 = { x: midX, y: cy + k };
+                                    p3 = { x: midX, y: cy };
+                                }
+                            } else if (type === "corner_3") {
+                                // S <-> E
+                                if (entry === "S") {
+                                    p0 = { x: midX, y: cy + ch };
+                                    p1 = { x: midX, y: cy + ch - k };
+                                    p2 = { x: cx + cw - k, y: midY };
+                                    p3 = { x: cx + cw, y: midY };
+                                } else {
+                                    p0 = { x: cx + cw, y: midY };
+                                    p1 = { x: cx + cw - k, y: midY };
+                                    p2 = { x: midX, y: cy + ch - k };
+                                    p3 = { x: midX, y: cy + ch };
+                                }
+                            } else if (type === "corner_4") {
+                                // S <-> W
+                                if (entry === "S") {
+                                    p0 = { x: midX, y: cy + ch };
+                                    p1 = { x: midX, y: cy + ch - k };
+                                    p2 = { x: cx + k, y: midY };
+                                    p3 = { x: cx, y: midY };
+                                } else {
+                                    p0 = { x: cx, y: midY };
+                                    p1 = { x: cx + k, y: midY };
+                                    p2 = { x: midX, y: cy + ch - k };
+                                    p3 = { x: midX, y: cy + ch };
+                                }
+                            }
+                            return { p0: p0, p1: p1, p2: p2, p3: p3 };
+                        }
+
+                        function getPathPoint(type, entry, cx, cy, cw, ch, t) {
+                            var midX = cx + cw / 2;
+                            var midY = cy + ch / 2;
+                            if (type === "pipe_h" || type === "valve") {
+                                var x = (entry === "W") ? (cx + cw * t) : (cx + cw * (1 - t));
+                                var y = midY + Math.sin(t * 12) * (cw * 0.02);
+                                return { x: x, y: y };
+                            } else if (type === "pipe_v") {
+                                var vx = midX + Math.sin(t * 12) * (cw * 0.02);
+                                var vy = (entry === "N") ? (cy + ch * t) : (cy + ch * (1 - t));
+                                return { x: vx, y: vy };
+                            } else if (type === "cross") {
+                                if (entry === "W") {
+                                    return { x: cx + cw * t, y: midY + Math.sin(t * 12) * (cw * 0.02) };
+                                } else if (entry === "E") {
+                                    return { x: cx + cw * (1 - t), y: midY + Math.sin(t * 12) * (cw * 0.02) };
+                                } else if (entry === "N") {
+                                    return { x: midX + Math.sin(t * 12) * (cw * 0.02), y: cy + ch * t };
+                                } else {
+                                    return { x: midX + Math.sin(t * 12) * (cw * 0.02), y: cy + ch * (1 - t) };
+                                }
+                            } else if (type === "corner_1" || type === "corner_2" || type === "corner_3" || type === "corner_4") {
+                                var cpts = getCornerControlPoints(type, entry, cx, cy, cw, ch);
+                                return getBezierPoint(cpts.p0, cpts.p1, cpts.p2, cpts.p3, t);
+                            }
+                            return null;
+                        }
+
+                        function drawBubble(ctx, bx, by, rad) {
+                            if (rad <= 0.5) return;
+                            ctx.beginPath();
+                            ctx.arc(bx, by, rad, 0, Math.PI * 2);
+                            ctx.fillStyle = Qt.rgba(0.85, 1.0, 0.95, 0.75);
+                            ctx.fill();
+
+                            ctx.beginPath();
+                            ctx.arc(bx - rad * 0.35, by - rad * 0.35, Math.max(0.5, rad * 0.35), 0, Math.PI * 2);
+                            ctx.fillStyle = Qt.rgba(1.0, 1.0, 1.0, 0.92);
+                            ctx.fill();
                         }
 
                         function drawFluidInCell(ctx, cell, cx, cy, cw, ch) {
@@ -1153,7 +1296,7 @@ Window {
                             var midX = cx + cw / 2;
                             var midY = cy + ch / 2;
 
-                            if (cell.type === "pipe_h") {
+                            if (cell.type === "pipe_h" || cell.type === "valve") {
                                 if (entry === "W") {
                                     ctx.moveTo(cx, midY);
                                     ctx.lineTo(cx + cw * p, midY);
@@ -1169,34 +1312,10 @@ Window {
                                     ctx.moveTo(midX, cy + ch);
                                     ctx.lineTo(midX, cy + ch * (1 - p));
                                 }
-                            } else if (cell.type === "corner_1") {
-                                // N <-> E, Center at (cx + cw, cy)
-                                if (entry === "N") {
-                                    ctx.arc(cx + cw, cy, cw / 2, Math.PI, Math.PI - (Math.PI / 2) * p, true);
-                                } else {
-                                    ctx.arc(cx + cw, cy, cw / 2, Math.PI / 2, Math.PI / 2 + (Math.PI / 2) * p, false);
-                                }
-                            } else if (cell.type === "corner_2") {
-                                // N <-> W, Center at (cx, cy)
-                                if (entry === "N") {
-                                    ctx.arc(cx, cy, cw / 2, 0, (Math.PI / 2) * p, false);
-                                } else {
-                                    ctx.arc(cx, cy, cw / 2, Math.PI / 2, Math.PI / 2 - (Math.PI / 2) * p, true);
-                                }
-                            } else if (cell.type === "corner_3") {
-                                // S <-> E, Center at (cx + cw, cy + ch)
-                                if (entry === "S") {
-                                    ctx.arc(cx + cw, cy + ch, cw / 2, Math.PI, Math.PI + (Math.PI / 2) * p, false);
-                                } else {
-                                    ctx.arc(cx + cw, cy + ch, cw / 2, -Math.PI / 2, -Math.PI / 2 - (Math.PI / 2) * p, true);
-                                }
-                            } else if (cell.type === "corner_4") {
-                                // S <-> W, Center at (cx, cy + ch)
-                                if (entry === "S") {
-                                    ctx.arc(cx, cy + ch, cw / 2, 0, - (Math.PI / 2) * p, true);
-                                } else {
-                                    ctx.arc(cx, cy + ch, cw / 2, -Math.PI / 2, -Math.PI / 2 + (Math.PI / 2) * p, false);
-                                }
+                            } else if (cell.type === "corner_1" || cell.type === "corner_2" ||
+                                       cell.type === "corner_3" || cell.type === "corner_4") {
+                                var bPts = getCornerControlPoints(cell.type, entry, cx, cy, cw, ch);
+                                drawBezierSub(ctx, bPts.p0, bPts.p1, bPts.p2, bPts.p3, p);
                             } else if (cell.type === "cross") {
                                 if (entry === "W") {
                                     ctx.moveTo(cx, midY);
@@ -1223,20 +1342,43 @@ Window {
 
                             ctx.stroke();
 
-                            // Reservoir liquid chamber fill
-                            if (cell.type === "reservoir" && p > 0.15) {
-                                ctx.beginPath();
-                                var chamberRad = (cw * 0.22) * Math.min(1.0, (p - 0.15) / 0.6);
-                                ctx.arc(midX, midY, chamberRad, 0, Math.PI * 2);
-                                ctx.fillStyle = "#047857";
-                                ctx.fill();
-                            }
-
                             // Subtle water core stream highlight
                             if (cell.type !== "reservoir") {
                                 ctx.lineWidth = cw * 0.07;
                                 ctx.strokeStyle = Qt.rgba(0.5, 0.95, 0.7, 0.40);
                                 ctx.stroke();
+                            }
+
+                            // Effervescent flow bubbles inside the fluid stream
+                            if (cell.type !== "reservoir") {
+                                var bubbleOffsets = [0.15, 0.48, 0.82];
+                                for (var bi = 0; bi < bubbleOffsets.length; bi++) {
+                                    var bt = (root.flowAnimTime * 0.40 + bubbleOffsets[bi]) % 1.0;
+                                    if (bt <= p && bt >= 0.02) {
+                                        var bPos = getPathPoint(cell.type, entry, cx, cy, cw, ch, bt);
+                                        if (bPos) {
+                                            var bRad = (cw * 0.024) + ((bi % 2 === 0) ? (cw * 0.007) : -(cw * 0.004));
+                                            drawBubble(ctx, bPos.x, bPos.y, bRad);
+                                        }
+                                    }
+                                }
+                            } else {
+                                // Reservoir liquid chamber fill & swirling bubbles
+                                if (p > 0.15) {
+                                    var chamberRad = (cw * 0.22) * Math.min(1.0, (p - 0.15) / 0.6);
+                                    ctx.beginPath();
+                                    ctx.arc(midX, midY, chamberRad, 0, Math.PI * 2);
+                                    ctx.fillStyle = "#047857";
+                                    ctx.fill();
+
+                                    for (var rbi = 0; rbi < 4; rbi++) {
+                                        var rAngle = root.flowAnimTime * 2.0 + rbi * (Math.PI / 2);
+                                        var rDist = chamberRad * (0.3 + 0.4 * ((rbi % 2) ? 0.8 : 0.4));
+                                        var rbx = midX + Math.cos(rAngle) * rDist;
+                                        var rby = midY + Math.sin(rAngle) * (rDist * 0.7);
+                                        drawBubble(ctx, rbx, rby, cw * 0.022);
+                                    }
+                                }
                             }
 
                             ctx.restore();
@@ -1248,9 +1390,9 @@ Window {
 
                             ctx.save();
                             var grad = ctx.createLinearGradient(cx, cy, cx + cw, cy + ch);
-                            grad.addColorStop(0, "#0284c7");
-                            grad.addColorStop(0.5, "#0369a1");
-                            grad.addColorStop(1, "#075985");
+                            grad.addColorStop(0, "#059669");
+                            grad.addColorStop(0.5, "#047857");
+                            grad.addColorStop(1, "#065f46");
 
                             ctx.strokeStyle = grad;
                             ctx.lineWidth = cw * 0.18;
@@ -1276,8 +1418,21 @@ Window {
                             ctx.stroke();
 
                             ctx.lineWidth = cw * 0.07;
-                            ctx.strokeStyle = Qt.rgba(0.5, 0.85, 1.0, 0.40);
+                            ctx.strokeStyle = Qt.rgba(0.5, 0.95, 0.7, 0.40);
                             ctx.stroke();
+
+                            // Bubbles for cross second pass
+                            var crossBubbleOffsets = [0.22, 0.58, 0.88];
+                            for (var cbi = 0; cbi < crossBubbleOffsets.length; cbi++) {
+                                var cbt = (root.flowAnimTime * 0.40 + crossBubbleOffsets[cbi]) % 1.0;
+                                if (cbt <= p && cbt >= 0.02) {
+                                    var cbPos = getPathPoint("cross", entry, cx, cy, cw, ch, cbt);
+                                    if (cbPos) {
+                                        var cbRad = (cw * 0.024) + ((cbi % 2 === 0) ? (cw * 0.007) : -(cw * 0.003));
+                                        drawBubble(ctx, cbPos.x, cbPos.y, cbRad);
+                                    }
+                                }
+                            }
 
                             ctx.restore();
                         }
