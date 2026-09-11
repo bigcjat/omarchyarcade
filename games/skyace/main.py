@@ -31,6 +31,7 @@ try:
     HAS_3D_DEPS = True
 except ImportError:
     HAS_3D_DEPS = False
+    np = None
 
 from PySide6.QtWidgets import QApplication, QWidget
 from PySide6.QtGui import QPainter, QPixmap, QImage, QColor, QFont, QPolygon, QRadialGradient, QLinearGradient, QPen, QBrush, QIcon
@@ -39,9 +40,18 @@ from PySide6.QtCore import QTimer, Qt, QRect, QPoint, QSettings
 # Add engine directory to python path
 current_dir = Path(__file__).resolve().parent
 sys.path.insert(0, str(current_dir / "engine"))
+sys.path.insert(0, str(current_dir))
 
-from audio_manager import SoundManager
-from prop_audio import ProceduralPropAudio
+try:
+    from games.skyace.engine.audio_manager import SoundManager
+    from games.skyace.engine.prop_audio import ProceduralPropAudio
+except ImportError:
+    try:
+        from engine.audio_manager import SoundManager
+        from engine.prop_audio import ProceduralPropAudio
+    except ImportError:
+        from audio_manager import SoundManager
+        from prop_audio import ProceduralPropAudio
 
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
@@ -67,7 +77,12 @@ def get_omarchy_theme():
     try:
         with open(theme_path, "rb") as f:
             data = tomllib.load(f)
-        c = data.get("colors") if isinstance(data.get("colors"), dict) else data
+        if not isinstance(data, dict):
+            return None
+        raw_colors = data.get("colors")
+        c = raw_colors if isinstance(raw_colors, dict) else data
+        if not isinstance(c, dict):
+            return None
         return {
             "background": c.get("background") or c.get("bg"),
             "foreground": c.get("foreground") or c.get("fg"),
@@ -79,7 +94,7 @@ def get_omarchy_theme():
 
 def pil_to_qpixmap(pil_img):
     """Converts a PIL RGBA image to a PySide6 QPixmap if 3D developer dependencies are installed."""
-    if not HAS_3D_DEPS or pil_img is None:
+    if not HAS_3D_DEPS or pil_img is None or np is None:
         return QPixmap()
     arr = np.array(pil_img.convert("RGBA"))
     h, w, ch = arr.shape
@@ -591,14 +606,14 @@ class SkyAceGame(QWidget):
             "sat_hangar": QPixmap(str(sprites_dir / "cartel_hangar_base_clean.png")),
             "sat_scorched": QPixmap(str(sprites_dir / "cartel_hangar_nuked_clean.png")),
         }
+        self.bomb_anim_18 = []
         b_full_path = sprites_dir / "cutscene_bomb_full_sheet.png"
         if b_full_path.exists():
             b_sheet = QPixmap(str(b_full_path))
             fw = b_sheet.width() // 18
             fh = b_sheet.height()
-            self.cutscene_sprites["bomb_anim_18"] = [b_sheet.copy(i * fw, 0, fw, fh) for i in range(18)]
-        else:
-            self.cutscene_sprites["bomb_anim_18"] = []
+            self.bomb_anim_18 = [b_sheet.copy(i * fw, 0, fw, fh) for i in range(18)]
+        self.cutscene_sprites["bomb_anim_18"] = self.bomb_anim_18
         self.cartel_hangar = None
         self.ground_targets = []
         self.ground_target_spawn_tick = 0
@@ -2191,7 +2206,7 @@ class SkyAceGame(QWidget):
         # Camera stays locked on the airfield and watches the bomb drop!
         if c["bomb_dropped"] and t < 580:
             bx, by = int(c["bomb_x"]), int(c["bomb_y"])
-            anim_frames = self.cutscene_sprites.get("bomb_anim_18", [])
+            anim_frames = getattr(self, "bomb_anim_18", [])
             if anim_frames:
                 prog = max(0.0, min(1.0, (t - 440) / 140.0))
                 f_idx = min(len(anim_frames) - 1, int(prog * len(anim_frames)))
@@ -4485,9 +4500,9 @@ class SkyAceGame(QWidget):
                             "p38", "zero", "spitfire", "bf109", "yak3", "mosquito", "folgore", "d520", "pzl11", "avia",
                             "hurricane", "p39", "ki43", "hs129", "i16", "cr42", "ms406", "beaufighter"
                         ]
-                        def get_ef(): return random.choice(pool)
+                        get_ef = lambda: random.choice(pool)
                     else:
-                        def get_ef(): return enemy_faction
+                        get_ef = lambda: enemy_faction
 
                     if self.is_secret_mission:
                         pattern = random.choice(["v_formation_5", "sweep_3", "pincer_4", "heavy_dual", "strafers"])
@@ -7223,6 +7238,9 @@ class SkyAceGame(QWidget):
                 else:
                     w_pix = w_cache.get(f"level_{(self.prop_tick // 3) % 4}", w_cache.get("level_0"))
 
+                if not w_pix or w_pix.isNull():
+                    continue
+
                 w_scale = 1.15 if w_plane == "b29" else 1.0
                 w_size = int(140 * w_scale)
 
@@ -7505,7 +7523,6 @@ class SkyAceGame(QWidget):
         import subprocess
         import shutil
         from pathlib import Path
-        from PySide6.QtCore import QTimer, Qt
 
         self.preview_rec_active = False
         self.preview_rec_done = False
