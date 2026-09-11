@@ -379,12 +379,10 @@ ApplicationWindow {
         ];
     }
 
-    // Load Catalog Data on Startup
+    // Load Catalog Data on Startup (Always default to Featured & Sidebar)
     Component.onCompleted: {
-        if (typeof arcadeBackend !== "undefined" && arcadeBackend.getViewMode) {
-            var savedMode = arcadeBackend.getViewMode();
-            if (savedMode) root.viewMode = savedMode;
-        }
+        root.selectedCategory = "FEATURED";
+        root.viewMode = "sidebar";
         loadCatalog();
         root.checkUpdates();
         keyboardController.forceActiveFocus();
