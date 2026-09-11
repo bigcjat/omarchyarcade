@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Shapes
 
 Item {
     id: desktopView
@@ -10,7 +11,8 @@ Item {
     property var allGames: (catalog && catalog.length > 0) ? catalog : games
     property var games: []
     property var favoritesList: (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getFavorites) ? arcadeBackend.getFavorites() : []
-    property string activeWallpaper: (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getDesktopWallpaper) ? arcadeBackend.getDesktopWallpaper() : "matrix"
+    property string activeWallpaper: (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getDesktopWallpaper) ? arcadeBackend.getDesktopWallpaper() : "poker"
+    property string feltColor: (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getFeltColor) ? arcadeBackend.getFeltColor() : "#0a5c36"
     
     // Active selection & open window state
     property var selectedItem: null // { type: "folder" | "game", data: ... }
@@ -32,6 +34,9 @@ Item {
         }
         function onWallpaperChanged(wp) {
             desktopView.activeWallpaper = wp;
+        }
+        function onFeltColorChanged(col) {
+            desktopView.feltColor = col;
         }
     }
 
@@ -185,6 +190,88 @@ Item {
             anchors.fill: parent
             visible: desktopView.activeWallpaper === "blue"
             color: "#1e3a8a"
+        }
+
+        // G. Casino Poker Felt Wallpaper (Patterned Omarchy Jacquard Cloth)
+        Item {
+            id: pokerFeltSurface
+            anchors.fill: parent
+            visible: desktopView.activeWallpaper === "poker"
+
+            // 1. Base Felt Solid Color
+            Rectangle {
+                anchors.fill: parent
+                color: desktopView.feltColor
+            }
+
+            // 2. Seamless Tiled Omarchy Logo Jacquard Pattern
+            Image {
+                anchors.fill: parent
+                fillMode: Image.Tile
+                source: "../assets/poker_felt_pattern.svg"
+                opacity: 0.90
+            }
+
+            // 3. Overhead Casino Lamp Lighting (Radial Spotlight Vignette & Subtle Weave)
+            Canvas {
+                id: feltLightingCanvas
+                anchors.fill: parent
+                onWidthChanged: requestPaint()
+                onHeightChanged: requestPaint()
+
+                Connections {
+                    target: desktopView
+                    function onFeltColorChanged() { feltLightingCanvas.requestPaint() }
+                    function onActiveWallpaperChanged() { if (desktopView.activeWallpaper === "poker") feltLightingCanvas.requestPaint() }
+                }
+
+                onPaint: {
+                    var ctx = getContext("2d");
+                    ctx.clearRect(0, 0, width, height);
+
+                    var cx = width / 2;
+                    var cy = height / 2;
+                    var radius = Math.max(width, height) * 0.72;
+
+                    // Radial glow simulating overhead casino spotlight
+                    var radGrad = ctx.createRadialGradient(cx, cy, 30, cx, cy, radius);
+                    radGrad.addColorStop(0.0, "rgba(255, 255, 255, 0.12)"); // soft center lamp highlight
+                    radGrad.addColorStop(0.40, "rgba(255, 255, 255, 0.02)");
+                    radGrad.addColorStop(0.72, "rgba(0, 0, 0, 0.24)");     // rail shadow falloff
+                    radGrad.addColorStop(1.0, "rgba(0, 0, 0, 0.65)");      // perimeter shadow
+                    ctx.fillStyle = radGrad;
+                    ctx.fillRect(0, 0, width, height);
+
+                    // Tactile cloth weave stipple grain
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.07)";
+                    for (var y = 0; y < height; y += 4) {
+                        var xOff = (y % 8 === 0 ? 0 : 2);
+                        for (var x = xOff; x < width; x += 4) {
+                            ctx.fillRect(x, y, 1, 1);
+                        }
+                    }
+                }
+            }
+
+            // 4. Casino Table Racetrack / Inset Border Line
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 26
+                radius: 34
+                color: "transparent"
+                border.color: Qt.rgba(1, 1, 1, 0.07)
+                border.width: 2
+
+                // Inner hairline gold accent ring
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    radius: 26
+                    color: "transparent"
+                    border.color: Qt.rgba(212/255, 175/255, 55/255, 0.13) // casino gold
+                    border.width: 1
+                }
+            }
         }
     }
 
@@ -810,13 +897,17 @@ Item {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 anchors.margins: 16
-                width: 280
-                height: 220
+                width: 320
+                height: desktopView.activeWallpaper === "poker" ? 395 : 240
                 radius: 8
                 color: "#161928"
                 border.color: "#3b82f6"
                 border.width: 1.5
                 z: 30
+
+                Behavior on height {
+                    NumberAnimation { duration: 160; easing.type: Easing.OutQuad }
+                }
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -849,24 +940,23 @@ Item {
 
                     GridLayout {
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
                         columns: 2
-                        rowSpacing: 8
-                        columnSpacing: 8
+                        rowSpacing: 6
+                        columnSpacing: 6
 
                         Repeater {
                             model: [
+                                { id: "poker", label: "Casino Poker Felt", previewCol: desktopView.feltColor },
                                 { id: "teal", label: "Windows 95 Teal", previewCol: "#008080" },
                                 { id: "matrix", label: "CRT Dot Matrix", previewCol: "#0d0f17" },
                                 { id: "cyber", label: "Cyberpunk Grid", previewCol: "#080914" },
                                 { id: "sunset", label: "Vaporwave Sunset", previewCol: "#9d174d" },
-                                { id: "starfield", label: "Starfield Space", previewCol: "#05060f" },
-                                { id: "blue", label: "Cobalt Blue", previewCol: "#1e3a8a" }
+                                { id: "starfield", label: "Starfield Space", previewCol: "#05060f" }
                             ]
 
                             Rectangle {
                                 Layout.fillWidth: true
-                                Layout.preferredHeight: 38
+                                Layout.preferredHeight: 34
                                 radius: 6
                                 color: wpMouse.containsMouse ? "#242a42" : "#1a1f30"
                                 border.color: desktopView.activeWallpaper === modelData.id ? "#00f0ff" : "#2f3854"
@@ -874,12 +964,12 @@ Item {
 
                                 RowLayout {
                                     anchors.fill: parent
-                                    anchors.margins: 8
+                                    anchors.margins: 6
                                     spacing: 8
 
                                     Rectangle {
-                                        width: 22
-                                        height: 22
+                                        width: 20
+                                        height: 20
                                         radius: 4
                                         color: modelData.previewCol
                                         border.color: "#ffffff"
@@ -905,6 +995,162 @@ Item {
                                         desktopView.activeWallpaper = modelData.id;
                                         if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.setDesktopWallpaper) {
                                             arcadeBackend.setDesktopWallpaper(modelData.id);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // --- Poker Felt Live Color Palette & Customizer ---
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+                        visible: desktopView.activeWallpaper === "poker"
+
+                        Rectangle { Layout.fillWidth: true; height: 1; color: "#252b40" }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Text {
+                                text: "🎰 FELT COLOR PALETTE"
+                                font.family: "monospace"
+                                font.pixelSize: 10
+                                font.bold: true
+                                color: "#38bdf8"
+                            }
+                            Item { Layout.fillWidth: true }
+                            Text {
+                                text: desktopView.feltColor.toUpperCase()
+                                font.family: "monospace"
+                                font.pixelSize: 10
+                                font.bold: true
+                                color: "#94a3b8"
+                            }
+                        }
+
+                        // 8 Authentic Casino Table Preset Swatches
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 4
+                            rowSpacing: 6
+                            columnSpacing: 6
+
+                            Repeater {
+                                model: [
+                                    { col: "#0a5c36", name: "Green" },
+                                    { col: "#102c57", name: "Navy" },
+                                    { col: "#58111a", name: "Burgundy" },
+                                    { col: "#181920", name: "Charcoal" },
+                                    { col: "#3b1859", name: "Violet" },
+                                    { col: "#701414", name: "Crimson" },
+                                    { col: "#0d5252", name: "Teal" },
+                                    { col: "#54381e", name: "Camel" }
+                                ]
+
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 22
+                                    radius: 4
+                                    color: modelData.col
+                                    border.color: desktopView.feltColor.toLowerCase() === modelData.col.toLowerCase() ? "#ffffff" : "#3b4261"
+                                    border.width: desktopView.feltColor.toLowerCase() === modelData.col.toLowerCase() ? 2 : 1
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "✓"
+                                        font.pixelSize: 10
+                                        font.bold: true
+                                        color: "#ffffff"
+                                        visible: desktopView.feltColor.toLowerCase() === modelData.col.toLowerCase()
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            desktopView.feltColor = modelData.col;
+                                            hexField.text = modelData.col;
+                                            if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.setFeltColor) {
+                                                arcadeBackend.setFeltColor(modelData.col);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Fine-tuning Hex Input
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+
+                            Rectangle {
+                                width: 22
+                                height: 22
+                                radius: 4
+                                color: desktopView.feltColor
+                                border.color: "#ffffff"
+                                border.width: 1
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 26
+                                radius: 4
+                                color: "#0d0f17"
+                                border.color: hexField.activeFocus ? "#38bdf8" : "#2d3748"
+                                border.width: 1
+
+                                TextInput {
+                                    id: hexField
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 8
+                                    anchors.rightMargin: 8
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    text: desktopView.feltColor
+                                    font.family: "monospace"
+                                    font.pixelSize: 11
+                                    color: "#f1f5f9"
+                                    selectByMouse: true
+                                    onAccepted: {
+                                        var val = text.trim();
+                                        if (val.length === 7 && val.startsWith("#")) {
+                                            desktopView.feltColor = val;
+                                            if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.setFeltColor) {
+                                                arcadeBackend.setFeltColor(val);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                width: 44
+                                height: 26
+                                radius: 4
+                                color: setBtnMouse.containsMouse ? "#0284c7" : "#0369a1"
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "SET"
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: "#ffffff"
+                                }
+
+                                MouseArea {
+                                    id: setBtnMouse
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    hoverEnabled: true
+                                    onClicked: {
+                                        var val = hexField.text.trim();
+                                        if (val.length === 7 && val.startsWith("#")) {
+                                            desktopView.feltColor = val;
+                                            if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.setFeltColor) {
+                                                arcadeBackend.setFeltColor(val);
+                                            }
                                         }
                                     }
                                 }
