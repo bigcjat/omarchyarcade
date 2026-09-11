@@ -420,10 +420,10 @@ Item {
                             Row {
                                 anchors.centerIn: parent
                                 spacing: 4
-                                Text { text: "🛡️"; font.pixelSize: 10 }
+                                Text { text: "🕹️"; font.pixelSize: 10 }
                                 Text {
                                     id: promisePillText
-                                    text: "THE ARCADE PROMISE"
+                                    text: "THE DEFAULT OS SUITE"
                                     font.family: "monospace"
                                     font.pixelSize: 10
                                     font.bold: true
@@ -433,7 +433,7 @@ Item {
                         }
 
                         Text {
-                            text: "Pure Gaming, The Way It Should Be"
+                            text: "Remember When Operating Systems Came With Games?"
                             font.pixelSize: 13
                             font.bold: true
                             color: "#f8fafc"
@@ -475,10 +475,11 @@ Item {
 
                     // Main manifesto summary
                     Text {
-                        text: "Free games built for players, not advertisers. Downloaded games are stored directly on your machine and work 100% offline forever."
+                        text: "Solitaire, Minesweeper, Pinball — operating systems used to ship with a suite of lightweight, instant, offline games right out of the box. Modern OSs replaced them with ads and app stores. Omarchy Arcade brings back the default games suite: free, zero bloat, completely offline, and 100% open source."
                         font.pixelSize: 12
                         color: "#cbd5e1"
                         Layout.fillWidth: true
+                        lineHeight: 1.25
                         wrapMode: Text.WordWrap
                     }
 
@@ -490,13 +491,13 @@ Item {
                         Repeater {
                             model: [
                                 { icon: "💾", title: "Zero Bloat", desc: "Most fit on a floppy" },
+                                { icon: "✈️", title: "100% Offline", desc: "Always works offline" },
                                 { icon: "🚫", title: "No Ads or Nags", desc: "Zero popups" },
-                                { icon: "🔓", title: "100% DRM-Free", desc: "Yours forever" },
-                                { icon: "💎", title: "No Microtransactions", desc: "Full complete games" },
-                                { icon: "🔒", title: "No Data Collection", desc: "Private & zero telemetry" },
-                                { icon: "👤", title: "No Accounts", desc: "No logins required" },
-                                { icon: "✈️", title: "100% Offline", desc: "Works anywhere" },
-                                { icon: "📖", title: "Open Source", desc: "Transparent code" }
+                                { icon: "👤", title: "No Accounts", desc: "No signups or logins" },
+                                { icon: "💎", title: "No Microtransactions", desc: "Complete games" },
+                                { icon: "🔒", title: "No Data Collection", desc: "Zero telemetry" },
+                                { icon: "🔓", title: "DRM-Free", desc: "Stored on your drive" },
+                                { icon: "📖", title: "Open Source", desc: "Auditable & community" }
                             ]
 
                             Rectangle {
