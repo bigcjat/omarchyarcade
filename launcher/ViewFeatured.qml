@@ -110,7 +110,7 @@ Item {
                         id: heroPreviewAnim
                         anchors.fill: parent
                         source: {
-                            if (typeof arcadeBackend !== "undefined" && arcadeBackend.getScreenshotUrl) {
+                            if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getScreenshotUrl) {
                                 return arcadeBackend.getScreenshotUrl("games/skyace");
                             }
                             return "../assets/previews/skyace.webp";
@@ -286,28 +286,33 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                             spacing: 10
 
-                            // Play Now Primary Action Button
+                            // Play / Get / Update Primary Action Button
                             Rectangle {
-                                width: playBtnText.implicitWidth + 34
+                                id: heroPlayBtn
+                                readonly property bool skyAceInstalled: typeof root !== "undefined" && root.isInstalled ? root.isInstalled("skyace") : false
+                                readonly property bool skyAceHasUpdate: typeof root !== "undefined" && root.hasGameUpdate && skyAceData ? root.hasGameUpdate("skyace", skyAceData.version || "") : false
+
+                                width: playBtnRow.implicitWidth + 34
                                 height: 40
                                 radius: 8
-                                color: playBtnMouse.containsMouse ? "#38bdf8" : "#0284c7"
-                                border.color: "#7dd3fc"
+                                color: heroPlayBtn.skyAceHasUpdate ? (playBtnMouse.containsMouse ? "#38bdf8" : "#0284c7") : (heroPlayBtn.skyAceInstalled ? (playBtnMouse.containsMouse ? "#38bdf8" : "#0284c7") : (playBtnMouse.containsMouse ? "#10b981" : "#059669"))
+                                border.color: heroPlayBtn.skyAceHasUpdate ? "#7dd3fc" : (heroPlayBtn.skyAceInstalled ? "#7dd3fc" : "#34d399")
                                 border.width: 1
                                 scale: playBtnMouse.pressed ? 0.96 : 1.0
                                 Behavior on scale { NumberAnimation { duration: 80 } }
 
                                 Row {
+                                    id: playBtnRow
                                     anchors.centerIn: parent
                                     spacing: 8
                                     Text {
-                                        text: "▶"
+                                        text: heroPlayBtn.skyAceHasUpdate ? "🔄" : (heroPlayBtn.skyAceInstalled ? "▶" : "⬇")
                                         font.pixelSize: 13
                                         color: "#FFFFFF"
                                     }
                                     Text {
                                         id: playBtnText
-                                        text: "PLAY NOW"
+                                        text: heroPlayBtn.skyAceHasUpdate ? "UPDATE NOW" : (heroPlayBtn.skyAceInstalled ? "PLAY NOW" : ("GET (" + (skyAceData && skyAceData.size ? skyAceData.size : "40.6 MB") + ")"))
                                         font.pixelSize: 12
                                         font.bold: true
                                         color: "#FFFFFF"
@@ -320,7 +325,12 @@ Item {
                                     cursorShape: Qt.PointingHandCursor
                                     hoverEnabled: true
                                     onClicked: {
-                                        featuredView.gameLaunched("skyace");
+                                        if (!skyAceInstalled || skyAceHasUpdate) {
+                                            if (skyAceData) featuredView.detailRequested(skyAceData);
+                                            else featuredView.gameLaunched("skyace");
+                                        } else {
+                                            featuredView.gameLaunched("skyace");
+                                        }
                                     }
                                 }
                             }
@@ -648,26 +658,31 @@ Item {
                                     }
 
                                     Rectangle {
-                                        width: 80
+                                        id: shelfPlayBtn
+                                        readonly property bool itemInstalled: typeof root !== "undefined" && root.isInstalled ? root.isInstalled(modelData.id) : false
+                                        readonly property bool itemHasUpdate: typeof root !== "undefined" && root.hasGameUpdate ? root.hasGameUpdate(modelData.id, modelData.version || "") : false
+
+                                        width: Math.max(76, shelfBtnRow.implicitWidth + 20)
                                         height: 28
                                         radius: 6
-                                        color: playSmallMouse.containsMouse ? "#00f0ff" : "#182834"
-                                        border.color: "#00f0ff"
+                                        color: shelfPlayBtn.itemHasUpdate ? (playSmallMouse.containsMouse ? "#0284c7" : "#0369a1") : (shelfPlayBtn.itemInstalled ? (playSmallMouse.containsMouse ? "#00f0ff" : "#182834") : (playSmallMouse.containsMouse ? "#059669" : "#064e3b"))
+                                        border.color: shelfPlayBtn.itemHasUpdate ? "#38bdf8" : (shelfPlayBtn.itemInstalled ? "#00f0ff" : "#34d399")
                                         border.width: 1
 
                                         Row {
+                                            id: shelfBtnRow
                                             anchors.centerIn: parent
                                             spacing: 4
                                             Text {
-                                                text: "▶"
+                                                text: shelfPlayBtn.itemHasUpdate ? "🔄" : (shelfPlayBtn.itemInstalled ? "▶" : "⬇")
                                                 font.pixelSize: 10
-                                                color: playSmallMouse.containsMouse ? "#09090e" : "#00f0ff"
+                                                color: shelfPlayBtn.itemHasUpdate ? "#ffffff" : (shelfPlayBtn.itemInstalled ? (playSmallMouse.containsMouse ? "#09090e" : "#00f0ff") : "#ecfdf5")
                                             }
                                             Text {
-                                                text: "PLAY"
+                                                text: shelfPlayBtn.itemHasUpdate ? "UPDATE" : (shelfPlayBtn.itemInstalled ? "PLAY" : "GET")
                                                 font.pixelSize: 10
                                                 font.bold: true
-                                                color: playSmallMouse.containsMouse ? "#09090e" : "#00f0ff"
+                                                color: shelfPlayBtn.itemHasUpdate ? "#ffffff" : (shelfPlayBtn.itemInstalled ? (playSmallMouse.containsMouse ? "#09090e" : "#00f0ff") : "#ecfdf5")
                                             }
                                         }
 
@@ -677,7 +692,11 @@ Item {
                                             cursorShape: Qt.PointingHandCursor
                                             hoverEnabled: true
                                             onClicked: {
-                                                featuredView.gameLaunched(modelData.id);
+                                                if (!itemInstalled || itemHasUpdate) {
+                                                    featuredView.detailRequested(modelData);
+                                                } else {
+                                                    featuredView.gameLaunched(modelData.id);
+                                                }
                                             }
                                         }
                                     }

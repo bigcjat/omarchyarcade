@@ -275,7 +275,7 @@ Item {
             border.color: "#38bdf8"
             border.width: 1
             z: 45
-            visible: !isUnreleased && (typeof arcadeBackend !== "undefined" && arcadeBackend) && gameData && arcadeBackend.hasGameUpdate(gameData.id, gameData.version || "")
+            visible: !isUnreleased && (typeof root !== "undefined" && root.hasGameUpdate && gameData ? root.hasGameUpdate(gameData.id, gameData.version || "") : (typeof arcadeBackend !== "undefined" && arcadeBackend && gameData && arcadeBackend.hasGameUpdate(gameData.id, gameData.version || "")))
 
             Row {
                 anchors.centerIn: parent
@@ -291,6 +291,41 @@ Item {
                     font.pixelSize: 8
                     font.bold: true
                     color: "#f0f9ff"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+        }
+
+        // --- 4b. Download / GET Badge ---
+        Rectangle {
+            id: getBadge
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 6
+            width: 48
+            height: 18
+            radius: 9
+            color: "#065f46"
+            border.color: "#34d399"
+            border.width: 1
+            z: 45
+            visible: !isUnreleased && !updateBadge.visible && gameData && (typeof root !== "undefined" && root.isInstalled ? !root.isInstalled(gameData.id) : (typeof arcadeBackend !== "undefined" && arcadeBackend && !arcadeBackend.isGameInstalled(gameData.id)))
+
+            Row {
+                anchors.centerIn: parent
+                spacing: 3
+                Text {
+                    text: "⬇"
+                    font.pixelSize: 8
+                    color: "#ecfdf5"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Text {
+                    text: "GET"
+                    font.family: "monospace"
+                    font.pixelSize: 8
+                    font.bold: true
+                    color: "#ecfdf5"
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }

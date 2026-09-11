@@ -350,15 +350,21 @@ class ArcadeBackend(QObject):
 
     @Slot(str)
     def launchGame(self, game_id: str):
-        """Spawns the requested game. If not yet installed, triggers download first."""
+        """Spawns the requested game if installed."""
         game_dir = GAMES_DIR / game_id
         main_py = game_dir / "main.py"
         main_qml = game_dir / "main.qml"
 
         if not main_py.exists() and not main_qml.exists():
-            print(f"[Arcade] Game not installed: {game_id}. Triggering on-demand download...")
-            self.installGame(game_id)
-            return
+            user_game_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "games" / game_id
+            if (user_game_dir / "main.py").exists() or (user_game_dir / "main.qml").exists():
+                game_dir = user_game_dir
+                main_py = game_dir / "main.py"
+                main_qml = game_dir / "main.qml"
+            else:
+                print(f"[Arcade] Refusing to launch uninstalled game without consent: {game_id}")
+                self.gameLaunchFailed.emit(game_id, "Game is not installed.")
+                return
 
         cmd = []
         if main_py.exists():

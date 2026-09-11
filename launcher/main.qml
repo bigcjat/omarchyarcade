@@ -82,6 +82,7 @@ ApplicationWindow {
             root.hide();
         }
         function onGameInstalled(gameId) {
+            root.installedChangeTracker++;
             if (detailSheet.gameData && detailSheet.gameData.id === gameId) {
                 detailSheet.isDownloading = false;
                 detailSheet.isInstalled = true;
@@ -91,6 +92,7 @@ ApplicationWindow {
             root.launchGame(gameId);
         }
         function onGameUninstalled(gameId) {
+            root.installedChangeTracker++;
             if (detailSheet.gameData && detailSheet.gameData.id === gameId) {
                 detailSheet.isDownloading = false;
                 detailSheet.isInstalled = false;
@@ -137,8 +139,10 @@ ApplicationWindow {
             root.updateFilter();
         }
         function onBatchUpdateFinished() {
+            root.installedChangeTracker++;
             root.isUpdatingAll = false;
             root.updateStatusText = "All updates installed successfully!";
+            root.refreshCategories();
             root.checkUpdates();
             root.updateFilter();
         }
@@ -222,7 +226,10 @@ ApplicationWindow {
         updateFocusedGameTitle();
     }
 
+    property int installedChangeTracker: 0
+
     function isInstalled(gameId) {
+        var _ = installedChangeTracker;
         if (!gameId) return false;
         if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.isGameInstalled) {
             return arcadeBackend.isGameInstalled(gameId);
@@ -231,6 +238,7 @@ ApplicationWindow {
     }
 
     function hasGameUpdate(gameId, version) {
+        var _ = installedChangeTracker;
         if (!gameId) return false;
         if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.hasGameUpdate) {
             return arcadeBackend.hasGameUpdate(gameId, version || "");
@@ -432,8 +440,27 @@ ApplicationWindow {
         filteredGames = list;
     }
 
+    function findGameById(gameId) {
+        if (!gameId || !catalogData) return null;
+        for (var i = 0; i < catalogData.length; i++) {
+            if (catalogData[i].id === gameId) return catalogData[i];
+        }
+        return null;
+    }
+
     // Launch game implementation
     function launchGame(gameId) {
+        if (!gameId) return;
+        var gData = findGameById(gameId);
+
+        // If the game is not yet installed, open the Detail Sheet so the player can review and consent to downloading
+        if (!isInstalled(gameId)) {
+            if (gData) {
+                detailSheet.open(gData);
+            }
+            return;
+        }
+
         if (typeof arcadeBackend !== "undefined" && arcadeBackend) {
             arcadeBackend.launchGame(gameId);
         } else {

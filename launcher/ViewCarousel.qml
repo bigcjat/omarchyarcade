@@ -101,14 +101,14 @@ Item {
                         asynchronous: true
                         source: {
                             if (!activeGame) return "";
-                            if (typeof arcadeBackend !== "undefined" && arcadeBackend.getScreenshotUrl) {
+                            if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getScreenshotUrl) {
                                 return arcadeBackend.getScreenshotUrl(activeGame.folder);
                             }
                             return "../" + activeGame.folder + "/screenshot.png";
                         }
                         onStatusChanged: {
                             if (status === AnimatedImage.Error && source.toString().indexOf("http") === 0) {
-                                if (typeof arcadeBackend !== "undefined" && arcadeBackend.getFallbackScreenshotUrl) {
+                                if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getFallbackScreenshotUrl) {
                                     var fb = arcadeBackend.getFallbackScreenshotUrl(activeGame ? activeGame.folder : "");
                                     if (fb) source = fb;
                                 }
@@ -299,12 +299,15 @@ Item {
                         // Primary Play / Launch Button
                         Rectangle {
                             id: playBtn
+                            readonly property bool isActiveInstalled: activeGame ? (typeof root !== "undefined" && root.isInstalled ? root.isInstalled(activeGame.id) : false) : false
+                            readonly property bool isActiveHasUpdate: activeGame ? (typeof root !== "undefined" && root.hasGameUpdate ? root.hasGameUpdate(activeGame.id, activeGame.version || "") : false) : false
+
                             height: 44
                             Layout.fillWidth: true
                             Layout.maximumWidth: 260
                             radius: 8
-                            color: playMouse.containsMouse ? Qt.lighter(themeAccent, 1.15) : themeAccent
-                            border.color: Qt.lighter(themeAccent, 1.4)
+                            color: isActiveHasUpdate ? (playMouse.containsMouse ? "#38bdf8" : "#0284c7") : (isActiveInstalled ? (playMouse.containsMouse ? Qt.lighter(themeAccent, 1.15) : themeAccent) : (playMouse.containsMouse ? "#10b981" : "#059669"))
+                            border.color: isActiveHasUpdate ? "#7dd3fc" : (isActiveInstalled ? Qt.lighter(themeAccent, 1.4) : "#34d399")
                             border.width: 1
                             scale: playMouse.pressed ? 0.97 : 1.0
                             Behavior on scale { NumberAnimation { duration: 80 } }
@@ -313,22 +316,22 @@ Item {
                                 anchors.centerIn: parent
                                 spacing: 8
                                 Text {
-                                    text: "▶"
+                                    text: playBtn.isActiveHasUpdate ? "🔄" : (playBtn.isActiveInstalled ? "▶" : "⬇")
                                     font.pixelSize: 14
-                                    color: "#0a0a10"
+                                    color: (playBtn.isActiveHasUpdate || !playBtn.isActiveInstalled) ? "#FFFFFF" : "#0a0a10"
                                 }
                                 Text {
-                                    text: "PLAY GAME"
+                                    text: playBtn.isActiveHasUpdate ? "UPDATE GAME" : (playBtn.isActiveInstalled ? "PLAY GAME" : ("GET (" + (activeGame && activeGame.size ? activeGame.size : "") + ")"))
                                     font.pixelSize: 13
                                     font.bold: true
                                     font.letterSpacing: 0.5
-                                    color: "#0a0a10"
+                                    color: (playBtn.isActiveHasUpdate || !playBtn.isActiveInstalled) ? "#FFFFFF" : "#0a0a10"
                                 }
                                 Text {
                                     text: "[Enter]"
                                     font.family: "monospace"
                                     font.pixelSize: 10
-                                    color: "#1e293b"
+                                    color: (playBtn.isActiveHasUpdate || !playBtn.isActiveInstalled) ? "#e2e8f0" : "#1e293b"
                                 }
                             }
 
@@ -339,7 +342,11 @@ Item {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     if (activeGame) {
-                                        carouselView.gameLaunched(activeGame.id);
+                                        if (!playBtn.isActiveInstalled || playBtn.isActiveHasUpdate) {
+                                            carouselView.detailRequested(activeGame);
+                                        } else {
+                                            carouselView.gameLaunched(activeGame.id);
+                                        }
                                     }
                                 }
                             }
@@ -613,7 +620,7 @@ Item {
                                 asynchronous: true
                                 source: {
                                     if (!modelData) return "";
-                                    if (typeof arcadeBackend !== "undefined" && arcadeBackend.getCoverUrl) {
+                                    if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getCoverUrl) {
                                         return arcadeBackend.getCoverUrl(modelData.id);
                                     }
                                     return "../assets/covers/" + modelData.id + ".png";

@@ -151,30 +151,31 @@ Item {
                                         smooth: false // Pixel crisp retro icons
                                         source: {
                                             if (!modelData) return "";
-                                            if (typeof arcadeBackend !== "undefined" && arcadeBackend.getDiskIconUrl) {
+                                            if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getDiskIconUrl) {
                                                 return arcadeBackend.getDiskIconUrl(modelData.id);
                                             }
                                             return "../games/" + modelData.id + "/assets/disk_icon.png";
                                         }
                                     }
 
-                                    // Installed Dot Indicator
+                                    // Installed / Update / Get Dot Indicator
                                     Rectangle {
                                         anchors.bottom: parent.bottom
                                         anchors.right: parent.right
                                         anchors.margins: 2
-                                        width: iconItem.hasUpdate ? 14 : 10
-                                        height: iconItem.hasUpdate ? 14 : 10
-                                        radius: iconItem.hasUpdate ? 3 : 5
-                                        color: iconItem.hasUpdate ? "#0284c7" : (iconItem.installed ? "#22c55e" : "#f59e0b")
-                                        border.color: iconItem.hasUpdate ? "#38bdf8" : "#0a0a0f"
+                                        width: (iconItem.hasUpdate || !iconItem.installed) ? 14 : 10
+                                        height: (iconItem.hasUpdate || !iconItem.installed) ? 14 : 10
+                                        radius: (iconItem.hasUpdate || !iconItem.installed) ? 3 : 5
+                                        color: iconItem.hasUpdate ? "#0284c7" : (iconItem.installed ? "#22c55e" : "#065f46")
+                                        border.color: iconItem.hasUpdate ? "#38bdf8" : (iconItem.installed ? "#0a0a0f" : "#34d399")
                                         border.width: 1.5
 
                                         Text {
                                             anchors.centerIn: parent
-                                            visible: iconItem.hasUpdate
-                                            text: "🔄"
+                                            visible: iconItem.hasUpdate || !iconItem.installed
+                                            text: iconItem.hasUpdate ? "🔄" : "⬇"
                                             font.pixelSize: 8
+                                            color: "#FFFFFF"
                                         }
                                     }
                                 }
@@ -257,7 +258,7 @@ Item {
                         fillMode: Image.PreserveAspectFit
                         source: {
                             if (!activeGame) return "";
-                            if (typeof arcadeBackend !== "undefined" && arcadeBackend.getDiskIconUrl) {
+                            if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getDiskIconUrl) {
                                 return arcadeBackend.getDiskIconUrl(activeGame.id);
                             }
                             return "../games/" + activeGame.id + "/assets/disk_icon.png";
@@ -307,26 +308,37 @@ Item {
                     }
 
                     Rectangle {
+                        id: taskbarPlayBtn
+                        readonly property bool activeInstalled: activeGame ? (typeof root !== "undefined" && root.isInstalled ? root.isInstalled(activeGame.id) : true) : true
+                        readonly property bool activeHasUpdate: activeGame ? (typeof root !== "undefined" && root.hasGameUpdate ? root.hasGameUpdate(activeGame.id, activeGame.version || "") : false) : false
+
                         height: 28
-                        width: 90
+                        width: Math.max(90, taskbarBtnText.implicitWidth + 16)
                         radius: 4
-                        color: themeAccent
-                        border.color: Qt.lighter(themeAccent, 1.3)
+                        color: taskbarPlayBtn.activeHasUpdate ? "#0284c7" : (taskbarPlayBtn.activeInstalled ? themeAccent : "#059669")
+                        border.color: taskbarPlayBtn.activeHasUpdate ? "#38bdf8" : (taskbarPlayBtn.activeInstalled ? Qt.lighter(themeAccent, 1.3) : "#34d399")
                         border.width: 1
 
                         Text {
+                            id: taskbarBtnText
                             anchors.centerIn: parent
-                            text: "▶ Play [Enter]"
+                            text: taskbarPlayBtn.activeHasUpdate ? "🔄 Update [Enter]" : (taskbarPlayBtn.activeInstalled ? "▶ Play [Enter]" : ("⬇ Get (" + (activeGame && activeGame.size ? activeGame.size : "") + ") [Enter]"))
                             font.pixelSize: 11
                             font.bold: true
-                            color: "#09090e"
+                            color: (taskbarPlayBtn.activeHasUpdate || !taskbarPlayBtn.activeInstalled) ? "#FFFFFF" : "#09090e"
                         }
 
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                if (activeGame) desktopView.gameLaunched(activeGame.id);
+                                if (activeGame) {
+                                    if (!taskbarPlayBtn.activeInstalled || taskbarPlayBtn.activeHasUpdate) {
+                                        desktopView.detailRequested(activeGame);
+                                    } else {
+                                        desktopView.gameLaunched(activeGame.id);
+                                    }
+                                }
                             }
                         }
                     }

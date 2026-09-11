@@ -145,7 +145,7 @@ Item {
                                     fillMode: Image.PreserveAspectFit
                                     source: {
                                         if (!modelData) return "";
-                                        if (typeof arcadeBackend !== "undefined" && arcadeBackend.getDiskIconUrl) {
+                                        if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getDiskIconUrl) {
                                             return arcadeBackend.getDiskIconUrl(modelData.id);
                                         }
                                         return "../games/" + modelData.id + "/assets/disk_icon.png";
@@ -176,14 +176,15 @@ Item {
                                 }
                             }
 
-                            // Status dot / update badge
+                            // Status dot / update badge / get badge
                             Rectangle {
-                                width: rowItem.hasUpdate ? (sidebarView.isNarrow ? 44 : 50) : (sidebarView.isNarrow ? 6 : 8)
-                                height: rowItem.hasUpdate ? (sidebarView.isNarrow ? 15 : 18) : (sidebarView.isNarrow ? 6 : 8)
-                                radius: rowItem.hasUpdate ? 4 : (width / 2)
-                                color: rowItem.hasUpdate ? "#0284c7" : (rowItem.installed ? "#22c55e" : "#f59e0b")
-                                border.color: rowItem.hasUpdate ? "#38bdf8" : "transparent"
-                                border.width: rowItem.hasUpdate ? 1 : 0
+                                readonly property bool showBadge: rowItem.hasUpdate || !rowItem.installed
+                                width: rowItem.hasUpdate ? (sidebarView.isNarrow ? 44 : 50) : (!rowItem.installed ? (sidebarView.isNarrow ? 36 : 42) : (sidebarView.isNarrow ? 6 : 8))
+                                height: showBadge ? (sidebarView.isNarrow ? 15 : 18) : (sidebarView.isNarrow ? 6 : 8)
+                                radius: showBadge ? 4 : (width / 2)
+                                color: rowItem.hasUpdate ? "#0284c7" : (!rowItem.installed ? "#065f46" : "#22c55e")
+                                border.color: rowItem.hasUpdate ? "#38bdf8" : (!rowItem.installed ? "#34d399" : "transparent")
+                                border.width: showBadge ? 1 : 0
 
                                 Row {
                                     anchors.centerIn: parent
@@ -199,6 +200,24 @@ Item {
                                         font.pixelSize: sidebarView.isNarrow ? 7 : 8
                                         font.bold: true
                                         color: "#f0f9ff"
+                                    }
+                                }
+
+                                Row {
+                                    anchors.centerIn: parent
+                                    visible: !rowItem.hasUpdate && !rowItem.installed
+                                    spacing: 2
+                                    Text {
+                                        text: "⬇"
+                                        font.pixelSize: sidebarView.isNarrow ? 7 : 8
+                                        color: "#ecfdf5"
+                                    }
+                                    Text {
+                                        text: "GET"
+                                        font.family: "monospace"
+                                        font.pixelSize: sidebarView.isNarrow ? 7 : 8
+                                        font.bold: true
+                                        color: "#ecfdf5"
                                     }
                                 }
                             }
@@ -298,14 +317,14 @@ Item {
                             asynchronous: true
                             source: {
                                 if (!activeGame) return "";
-                                if (typeof arcadeBackend !== "undefined" && arcadeBackend.getScreenshotUrl) {
+                                if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getScreenshotUrl) {
                                     return arcadeBackend.getScreenshotUrl(activeGame.folder);
                                 }
                                 return "../" + activeGame.folder + "/screenshot.png";
                             }
                             onStatusChanged: {
                                 if (status === AnimatedImage.Error && source.toString().indexOf("http") === 0) {
-                                    if (typeof arcadeBackend !== "undefined" && arcadeBackend.getFallbackScreenshotUrl) {
+                                    if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getFallbackScreenshotUrl) {
                                         var fb = arcadeBackend.getFallbackScreenshotUrl(activeGame ? activeGame.folder : "");
                                         if (fb) source = fb;
                                     }
@@ -478,15 +497,24 @@ Item {
                                     height: sidebarView.isNarrow ? 38 : 44
                                     width: sidebarView.isNarrow ? 150 : 180
                                     radius: 8
-                                    color: sidebarPlayMouse.containsMouse ? Qt.lighter(themeAccent, 1.15) : themeAccent
-                                    border.color: Qt.lighter(themeAccent, 1.4)
+                                    color: !parent.activeInstalled ? (sidebarPlayMouse.containsMouse ? "#10b981" : "#059669") : (sidebarPlayMouse.containsMouse ? Qt.lighter(themeAccent, 1.15) : themeAccent)
+                                    border.color: !parent.activeInstalled ? "#34d399" : Qt.lighter(themeAccent, 1.4)
                                     border.width: 1
 
                                     RowLayout {
                                         anchors.centerIn: parent
                                         spacing: 6
-                                        Text { text: "▶"; font.pixelSize: sidebarView.isNarrow ? 12 : 14; color: "#09090e" }
-                                        Text { text: "PLAY GAME"; font.pixelSize: sidebarView.isNarrow ? 11 : 13; font.bold: true; color: "#09090e" }
+                                        Text {
+                                            text: !parent.activeInstalled ? "⬇" : "▶"
+                                            font.pixelSize: sidebarView.isNarrow ? 12 : 14
+                                            color: !parent.activeInstalled ? "#ffffff" : "#09090e"
+                                        }
+                                        Text {
+                                            text: !parent.activeInstalled ? ("GET (" + (activeGame && activeGame.size ? activeGame.size : "") + ")") : "PLAY GAME"
+                                            font.pixelSize: sidebarView.isNarrow ? 11 : 13
+                                            font.bold: true
+                                            color: !parent.activeInstalled ? "#ffffff" : "#09090e"
+                                        }
                                     }
 
                                     MouseArea {
@@ -495,7 +523,13 @@ Item {
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
-                                            if (activeGame) sidebarView.gameLaunched(activeGame.id);
+                                            if (activeGame) {
+                                                if (!parent.activeInstalled) {
+                                                    sidebarView.detailRequested(activeGame);
+                                                } else {
+                                                    sidebarView.gameLaunched(activeGame.id);
+                                                }
+                                            }
                                         }
                                     }
                                 }
