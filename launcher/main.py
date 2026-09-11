@@ -27,13 +27,23 @@ os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
 BASE_DIR = Path(__file__).resolve().parent.parent
 LAUNCHER_DIR = Path(__file__).resolve().parent
 
-# If in source repository, use repository paths. Otherwise use ~/.local/share/omarchy-arcade
+def get_user_data_dir() -> Path:
+    """Returns platform-appropriate user data directory with zero external dependencies."""
+    if sys.platform == "win32":
+        local_app_data = os.environ.get("LOCALAPPDATA")
+        if local_app_data:
+            return Path(local_app_data) / "omarchy-arcade"
+        return Path.home() / "AppData" / "Local" / "omarchy-arcade"
+    return Path.home() / ".local" / "share" / "omarchy-arcade"
+
+DATA_DIR = get_user_data_dir()
+
+# If in source repository, use repository paths. Otherwise use installed user data directory
 if (BASE_DIR / "games").is_dir():
     GAMES_DIR = BASE_DIR / "games"
     CATALOG_PATH = BASE_DIR / "catalog.json"
     ASSETS_DIR = BASE_DIR / "assets"
 else:
-    DATA_DIR = Path.home() / ".local" / "share" / "omarchy-arcade"
     GAMES_DIR = DATA_DIR / "games"
     CATALOG_PATH = DATA_DIR / "catalog.json"
     ASSETS_DIR = DATA_DIR / "assets"
@@ -142,7 +152,7 @@ class ArcadeBackend(QObject):
         # 1. Local path check
         local_path = BASE_DIR / "assets" / "covers" / f"{game_id}.png"
         if not local_path.exists():
-            local_path = Path.home() / ".local" / "share" / "omarchy-arcade" / "assets" / "covers" / f"{game_id}.png"
+            local_path = DATA_DIR / "assets" / "covers" / f"{game_id}.png"
         if local_path.exists():
             return QUrl.fromLocalFile(str(local_path)).toString()
         # 2. Remote GitHub raw URL
@@ -156,7 +166,7 @@ class ArcadeBackend(QObject):
         game_dir = GAMES_DIR / game_id
         if (game_dir / "main.py").exists() or (game_dir / "main.qml").exists():
             return True
-        user_game_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "games" / game_id
+        user_game_dir = DATA_DIR / "games" / game_id
         if (user_game_dir / "main.py").exists() or (user_game_dir / "main.qml").exists():
             return True
         return False
@@ -168,7 +178,7 @@ class ArcadeBackend(QObject):
             return False
         game_dir = GAMES_DIR / game_id
         if not (game_dir / "main.py").exists() and not (game_dir / "main.qml").exists():
-            user_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "games" / game_id
+            user_dir = DATA_DIR / "games" / game_id
             if not (user_dir / "main.py").exists() and not (user_dir / "main.qml").exists():
                 return False
             game_dir = user_dir
@@ -190,7 +200,7 @@ class ArcadeBackend(QObject):
             return ""
         game_id = Path(folder).name
         # 1. Local preview WebP check (e.g. dev clone)
-        for base in [BASE_DIR, Path.home() / ".local" / "share" / "omarchy-arcade"]:
+        for base in [BASE_DIR, DATA_DIR]:
             preview_path = base / "assets" / "previews" / f"{game_id}.webp"
             if preview_path.exists():
                 return QUrl.fromLocalFile(str(preview_path)).toString()
@@ -203,7 +213,7 @@ class ArcadeBackend(QObject):
         """Fallback to local static screenshot.png when offline or if remote fetch fails."""
         if not folder:
             return ""
-        for base in [BASE_DIR, Path.home() / ".local" / "share" / "omarchy-arcade"]:
+        for base in [BASE_DIR, DATA_DIR]:
             local_path = base / folder / "screenshot.png"
             if local_path.exists():
                 return QUrl.fromLocalFile(str(local_path)).toString()
@@ -218,7 +228,7 @@ class ArcadeBackend(QObject):
         if not local_path.exists():
             local_path = BASE_DIR / "games" / game_id / "assets" / "disk_icon.png"
         if not local_path.exists():
-            local_path = Path.home() / ".local" / "share" / "omarchy-arcade" / "games" / game_id / "assets" / "disk_icon.png"
+            local_path = DATA_DIR / "games" / game_id / "assets" / "disk_icon.png"
         if local_path.exists():
             return QUrl.fromLocalFile(str(local_path)).toString()
         return self.getCoverUrl(game_id)
@@ -226,6 +236,8 @@ class ArcadeBackend(QObject):
     def _get_settings_path(self) -> Path:
         if (BASE_DIR / ".git").exists():
             return LAUNCHER_DIR / ".launcher_settings.json"
+        if sys.platform == "win32":
+            return DATA_DIR / "arcade_settings.json"
         return Path.home() / ".config" / "omarchy" / "arcade_settings.json"
 
     @Slot(result=str)
@@ -319,8 +331,8 @@ class ArcadeBackend(QObject):
         import shutil
         print(f"[Arcade] Uninstalling game: {game_id}...")
 
-        # 1. Check data dir (~/.local/share/omarchy-arcade/games/<game_id>)
-        data_game_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "games" / game_id
+        # 1. Check data dir (<DATA_DIR>/games/<game_id>)
+        data_game_dir = DATA_DIR / "games" / game_id
         if data_game_dir.exists():
             try:
                 shutil.rmtree(data_game_dir, ignore_errors=True)
@@ -334,7 +346,7 @@ class ArcadeBackend(QObject):
             try:
                 # If running in development repository, preserve a backup in trash
                 # so developer files are never permanently destroyed
-                trash_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "trash" / game_id
+                trash_dir = DATA_DIR / "trash" / game_id
                 trash_dir.parent.mkdir(parents=True, exist_ok=True)
                 if trash_dir.exists():
                     shutil.rmtree(trash_dir, ignore_errors=True)
@@ -357,7 +369,7 @@ class ArcadeBackend(QObject):
         main_qml = game_dir / "main.qml"
 
         if not main_py.exists() and not main_qml.exists():
-            user_game_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "games" / game_id
+            user_game_dir = DATA_DIR / "games" / game_id
             if (user_game_dir / "main.py").exists() or (user_game_dir / "main.qml").exists():
                 game_dir = user_game_dir
                 main_py = game_dir / "main.py"
@@ -383,12 +395,19 @@ class ArcadeBackend(QObject):
             if theme_path and theme_path.is_file():
                 env["OMARCHY_THEME_FILE"] = str(theme_path)
 
+            popen_kwargs = {
+                "cwd": str(game_dir),
+                "env": env,
+            }
+            if sys.platform == "win32":
+                popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+            else:
+                popen_kwargs["start_new_session"] = True
+
             print(f"[Arcade] Launching game: {game_id} via {cmd}")
             proc = subprocess.Popen(
                 cmd,
-                cwd=str(game_dir),
-                env=env,
-                start_new_session=True
+                **popen_kwargs
             )
             self._active_processes.append(proc)
             self.gameLaunched.emit(game_id)
@@ -429,8 +448,8 @@ class ArcadeBackend(QObject):
         """Returns the current launcher version."""
         for v_path in [
             LAUNCHER_DIR / ".launcher_version",
-            Path.home() / ".local" / "share" / "omarchy-arcade" / "launcher" / ".launcher_version",
-            Path.home() / ".local" / "share" / "omarchy-arcade" / ".launcher_version"
+            DATA_DIR / "launcher" / ".launcher_version",
+            DATA_DIR / ".launcher_version"
         ]:
             if v_path.exists():
                 try:
@@ -478,7 +497,7 @@ class ArcadeBackend(QObject):
             if self.isGameInstalled(gid) and self.hasGameUpdate(gid, gver):
                 # Resolve current installed version
                 inst_ver = "1.0.0"
-                for cand in [GAMES_DIR / gid / ".version", Path.home() / ".local" / "share" / "omarchy-arcade" / "games" / gid / ".version"]:
+                for cand in [GAMES_DIR / gid / ".version", DATA_DIR / "games" / gid / ".version"]:
                     if cand.exists():
                         try:
                             inst_ver = cand.read_text(encoding="utf-8").strip()
@@ -537,7 +556,7 @@ class ArcadeBackend(QObject):
                 with urllib.request.urlopen(req, timeout=30) as resp:
                     tar_data = resp.read()
 
-                dest_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "launcher"
+                dest_dir = DATA_DIR / "launcher"
                 if (BASE_DIR / ".git").is_dir() and (BASE_DIR / "launcher").is_dir():
                     dest_dir = BASE_DIR / "launcher"
                 dest_dir.mkdir(parents=True, exist_ok=True)
@@ -643,7 +662,7 @@ class ArcadeBackend(QObject):
                     if launcher_needs_update:
                         step += 1
                         self.batchUpdateProgress.emit(step, total, f"Updating Omarchy Arcade UI ({step}/{total})...")
-                        dest_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "launcher"
+                        dest_dir = DATA_DIR / "launcher"
                         if (BASE_DIR / ".git").is_dir() and (BASE_DIR / "launcher").is_dir():
                             dest_dir = BASE_DIR / "launcher"
                         dest_dir.mkdir(parents=True, exist_ok=True)
@@ -687,6 +706,9 @@ def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
     if env_path and Path(env_path).is_file():
         return Path(env_path)
+
+    if sys.platform == "win32":
+        return None
 
     home = Path.home()
     candidates = [

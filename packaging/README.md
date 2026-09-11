@@ -8,6 +8,7 @@ This directory contains the build specifications and metadata for distributing O
 | **Flatpak** | Flathub / Sandboxed desktop | [`flatpak/org.omarchy.Arcade.yml`](flatpak/org.omarchy.Arcade.yml) |
 | **AppImage** | Universal portable executable | [`appimage/build_appimage.sh`](appimage/build_appimage.sh) |
 | **macOS Bundle & DMG** | Apple Silicon & Intel macOS | [`macos/build_macos_app.sh`](macos/build_macos_app.sh) |
+| **Windows 10 / 11** | PowerShell One-Command / Portable | [`windows/install.ps1`](windows/README.md) |
 
 ---
 

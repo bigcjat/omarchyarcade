@@ -86,3 +86,68 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  build-windows:
+    name: Build Windows Release
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install PySide6
+
+      - name: Assemble Windows Portable Package
+        shell: pwsh
+        run: |
+          $DIST = "Omarchy_Arcade-Windows-x64"
+          New-Item -ItemType Directory -Force -Path "$DIST\launcher" | Out-Null
+          New-Item -ItemType Directory -Force -Path "$DIST\assets" | Out-Null
+
+          Copy-Item -Force "catalog.json" "$DIST\catalog.json"
+          Copy-Item -Force -Recurse "launcher\*" "$DIST\launcher\"
+          Copy-Item -Force "assets\omarchy_arcade_logo.svg" "$DIST\assets\"
+          Copy-Item -Force "packaging\windows\arcade.ico" "$DIST\assets\"
+          Copy-Item -Force "packaging\windows\arcade.cmd" "$DIST\arcade.cmd"
+
+          @"
+@echo off
+setlocal
+cd /d "%~dp0"
+python launcher\main.py %*
+if errorlevel 1 (
+    echo.
+    echo If Python is not installed, install it via: winget install Python.Python.3.12
+    echo Or run our one-command installer:
+    echo powershell -c "irm https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/packaging/windows/install.ps1 | iex"
+    pause
+)
+"@ | Set-Content -Path "$DIST\Launch_Arcade.bat" -Encoding ASCII
+
+          Compress-Archive -Path "$DIST\*" -DestinationPath "Omarchy_Arcade-Windows-x64.zip" -Force
+
+      - name: Upload Windows Zip Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Omarchy_Arcade-Windows-x64.zip
+          path: Omarchy_Arcade-Windows-x64.zip
+
+      - name: Publish Release Asset
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Omarchy Arcade Latest Release
+          files: Omarchy_Arcade-Windows-x64.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
