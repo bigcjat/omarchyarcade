@@ -507,6 +507,20 @@ class ArcadeBackend(QObject):
                 except Exception:
                     pass
 
+                # If game includes native C++ modules and on Linux/Unix, build if needed
+                native_dir = dest / "native"
+                if (native_dir / "Makefile").exists() and sys.platform != "darwin":
+                    target_so = native_dir / "libmicropolis.so"
+                    if not target_so.exists():
+                        try:
+                            import shutil
+                            make_cmd = shutil.which("make")
+                            if make_cmd:
+                                print(f"[Arcade] Building native components for {game_id}...")
+                                subprocess.run([make_cmd, "-C", str(native_dir), "-j4"], timeout=90)
+                        except Exception as ne:
+                            print(f"[Arcade] Native build notice for {game_id}: {ne}")
+
                 print(f"[Arcade] Installed game: {game_id} ({count} files)")
                 self.gameInstalled.emit(game_id)
             except Exception as e:

@@ -132,14 +132,68 @@ class ByteCityEngine(QObject):
         self.generate_new_city(42)
 
 
+    def _ensure_native_library(self, lib_dir: Path, lib_path: Path):
+        """Attempts to auto-compile the native C++ simulation core if missing."""
+        if lib_path.exists():
+            return
+
+        makefile = lib_dir / "Makefile"
+        src_dir = lib_dir / "src"
+        if not makefile.exists() or not src_dir.exists():
+            return
+
+        import subprocess
+        import shutil
+
+        print(f"[ByteCity] Native simulation core '{lib_path.name}' not found. Compiling...")
+        make_cmd = shutil.which("make")
+        cxx_cmd = shutil.which("c++") or shutil.which("g++") or shutil.which("clang++")
+
+        if not cxx_cmd:
+            print("[ByteCity] Notice: No C++ compiler (g++/clang++) found in PATH.")
+            return
+
+        try:
+            if make_cmd:
+                subprocess.run([make_cmd, "-C", str(lib_dir), "-j4"], capture_output=True, text=True, timeout=90)
+            else:
+                sources = list(src_dir.glob("*.cpp")) + [lib_dir / "micropolis_c_api.cpp"]
+                cmd = [
+                    cxx_cmd, "-std=c++17", "-O3", "-fPIC", "-shared",
+                    f"-I{src_dir}", f"-I{lib_dir}",
+                    *[str(s) for s in sources],
+                    "-o", str(lib_path)
+                ]
+                subprocess.run(cmd, capture_output=True, text=True, timeout=90)
+
+            if lib_path.exists():
+                print(f"[ByteCity] Successfully compiled {lib_path.name}!")
+        except Exception as e:
+            print(f"[ByteCity] Auto-compilation notice: {e}")
+
     def _load_native_library(self):
         lib_dir = Path(__file__).resolve().parent / "native"
-        lib_path = lib_dir / "libmicropolis.dylib"
+        if sys.platform == "darwin":
+            lib_name = "libmicropolis.dylib"
+        elif sys.platform == "win32":
+            lib_name = "micropolis.dll"
+        else:
+            lib_name = "libmicropolis.so"
+
+        lib_path = lib_dir / lib_name
         if not lib_path.exists():
-            lib_path = lib_dir / "libmicropolis.so"
-        
+            self._ensure_native_library(lib_dir, lib_path)
+
         if not lib_path.exists():
-            raise FileNotFoundError(f"Native library not found at {lib_path}")
+            help_msg = (
+                f"ByteCity native simulation library '{lib_name}' not found at:\n"
+                f"  {lib_path}\n\n"
+                f"To compile it, open a terminal and run:\n"
+                f"  make -C {lib_dir}\n\n"
+                f"On Arch / Omarchy Linux, ensure base development tools are installed:\n"
+                f"  sudo pacman -S --needed base-devel\n"
+            )
+            raise FileNotFoundError(help_msg)
 
         self._lib = ctypes.CDLL(str(lib_path))
 

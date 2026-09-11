@@ -555,7 +555,11 @@
       "category": "Simulation & City",
       "floppy_color": "#0891B2",
       "grid_color": "#06B6D4",
-      "version": "1.0.4",
+      "version": "1.0.5",
+      "changelog": [
+        "Linux ELF dynamic library resolution fix",
+        "Self-contained native C++ simulation sources for resilient compilation"
+      ],
       "status": "released",
       "tagline": "Classic 1989 Metropolis Simulation Homage",
       "description": "Authentic 1989 Micropolis C++ simulation engine with Dr. DHH in a responsive 2D arcade viewport. Manage RCI zoning, power grids, annual budgets & loans, disasters, and municipal growth milestones.",

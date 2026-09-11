@@ -1,7 +1,7 @@
 CXX ?= c++
 CXXFLAGS ?= -std=c++17 -O3 -fPIC -Wall -Wno-unused-variable -Wno-unused-function
 
-ENGINE_SRC = ../../../references/MicropolisCore/packages/micropolis-engine/src
+ENGINE_SRC = src
 INCLUDES = -I$(ENGINE_SRC) -I.
 
 UNAME := $(shell uname)
