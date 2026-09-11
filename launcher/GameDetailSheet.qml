@@ -23,6 +23,8 @@ Rectangle {
         onTriggered: detailSheet.confirmingUninstall = false
     }
 
+    property var favoritesList: []
+
     signal playRequested(string gameId)
     signal closeRequested()
 
@@ -46,6 +48,9 @@ Rectangle {
                 detailSheet.confirmingUninstall = false;
             }
         }
+        function onFavoritesChanged(favs) {
+            detailSheet.favoritesList = favs;
+        }
     }
 
     function open(data) {
@@ -56,6 +61,9 @@ Rectangle {
         if (typeof arcadeBackend !== "undefined" && data) {
             isInstalled = arcadeBackend.isGameInstalled(data.id);
             hasUpdate = arcadeBackend.hasGameUpdate(data.id, data.version || "");
+            if (arcadeBackend.getFavorites) {
+                favoritesList = arcadeBackend.getFavorites();
+            }
         } else {
             isInstalled = true;
             hasUpdate = false;
@@ -99,6 +107,52 @@ Rectangle {
 
         // Trap mouse clicks inside content box
         MouseArea { anchors.fill: parent }
+
+        // Favorite / Like Button (Top-Right, beside close button)
+        Rectangle {
+            id: favBtn
+            anchors.top: parent.top
+            anchors.right: closeBtn.left
+            anchors.topMargin: 12
+            anchors.rightMargin: 8
+            height: 32
+            radius: 16
+            readonly property bool isFav: gameData ? (detailSheet.favoritesList.indexOf(gameData.id) !== -1) : false
+            width: favRow.implicitWidth + 20
+            color: isFav ? "#2d1222" : (favMouse.containsMouse ? "#242436" : "#1a1a26")
+            border.color: isFav ? "#ec4899" : (favMouse.containsMouse ? "#4b5563" : "#2e2e42")
+            border.width: 1
+            z: 30
+
+            Row {
+                id: favRow
+                anchors.centerIn: parent
+                spacing: 6
+                Text {
+                    text: favBtn.isFav ? "❤️" : "🤍"
+                    font.pixelSize: 12
+                }
+                Text {
+                    text: favBtn.isFav ? "FAVORITED" : "FAVORITE"
+                    font.family: "monospace"
+                    font.pixelSize: 10
+                    font.bold: true
+                    color: favBtn.isFav ? "#f472b6" : (favMouse.containsMouse ? "#FFFFFF" : "#94a3b8")
+                }
+            }
+
+            MouseArea {
+                id: favMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (gameData && typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.toggleFavorite) {
+                        arcadeBackend.toggleFavorite(gameData.id);
+                    }
+                }
+            }
+        }
 
         // Close button (Top-Right)
         Rectangle {

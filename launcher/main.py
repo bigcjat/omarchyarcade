@@ -68,10 +68,13 @@ class ArcadeBackend(QObject):
     updatesChecked = Signal("QVariantMap")
     launcherUpdateStarted = Signal()
     launcherUpdated = Signal(str)
-    launcherUpdateFailed = Signal(str)
     batchUpdateStarted = Signal(int)
     batchUpdateProgress = Signal(int, int, str)
     batchUpdateFinished = Signal()
+
+    # Desktop Customization & Favorites signals
+    favoritesChanged = Signal("QVariantList")
+    wallpaperChanged = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -272,6 +275,86 @@ class ArcadeBackend(QObject):
             settings_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
         except Exception as e:
             print(f"[Arcade] Error saving view mode: {e}")
+
+    @Slot(result="QVariantList")
+    def getFavorites(self) -> list:
+        """Returns the list of game IDs marked as favorite."""
+        settings_file = self._get_settings_path()
+        if settings_file.exists():
+            try:
+                data = json.loads(settings_file.read_text(encoding="utf-8"))
+                favs = data.get("favorites", [])
+                if isinstance(favs, list):
+                    return favs
+            except Exception:
+                pass
+        return []
+
+    @Slot(str, result=bool)
+    def isFavorite(self, game_id: str) -> bool:
+        """Returns True if the given game_id is in favorites."""
+        return game_id in self.getFavorites()
+
+    @Slot(str, result=bool)
+    def toggleFavorite(self, game_id: str) -> bool:
+        """Toggles the favorite status for game_id and emits favoritesChanged."""
+        if not game_id:
+            return False
+        settings_file = self._get_settings_path()
+        data = {}
+        if settings_file.exists():
+            try:
+                data = json.loads(settings_file.read_text(encoding="utf-8"))
+            except Exception:
+                data = {}
+        favs = data.get("favorites", [])
+        if not isinstance(favs, list):
+            favs = []
+        is_fav = False
+        if game_id in favs:
+            favs.remove(game_id)
+            is_fav = False
+        else:
+            favs.append(game_id)
+            is_fav = True
+        data["favorites"] = favs
+        try:
+            settings_file.parent.mkdir(parents=True, exist_ok=True)
+            settings_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        except Exception as e:
+            print(f"[Arcade] Error saving favorites: {e}")
+        self.favoritesChanged.emit(favs)
+        return is_fav
+
+    @Slot(result=str)
+    def getDesktopWallpaper(self) -> str:
+        """Returns the saved desktop wallpaper theme ID ('teal', 'matrix', 'cyber', 'sunset', 'starfield', 'blue')."""
+        settings_file = self._get_settings_path()
+        if settings_file.exists():
+            try:
+                data = json.loads(settings_file.read_text(encoding="utf-8"))
+                return data.get("desktop_wallpaper", "matrix")
+            except Exception:
+                pass
+        return "matrix"
+
+    @Slot(str)
+    def setDesktopWallpaper(self, wallpaper: str):
+        """Persists the desktop wallpaper theme."""
+        settings_file = self._get_settings_path()
+        data = {}
+        if settings_file.exists():
+            try:
+                data = json.loads(settings_file.read_text(encoding="utf-8"))
+            except Exception:
+                data = {}
+        data["desktop_wallpaper"] = wallpaper
+        try:
+            settings_file.parent.mkdir(parents=True, exist_ok=True)
+            settings_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        except Exception as e:
+            print(f"[Arcade] Error saving wallpaper: {e}")
+        self.wallpaperChanged.emit(wallpaper)
 
     @Slot(str)
     def installGame(self, game_id: str):

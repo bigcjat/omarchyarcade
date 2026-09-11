@@ -813,10 +813,11 @@ ApplicationWindow {
         // =====================================================================
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 46
+            Layout.preferredHeight: root.viewMode === "desktop" ? 0 : 46
+            visible: root.viewMode !== "desktop"
             color: "#14141c"
             border.color: themeBorder
-            border.width: 1
+            border.width: root.viewMode === "desktop" ? 0 : 1
             z: 10
 
             Flickable {
@@ -1037,6 +1038,7 @@ ApplicationWindow {
                 id: desktopView
                 anchors.fill: parent
                 visible: (root.selectedCategory !== "FEATURED" || root.searchQuery !== "") && root.viewMode === "desktop"
+                catalog: root.catalogData
                 games: root.filteredGames
                 selectedIndex: root.focusedIndex
                 onGameSelected: function(idx) {
@@ -1883,6 +1885,18 @@ ApplicationWindow {
             }
             if (detailSheet.visible) {
                 return;
+            }
+            if (event.key === Qt.Key_Escape && desktopView.visible) {
+                if (desktopView.openFolder !== null) {
+                    desktopView.openFolder = null;
+                    event.accepted = true;
+                    return;
+                }
+                if (desktopView.showWallpaperPicker) {
+                    desktopView.showWallpaperPicker = false;
+                    event.accepted = true;
+                    return;
+                }
             }
             if (searchInput.activeFocus) {
                 if (event.key === Qt.Key_Escape) {
