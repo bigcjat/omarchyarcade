@@ -194,12 +194,8 @@ ApplicationWindow {
 
     function updateFocusedGameTitle() {
         if (focusedIndex >= 0 && filteredGames && focusedIndex < filteredGames.length) {
-            var g = filteredGames[focusedIndex];
-            if (g && g.title) {
-                var sz = g.size ? (" • " + g.size) : "";
-                focusedGameTitle = g.title + sz + "  [" + (focusedIndex + 1) + "/" + filteredGames.length + "]";
-                return;
-            }
+            focusedGameTitle = (focusedIndex + 1) + " of " + filteredGames.length;
+            return;
         }
         focusedGameTitle = "";
     }
@@ -1182,11 +1178,12 @@ ApplicationWindow {
                 Text {
                     id: statusGameText
                     Layout.alignment: Qt.AlignVCenter
+                    visible: (root.selectedCategory !== "FEATURED" || root.searchQuery !== "") && (root.viewMode === "grid" || root.viewMode === "desktop") && root.focusedGameTitle !== ""
                     text: root.focusedGameTitle
                     font.family: "monospace"
                     font.pixelSize: 11
                     font.bold: true
-                    color: themeAccentAlt
+                    color: "#64748b"
                 }
             }
         }
