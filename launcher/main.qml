@@ -955,7 +955,7 @@ ApplicationWindow {
             ViewFeatured {
                 id: featuredPageView
                 anchors.fill: parent
-                visible: root.selectedCategory === "FEATURED" && root.searchQuery === ""
+                visible: root.viewMode !== "desktop" && root.selectedCategory === "FEATURED" && root.searchQuery === ""
                 catalog: root.catalogData
                 onGameLaunched: function(gameId) {
                     root.launchGame(gameId);
@@ -1037,7 +1037,7 @@ ApplicationWindow {
             ViewDesktop {
                 id: desktopView
                 anchors.fill: parent
-                visible: (root.selectedCategory !== "FEATURED" || root.searchQuery !== "") && root.viewMode === "desktop"
+                visible: root.viewMode === "desktop"
                 catalog: root.catalogData
                 games: root.filteredGames
                 selectedIndex: root.focusedIndex
@@ -2034,7 +2034,7 @@ ApplicationWindow {
                 }
             }
 
-            if (root.selectedCategory === "FEATURED" && root.searchQuery === "") {
+            if (featuredPageView.visible) {
                 if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                     root.launchGame("skyace");
                     event.accepted = true;
