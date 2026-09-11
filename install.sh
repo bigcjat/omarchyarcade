@@ -31,9 +31,8 @@ if [ -d "$PWD/launcher" ] && [ -f "$PWD/catalog.json" ]; then
     mkdir -p "$APP_DIR/launcher" "$APP_DIR/assets"
     cp "$PWD/catalog.json" "$APP_DIR/catalog.json"
     cp -r "$PWD/launcher/"* "$APP_DIR/launcher/"
-    cp "$PWD/assets/omarchy_arcade_logo.svg" "$APP_DIR/assets/omarchy_arcade_logo.svg"
-    if [ -d "$PWD/assets/covers" ]; then
-        cp -r "$PWD/assets/covers" "$APP_DIR/assets/"
+    if [ -d "$PWD/assets" ]; then
+        cp -r "$PWD/assets/"* "$APP_DIR/assets/" 2>/dev/null || true
     fi
 else
     echo -e "${GREEN}==>${RESET} Downloading Omarchy Arcade launcher payload..."
@@ -42,8 +41,11 @@ else
     curl -sSL "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/catalog.json" -o "$APP_DIR/catalog.json"
     curl -sSL "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/assets/omarchy_arcade_logo.svg" -o "$APP_DIR/assets/omarchy_arcade_logo.svg"
     curl -sSL "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/assets/splashscreen.png" -o "$APP_DIR/assets/splashscreen.png" 2>/dev/null || true
+    curl -sSL "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/assets/poker_felt_monogram.svg" -o "$APP_DIR/assets/poker_felt_monogram.svg" 2>/dev/null || true
+    curl -sSL "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/assets/poker_felt_suited.svg" -o "$APP_DIR/assets/poker_felt_suited.svg" 2>/dev/null || true
+    curl -sSL "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/assets/poker_felt_pattern.svg" -o "$APP_DIR/assets/poker_felt_pattern.svg" 2>/dev/null || true
 
-    for f in main.py main.qml FloppyCard.qml GameDetailSheet.qml SplashScreen.qml ViewFeatured.qml ViewCarousel.qml ViewDesktop.qml ViewSidebar.qml omarchy_arcade_logo.svg omarchy_arcade_text.svg; do
+    for f in main.py main.qml FloppyCard.qml GameDetailSheet.qml SplashScreen.qml ViewFeatured.qml ViewCarousel.qml ViewDesktop.qml ViewSidebar.qml omarchy_arcade_logo.svg omarchy_arcade_text.svg poker_felt_monogram.svg poker_felt_suited.svg poker_felt_pattern.svg; do
         curl -sSL "https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/launcher/$f" -o "$APP_DIR/launcher/$f"
     done
 fi

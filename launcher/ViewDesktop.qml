@@ -210,10 +210,18 @@ Item {
 
             // 2. Seamless Tiled Omarchy Logo Jacquard Pattern
             Image {
+                id: feltTileImage
                 anchors.fill: parent
                 fillMode: Image.Tile
-                source: desktopView.feltStyle === "monogram" ? "../assets/poker_felt_monogram.svg" : "../assets/poker_felt_suited.svg"
+                source: (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getPokerFeltUrl) ?
+                        arcadeBackend.getPokerFeltUrl(desktopView.feltStyle) :
+                        (desktopView.feltStyle === "monogram" ? "poker_felt_monogram.svg" : "poker_felt_suited.svg")
                 opacity: 0.95
+                onStatusChanged: {
+                    if (status === Image.Error && source.toString().indexOf("../assets/") === -1) {
+                        source = desktopView.feltStyle === "monogram" ? "../assets/poker_felt_monogram.svg" : "../assets/poker_felt_suited.svg";
+                    }
+                }
             }
 
             // 3. Overhead Casino Lamp Lighting (Radial Spotlight Vignette & Subtle Weave)

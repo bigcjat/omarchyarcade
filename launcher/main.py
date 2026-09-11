@@ -418,6 +418,46 @@ class ArcadeBackend(QObject):
             print(f"[Arcade] Error saving felt style: {e}")
         self.feltStyleChanged.emit(style)
 
+    @Slot(str, result=str)
+    def getPokerFeltUrl(self, style: str) -> str:
+        """Returns a valid file URL for the poker felt wallpaper SVG, auto-restoring if missing."""
+        fname = "poker_felt_monogram.svg" if style == "monogram" else "poker_felt_suited.svg"
+        
+        # 1. Check in launcher directory
+        p_launcher = LAUNCHER_DIR / fname
+        if p_launcher.exists():
+            return QUrl.fromLocalFile(str(p_launcher)).toString()
+
+        # 2. Check in assets directory
+        p_assets = BASE_DIR / "assets" / fname
+        if p_assets.exists():
+            return QUrl.fromLocalFile(str(p_assets)).toString()
+
+        # 3. Check in app data assets directory
+        p_data = DATA_DIR / "assets" / fname
+        if p_data.exists():
+            return QUrl.fromLocalFile(str(p_data)).toString()
+
+        # 4. Auto-restore missing wallpaper asset from GitHub
+        try:
+            import urllib.request
+            LAUNCHER_DIR.mkdir(parents=True, exist_ok=True)
+            for target_url in [
+                f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/launcher/{fname}",
+                f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/assets/{fname}"
+            ]:
+                try:
+                    urllib.request.urlretrieve(target_url, str(p_launcher))
+                    if p_launcher.exists():
+                        print(f"[Arcade] Auto-restored missing poker felt pattern: {fname}")
+                        return QUrl.fromLocalFile(str(p_launcher)).toString()
+                except Exception:
+                    continue
+        except Exception as e:
+            print(f"[Arcade] Could not auto-download poker felt {fname}: {e}")
+
+        return fname
+
     @Slot(str)
     def installGame(self, game_id: str):
         """Downloads and installs only the requested game from GitHub in the background."""
@@ -957,6 +997,9 @@ def ensure_launcher_assets():
         "SplashScreen.qml",
         "omarchy_arcade_logo.svg",
         "omarchy_arcade_text.svg",
+        "poker_felt_monogram.svg",
+        "poker_felt_suited.svg",
+        "poker_felt_pattern.svg",
     ]
     import urllib.request
     for rf in required_files:
@@ -967,8 +1010,13 @@ def ensure_launcher_assets():
                 url = f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/launcher/{rf}"
                 urllib.request.urlretrieve(url, str(dest))
                 print(f"[Arcade] Successfully restored {rf}")
-            except Exception as e:
-                print(f"[Arcade] Error downloading {rf}: {e}")
+            except Exception:
+                try:
+                    url2 = f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/assets/{rf}"
+                    urllib.request.urlretrieve(url2, str(dest))
+                    print(f"[Arcade] Successfully restored {rf} from assets")
+                except Exception as e2:
+                    print(f"[Arcade] Error downloading {rf}: {e2}")
 
 
 def main():

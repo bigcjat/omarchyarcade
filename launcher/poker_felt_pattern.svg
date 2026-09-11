@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <defs>
+    <!-- Omarchy Icon scaled to 26x26 (0.0216666) -->
+    <g id="omarchy-felt-mark">
+      <!-- 1px Deboss Depth Shadow (into felt fibers) -->
+      <path transform="translate(0.6, 1.0) scale(0.0216666)" clip-rule="evenodd" fill-rule="evenodd" fill="rgba(0, 0, 0, 0.42)" d="m1200 1200h-480v-80h400v-1040h-479.996v160h-400v720h720v-720h-80v-80h159.996v880h-400v160h-640v-1200h1200zm-1120-80h480v-80h-400l.004-400h-80.004zm0-560h80.004v-400h400v-80h-480.004z"/>
+      <!-- Soft Top Highlight (felt sheen) -->
+      <path transform="translate(0, -0.5) scale(0.0216666)" clip-rule="evenodd" fill-rule="evenodd" fill="rgba(255, 255, 255, 0.16)" d="m1200 1200h-480v-80h400v-1040h-479.996v160h-400v720h720v-720h-80v-80h159.996v880h-400v160h-640v-1200h1200zm-1120-80h480v-80h-400l.004-400h-80.004zm0-560h80.004v-400h400v-80h-480.004z"/>
+      <!-- Main Jacquard Weave Face -->
+      <path transform="scale(0.0216666)" clip-rule="evenodd" fill-rule="evenodd" fill="rgba(255, 255, 255, 0.09)" d="m1200 1200h-480v-80h400v-1040h-479.996v160h-400v720h720v-720h-80v-80h159.996v880h-400v160h-640v-1200h1200zm-1120-80h480v-80h-400l.004-400h-80.004zm0-560h80.004v-400h400v-80h-480.004z"/>
+    </g>
+
+    <!-- Subtle Diamond Grid Accent -->
+    <g id="diamond-accent">
+      <polygon points="0,-2.5 2.5,0 0,2.5 -2.5,0" fill="rgba(255, 255, 255, 0.08)"/>
+      <polygon points="0,-1.5 1.5,0 0,1.5 -1.5,0" fill="rgba(0, 0, 0, 0.25)"/>
+    </g>
+    <!-- Soft Diamond Link Lines -->
+    <g id="grid-links">
+      <line x1="0" y1="48" x2="48" y2="0" stroke="rgba(255,255,255,0.025)" stroke-width="1" stroke-dasharray="2 3"/>
+      <line x1="48" y1="0" x2="96" y2="48" stroke="rgba(255,255,255,0.025)" stroke-width="1" stroke-dasharray="2 3"/>
+      <line x1="96" y1="48" x2="48" y2="96" stroke="rgba(255,255,255,0.025)" stroke-width="1" stroke-dasharray="2 3"/>
+      <line x1="48" y1="96" x2="0" y2="48" stroke="rgba(255,255,255,0.025)" stroke-width="1" stroke-dasharray="2 3"/>
+    </g>
+  </defs>
+
+  <!-- Diamond Grid Hairlines -->
+  <use href="#grid-links"/>
+
+  <!-- Center Logo (26x26 centered at 48,48 -> offset 48 - 13 = 35) -->
+  <use href="#omarchy-felt-mark" x="35" y="35" />
+
+  <!-- 4 Corner Logos (centered at (0,0), (96,0), (0,96), (96,96) -> offset -13) -->
+  <use href="#omarchy-felt-mark" x="-13" y="-13" />
+  <use href="#omarchy-felt-mark" x="83" y="-13" />
+  <use href="#omarchy-felt-mark" x="-13" y="83" />
+  <use href="#omarchy-felt-mark" x="83" y="83" />
+
+  <!-- Diamond Pips at diamond lattice nodes -->
+  <use href="#diamond-accent" x="48" y="0" />
+  <use href="#diamond-accent" x="48" y="96" />
+  <use href="#diamond-accent" x="0" y="48" />
+  <use href="#diamond-accent" x="96" y="48" />
+</svg>
