@@ -405,36 +405,14 @@ Item {
                     anchors.margins: 18
                     spacing: 12
 
-                    // Header pill & Title
+                    // Header Title & Auditable Link
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 10
-
-                        Rectangle {
-                            height: 22
-                            radius: 4
-                            Layout.preferredWidth: promisePillText.implicitWidth + 14
-                            color: "#142828"
-                            border.color: "#059669"
-                            border.width: 1
-                            Row {
-                                anchors.centerIn: parent
-                                spacing: 4
-                                Text { text: "🕹️"; font.pixelSize: 10 }
-                                Text {
-                                    id: promisePillText
-                                    text: "THE DEFAULT OS SUITE"
-                                    font.family: "monospace"
-                                    font.pixelSize: 10
-                                    font.bold: true
-                                    color: "#34d399"
-                                }
-                            }
-                        }
+                        spacing: 12
 
                         Text {
-                            text: "Remember When Operating Systems Came With Games?"
-                            font.pixelSize: 13
+                            text: "Remember when operating systems came with games?"
+                            font.pixelSize: 14
                             font.bold: true
                             color: "#f8fafc"
                             Layout.fillWidth: true
