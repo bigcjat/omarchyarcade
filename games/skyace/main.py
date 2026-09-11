@@ -2739,9 +2739,65 @@ class SkyAceGame(QWidget):
         btn_msg = "★ RESUME WORLD TOUR CAMPAIGN • [SPACE / CLICK] ★" if is_victory else "★ RETURN TO CAMPAIGN SORTIE • [SPACE / CLICK] ★"
         painter.drawText(btn_rect, Qt.AlignCenter, btn_msg)
 
+    def start_landing_sequence(self):
+        """Cleanly prepares carrier recovery sequence, clearing all hostile combat entities from airspace."""
+        self.state = "landing"
+        self.landing_tick = 0
+        self.carrier_y = -700
+
+        # Detonate and award points for any remaining airborne enemies
+        for e in self.enemies:
+            self.explosions.append({
+                "x": e["x"], "y": e["y"],
+                "radius": 18, "max_radius": 46, "life": 22
+            })
+            self.score += 400
+        self.enemies.clear()
+
+        # Detonate and award points for any remaining naval warships
+        for w in self.warships:
+            self.explosions.append({
+                "x": w["x"], "y": w["y"],
+                "radius": 26, "max_radius": 58, "life": 26
+            })
+            self.score += 1000
+        self.warships.clear()
+
+        # Detonate and award points for any remaining ground structures
+        for g in self.ground_targets:
+            self.explosions.append({
+                "x": g["x"], "y": g["y"],
+                "radius": 20, "max_radius": 45, "life": 22
+            })
+            self.score += 300
+        self.ground_targets.clear()
+
+        # Disarm and sweep all active projectiles
+        self.bullets.clear()
+        self.missiles.clear()
+        self.enemy_bullets.clear()
+        self.muzzle_flashes.clear()
+
+        # Auto-collect floating loot items as recovery bonus
+        for p in self.pickups:
+            self.score += 500
+        self.pickups.clear()
+
+        # Clear boss and facility state
+        self.boss = None
+        self.boss_spawned = False
+        if self.cartel_hangar:
+            self.cartel_hangar["active"] = False
+
+        # Reset player flight combat triggers
+        self.is_fire_held = False
+        self.is_looping = False
+        self.loop_tick = 0
+
     def defeat_boss(self):
         if not self.boss or not self.boss.get("active"):
             return
+        boss_title = self.boss.get("title", "FLAGSHIP")
         self.boss["active"] = False
         self.stats["boss_killed"] = True
         self.score += 20000
@@ -2756,19 +2812,17 @@ class SkyAceGame(QWidget):
 
         if self.is_secret_mission:
             self.secret_bosses_defeated += 1
-            b_title = self.boss.get("title", "CARTEL DREADNOUGHT") if self.boss else "CARTEL DREADNOUGHT"
             self.boss = None
             self.boss_spawned = False
-            self.banner_text = f"★ {b_title} DOWN! ADVANCING TOWARDS WEAPONS DEPOT! ★"
+            self.banner_text = f"★ {boss_title} DOWN! ADVANCING TOWARDS WEAPONS DEPOT! ★"
             self.banner_timer = 150
             return
 
         self.sound.play_bgm("bgm_victory")
-        self.banner_text = f"★ {self.boss['title']} DESTROYED! RETURN TO CARRIER FOR RECOVERY! ★"
+        self.banner_text = f"★ {boss_title} DESTROYED! RETURN TO CARRIER FOR RECOVERY! ★"
         self.banner_timer = 180
         # Scramble carrier landing
-        self.state = "landing"
-        self.landing_tick = 0
+        self.start_landing_sequence()
 
     def take_player_damage(self, amount=1, hit_x=None, hit_y=None):
         if self.invulnerable_ticks > 0 or self.is_looping or self.death_ticks > 0 or self.state != "playing":
@@ -3980,8 +4034,7 @@ class SkyAceGame(QWidget):
                 self.trigger_mega_crash()
             elif key == Qt.Key_L:
                 if not self.is_looping and self.death_ticks == 0:
-                    self.state = "landing"
-                    self.landing_tick = 0
+                    self.start_landing_sequence()
             elif key in (Qt.Key_Z, Qt.Key_X, Qt.Key_V, Qt.Key_F, Qt.Key_Control, Qt.Key_Meta):
                 self.keys.add(key)
                 self.is_fire_held = True
@@ -4400,8 +4453,7 @@ class SkyAceGame(QWidget):
                             self.sound.play_bgm("bgm_victory")
                             self.banner_text = "★ MISSION ACCOMPLISHED: BLACKOUT OPERATION COMPLETE! ★"
                             self.banner_timer = 200
-                            self.state = "landing"
-                            self.landing_tick = 0
+                            self.start_landing_sequence()
                     else:
                         for t in h.get("turrets", []):
                             if t.get("active", True):
@@ -6630,7 +6682,7 @@ class SkyAceGame(QWidget):
         # During takeoff: starts on ocean, transitions to destination theater background while inside cloud cover (tick 300)
         show_ocean_base = (
             (self.state == "takeoff" and self.takeoff_tick < 300)
-            or (self.state == "landing" and self.landing_tick >= 80)
+            or (self.state == "landing")
             or (self.carrier_y > -750 and self.carrier_y < self.height() + 250)
             or (self.current_round == 2 and not self.is_secret_mission)
         )
@@ -6733,7 +6785,7 @@ class SkyAceGame(QWidget):
                 painter.fillRect(self.rect(), QColor(55, 95, 45))
 
             # Draw Ground Targets (Tanks, Pillbox Bunkers, Flak 88s, Hangars, Tents)
-            for g in self.ground_targets:
+            for g in (self.ground_targets if self.state != "landing" else []):
                 gx, gy = int(g["x"]), int(g["y"])
                 g_model = g["model"]
                 stage_name = "wreck" if g.get("wreck") else ("damaged" if g["hp"] <= g["max_hp"] * 0.5 else "pristine")
@@ -6761,7 +6813,7 @@ class SkyAceGame(QWidget):
                 painter.restore()
 
             # Draw Cartel Underground Hangar Complex (Ground Redoubt)
-            if self.cartel_hangar and self.cartel_hangar.get("active"):
+            if self.cartel_hangar and self.cartel_hangar.get("active") and self.state != "landing":
                 h = self.cartel_hangar
                 hx, hy = int(h["x"]), int(h["y"])
                 if h.get("exploding"):
@@ -6867,7 +6919,7 @@ class SkyAceGame(QWidget):
                 painter.drawPixmap(dest_rect, carrier_pix)
 
         # 3.5 Hostile 3D Cel-Shaded Naval Warships
-        for w in self.warships:
+        for w in (self.warships if self.state != "landing" else []):
             wx, wy = int(w["x"]), int(w["y"])
             w_type = w["type"]
             stage_idx = 0 if w["hp"] > w["max_hp"] * 0.5 else (1 if w["hp"] > 0 else 2)
@@ -6950,7 +7002,7 @@ class SkyAceGame(QWidget):
                 painter.restore()
 
         # 4. Boss: Super Heavy Fortress
-        if self.boss and self.boss["active"]:
+        if self.boss and self.boss["active"] and self.state != "landing":
             b = self.boss
             bx, by = int(b["x"]), int(b["y"])
             b_faction = b["faction"]
@@ -6984,7 +7036,7 @@ class SkyAceGame(QWidget):
                 painter.drawText(QRect(self.width()//2 - bar_w//2, 127, bar_w, 15), Qt.AlignCenter, f"★ {b['title']} [{b['hp']}/{b['max_hp']}] ★")
 
         # Dedicated Boss Health Gauge for Cartel Hangar Complex
-        if self.cartel_hangar and self.cartel_hangar.get("active"):
+        if self.cartel_hangar and self.cartel_hangar.get("active") and self.state != "landing":
             h = self.cartel_hangar
             bar_w = 360
             painter.fillRect(QRect(self.width()//2 - bar_w//2 - 6, 126, bar_w + 12, 28), QColor(12, 18, 28, 235))
@@ -7006,7 +7058,7 @@ class SkyAceGame(QWidget):
                 painter.drawText(QRect(self.width()//2 - bar_w//2, 127, bar_w, 15), Qt.AlignCenter, f"★ CARTEL UNDERGROUND HANGAR [{h['hp']}/{h['max_hp']}] ★")
 
         # 5. Enemies (Using Dedicated High-Res Sprites)
-        for e in self.enemies:
+        for e in (self.enemies if self.state != "landing" else []):
             ex, ey = int(e["x"]), int(e["y"])
             faction = e["faction"]
             e_type = e["type"]
@@ -7048,7 +7100,7 @@ class SkyAceGame(QWidget):
                     painter.drawPixmap(dest, flash_pix)
 
         # 6. Enemy Bullets
-        for eb in self.enemy_bullets:
+        for eb in (self.enemy_bullets if self.state != "landing" else []):
             bx, by = int(eb["x"]), int(eb["y"])
             painter.setPen(Qt.NoPen)
             painter.setBrush(QColor(255, 80, 30, 200))
@@ -7057,7 +7109,7 @@ class SkyAceGame(QWidget):
             painter.drawEllipse(QRect(bx - 3, by - 3, 6, 6))
 
         # 7. Pickups (Official High-Res Shimmering Badges & Dedicated Repair Kits)
-        for p in self.pickups:
+        for p in (self.pickups if self.state != "landing" else []):
             px, py = int(p["x"]), int(p["y"])
             p_type = p.get("type", "pow")
             shimmer = (self.prop_tick // 8) % 2
@@ -7194,7 +7246,7 @@ class SkyAceGame(QWidget):
         painter.setOpacity(1.0)
 
         # 9. Bullets & Missiles (UNDER AIRCRAFT WINGS)
-        for b in self.bullets:
+        for b in (self.bullets if self.state != "landing" else []):
             bx, by, b_type = b["x"], b["y"], b.get("type", "twin")
             painter.setPen(Qt.NoPen)
             if b_type == "shotgun":
@@ -7206,12 +7258,12 @@ class SkyAceGame(QWidget):
             else:
                 painter.setBrush(QColor(255, 180, 30, 200)); painter.drawRoundedRect(QRect(int(bx - 2), int(by - 12), 4, 16), 2, 2)
 
-        for m in self.missiles:
+        for m in (self.missiles if self.state != "landing" else []):
             mx, my = int(m["x"]), int(m["y"])
             painter.setPen(Qt.NoPen); painter.setBrush(QColor(255, 120, 20)); painter.drawEllipse(mx - 3, my + 6, 6, 8)
             painter.setBrush(QColor(230, 235, 240)); painter.drawRoundedRect(QRect(mx - 3, my - 8, 6, 16), 2, 2)
 
-        for f in self.muzzle_flashes:
+        for f in (self.muzzle_flashes if self.state != "landing" else []):
             painter.setPen(Qt.NoPen); painter.setBrush(QColor(255, 220, 40, 240)); painter.drawEllipse(QRect(int(f["x"] - 5), int(f["y"] - 5), 10, 10))
 
         # 10. Escort Fighters
