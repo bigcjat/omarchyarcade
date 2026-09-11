@@ -454,7 +454,7 @@ Item {
                                 text: activeGame ? activeGame.tagline : ""
                                 font.pixelSize: sidebarView.isNarrow ? 13 : 15
                                 font.italic: true
-                                color: themeAccent
+                                color: "#94a3b8"
                                 elide: Text.ElideRight
                             }
 
@@ -467,62 +467,33 @@ Item {
                                 readonly property bool activeHasUpdate: activeGame ? (typeof root !== "undefined" && root.hasGameUpdate ? root.hasGameUpdate(activeGame.id, activeGame.version || "") : (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.hasGameUpdate ? arcadeBackend.hasGameUpdate(activeGame.id, activeGame.version || "") : false)) : false
                                 readonly property bool activeInstalled: activeGame ? (typeof root !== "undefined" && root.isInstalled ? root.isInstalled(activeGame.id) : (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.isGameInstalled ? arcadeBackend.isGameInstalled(activeGame.id) : true)) : true
 
-                                // Update Button (prominent cyan)
+                                // Primary Action Button (Play Game / Update / Get)
                                 Rectangle {
-                                    visible: actionButtonsFlow.activeHasUpdate
+                                    id: sidebarPlayBtn
                                     height: sidebarView.isNarrow ? 38 : 44
                                     width: sidebarView.isNarrow ? 150 : 180
                                     radius: 8
-                                    color: sidebarUpdateMouse.containsMouse ? "#38bdf8" : "#0284c7"
-                                    border.color: "#38bdf8"
-                                    border.width: 1
-
-                                    RowLayout {
-                                        anchors.centerIn: parent
-                                        spacing: 6
-                                        Text { text: "🔄"; font.pixelSize: sidebarView.isNarrow ? 12 : 14; color: "#f0f9ff" }
-                                        Text {
-                                            text: "UPDATE (v" + (activeGame ? (activeGame.version || "") : "") + ")"
-                                            font.pixelSize: sidebarView.isNarrow ? 11 : 13
-                                            font.bold: true
-                                            color: "#f0f9ff"
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: sidebarUpdateMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: {
-                                            if (activeGame) {
-                                                sidebarView.detailRequested(activeGame);
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Rectangle {
-                                    height: sidebarView.isNarrow ? 38 : 44
-                                    width: sidebarView.isNarrow ? 150 : 180
-                                    radius: 8
-                                    color: !actionButtonsFlow.activeInstalled ? (sidebarPlayMouse.containsMouse ? "#10b981" : "#059669") : (sidebarPlayMouse.containsMouse ? Qt.lighter(themeAccent, 1.15) : themeAccent)
-                                    border.color: !actionButtonsFlow.activeInstalled ? "#34d399" : Qt.lighter(themeAccent, 1.4)
+                                    color: actionButtonsFlow.activeHasUpdate ? (sidebarPlayMouse.containsMouse ? "#0284c7" : "#0369a1") :
+                                           (!actionButtonsFlow.activeInstalled ? (sidebarPlayMouse.containsMouse ? "#059669" : "#047857") :
+                                           (sidebarPlayMouse.containsMouse ? "#0284c7" : "#0369a1"))
+                                    border.color: actionButtonsFlow.activeHasUpdate ? "#38bdf8" :
+                                                  (!actionButtonsFlow.activeInstalled ? "#34d399" : "#38bdf8")
                                     border.width: 1
 
                                     RowLayout {
                                         anchors.centerIn: parent
                                         spacing: 6
                                         Text {
-                                            text: !actionButtonsFlow.activeInstalled ? "⬇" : "▶"
+                                            text: actionButtonsFlow.activeHasUpdate ? "🔄" : (!actionButtonsFlow.activeInstalled ? "⬇" : "▶")
                                             font.pixelSize: sidebarView.isNarrow ? 12 : 14
-                                            color: !actionButtonsFlow.activeInstalled ? "#ffffff" : "#09090e"
+                                            color: "#FFFFFF"
                                         }
                                         Text {
-                                            text: !actionButtonsFlow.activeInstalled ? ("GET (" + (activeGame && activeGame.size ? activeGame.size : "") + ")") : "PLAY GAME"
+                                            text: actionButtonsFlow.activeHasUpdate ? ("UPDATE (v" + (activeGame ? activeGame.version : "") + ")") :
+                                                  (!actionButtonsFlow.activeInstalled ? ("GET (" + (activeGame && activeGame.size ? activeGame.size : "") + ")") : "PLAY GAME")
                                             font.pixelSize: sidebarView.isNarrow ? 11 : 13
                                             font.bold: true
-                                            color: !actionButtonsFlow.activeInstalled ? "#ffffff" : "#09090e"
+                                            color: "#FFFFFF"
                                         }
                                     }
 

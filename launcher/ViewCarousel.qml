@@ -239,7 +239,7 @@ Item {
                         text: activeGame ? activeGame.tagline : ""
                         font.pixelSize: 14
                         font.italic: true
-                        color: themeAccent
+                        color: "#94a3b8"
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }

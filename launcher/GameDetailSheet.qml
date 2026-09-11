@@ -774,8 +774,8 @@ Rectangle {
                             Text {
                                 text: gameData ? gameData.tagline : ""
                                 font.pixelSize: 13
-                                font.bold: true
-                                color: gameData ? gameData.grid_color : "#38bdf8"
+                                font.italic: true
+                                color: "#94a3b8"
                                 Layout.fillWidth: true
                                 wrapMode: Text.WordWrap
                             }
