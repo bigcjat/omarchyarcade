@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/Ads-Zero-f59e0b?style=flat-square" alt="Zero Ads"/>
   <img src="https://img.shields.io/badge/Games-39%20Included-ec4899?style=flat-square" alt="39 Games"/>
   <img src="https://img.shields.io/badge/Interface-Keyboard--Primary-8b5cf6?style=flat-square" alt="Keyboard-Primary"/>
-  <img src="https://img.shields.io/badge/Platform-Omarchy%20Linux%20(Hyprland)-38bdf8?style=flat-square" alt="Omarchy Linux"/>
+  <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-38bdf8?style=flat-square" alt="Linux | macOS | Windows"/>
 </p>
 
 ---
@@ -64,42 +64,45 @@ When you download a casual title like 2048 on modern mobile app stores (such as 
 
 ---
 
-## Choose Your Installation Method
+## Installation
 
-Install Omarchy Arcade however you prefer—as an automated single command, a native system package, a portable executable, or a sandboxed container.
+Omarchy Arcade is lightweight, cross-platform, and runs natively on **Omarchy & all Linux distributions**, **macOS**, and **Windows 10/11**.
 
-### Option 1: Standalone AppImage (Zero-Install Executable)
+---
 
-Download the single `Omarchy_Arcade-x86_64.AppImage` executable from [GitHub Releases](https://github.com/bigcjat/omarchyarcade/releases) (or build it locally via `./packaging/appimage/build_appimage.sh`), make it executable, and run—zero system changes:
+### 🐧 Omarchy & Linux
+
+Omarchy Arcade works out-of-the-box on **any Linux distribution** (Omarchy, Arch, Ubuntu, Debian, Fedora, openSUSE, Pop!_OS, Linux Mint, etc.).
+
+#### Option A: One-Command Quick Install (Recommended)
+Installs only the lightweight launcher application (under 1 MB, zero git clone, zero developer baggage):
+
+```bash
+curl -sSL https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/install.sh | bash
+```
+
+* **On Omarchy / Arch:** Automatically configures native `python-pyside6` via `pacman`.
+* **On All Other Linux Distros (Ubuntu, Debian, Fedora, etc.):** Automatically provisions an isolated user environment with PySide6 in `~/.local/share/omarchy-arcade/venv` (zero `sudo` required).
+* **Desktop Integration:** Installs `omarchy-arcade.desktop` to your system app launcher (Walker, Rofi, Fuzzel, GNOME, KDE) and provides the `arcade` terminal command.
+
+#### Option B: Standalone AppImage (Zero-Install Portable Executable)
+Download the standalone `Omarchy_Arcade-x86_64.AppImage` from [GitHub Releases](https://github.com/bigcjat/omarchyarcade/releases), make it executable, and double-click to play anywhere:
 
 ```bash
 chmod +x Omarchy_Arcade-x86_64.AppImage
 ./Omarchy_Arcade-x86_64.AppImage
 ```
 
----
-
-### Option 2: One-Line Installer (Fastest for Omarchy)
-
-Run this single command in your terminal. It installs **only the launcher application** (no git repository, no developer clone):
+#### Option C: Native Arch / Omarchy Package (`pacman` / `makepkg`)
+Build and install natively via the included [`PKGBUILD`](PKGBUILD):
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/install.sh | bash
+git clone https://github.com/bigcjat/omarchyarcade.git
+cd omarchyarcade
+makepkg -si
 ```
 
-**What this sets up automatically:**
-- Installs Qt6 dependencies (`python-pyside6`, `qt6-declarative`, `qt6-svg`, `qt6-multimedia`) via `pacman`.
-- Places the standalone launcher executable in `~/.local/bin/arcade`.
-- Installs the retro vector icon in `~/.local/share/icons/`.
-- Registers `omarchy-arcade.desktop` in your application launcher (Walker / Rofi / Fuzzel / App Menu).
-- Enables launching via terminal with `arcade`.
-
----
-
-### Option 3: Flatpak (KDE Qt6 Runtime)
-
-Run the sandboxed Flatpak package:
-
+#### Option D: Flatpak (Flathub Sandboxed Runtime)
 ```bash
 cd packaging/flatpak
 flatpak-builder --user --install --force-clean build-dir org.omarchy.Arcade.yml
@@ -108,17 +111,44 @@ flatpak run org.omarchy.Arcade
 
 ---
 
-### Option 4: Native Arch / Omarchy Package (`makepkg` / `pacman`)
+### 🍏 macOS (Apple Silicon & Intel)
 
-Build and install natively using the included [`PKGBUILD`](PKGBUILD):
+Omarchy Arcade runs natively with full Retina high-DPI support on macOS 12 Monterey, 13 Ventura, 14 Sonoma, and 15 Sequoia.
+
+#### Option A: One-Command Quick Install (Recommended)
+Open Terminal and run:
 
 ```bash
-git clone https://github.com/bigcjat/omarchyarcade.git
-cd omarchyarcade
-makepkg -si
+curl -sSL https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/install.sh | bash
 ```
 
-*Cleanly uninstall anytime with `sudo pacman -R omarchy-arcade`.*
+* Automatically provisions an isolated user environment with PySide6 (zero Homebrew or Xcode required).
+* Registers a native `Omarchy Arcade.app` in `~/Applications` so it appears in **Spotlight**, **Launchpad**, and Finder.
+* Adds the `arcade` command to your terminal.
+
+#### Option B: Standalone DMG
+Download `Omarchy_Arcade-macOS.dmg` from [GitHub Releases](https://github.com/bigcjat/omarchyarcade/releases), double-click to mount, and drag **Omarchy Arcade** into your Applications folder.
+
+---
+
+### 🪟 Windows 10 & 11
+
+Omarchy Arcade runs natively with hardware-accelerated DirectX 11 / OpenGL Qt Quick rendering and WASAPI audio.
+
+#### Option A: One-Command Quick Install (PowerShell)
+Open PowerShell and run:
+
+```powershell
+irm https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/packaging/windows/install.ps1 | iex
+```
+
+* Installs the launcher payload to `%LOCALAPPDATA%\omarchy-arcade` (under 1 MB).
+* Automatically provisions an isolated virtual environment with PySide6.
+* Creates high-DPI **Start Menu** and **Desktop** shortcuts (`Omarchy Arcade.lnk`).
+* Adds the `arcade` CLI shortcut to your command line.
+
+#### Option B: Portable Release Zip
+Download `Omarchy_Arcade-Windows-x64.zip` from [GitHub Releases](https://github.com/bigcjat/omarchyarcade/releases), extract anywhere, and double-click `Launch_Arcade.bat`.
 
 ---
 
