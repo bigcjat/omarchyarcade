@@ -108,28 +108,11 @@ if command -v update-desktop-database >/dev/null 2>&1; then
 fi
 echo -e "${GREEN}==>${RESET} Desktop application registered."
 
-# 5. Configure Hyprland Rules & Shortcut (Super + G)
-HYPR_CONF="$HOME/.config/hypr/hyprland.conf"
-if [ -f "$HYPR_CONF" ]; then
-    if ! grep -q "omarchy-arcade" "$HYPR_CONF" && ! grep -q "exec, arcade" "$HYPR_CONF"; then
-        cat << 'EOF' >> "$HYPR_CONF"
-
-# --- Omarchy Arcade Window Rule & Keybind ---
-windowrulev2 = float, title:^(Omarchy Arcade)$
-windowrulev2 = size 1080 740, title:^(Omarchy Arcade)$
-windowrulev2 = center, title:^(Omarchy Arcade)$
-bind = $mainMod, G, exec, arcade
-EOF
-        echo -e "${GREEN}==>${RESET} Hyprland configuration updated."
-    fi
-fi
-
 echo ""
 echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${RESET}"
 echo -e "${GREEN}║${RESET}  ${BOLD}LAUNCHER INSTALLED SUCCESSFULLY!${RESET}                          ${GREEN}║${RESET}"
 echo -e "${GREEN}║${RESET}                                                            ${GREEN}║${RESET}"
-echo -e "${GREEN}║${RESET}  🎮 App Launcher:  Open ${BOLD}Omarchy Arcade${RESET} in menu             ${GREEN}║${RESET}"
+echo -e "${GREEN}║${RESET}  🎮 App Launcher:  Open ${BOLD}Omarchy Arcade${RESET} via Super / App Menu  ${GREEN}║${RESET}"
 echo -e "${GREEN}║${RESET}  ⌨️ Terminal:      Type ${BOLD}arcade${RESET}                              ${GREEN}║${RESET}"
-echo -e "${GREEN}║${RESET}  ⚡ In Hyprland:   Press ${BOLD}Super + G${RESET}                           ${GREEN}║${RESET}"
 echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${RESET}"
 echo ""

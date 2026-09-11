@@ -34,13 +34,4 @@ EOF
 
     # Application Icon
     install -Dm644 "$src/assets/omarchy_arcade_logo.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/omarchy-arcade.svg"
-
-    # Hyprland Window Rule & Keybind Drop-in
-    install -dm755 "$pkgdir/usr/share/hypr/rules"
-    cat << 'EOF' > "$pkgdir/usr/share/hypr/rules/omarchy-arcade.conf"
-windowrulev2 = float, title:^(Omarchy Arcade)$
-windowrulev2 = size 1080 740, title:^(Omarchy Arcade)$
-windowrulev2 = center, title:^(Omarchy Arcade)$
-bind = $mainMod, G, exec, arcade
-EOF
 }

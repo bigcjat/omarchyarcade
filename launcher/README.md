@@ -135,8 +135,8 @@ curl -sSL https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/install.s
 **What this sets up automatically:**
 - Installs Qt6 dependencies (`python-pyside6`, `qt6-declarative`, `qt6-svg`, `qt6-multimedia`) via `pacman`.
 - Symlinks the `arcade` CLI command into `~/.local/bin/arcade`.
-- Adds the application icon to your system menu (Rofi / Walker / Fuzzel).
-- Configures Hyprland floating rules and binds **`Super + G`** for quick launcher access.
+- Adds the application icon to your system menu (Walker / Rofi / Fuzzel / App Menu).
+- Enables terminal launch via `arcade`.
 
 ---
 

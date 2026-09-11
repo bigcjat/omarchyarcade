@@ -91,8 +91,8 @@ curl -sSL https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/install.s
 - Installs Qt6 dependencies (`python-pyside6`, `qt6-declarative`, `qt6-svg`, `qt6-multimedia`) via `pacman`.
 - Places the standalone launcher executable in `~/.local/bin/arcade`.
 - Installs the retro vector icon in `~/.local/share/icons/`.
-- Registers `omarchy-arcade.desktop` in your application launcher (Rofi / Walker / Fuzzel).
-- Adds floating window rules and binds **`Super + G`** in `~/.config/hypr/hyprland.conf`.
+- Registers `omarchy-arcade.desktop` in your application launcher (Walker / Rofi / Fuzzel / App Menu).
+- Enables launching via terminal with `arcade`.
 
 ---
 
