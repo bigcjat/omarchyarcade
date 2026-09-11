@@ -135,7 +135,7 @@ class SoundManager:
             self.bgm_player = None
             self.bgm_audio = None
 
-        atexit.register(self.stop_bgm)
+        atexit.register(self.shutdown)
 
     def set_music_volume(self, vol):
         """Dynamically adjusts BGM volume."""
@@ -230,7 +230,27 @@ class SoundManager:
         self.current_bgm = None
         if self.bgm_player:
             try:
+                from PySide6.QtCore import QUrl
                 self.bgm_player.stop()
+                self.bgm_player.setSource(QUrl())
             except Exception:
                 pass
+
+    def shutdown(self):
+        """Cleanly releases audio players and backend resources before process exit."""
+        self.stop_bgm()
+        if self.bgm_player:
+            try:
+                self.bgm_player.setAudioOutput(None)
+                self.bgm_player.deleteLater()
+            except Exception:
+                pass
+            self.bgm_player = None
+        if self.bgm_audio:
+            try:
+                self.bgm_audio.deleteLater()
+            except Exception:
+                pass
+            self.bgm_audio = None
+        self.effects.clear()
 

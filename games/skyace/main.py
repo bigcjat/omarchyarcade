@@ -7575,7 +7575,8 @@ class SkyAceGame(QWidget):
     def closeEvent(self, event):
         if hasattr(self, "prop_audio"):
             self.prop_audio.stop()
-        self.sound.stop_bgm()
+        if hasattr(self, "sound"):
+            self.sound.shutdown()
         super().closeEvent(event)
 
 if __name__ == "__main__":
