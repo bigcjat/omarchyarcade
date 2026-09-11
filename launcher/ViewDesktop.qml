@@ -550,24 +550,6 @@ Item {
                                                 }
                                             }
 
-                                            // Glowing Heart Favorite Badge (Top-Right)
-                                            Rectangle {
-                                                anchors.top: parent.top
-                                                anchors.right: parent.right
-                                                anchors.margins: -2
-                                                width: 18
-                                                height: 18
-                                                radius: 9
-                                                color: "#2a0a18"
-                                                border.color: "#ec4899"
-                                                border.width: 1.5
-
-                                                Text {
-                                                    anchors.centerIn: parent
-                                                    text: "❤️"
-                                                    font.pixelSize: 10
-                                                }
-                                            }
 
                                             // Installed / Update / Get Dot (Bottom-Right)
                                             Rectangle {
