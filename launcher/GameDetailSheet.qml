@@ -108,51 +108,6 @@ Rectangle {
         // Trap mouse clicks inside content box
         MouseArea { anchors.fill: parent }
 
-        // Favorite / Like Button (Top-Right, beside close button)
-        Rectangle {
-            id: favBtn
-            anchors.top: parent.top
-            anchors.right: closeBtn.left
-            anchors.topMargin: 12
-            anchors.rightMargin: 8
-            height: 32
-            radius: 16
-            readonly property bool isFav: gameData ? (detailSheet.favoritesList.indexOf(gameData.id) !== -1) : false
-            width: favRow.implicitWidth + 20
-            color: isFav ? "#2d1222" : (favMouse.containsMouse ? "#242436" : "#1a1a26")
-            border.color: isFav ? "#ec4899" : (favMouse.containsMouse ? "#4b5563" : "#2e2e42")
-            border.width: 1
-            z: 30
-
-            Row {
-                id: favRow
-                anchors.centerIn: parent
-                spacing: 6
-                Text {
-                    text: favBtn.isFav ? "❤️" : "🤍"
-                    font.pixelSize: 12
-                }
-                Text {
-                    text: favBtn.isFav ? "FAVORITED" : "FAVORITE"
-                    font.family: "monospace"
-                    font.pixelSize: 10
-                    font.bold: true
-                    color: favBtn.isFav ? "#f472b6" : (favMouse.containsMouse ? "#FFFFFF" : "#94a3b8")
-                }
-            }
-
-            MouseArea {
-                id: favMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    if (gameData && typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.toggleFavorite) {
-                        arcadeBackend.toggleFavorite(gameData.id);
-                    }
-                }
-            }
-        }
 
         // Close button (Top-Right)
         Rectangle {
@@ -346,6 +301,48 @@ Rectangle {
                                 if (gameData && typeof arcadeBackend !== "undefined" && arcadeBackend.uninstallGame) {
                                     arcadeBackend.uninstallGame(gameData.id);
                                 }
+                            }
+                        }
+                    }
+                }
+
+                // Favorite / Pin to Desktop Button
+                Rectangle {
+                    id: footerFavBtn
+                    Layout.preferredHeight: 38
+                    Layout.preferredWidth: favRow.implicitWidth + 24
+                    radius: 6
+                    readonly property bool isFav: gameData ? (detailSheet.favoritesList.indexOf(gameData.id) !== -1) : false
+                    color: isFav ? (favMouse.containsMouse ? "#45122a" : "#2d0f1e") : (favMouse.containsMouse ? "#262638" : "#1a1a26")
+                    border.color: isFav ? "#f43f5e" : (favMouse.containsMouse ? "#474760" : "#2e2e40")
+                    border.width: 1
+
+                    Row {
+                        id: favRow
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Text {
+                            text: footerFavBtn.isFav ? "❤️" : "🤍"
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: footerFavBtn.isFav ? "Favorited" : "Favorite"
+                            font.pixelSize: 12
+                            font.bold: true
+                            color: footerFavBtn.isFav ? "#fb7185" : (favMouse.containsMouse ? "#FFFFFF" : "#94a3b8")
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    MouseArea {
+                        id: favMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (gameData && typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.toggleFavorite) {
+                                arcadeBackend.toggleFavorite(gameData.id);
                             }
                         }
                     }

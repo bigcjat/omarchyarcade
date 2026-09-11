@@ -9,6 +9,14 @@ Item {
     property var games: []
     property int selectedIndex: 0
     property var activeGame: (games && selectedIndex >= 0 && selectedIndex < games.length) ? games[selectedIndex] : null
+    property var favoritesList: (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getFavorites) ? arcadeBackend.getFavorites() : []
+
+    Connections {
+        target: typeof arcadeBackend !== "undefined" && arcadeBackend ? arcadeBackend : null
+        function onFavoritesChanged(favs) {
+            sidebarView.favoritesList = favs;
+        }
+    }
 
     // Responsive breakpoints
     readonly property bool isNarrow: sidebarView.width < 900
@@ -557,6 +565,45 @@ Item {
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             if (activeGame) sidebarView.detailRequested(activeGame);
+                                        }
+                                    }
+                                }
+
+                                // Favorite / Like Button
+                                Rectangle {
+                                    id: sidebarFavBtn
+                                    height: sidebarView.isNarrow ? 38 : 44
+                                    width: sidebarView.isNarrow ? 110 : 124
+                                    radius: 8
+                                    readonly property bool isFav: activeGame ? (sidebarView.favoritesList && sidebarView.favoritesList.indexOf(activeGame.id) !== -1) : false
+                                    color: isFav ? (sidebarFavMouse.containsMouse ? "#45122a" : "#2d0f1e") : (sidebarFavMouse.containsMouse ? "#272a3c" : "#1b1d2a")
+                                    border.color: isFav ? "#f43f5e" : (sidebarFavMouse.containsMouse ? "#474760" : "#353950")
+                                    border.width: 1
+
+                                    RowLayout {
+                                        anchors.centerIn: parent
+                                        spacing: 6
+                                        Text {
+                                            text: sidebarFavBtn.isFav ? "❤️" : "🤍"
+                                            font.pixelSize: 12
+                                        }
+                                        Text {
+                                            text: sidebarFavBtn.isFav ? "Favorited" : "Favorite"
+                                            font.pixelSize: sidebarView.isNarrow ? 11 : 12
+                                            font.bold: true
+                                            color: sidebarFavBtn.isFav ? "#fb7185" : "#cbd5e1"
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: sidebarFavMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (activeGame && typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.toggleFavorite) {
+                                                arcadeBackend.toggleFavorite(activeGame.id);
+                                            }
                                         }
                                     }
                                 }
