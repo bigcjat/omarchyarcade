@@ -18,3 +18,8 @@ wishlist*
 *.launcher_settings.json
 assets/covers_original/
 
+# Backups
+*.zip
+backups/
+skyace_backup.zip
+screenshots/

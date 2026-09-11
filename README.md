@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Offline-Forever-00f0ff?style=flat-square" alt="Offline Forever"/>
   <img src="https://img.shields.io/badge/Telemetry-Zero-10b981?style=flat-square" alt="Zero Telemetry"/>
   <img src="https://img.shields.io/badge/Ads-Zero-f59e0b?style=flat-square" alt="Zero Ads"/>
-  <img src="https://img.shields.io/badge/Games-38%20Included-ec4899?style=flat-square" alt="38 Games"/>
+  <img src="https://img.shields.io/badge/Games-39%20Included-ec4899?style=flat-square" alt="39 Games"/>
   <img src="https://img.shields.io/badge/Interface-Keyboard--Primary-8b5cf6?style=flat-square" alt="Keyboard-Primary"/>
   <img src="https://img.shields.io/badge/Platform-Omarchy%20Linux%20(Hyprland)-38bdf8?style=flat-square" alt="Omarchy Linux"/>
 </p>
@@ -155,6 +155,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **Fold** | Puzzles & Logic | **1.2 MB** | Tactile geometric paper folding & crease logic puzzle with 100 historical archetypes. | [Manual](games/fold/README.md) |
 | **Mahjong Solitaire** | Puzzles & Logic | **1.0 MB** | True 3D hardware-accelerated obsidian tile matching with 5-tier elevation depth. | [Manual](games/mahjongsolitaire/README.md) |
 | **Pipe Punk** | Puzzles & Logic | **1.1 MB** | Victorian steampunk boiler pipe puzzle with real-time fluid dynamics, cast-iron obstacles & analog gauges. | [Manual](games/pipepunk/README.md) |
+| **Sky Ace** | Action Arcade | **40.6 MB** | 194X WW2 Pacific & Global aerial combat homage with 10 global theaters, 3D pre-baked warbirds, carrier landings & super fortress bosses. | [Manual](games/skyace/README.md) |
 
 ---
 

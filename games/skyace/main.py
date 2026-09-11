@@ -22,54 +22,80 @@ import math
 import random
 import json
 from pathlib import Path
-from PIL import Image
-import numpy as np
+# Soft optional import for 3D engine developer mode
+try:
+    from PIL import Image
+    import numpy as np
+    HAS_3D_DEPS = True
+except ImportError:
+    HAS_3D_DEPS = False
 
 from PySide6.QtWidgets import QApplication, QWidget
-from PySide6.QtGui import QPainter, QPixmap, QImage, QColor, QFont, QPolygon, QRadialGradient, QLinearGradient, QPen, QBrush
+from PySide6.QtGui import QPainter, QPixmap, QImage, QColor, QFont, QPolygon, QRadialGradient, QLinearGradient, QPen, QBrush, QIcon
 from PySide6.QtCore import QTimer, Qt, QRect, QPoint, QSettings
 
 # Add engine directory to python path
 current_dir = Path(__file__).resolve().parent
 sys.path.insert(0, str(current_dir / "engine"))
 
-from p38_3d_engine import build_p38_mesh
-from render_3d_p38 import render_3d_frame
-from zero_3d_engine import build_zero_mesh
-from render_3d_zero import render_3d_zero_frame
-from spitfire_3d_engine import build_spitfire_mesh
-from render_3d_spitfire import render_3d_spitfire_frame
-from bf109_3d_engine import build_bf109_mesh
-from render_3d_bf109 import render_3d_bf109_frame
-from yak3_3d_engine import build_yak3_mesh
-from render_3d_yak3 import render_3d_yak3_frame
-from mosquito_3d_engine import build_mosquito_mesh
-from render_3d_mosquito import render_3d_mosquito_frame
-from folgore_3d_engine import build_folgore_mesh
-from render_3d_folgore import render_3d_folgore_frame
-from d520_3d_engine import build_d520_mesh
-from render_3d_d520 import render_3d_d520_frame
-from pzl11_3d_engine import build_pzl11_mesh
-from render_3d_pzl11 import render_3d_pzl11_frame
-from avia_3d_engine import build_avia_mesh
-from render_3d_avia import render_3d_avia_frame
-from secret_planes_engine import build_ho229_mesh, build_b29_mesh, build_shinden_mesh, build_xb35_mesh
-
 from audio_manager import SoundManager
 from prop_audio import ProceduralPropAudio
 
 def pil_to_qpixmap(pil_img):
-    """Converts a PIL RGBA image to a PySide6 QPixmap."""
+    """Converts a PIL RGBA image to a PySide6 QPixmap if 3D developer dependencies are installed."""
+    if not HAS_3D_DEPS or pil_img is None:
+        return QPixmap()
     arr = np.array(pil_img.convert("RGBA"))
     h, w, ch = arr.shape
     bytes_per_line = ch * w
     qimg = QImage(arr.data, w, h, bytes_per_line, QImage.Format_RGBA8888)
     return QPixmap.fromImage(qimg)
 
+def get_3d_engine_map():
+    """Lazily loads 3D meshes and rasterizers when re-baking airframe frames."""
+    if not HAS_3D_DEPS:
+        return {}
+    from p38_3d_engine import build_p38_mesh
+    from render_3d_p38 import render_3d_frame
+    from zero_3d_engine import build_zero_mesh
+    from render_3d_zero import render_3d_zero_frame
+    from spitfire_3d_engine import build_spitfire_mesh
+    from render_3d_spitfire import render_3d_spitfire_frame
+    from bf109_3d_engine import build_bf109_mesh
+    from render_3d_bf109 import render_3d_bf109_frame
+    from yak3_3d_engine import build_yak3_mesh
+    from render_3d_yak3 import render_3d_yak3_frame
+    from mosquito_3d_engine import build_mosquito_mesh
+    from render_3d_mosquito import render_3d_mosquito_frame
+    from folgore_3d_engine import build_folgore_mesh
+    from render_3d_folgore import render_3d_folgore_frame
+    from d520_3d_engine import build_d520_mesh
+    from render_3d_d520 import render_3d_d520_frame
+    from pzl11_3d_engine import build_pzl11_mesh
+    from render_3d_pzl11 import render_3d_pzl11_frame
+    from avia_3d_engine import build_avia_mesh
+    from render_3d_avia import render_3d_avia_frame
+
+    return {
+        "p38": (build_p38_mesh(), render_3d_frame),
+        "zero": (build_zero_mesh(), render_3d_zero_frame),
+        "spitfire": (build_spitfire_mesh(), render_3d_spitfire_frame),
+        "bf109": (build_bf109_mesh(), render_3d_bf109_frame),
+        "yak3": (build_yak3_mesh(), render_3d_yak3_frame),
+        "mosquito": (build_mosquito_mesh(), render_3d_mosquito_frame),
+        "folgore": (build_folgore_mesh(), render_3d_folgore_frame),
+        "d520": (build_d520_mesh(), render_3d_d520_frame),
+        "pzl11": (build_pzl11_mesh(), render_3d_pzl11_frame),
+        "avia": (build_avia_mesh(), render_3d_avia_frame),
+    }
+
 class SkyAceGame(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Sky Ace • 194X Global Air War")
+        icon_path = current_dir / "assets" / "disk_icon.png"
+        if icon_path.exists():
+            self.setWindowIcon(QIcon(str(icon_path)))
         self.resize(580, 750)
         self.setFocusPolicy(Qt.StrongFocus)
         self.setMouseTracking(True)
@@ -93,6 +119,8 @@ class SkyAceGame(QWidget):
         self.terrain_speed = 1.8
         self.audio_selected_channel = 0  # 0: Music, 1: Battle, 2: Engine
         self.audio_slider_dragging = None  # 0, 1, 2 or None
+        self.mouse_cursor_pos = None
+        self.matchup_badge_hovered = False
 
         # Game States: "hangar", "transition", "takeoff", "playing", "landing", "round_clear", "victory"
         self.state = "hangar"
@@ -141,22 +169,8 @@ class SkyAceGame(QWidget):
             "boss_killed": False
         }
 
-        # 3D Airframe Models
-        print("[Sky Ace] Initializing 6-Nation 3D airframes...")
-        self.mesh_p38 = build_p38_mesh()
-        self.mesh_zero = build_zero_mesh()
-        self.mesh_spitfire = build_spitfire_mesh()
-        self.mesh_bf109 = build_bf109_mesh()
-        self.mesh_yak3 = build_yak3_mesh()
-        self.mesh_mosquito = build_mosquito_mesh()
-        self.mesh_folgore = build_folgore_mesh()
-        self.mesh_d520 = build_d520_mesh()
-        self.mesh_pzl11 = build_pzl11_mesh()
-        self.mesh_avia = build_avia_mesh()
-        self.mesh_ho229 = build_ho229_mesh()
-        self.mesh_b29 = build_b29_mesh()
-        self.mesh_shinden = build_shinden_mesh()
-        self.mesh_xb35 = build_xb35_mesh()
+        # 3D Airframe Models (Lazy loaded for developer re-bakes)
+        self.mesh_engines = None
 
         self.factions = [
             "p38", "zero", "spitfire", "bf109", "yak3", "mosquito",
@@ -165,6 +179,9 @@ class SkyAceGame(QWidget):
         self.secret_factions = ["ho229", "b29", "shinden", "xb35"]
         self.current_plane = "p38"
         self.enemy_theater = "imperial"
+        self.is_mini_header = False
+        self.show_help_modal = False
+        self.paused_by_menu = False
 
         # National Metas (10 Playable Nations + 4 Secret Coalition Prototypes)
         self.nation_info = {
@@ -335,6 +352,13 @@ class SkyAceGame(QWidget):
         for plane_key in self.factions + self.secret_factions:
             self.build_cache_for_plane(plane_key)
 
+        # Showcase demonstration for hangar inspection (Pre-rendered for all fighters)
+        print("[Sky Ace] Pre-rendering 3D roll showcases for all fighters...")
+        self.showcase_tick = 0
+        self.showcase_frames = {}
+        for p in self.factions:
+            self.build_showcase_for_plane(p)
+
         # High-Res 2D Sprite Atlases
         print("[Sky Ace] Loading dedicated high-resolution sprite sheets...")
         self.fx_sprites = self.load_atlas("sheet_fx")
@@ -439,20 +463,9 @@ class SkyAceGame(QWidget):
             if (sprites_dir / f"island_japan_{i}.png").exists()
         ]
         self.island_pixmaps = self.pacific_island_pixmaps
+        carrier_deck_pix = QPixmap(str(sprites_dir / "carrier_p38.png"))
         self.carrier_pixmaps = {
-            "p38": QPixmap(str(sprites_dir / "carrier_p38.png")),
-            "zero": QPixmap(str(sprites_dir / "carrier_zero.png")),
-            "spitfire": QPixmap(str(sprites_dir / "carrier_spitfire.png")),
-            "bf109": QPixmap(str(sprites_dir / "carrier_bf109.png")),
-            "mosquito": QPixmap(str(sprites_dir / "carrier_mosquito.png")),
-            "yak3": QPixmap(str(sprites_dir / "carrier_yak3.png")),
-            "folgore": QPixmap(str(sprites_dir / "carrier_folgore.png")),
-            "d520": QPixmap(str(sprites_dir / "carrier_d520.png")),
-            "pzl11": QPixmap(str(sprites_dir / "carrier_pzl11.png")),
-            "avia": QPixmap(str(sprites_dir / "carrier_avia.png")),
-            "ho229": QPixmap(str(sprites_dir / "carrier_bf109.png")),
-            "b29": QPixmap(str(sprites_dir / "carrier_p38.png")),
-            "shinden": QPixmap(str(sprites_dir / "carrier_zero.png")),
+            k: carrier_deck_pix for k in self.factions + self.secret_factions
         }
 
         # 3D Cel-Shaded Hostile Naval Warships & Rotating Turrets
@@ -519,27 +532,26 @@ class SkyAceGame(QWidget):
             }
             for k in ["tank_sherman", "tank_tiger", "tank_chiha", "tank_t34", "tank_churchill"]
         }
-        self.structure_sprites = {
-            k: {
-                "pristine": QPixmap(str(sprites_dir / f"{k}_pristine.png")),
-                "damaged": QPixmap(str(sprites_dir / f"{k}_damaged.png")),
-                "wreck": QPixmap(str(sprites_dir / f"{k}_wreck.png")),
-            }
-            for k in ["pillbox_bunker", "flak_emplacement", "military_building", "military_tent"]
-        }
         self.hangar_sprites = {
             "pristine": QPixmap(str(sprites_dir / "hangar_depot_pristine.png")),
             "damaged": QPixmap(str(sprites_dir / "hangar_depot_damaged.png")),
             "wreck": QPixmap(str(sprites_dir / "hangar_depot_wreck.png")),
         }
+        self.ground_sprites = {}
+        for k in ["pillbox_bunker", "flak_emplacement", "military_building", "military_tent"]:
+            self.ground_sprites[k] = {
+                "pristine": QPixmap(str(sprites_dir / f"{k}_pristine.png")),
+                "damaged": QPixmap(str(sprites_dir / f"{k}_damaged.png")),
+                "wreck": QPixmap(str(sprites_dir / f"{k}_wreck.png")),
+            }
         self.cutscene_sprites = {
             "wreckage": QPixmap(str(sprites_dir / "cutscene_fighter_wreckage.png")),
             "photo_wreckage": QPixmap(str(sprites_dir / "cutscene_photo_wreckage.png")),
             "bomb": QPixmap(str(sprites_dir / "cutscene_nuke_bomb.png")),
             "crater": QPixmap(str(sprites_dir / "cutscene_scorched_crater.png")),
             "fireball": QPixmap(str(sprites_dir / "cutscene_fireball_blast.png")),
-            "sat_hangar": QPixmap(str(sprites_dir / "cartel_hangar_base_clean.png" if (sprites_dir / "cartel_hangar_base_clean.png").exists() else sprites_dir / "cutscene_sat_hangar_base.jpg")),
-            "sat_scorched": QPixmap(str(sprites_dir / "cartel_hangar_nuked_clean.png" if (sprites_dir / "cartel_hangar_nuked_clean.png").exists() else sprites_dir / "cutscene_sat_scorched_earth.jpg")),
+            "sat_hangar": QPixmap(str(sprites_dir / "cartel_hangar_base_clean.png")),
+            "sat_scorched": QPixmap(str(sprites_dir / "cartel_hangar_nuked_clean.png")),
         }
         b_full_path = sprites_dir / "cutscene_bomb_full_sheet.png"
         if b_full_path.exists():
@@ -843,29 +855,28 @@ class SkyAceGame(QWidget):
                         self.cache[plane][f"loop_{st_idx}_{p_idx}"] = frame
                 return
 
-        if plane == "p38":
-            mesh, render_fn = self.mesh_p38, render_3d_frame
-        elif plane == "zero":
-            mesh, render_fn = self.mesh_zero, render_3d_zero_frame
-        elif plane == "spitfire":
-            mesh, render_fn = self.mesh_spitfire, render_3d_spitfire_frame
-        elif plane == "bf109":
-            mesh, render_fn = self.mesh_bf109, render_3d_bf109_frame
-        elif plane == "yak3":
-            mesh, render_fn = self.mesh_yak3, render_3d_yak3_frame
-        elif plane == "mosquito":
-            mesh, render_fn = self.mesh_mosquito, render_3d_mosquito_frame
-        elif plane == "folgore":
-            mesh, render_fn = self.mesh_folgore, render_3d_folgore_frame
-        elif plane == "d520":
-            mesh, render_fn = self.mesh_d520, render_3d_d520_frame
-        elif plane == "pzl11":
-            mesh, render_fn = self.mesh_pzl11, render_3d_pzl11_frame
-        elif plane == "avia":
-            mesh, render_fn = self.mesh_avia, render_3d_avia_frame
-        else:
-            mesh, render_fn = self.mesh_p38, render_3d_frame
+        # 1. Fast path: Load pre-rendered 3D frames from disk (Zero external dependencies)
+        p_dir = current_dir / "sprites" / "rendered_3d" / plane
+        if p_dir.exists():
+            for png_path in p_dir.glob("*.png"):
+                stem = png_path.stem
+                if not stem.startswith("showcase_"):
+                    self.cache[plane][stem] = QPixmap(str(png_path))
+            if "level_0" in self.cache[plane]:
+                return
 
+        # 2. Developer fallback: If frames are missing and developer has 3D deps installed
+        if not HAS_3D_DEPS:
+            print(f"[Sky Ace] Notice: Pre-rendered frames for {plane} not found and 3D dependencies are disabled.")
+            return
+
+        if self.mesh_engines is None:
+            self.mesh_engines = get_3d_engine_map()
+
+        if plane not in self.mesh_engines:
+            return
+
+        mesh, render_fn = self.mesh_engines[plane]
         style = "tactical"
 
         for p_idx, p_ang in enumerate([0.0, 40.0, 80.0, 120.0]):
@@ -890,6 +901,61 @@ class SkyAceGame(QWidget):
             for p_idx, p_ang in enumerate([0.0, 40.0, 80.0]):
                 img = render_fn(mesh, roll_deg=0.0, pitch_deg=pitch, yaw_deg=0.0, prop_angle=p_ang, style=style)
                 self.cache[plane][f"{p_name}_{p_idx}"] = pil_to_qpixmap(img)
+
+    def build_showcase_for_plane(self, plane):
+        """Pre-renders or loads plane in standard top-down view rolling 360 from top to under view and back."""
+        if not hasattr(self, "showcase_frames"):
+            self.showcase_frames = {}
+        if plane in self.showcase_frames:
+            return self.showcase_frames[plane]
+
+        # 1. Fast path: Load from pre-rendered showcase PNGs (Zero external dependencies)
+        p_dir = current_dir / "sprites" / "rendered_3d" / plane
+        if p_dir.exists():
+            frames = []
+            for i in range(24):
+                p_pix = self.cache.get(plane, {}).get(f"level_{(i // 3) % 4}")
+                if p_pix:
+                    frames.append(p_pix)
+            roll_frames = []
+            for i in range(24):
+                s_path = p_dir / f"showcase_{i}.png"
+                if s_path.exists():
+                    roll_frames.append(QPixmap(str(s_path)))
+            if len(roll_frames) == 24:
+                frames.extend(roll_frames)
+                self.showcase_frames[plane] = frames
+                return frames
+
+        # 2. Developer fallback
+        if not HAS_3D_DEPS:
+            return None
+
+        if self.mesh_engines is None:
+            self.mesh_engines = get_3d_engine_map()
+
+        if plane not in self.mesh_engines:
+            return None
+
+        mesh, render_fn = self.mesh_engines[plane]
+        style = "tactical"
+        frames = []
+
+        # 1. Level flight pause in standard top-down view
+        for i in range(24):
+            p_pix = self.cache.get(plane, {}).get(f"level_{(i // 3) % 4}")
+            if p_pix:
+                frames.append(p_pix)
+
+        # 2. Smooth 360 roll
+        for i in range(24):
+            roll = (i / 24.0) * 360.0
+            p_ang = (i * 35.0) % 360.0
+            img = render_fn(mesh, roll_deg=roll, pitch_deg=0.0, yaw_deg=0.0, prop_angle=p_ang, style=style, size=256, scale=1.75)
+            frames.append(pil_to_qpixmap(img))
+
+        self.showcase_frames[plane] = frames
+        return frames
 
     def start_transition(self, origin_key, target_theater_key, round_num=1):
         """Starts the Street Fighter World Map transition screen."""
@@ -2688,21 +2754,449 @@ class SkyAceGame(QWidget):
             self.banner_timer = 90
 
     def get_audio_button_rect(self):
-        if self.state == "hangar":
-            return QRect(self.width() - 114, 24, 98, 28)
-        else:
-            return QRect(self.width() - 114, 18, 98, 24)
+        if self.state == "playing":
+            return self.get_header_rects()["sound"]
+        return QRect(self.width() - 84, 18, 70, 26)
 
     def draw_audio_button(self, painter, rect, is_hud=False):
         painter.save()
-        bg = QColor(30, 44, 60, 230) if is_hud else QColor(24, 38, 52, 240)
-        border = QColor(255, 215, 60) if self.audio_menu_open else QColor(60, 110, 160)
-        painter.fillRect(rect, bg)
-        painter.setPen(border)
-        painter.drawRect(rect)
+        painter.setBrush(QColor(20, 32, 48))
+        painter.setPen(QPen(QColor(255, 215, 60) if self.audio_menu_open else QColor(50, 80, 120), 1))
+        painter.drawRoundedRect(rect, 5, 5)
+        painter.setFont(QFont("Arial", 9, QFont.Bold))
+        painter.setPen(QColor(255, 215, 60) if self.audio_menu_open else QColor(220, 235, 250))
+        painter.drawText(rect, Qt.AlignCenter, "🔊 Snd [M]")
+        painter.restore()
+
+    def set_help_modal(self, open_help):
+        if open_help:
+            if not self.is_paused and self.state == "playing":
+                self.is_paused = True
+                self.paused_by_menu = True
+            self.show_help_modal = True
+            self.sound.play("pow_pickup")
+        else:
+            self.show_help_modal = False
+            if getattr(self, "paused_by_menu", False) and not self.audio_menu_open:
+                self.is_paused = False
+                self.paused_by_menu = False
+        self.update()
+
+    def set_audio_menu(self, open_audio):
+        if open_audio:
+            if not self.is_paused and self.state == "playing":
+                self.is_paused = True
+                self.paused_by_menu = True
+            self.audio_menu_open = True
+            self.sound.play("pow_pickup")
+        else:
+            self.audio_menu_open = False
+            if getattr(self, "paused_by_menu", False) and not getattr(self, "show_help_modal", False):
+                self.is_paused = False
+                self.paused_by_menu = False
+        self.update()
+
+    def toggle_help_modal(self):
+        self.set_help_modal(not getattr(self, "show_help_modal", False))
+
+    def toggle_audio_menu(self):
+        self.set_audio_menu(not self.audio_menu_open)
+
+    def toggle_pause(self):
+        if getattr(self, "show_help_modal", False):
+            self.set_help_modal(False)
+            return
+        if self.audio_menu_open:
+            self.set_audio_menu(False)
+            return
+        self.is_paused = not self.is_paused
+        self.paused_by_menu = False
+        self.sound.play("pow_pickup")
+        self.update()
+
+    def toggle_header_mode(self):
+        self.is_mini_header = not getattr(self, "is_mini_header", False)
+        self.sound.play("pow_pickup")
+        self.update()
+
+    def get_audio_dialog_rect(self):
+        dlg_w = 444
+        dlg_h = 430
+        h_h = (46 if getattr(self, "is_mini_header", False) else 108) if self.state == "playing" else 10
+        dlg_x = (self.width() - dlg_w) // 2
+        dlg_y = h_h + (self.height() - h_h - dlg_h) // 2
+        return QRect(dlg_x, dlg_y, dlg_w, dlg_h)
+
+    def get_header_rects(self):
+        if getattr(self, "is_mini_header", False):
+            my = 13
+            h_h = 46 if self.state == "playing" else 0
+            m_y = h_h + (self.height() - h_h - 360) // 2
+            return {
+                "is_mini": True,
+                "pause": QRect(self.width() - 170, my, 26, 28),
+                "help": QRect(self.width() - 138, my, 26, 28),
+                "sound": QRect(self.width() - 106, my, 26, 28),
+                "restart": QRect(self.width() - 74, my, 26, 28),
+                "view_mode": QRect(self.width() - 42, my, 26, 28),
+                "modal_close": QRect((self.width() - 440) // 2 + 130, m_y + 306, 180, 36)
+            }
+        else:
+            r2_y = 68
+            h_h = 108 if self.state == "playing" else 0
+            m_y = h_h + (self.height() - h_h - 360) // 2
+            return {
+                "is_mini": False,
+                "help": QRect(16, r2_y, 116, 28),
+                "pause": QRect(self.width() - 256, r2_y, 72, 28),
+                "sound": QRect(self.width() - 176, r2_y, 62, 28),
+                "restart": QRect(self.width() - 106, r2_y, 64, 28),
+                "view_mode": QRect(self.width() - 36, r2_y, 24, 28),
+                "modal_close": QRect((self.width() - 440) // 2 + 130, m_y + 306, 180, 36)
+            }
+
+    def draw_template_header(self, painter):
+        painter.save()
+        rects = self.get_header_rects()
+
+        if getattr(self, "is_mini_header", False):
+            # -----------------------------------------------------------------
+            # Mini Floating Header (Shift+F Tiled View / Micro-HUD)
+            # -----------------------------------------------------------------
+            mini_rect = QRect(12, 8, self.width() - 24, 38)
+            painter.fillRect(mini_rect, QColor(10, 18, 30, 235))
+            painter.setPen(QPen(QColor(45, 80, 125), 1))
+            painter.drawRoundedRect(mini_rect, 7, 7)
+
+            painter.setFont(QFont("Arial", 11, QFont.Bold))
+            painter.setPen(QColor(255, 215, 60))
+            painter.drawText(22, 32, "SKY ACE 194X")
+
+            painter.setFont(QFont("Menlo", 9, QFont.Bold))
+            painter.setPen(QColor(255, 255, 255))
+            painter.drawText(136, 32, f"• {self.score:,}")
+
+            painter.setFont(QFont("Menlo", 8))
+            painter.setPen(QColor(160, 195, 230))
+            painter.drawText(215, 32, f"HI:{self.high_score:,}")
+
+            # Mini buttons on right
+            for b_key, b_icon in [("pause", "▶" if self.is_paused else "⏸"),
+                                   ("help", "?"),
+                                   ("sound", "🔊"),
+                                   ("restart", "🔄"),
+                                   ("view_mode", "⛶")]:
+                b_rect = rects[b_key]
+                is_active = (b_key == "pause" and self.is_paused) or \
+                            (b_key == "help" and getattr(self, "show_help_modal", False)) or \
+                            (b_key == "sound" and self.audio_menu_open)
+                painter.fillRect(b_rect, QColor(20, 34, 52))
+                painter.setPen(QPen(QColor(255, 215, 60) if is_active else QColor(50, 90, 140), 1))
+                painter.drawRoundedRect(b_rect, 4, 4)
+                painter.setFont(QFont("Menlo", 10, QFont.Bold))
+                painter.setPen(QColor(255, 215, 60) if is_active else QColor(240, 248, 255))
+                painter.drawText(b_rect, Qt.AlignCenter, b_icon)
+
+        else:
+            # -----------------------------------------------------------------
+            # Standard 2048 Arcade Header (Row 1 Title/Stats + Row 2 Action Bar)
+            # -----------------------------------------------------------------
+            h_h = 108
+            header_rect = QRect(0, 0, self.width(), h_h)
+            painter.fillRect(header_rect, QColor(8, 14, 22, 245))
+            painter.setPen(QPen(QColor(36, 56, 82), 1))
+            painter.drawLine(0, h_h, self.width(), h_h)
+
+            # Row 1: Title & Subtitle (Left)
+            t_info = self.theaters.get(self.enemy_theater, self.theaters["imperial"])
+
+            painter.setFont(QFont("Arial", 18, QFont.Bold))
+            painter.setPen(QColor(255, 215, 60))
+            painter.drawText(18, 36, "SKY ACE 194X")
+
+            painter.setFont(QFont("Arial", 10))
+            painter.setPen(QColor(140, 175, 210))
+            sub_text = f"WWII Tactical Carrier Arcade • {t_info['name']}"
+            painter.drawText(18, 52, sub_text)
+
+            # Row 1: Stat Cards (Right)
+            sc_w, sc_h = 76, 44
+            # SCORE Card
+            sc_rect = QRect(self.width() - 176, 16, sc_w, sc_h)
+            painter.setBrush(QColor(16, 26, 40))
+            painter.setPen(QPen(QColor(48, 78, 114), 1))
+            painter.drawRoundedRect(sc_rect, 6, 6)
+            painter.setFont(QFont("Arial", 8, QFont.Bold))
+            painter.setPen(QColor(140, 175, 210))
+            painter.drawText(QRect(sc_rect.left(), sc_rect.top() + 4, sc_w, 14), Qt.AlignCenter, "SCORE")
+            painter.setFont(QFont("Menlo", 11, QFont.Bold))
+            painter.setPen(QColor(255, 255, 255))
+            painter.drawText(QRect(sc_rect.left(), sc_rect.top() + 18, sc_w, 22), Qt.AlignCenter, f"{self.score:06d}")
+
+            # BEST Card
+            best_rect = QRect(self.width() - 92, 16, sc_w, sc_h)
+            painter.setBrush(QColor(16, 26, 40))
+            painter.setPen(QPen(QColor(48, 78, 114), 1))
+            painter.drawRoundedRect(best_rect, 6, 6)
+            painter.setFont(QFont("Arial", 8, QFont.Bold))
+            painter.setPen(QColor(140, 175, 210))
+            painter.drawText(QRect(best_rect.left(), best_rect.top() + 4, sc_w, 14), Qt.AlignCenter, "BEST")
+            painter.setFont(QFont("Menlo", 11, QFont.Bold))
+            painter.setPen(QColor(255, 215, 60))
+            painter.drawText(QRect(best_rect.left(), best_rect.top() + 18, sc_w, 22), Qt.AlignCenter, f"{self.high_score:06d}")
+
+            # Row 2: Subheader Action Bar
+            r2_y = 68
+            # [? How to Play]
+            h_btn = rects["help"]
+            painter.setBrush(QColor(20, 32, 48))
+            painter.setPen(QPen(QColor(255, 215, 60) if getattr(self, "show_help_modal", False) else QColor(50, 80, 120), 1))
+            painter.drawRoundedRect(h_btn, 5, 5)
+            painter.setFont(QFont("Arial", 9, QFont.Bold))
+            painter.setPen(QColor(255, 215, 60) if getattr(self, "show_help_modal", False) else QColor(220, 235, 250))
+            painter.drawText(h_btn, Qt.AlignCenter, "? How to Play (H)")
+
+            # [⏸ Pause (P)]
+            p_btn = rects["pause"]
+            painter.setBrush(QColor(20, 32, 48))
+            painter.setPen(QPen(QColor(255, 215, 60) if self.is_paused else QColor(50, 80, 120), 1))
+            painter.drawRoundedRect(p_btn, 5, 5)
+            painter.setFont(QFont("Arial", 9, QFont.Bold))
+            painter.setPen(QColor(255, 215, 60) if self.is_paused else QColor(220, 235, 250))
+            p_label = "▶ Resume" if self.is_paused else "⏸ Pause"
+            painter.drawText(p_btn, Qt.AlignCenter, p_label)
+
+            # [🔊 Snd (M)]
+            s_btn = rects["sound"]
+            painter.setBrush(QColor(20, 32, 48))
+            painter.setPen(QPen(QColor(255, 215, 60) if self.audio_menu_open else QColor(50, 80, 120), 1))
+            painter.drawRoundedRect(s_btn, 5, 5)
+            painter.setFont(QFont("Arial", 9, QFont.Bold))
+            painter.setPen(QColor(255, 215, 60) if self.audio_menu_open else QColor(220, 235, 250))
+            painter.drawText(s_btn, Qt.AlignCenter, "🔊 Snd (M)")
+
+            # [🔄 Reset (R)]
+            r_btn = rects["restart"]
+            painter.setBrush(QColor(20, 32, 48))
+            painter.setPen(QPen(QColor(50, 80, 120), 1))
+            painter.drawRoundedRect(r_btn, 5, 5)
+            painter.setFont(QFont("Arial", 9, QFont.Bold))
+            painter.setPen(QColor(220, 235, 250))
+            painter.drawText(r_btn, Qt.AlignCenter, "🔄 Reset")
+
+            # [⛶ Full / Tiled (Shift+F)]
+            f_btn = rects["view_mode"]
+            painter.setBrush(QColor(20, 32, 48))
+            painter.setPen(QPen(QColor(50, 80, 120), 1))
+            painter.drawRoundedRect(f_btn, 5, 5)
+            painter.setFont(QFont("Arial", 9, QFont.Bold))
+            painter.setPen(QColor(220, 235, 250))
+            painter.drawText(f_btn, Qt.AlignCenter, "⛶")
+
+        painter.restore()
+
+    def draw_option1_hud(self, painter):
+        painter.save()
+        hud_y = 52 if getattr(self, "is_mini_header", False) else 114
+        hud_h = 34
+        hud_w = self.width() - 28
+        hud_rect = QRect(14, hud_y, hud_w, hud_h)
+
+        # 1. Dark glassmorphic bar
+        painter.fillRect(hud_rect, QColor(10, 18, 28, 220))
+        painter.setPen(QPen(QColor(45, 110, 175), 1))
+        painter.drawRoundedRect(hud_rect, 6, 6)
+
+        # 2. Left Section: ARMOR + Lives + Bombs
+        painter.setFont(QFont("Arial", 7, QFont.Bold))
+        painter.setPen(QColor(160, 200, 240))
+        painter.drawText(20, hud_y + 22, "ARMOR")
+
+        # 4-segment neon health bar
+        for seg in range(4):
+            if seg < self.hp:
+                if self.hp >= 4:
+                    col = QColor(70, 240, 120)
+                elif self.hp == 3:
+                    col = QColor(230, 220, 50)
+                elif self.hp == 2:
+                    col = QColor(255, 140, 30)
+                else:
+                    col = QColor(255, 50, 50) if (self.prop_tick // 4) % 2 == 0 else QColor(255, 180, 50)
+            else:
+                col = QColor(30, 48, 65)
+            painter.fillRect(QRect(58 + seg * 10, hud_y + 11, 7, 12), col)
+
         painter.setFont(QFont("Menlo", 9, QFont.Bold))
-        painter.setPen(QColor(255, 220, 80) if self.audio_menu_open else QColor(190, 220, 255))
-        painter.drawText(rect, Qt.AlignCenter, "🔊 AUDIO [M]")
+        painter.setPen(QColor(255, 215, 60))
+        painter.drawText(104, hud_y + 22, f"✈{self.lives} 💣{self.bombs_remaining}")
+
+        # 3. Center Section: Boss/Sortie Radar Pill
+        pill_w = 116
+        pill_x = (self.width() - pill_w) // 2
+        painter.setBrush(QColor(18, 30, 46))
+        painter.setPen(QPen(QColor(50, 90, 140), 1))
+        painter.drawRoundedRect(QRect(pill_x, hud_y + 6, pill_w, 22), 4, 4)
+
+        if self.boss and self.boss.get("active"):
+            clock_text = "⚠ BOSS ACTIVE"
+            pulse_c = QColor(255, 70, 70) if (self.prop_tick // 4) % 2 == 0 else QColor(255, 215, 60)
+            painter.setPen(pulse_c)
+        else:
+            rem_secs = max(0, (self.boss_target_ticks - self.mission_ticks) // 60)
+            clock_text = f"⚔️ BOSS IN {rem_secs}s"
+            painter.setPen(QColor(255, 230, 90))
+        painter.setFont(QFont("Menlo", 7, QFont.Bold))
+        painter.drawText(QRect(pill_x, hud_y + 6, pill_w, 22), Qt.AlignCenter, clock_text)
+
+        # 4. Right Section: Active Weapon & Tactical Air Support
+        if self.is_secret_mission:
+            w_disp = "[★ ALL ARMED ★]"
+        else:
+            w_name = self.weapon_names[self.current_plane][self.weapons[self.weapon_idx]]
+            w_disp = f"[Q/E] {w_name[:9]}"
+
+        painter.setFont(QFont("Arial", 8, QFont.Bold))
+        painter.setPen(QColor(255, 180, 40))
+        painter.drawText(self.width() - 176, hud_y + 22, w_disp)
+
+        if self.air_support_active and self.air_support_obj:
+            rem_s = max(0, self.air_support_timer // 60)
+            painter.setPen(QColor(100, 255, 150))
+            painter.drawText(self.width() - 78, hud_y + 22, f"📻 {rem_s}s")
+        elif self.air_support_ready:
+            pulse_col = QColor(100, 255, 140) if (self.prop_tick // 6) % 2 == 0 else QColor(255, 225, 70)
+            painter.setPen(pulse_col)
+            painter.drawText(self.width() - 86, hud_y + 22, "📻 [C] RDY")
+        else:
+            painter.setPen(QColor(140, 165, 190))
+            painter.drawText(self.width() - 86, hud_y + 22, "📻 CHRG")
+
+        painter.restore()
+
+    def get_matchup_badge_rect(self):
+        badge_w = 120
+        badge_h = 24
+        badge_x = (self.width() - badge_w) // 2
+        badge_y = self.height() - badge_h - 8
+        return QRect(badge_x, badge_y, badge_w, badge_h)
+
+    def draw_battle_matchup_badge(self, painter):
+        """Draws the sleek [flag] vs [flag] battle matchup indicator pill centered at the bottom of the screen."""
+        badge_rect = self.get_matchup_badge_rect()
+
+        p_info = self.nation_info.get(self.current_plane, {})
+        p_flag = p_info.get("flag", "🇺🇸")
+        p_name = p_info.get("country", "ALLIED")
+
+        if getattr(self, "is_secret_mission", False):
+            t_flag = "⚔️"
+            t_name = "ROGUE SYNDICATE"
+        else:
+            t_info = self.theaters.get(self.enemy_theater, {})
+            t_flag = t_info.get("flag", "⚔️")
+            t_name = t_info.get("name", "THEATER")
+
+        hovered = getattr(self, "matchup_badge_hovered", False)
+        if not hovered and hasattr(self, "mouse_cursor_pos") and self.mouse_cursor_pos is not None:
+            hovered = badge_rect.contains(self.mouse_cursor_pos[0], self.mouse_cursor_pos[1])
+
+        painter.save()
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        # Tactical hover tooltip
+        if hovered:
+            tip_text = f"{p_name}  vs  {t_name}"
+            tip_w = max(180, len(tip_text) * 7 + 36)
+            tip_h = 20
+            tip_x = (self.width() - tip_w) // 2
+            tip_y = badge_rect.top() - tip_h - 6
+            tip_rect = QRect(tip_x, tip_y, tip_w, tip_h)
+            painter.fillRect(tip_rect, QColor(6, 12, 20, 235))
+            painter.setPen(QPen(QColor(80, 160, 230, 200), 1))
+            painter.drawRoundedRect(tip_rect, 4, 4)
+            painter.setFont(QFont("Menlo", 7, QFont.Bold))
+            painter.setPen(QColor(200, 230, 255))
+            painter.drawText(tip_rect, Qt.AlignCenter, tip_text)
+
+        # Glassmorphic pill badge
+        bg_col = QColor(10, 20, 32, 235) if hovered else QColor(8, 16, 26, 215)
+        border_col = QColor(100, 210, 255, 230) if hovered else QColor(45, 110, 175, 190)
+
+        painter.fillRect(badge_rect, bg_col)
+        painter.setPen(QPen(border_col, 1.2 if hovered else 1.0))
+        painter.drawRoundedRect(badge_rect, 5, 5)
+
+        # Left flag
+        painter.setFont(QFont("Arial", 11))
+        painter.drawText(QRect(badge_rect.left() + 6, badge_rect.top(), 32, badge_rect.height()), Qt.AlignCenter, p_flag)
+
+        # Center "VS"
+        painter.setFont(QFont("Menlo", 8, QFont.Bold))
+        painter.setPen(QColor(255, 220, 70))
+        painter.drawText(QRect(badge_rect.left() + 40, badge_rect.top(), 40, badge_rect.height()), Qt.AlignCenter, "VS")
+
+        # Right flag
+        painter.setFont(QFont("Arial", 11))
+        painter.drawText(QRect(badge_rect.left() + 82, badge_rect.top(), 32, badge_rect.height()), Qt.AlignCenter, t_flag)
+
+        painter.restore()
+
+    def draw_help_modal(self, painter):
+        painter.save()
+        h_h = (46 if getattr(self, "is_mini_header", False) else 108) if self.state == "playing" else 0
+        # Backdrop dimming ONLY over the playfield below the header
+        painter.fillRect(QRect(0, h_h, self.width(), self.height() - h_h), QColor(6, 12, 20, 215))
+
+        m_w, m_h = 440, 360
+        m_x = (self.width() - m_w) // 2
+        m_y = h_h + (self.height() - h_h - m_h) // 2
+        modal_rect = QRect(m_x, m_y, m_w, m_h)
+
+        painter.fillRect(modal_rect, QColor(14, 22, 34, 250))
+        painter.setPen(QPen(QColor(255, 215, 60), 2))
+        painter.drawRoundedRect(modal_rect, 8, 8)
+
+        # Title
+        painter.setFont(QFont("Arial", 14, QFont.Bold))
+        painter.setPen(QColor(255, 215, 60))
+        painter.drawText(QRect(m_x, m_y + 16, m_w, 26), Qt.AlignCenter, "★ FLIGHT & COMBAT MANUAL ★")
+
+        painter.setFont(QFont("Arial", 9))
+        painter.setPen(QColor(160, 195, 230))
+        painter.drawText(QRect(m_x, m_y + 44, m_w, 18), Qt.AlignCenter, "Tactical Carrier Air Wing Operations")
+
+        # Controls Grid
+        controls = [
+            ("FLIGHT CONTROLS", "[Arrows] or [WASD] or Mouse Flight"),
+            ("PRIMARY GUNS", "[Z] or [Left Click] (Hold to Autofire)"),
+            ("HEAVY ORDNANCE", "[B] (Clears screen & destroys fleet)"),
+            ("AIR SUPPORT", "[C] (Summons hero wingman sortie)"),
+            ("BARREL LOOP", "[Space] / [Enter] (Evade incoming flak)"),
+            ("CYCLE WEAPONS", "[Q] / [E] (Cannons, Rockets, Spread)"),
+            ("MINI HEADER", "[Shift+F] or [F] (Toggle micro-HUD)"),
+            ("AUDIO / PAUSE", "[M] Audio Console • [P] Pause Game")
+        ]
+
+        p_y = m_y + 74
+        for action, binding in controls:
+            painter.setFont(QFont("Menlo", 9, QFont.Bold))
+            painter.setPen(QColor(255, 230, 90))
+            painter.drawText(m_x + 24, p_y, action)
+            painter.setFont(QFont("Menlo", 8))
+            painter.setPen(QColor(220, 235, 250))
+            painter.drawText(m_x + 180, p_y, binding)
+            p_y += 26
+
+        # Close Button
+        btn_close = self.get_header_rects()["modal_close"]
+        painter.fillRect(btn_close, QColor(36, 56, 82))
+        painter.setPen(QPen(QColor(255, 215, 60), 1.5))
+        painter.drawRoundedRect(btn_close, 6, 6)
+        painter.setFont(QFont("Arial", 10, QFont.Bold))
+        painter.setPen(QColor(255, 255, 255))
+        painter.drawText(btn_close, Qt.AlignCenter, "✕ CLOSE MANUAL [H / ESC]")
+
         painter.restore()
 
     def get_current_engine_spec(self):
@@ -2764,55 +3258,54 @@ class SkyAceGame(QWidget):
         self.sound.play("shoot_cannon")
 
     def handle_audio_menu_mouse(self, mx, my, is_press=True):
-        dlg_w = 480
-        dlg_h = 440
-        dlg_x = (self.width() - dlg_w) // 2
-        dlg_y = (self.height() - dlg_h) // 2
+        dlg_rect = self.get_audio_dialog_rect()
+        dlg_x = dlg_rect.x()
+        dlg_y = dlg_rect.y()
+        dlg_w = dlg_rect.width()
+        dlg_h = dlg_rect.height()
 
         # 1. Close button
         close_btn_rect = QRect(dlg_x + dlg_w - 44, dlg_y + 16, 26, 26)
         if close_btn_rect.contains(int(mx), int(my)):
-            self.audio_menu_open = False
-            self.update()
+            self.set_audio_menu(False)
             return True
 
         # 2. Save / Resume button
-        save_btn_rect = QRect(dlg_x + 60, dlg_y + 374, dlg_w - 120, 36)
+        save_btn_rect = QRect(dlg_x + 36, dlg_y + 378, dlg_w - 72, 38)
         if save_btn_rect.contains(int(mx), int(my)):
-            self.audio_menu_open = False
+            self.set_audio_menu(False)
             self.sound.play("pow_pickup")
-            self.update()
             return True
 
         # 3. Test SFX button
-        ch1_y = dlg_y + 150
-        test_btn_rect = QRect(dlg_x + dlg_w - 176, ch1_y + 8, 88, 20)
+        ch1_y = dlg_y + 152
+        test_btn_rect = QRect(dlg_x + dlg_w - 168, ch1_y + 8, 86, 22)
         if test_btn_rect.contains(int(mx), int(my)):
             self.trigger_test_sfx()
             return True
 
         # 4. Presets
-        preset_y = dlg_y + 304
-        if QRect(dlg_x + 85, preset_y, 76, 24).contains(int(mx), int(my)):
+        preset_y = dlg_y + 310
+        if QRect(dlg_x + 84, preset_y, 68, 26).contains(int(mx), int(my)):
             self.apply_audio_preset(0.0, 0.0, 0.0)
             return True
-        if QRect(dlg_x + 169, preset_y, 94, 24).contains(int(mx), int(my)):
+        if QRect(dlg_x + 158, preset_y, 84, 26).contains(int(mx), int(my)):
             self.apply_audio_preset(0.50, 0.50, 0.30)
             return True
-        if QRect(dlg_x + 271, preset_y, 90, 24).contains(int(mx), int(my)):
+        if QRect(dlg_x + 248, preset_y, 86, 26).contains(int(mx), int(my)):
             self.apply_audio_preset(0.20, 1.00, 0.75)
             return True
-        if QRect(dlg_x + 369, preset_y, 90, 24).contains(int(mx), int(my)):
+        if QRect(dlg_x + 340, preset_y, 88, 26).contains(int(mx), int(my)):
             self.apply_audio_preset(0.75, 0.20, 0.20)
             return True
 
         # 5. Channel strips & slider tracks
-        ch_y_list = [dlg_y + 74, dlg_y + 150, dlg_y + 226]
+        ch_y_list = [dlg_y + 74, dlg_y + 152, dlg_y + 230]
         track_x = dlg_x + 36
         track_w = dlg_w - 72
 
         for ch_idx, ch_y in enumerate(ch_y_list):
-            card_rect = QRect(dlg_x + 18, ch_y, dlg_w - 36, 66)
+            card_rect = QRect(dlg_x + 16, ch_y, dlg_w - 32, 68)
             slider_hit_rect = QRect(track_x - 12, ch_y + 32, track_w + 24, 32)
 
             if slider_hit_rect.contains(int(mx), int(my)):
@@ -2829,32 +3322,22 @@ class SkyAceGame(QWidget):
         return False
 
     def mouseMoveEvent(self, event):
-        if self.audio_menu_open and self.audio_slider_dragging is not None:
-            mx = event.position().x()
-            dlg_w = 480
-            dlg_x = (self.width() - dlg_w) // 2
-            track_x = dlg_x + 36
-            track_w = dlg_w - 72
-            val = max(0.0, min(1.0, (mx - track_x) / float(track_w)))
-            self.adjust_channel_volume(self.audio_slider_dragging, absolute_val=val)
-            return
-        super().mouseMoveEvent(event)
-
-    def mousePressEvent(self, event):
         pos = event.position()
         mx, my = pos.x(), pos.y()
+        self.mouse_cursor_pos = (int(mx), int(my))
+        if self.state in ("playing", "takeoff", "landing", "boss_intro", "victory", "game_over"):
+            prev_h = getattr(self, "matchup_badge_hovered", False)
+            cur_h = self.get_matchup_badge_rect().contains(int(mx), int(my))
+            if cur_h != prev_h:
+                self.matchup_badge_hovered = cur_h
+                self.update()
 
-        # Check Audio Console button in Hangar or HUD
-        audio_btn_rect = self.get_audio_button_rect()
-        if audio_btn_rect.contains(int(mx), int(my)):
-            self.audio_menu_open = not self.audio_menu_open
-            if self.audio_menu_open:
-                self.sound.play("pow_pickup")
-            self.update()
-            return
-
-        if self.audio_menu_open:
-            self.handle_audio_menu_mouse(mx, my, is_press=True)
+        if self.audio_menu_open and self.audio_slider_dragging is not None:
+            dlg_rect = self.get_audio_dialog_rect()
+            track_x = dlg_rect.x() + 36
+            track_w = dlg_rect.width() - 72
+            val = max(0.0, min(1.0, (mx - track_x) / float(track_w)))
+            self.adjust_channel_volume(self.audio_slider_dragging, absolute_val=val)
             return
 
         if self.state == "hangar":
@@ -2866,7 +3349,94 @@ class SkyAceGame(QWidget):
                     col = i % 2
                     row = i // 2
                     rx = 18 + col * (col_w + 8)
-                    ry = 114 + row * (row_h + 8)
+                    ry = 110 + row * (row_h + 8)
+                    rect = QRect(rx, ry, col_w, row_h)
+                    if rect.contains(int(mx), int(my)):
+                        if self.current_plane != k:
+                            self.current_plane = k
+                            self.showcase_tick = 0
+                            self.update()
+                        break
+            elif self.hangar_step == 2:
+                th_keys = ["imperial", "allied", "luftwaffe", "raf", "vvs", "canada", "mediterranean", "france", "poland", "czech"]
+                for i, tk in enumerate(th_keys):
+                    col = i % 2
+                    row = i // 2
+                    rx = 18 + col * (col_w + 8)
+                    ry = 110 + row * (row_h + 8)
+                    rect = QRect(rx, ry, col_w, row_h)
+                    if rect.contains(int(mx), int(my)):
+                        if getattr(self, "selected_theater", None) != tk:
+                            self.selected_theater = tk
+                            self.showcase_tick = 0
+                            self.update()
+                        break
+
+        super().mouseMoveEvent(event)
+
+    def mousePressEvent(self, event):
+        pos = event.position()
+        mx, my = int(pos.x()), int(pos.y())
+
+        # If Help modal is open
+        if getattr(self, "show_help_modal", False):
+            h_rects = self.get_header_rects()
+            if h_rects["modal_close"].contains(mx, my):
+                self.set_help_modal(False)
+            else:
+                m_w, m_h = 440, 360
+                m_x = (self.width() - m_w) // 2
+                m_y = (self.height() - m_h) // 2
+                modal_rect = QRect(m_x, m_y, m_w, m_h)
+                if not modal_rect.contains(mx, my):
+                    self.set_help_modal(False)
+            return
+
+        # If Audio Console is open
+        if self.audio_menu_open:
+            audio_btn = self.get_audio_button_rect()
+            h_rects = self.get_header_rects()
+            if audio_btn.contains(mx, my) or (self.state == "playing" and h_rects["sound"].contains(mx, my)):
+                self.set_audio_menu(False)
+                return
+            self.handle_audio_menu_mouse(mx, my, is_press=True)
+            return
+
+        # Check Template Header buttons in playing mode
+        if self.state == "playing":
+            h_rects = self.get_header_rects()
+            if h_rects["help"].contains(mx, my):
+                self.toggle_help_modal()
+                return
+            elif h_rects["pause"].contains(mx, my):
+                self.toggle_pause()
+                return
+            elif h_rects["sound"].contains(mx, my):
+                self.toggle_audio_menu()
+                return
+            elif h_rects["restart"].contains(mx, my):
+                self.start_mission(self.current_plane, self.enemy_theater, round_num=self.current_round)
+                return
+            elif h_rects["view_mode"].contains(mx, my):
+                self.toggle_header_mode()
+                return
+
+        # Check Audio Console button in Hangar
+        audio_btn_rect = self.get_audio_button_rect()
+        if audio_btn_rect.contains(mx, my):
+            self.toggle_audio_menu()
+            return
+
+        if self.state == "hangar":
+            col_w = (self.width() - 44) // 2
+            row_h = 106
+            if self.hangar_step == 1:
+                card_keys = ["p38", "zero", "spitfire", "bf109", "yak3", "mosquito", "folgore", "d520", "pzl11", "avia"]
+                for i, k in enumerate(card_keys):
+                    col = i % 2
+                    row = i // 2
+                    rx = 18 + col * (col_w + 8)
+                    ry = 110 + row * (row_h + 8)
                     rect = QRect(rx, ry, col_w, row_h)
                     if rect.contains(int(mx), int(my)):
                         self.current_plane = k
@@ -2943,11 +3513,12 @@ class SkyAceGame(QWidget):
             self.update()
             return
         elif self.state in ("secret_victory", "secret_defeat"):
-            self.state = "secret_briefing"
-            self.sound.play_bgm("bgm_boss")
-            self.update()
+            self.advance_to_next_campaign_theater()
             return
         elif self.state == "playing":
+            if self.is_paused:
+                self.toggle_pause()
+                return
             if event.button() == Qt.LeftButton:
                 self.is_fire_held = True
                 self.trigger_fire()
@@ -2960,6 +3531,13 @@ class SkyAceGame(QWidget):
             self.update()
         if event.button() == Qt.LeftButton:
             self.is_fire_held = False
+
+    def leaveEvent(self, event):
+        self.mouse_cursor_pos = None
+        if getattr(self, "matchup_badge_hovered", False):
+            self.matchup_badge_hovered = False
+            self.update()
+        super().leaveEvent(event)
 
     def cycle_weapon(self):
         if self.is_secret_mission:
@@ -2979,18 +3557,39 @@ class SkyAceGame(QWidget):
     def keyPressEvent(self, event):
         key = event.key()
 
-        # [M] or [O] toggles the Audio Console anywhere
-        if key in (Qt.Key_M, Qt.Key_O):
-            self.audio_menu_open = not self.audio_menu_open
-            if self.audio_menu_open:
-                self.sound.play("pow_pickup")
-            self.update()
+        # [Shift+F] or [F11] toggles header view mode (mini vs standard) anywhere
+        if (event.modifiers() & Qt.ShiftModifier and key == Qt.Key_F) or key == Qt.Key_F11:
+            self.toggle_header_mode()
             return
 
+        # [H] toggles Help Modal anywhere (or returns to hangar if in game_over)
+        if key == Qt.Key_H:
+            if self.state == "game_over":
+                self.state = "hangar"
+                self.hangar_step = 1
+                self.sound.play_bgm("bgm_hangar")
+                self.update()
+                return
+            else:
+                self.toggle_help_modal()
+                return
+
+        # [M] or [O] toggles the Audio Console anywhere
+        if key in (Qt.Key_M, Qt.Key_O):
+            self.toggle_audio_menu()
+            return
+
+        # If Help modal is open, dismiss it on Escape/Enter/Space
+        if getattr(self, "show_help_modal", False):
+            if key in (Qt.Key_Escape, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space):
+                self.set_help_modal(False)
+                return
+            return
+
+        # If Audio console is open, handle keys
         if self.audio_menu_open:
             if key in (Qt.Key_Escape, Qt.Key_Return, Qt.Key_Enter):
-                self.audio_menu_open = False
-                self.update()
+                self.set_audio_menu(False)
                 return
             elif key in (Qt.Key_Up, Qt.Key_W):
                 self.audio_selected_channel = (self.audio_selected_channel - 1) % 3
@@ -3026,12 +3625,9 @@ class SkyAceGame(QWidget):
             return
 
         if key == Qt.Key_Escape:
-            if self.audio_menu_open:
-                self.audio_menu_open = False
-                self.update()
-                return
-            elif self.is_paused:
+            if self.is_paused:
                 self.is_paused = False
+                self.paused_by_menu = False
                 self.sound.play("pow_pickup")
                 self.update()
                 return
@@ -3040,9 +3636,7 @@ class SkyAceGame(QWidget):
                 self.update()
                 return
             elif self.state == "playing":
-                self.is_paused = True
-                self.sound.play("pow_pickup")
-                self.update()
+                self.toggle_pause()
                 return
             elif self.state in ("victory", "game_over"):
                 self.state = "hangar"
@@ -3054,6 +3648,36 @@ class SkyAceGame(QWidget):
                 self.close()
         elif self.state == "hangar":
             if self.hangar_step == 1:
+                card_keys = ["p38", "zero", "spitfire", "bf109", "yak3", "mosquito", "folgore", "d520", "pzl11", "avia"]
+                cur_idx = card_keys.index(self.current_plane) if self.current_plane in card_keys else 0
+                if key in (Qt.Key_Left, Qt.Key_Right):
+                    cur_idx = cur_idx ^ 1
+                    self.current_plane = card_keys[cur_idx]
+                    self.sound.play("pow_pickup")
+                    self.update()
+                    return
+                elif key == Qt.Key_Up:
+                    if cur_idx >= 2:
+                        cur_idx -= 2
+                        self.current_plane = card_keys[cur_idx]
+                        self.sound.play("pow_pickup")
+                        self.update()
+                    return
+                elif key == Qt.Key_Down:
+                    if cur_idx + 2 < len(card_keys):
+                        cur_idx += 2
+                        self.current_plane = card_keys[cur_idx]
+                        self.sound.play("pow_pickup")
+                        self.update()
+                    return
+                elif key in (Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space):
+                    self.hangar_step = 2
+                    self.sound.play("pow_pickup")
+                    self.banner_text = f"SELECTED {self.nation_info[self.current_plane]['name']} • CHOOSE ENEMY THEATER"
+                    self.banner_timer = 120
+                    self.update()
+                    return
+
                 key_map = {
                     Qt.Key_1: "p38", Qt.Key_2: "zero", Qt.Key_3: "spitfire",
                     Qt.Key_4: "bf109", Qt.Key_5: "yak3", Qt.Key_6: "mosquito",
@@ -3068,28 +3692,77 @@ class SkyAceGame(QWidget):
                     self.banner_timer = 120
                     self.update()
             elif self.hangar_step == 2:
-                th_map = {
-                    Qt.Key_1: "imperial", Qt.Key_2: "allied", Qt.Key_3: "luftwaffe",
-                    Qt.Key_4: "raf", Qt.Key_5: "vvs", Qt.Key_6: "canada",
-                    Qt.Key_7: "mediterranean", Qt.Key_8: "france", Qt.Key_9: "poland",
-                    Qt.Key_0: "czech"
-                }
-                if key in th_map:
-                    self.start_transition(self.current_plane, th_map[key], round_num=1)
-                elif key in (Qt.Key_Space, Qt.Key_Return):
-                    # Launch default rival theater
-                    self.start_transition(self.current_plane, self.nation_info[self.current_plane]["default_rival"], round_num=1)
-                elif key == Qt.Key_Backspace:
+                th_keys = ["imperial", "allied", "luftwaffe", "raf", "vvs", "canada", "mediterranean", "france", "poland", "czech"]
+                if not hasattr(self, "selected_theater") or self.selected_theater not in th_keys:
+                    self.selected_theater = self.nation_info[self.current_plane]["default_rival"]
+                cur_idx = th_keys.index(self.selected_theater) if self.selected_theater in th_keys else 0
+
+                if key in (Qt.Key_Left, Qt.Key_Right):
+                    cur_idx = cur_idx ^ 1
+                    self.selected_theater = th_keys[cur_idx]
+                    self.sound.play("pow_pickup")
+                    self.update()
+                    return
+                elif key == Qt.Key_Up:
+                    if cur_idx >= 2:
+                        cur_idx -= 2
+                        self.selected_theater = th_keys[cur_idx]
+                        self.sound.play("pow_pickup")
+                        self.update()
+                    return
+                elif key == Qt.Key_Down:
+                    if cur_idx + 2 < len(th_keys):
+                        cur_idx += 2
+                        self.selected_theater = th_keys[cur_idx]
+                        self.sound.play("pow_pickup")
+                        self.update()
+                    return
+                elif key in (Qt.Key_Space, Qt.Key_Return, Qt.Key_Enter):
+                    self.start_transition(self.current_plane, self.selected_theater, round_num=1)
+                    return
+                elif key in (Qt.Key_Backspace, Qt.Key_Escape):
                     self.hangar_step = 1
                     self.update()
+                    return
+                else:
+                    th_map = {
+                        Qt.Key_1: "imperial", Qt.Key_2: "allied", Qt.Key_3: "luftwaffe",
+                        Qt.Key_4: "raf", Qt.Key_5: "vvs", Qt.Key_6: "canada",
+                        Qt.Key_7: "mediterranean", Qt.Key_8: "france", Qt.Key_9: "poland",
+                        Qt.Key_0: "czech"
+                    }
+                    if key in th_map:
+                        self.selected_theater = th_map[key]
+                        self.start_transition(self.current_plane, th_map[key], round_num=1)
 
         elif self.state == "transition":
-            if key in (Qt.Key_Space, Qt.Key_Return):
+            th_keys = ["imperial", "allied", "luftwaffe", "raf", "vvs", "canada", "mediterranean", "france", "poland", "czech"]
+            card_keys = ["p38", "zero", "spitfire", "bf109", "yak3", "mosquito", "folgore", "d520", "pzl11", "avia"]
+
+            if key in (Qt.Key_Space, Qt.Key_Return, Qt.Key_Enter):
                 self.start_mission(self.current_plane, self.transition_target, round_num=1)
             elif key in (Qt.Key_Escape, Qt.Key_Backspace):
                 self.state = "hangar"
                 self.hangar_step = 2
                 self.sound.play_bgm("bgm_hangar")
+                self.update()
+            elif key in (Qt.Key_Left, Qt.Key_Right):
+                # Cycle enemy theater destination
+                cur_t_idx = th_keys.index(self.transition_target) if self.transition_target in th_keys else 0
+                step = 1 if key == Qt.Key_Right else -1
+                self.transition_target = th_keys[(cur_t_idx + step) % len(th_keys)]
+                self.transition_t = 0.0
+                self.sound.play("pow_pickup")
+                self.update()
+            elif key in (Qt.Key_Up, Qt.Key_Down):
+                # Cycle player fighter plane
+                cur_p_idx = card_keys.index(self.current_plane) if self.current_plane in card_keys else 0
+                step = -1 if key == Qt.Key_Up else 1
+                self.current_plane = card_keys[(cur_p_idx + step) % len(card_keys)]
+                self.transition_origin = self.current_plane
+                self.transition_t = 0.0
+                self.build_showcase_for_plane(self.current_plane)
+                self.sound.play("pow_pickup")
                 self.update()
             else:
                 th_map = {
@@ -3171,9 +3844,7 @@ class SkyAceGame(QWidget):
                 return
         elif self.state in ("secret_victory", "secret_defeat"):
             if key in (Qt.Key_Space, Qt.Key_Return, Qt.Key_Escape):
-                self.state = "secret_briefing"
-                self.sound.play_bgm("bgm_boss")
-                self.update()
+                self.advance_to_next_campaign_theater()
                 return
 
         elif self.state == "playing":
@@ -3182,13 +3853,15 @@ class SkyAceGame(QWidget):
                     self.summon_air_support()
                     return
             if key == Qt.Key_P:
-                self.is_paused = not self.is_paused
-                self.sound.play("pow_pickup")
-                self.update()
+                self.toggle_pause()
+                return
+            if key == Qt.Key_R:
+                self.start_mission(self.current_plane, self.enemy_theater, round_num=self.current_round)
                 return
             elif self.is_paused:
                 if key in (Qt.Key_Escape, Qt.Key_Space, Qt.Key_Return):
                     self.is_paused = False
+                    self.paused_by_menu = False
                     self.sound.play("pow_pickup")
                     self.update()
                 return
@@ -3225,7 +3898,7 @@ class SkyAceGame(QWidget):
             self.is_fire_held = False
 
     def game_loop(self):
-        if self.audio_menu_open or self.is_paused:
+        if self.audio_menu_open or self.is_paused or getattr(self, "show_help_modal", False):
             if hasattr(self, "prop_audio"):
                 self.prop_audio.update_flight_telemetry(
                     plane_id=self.current_plane,
@@ -3236,8 +3909,13 @@ class SkyAceGame(QWidget):
                     loop_tick=0,
                     takeoff_tick=0,
                     landing_tick=0,
-                    is_muted=self.is_paused
+                    is_muted=True
                 )
+            self.update()
+            if self.state in ("takeoff", "playing", "landing"):
+                return
+        if self.state == "hangar":
+            self.showcase_tick += 1
             self.update()
             return
 
@@ -3330,6 +4008,7 @@ class SkyAceGame(QWidget):
         # ---------------------------------------------------------------------
         if self.state == "transition":
             self.takeoff_tick += 1
+            self.showcase_tick += 1
             if self.transition_t < 1.0:
                 self.transition_t = min(1.0, self.transition_t + 0.015)
                 if self.transition_t >= 1.0:
@@ -3512,9 +4191,10 @@ class SkyAceGame(QWidget):
 
             # Banking
             target_bank = 0.0
-            if moving_left: target_bank = -p_info["bank"]
-            elif moving_right: target_bank = p_info["bank"]
-            self.bank_angle += (target_bank - self.bank_angle) * 0.22
+            if moving_left: target_bank = -28.0
+            elif moving_right: target_bank = 28.0
+            bank_speed = p_info.get("bank", 0.35)
+            self.bank_angle += (target_bank - self.bank_angle) * bank_speed
 
             # Damage smoke trails on player airframe
             if self.hp < self.max_hp and not self.is_looping and random.random() < 0.70:
@@ -4787,7 +5467,8 @@ class SkyAceGame(QWidget):
         painter.drawText(int(ex - 35), int(ey + 26), f"TARGET {targ_data[3]}")
 
         # 3. DRAW THE PLAYER'S ACTUAL CHOSEN FIGHTER ON THE MAP!
-        plane_pix = self.cache.get(self.current_plane, {}).get("level_0")
+        p_frame = f"level_{(self.showcase_tick // 3) % 4}"
+        plane_pix = self.cache.get(self.current_plane, {}).get(p_frame, self.cache.get(self.current_plane, {}).get("level_0"))
         if plane_pix and not plane_pix.isNull():
             scaled_plane = plane_pix.scaled(48, 48, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             painter.save()
@@ -4826,6 +5507,20 @@ class SkyAceGame(QWidget):
         painter.setFont(QFont("Menlo", 10, QFont.Bold))
         painter.drawText(p_rect.left() + 10, p_rect.top() + 46, p_info['name'])
 
+        # Player Fighter 3D Rolling Animation Preview
+        p_thumb = QRect(p_rect.right() - 72, p_rect.top() + 8, 64, 64)
+        painter.fillRect(p_thumb, QColor(10, 20, 32, 220))
+        painter.setPen(QColor(50, 130, 200))
+        painter.drawRect(p_thumb)
+        p_frames = self.showcase_frames.get(self.current_plane)
+        if p_frames:
+            f_idx = (self.showcase_tick // 2) % len(p_frames)
+            painter.drawPixmap(p_thumb, p_frames[f_idx])
+        else:
+            pix = self.cache.get(self.current_plane, {}).get("level_0")
+            if pix:
+                painter.drawPixmap(p_thumb, pix)
+
         painter.setFont(QFont("Menlo", 8))
         painter.setPen(QColor(170, 190, 215))
         p_details = [
@@ -4853,6 +5548,27 @@ class SkyAceGame(QWidget):
         painter.setPen(QColor(255, 215, 60))
         painter.setFont(QFont("Menlo", 10, QFont.Bold))
         painter.drawText(o_rect.left() + 10, o_rect.top() + 46, t_info['boss_title'][:19])
+
+        # Enemy Rival Fighter 3D Rolling Animation Preview
+        e_plane = {
+            "imperial": "zero", "allied": "p38", "luftwaffe": "bf109",
+            "raf": "spitfire", "vvs": "yak3", "canada": "mosquito",
+            "mediterranean": "folgore", "france": "d520", "poland": "pzl11",
+            "czech": "avia"
+        }.get(self.transition_target, "zero")
+
+        o_thumb = QRect(o_rect.right() - 72, o_rect.top() + 8, 64, 64)
+        painter.fillRect(o_thumb, QColor(28, 12, 16, 220))
+        painter.setPen(QColor(200, 50, 50))
+        painter.drawRect(o_thumb)
+        e_frames = self.showcase_frames.get(e_plane)
+        if e_frames:
+            f_idx = (self.showcase_tick // 2) % len(e_frames)
+            painter.drawPixmap(o_thumb, e_frames[f_idx])
+        else:
+            boss_pix = self.enemy_sprites.get(self.transition_target, {}).get("boss", {}).get("pristine")
+            if boss_pix:
+                painter.drawPixmap(QRect(o_thumb.left() + 2, o_thumb.top() + 10, 60, 44), boss_pix)
 
         painter.setFont(QFont("Menlo", 8))
         painter.setPen(QColor(225, 190, 195))
@@ -4905,7 +5621,7 @@ class SkyAceGame(QWidget):
         # Footer
         painter.setPen(QColor(140, 160, 185))
         painter.setFont(QFont("Menlo", 8))
-        painter.drawText(QRect(0, self.height() - 22, self.width(), 20), Qt.AlignCenter, "[1-9, 0] Re-route Destination  •  [Esc] Hangar")
+        painter.drawText(QRect(0, self.height() - 22, self.width(), 20), Qt.AlignCenter, "[Arrows] Change Theater / Fighter  •  [1-9, 0] Sector  •  [Space] Scramble  •  [Esc] Hangar")
 
     def draw_game_over_screen(self, painter):
         """Renders authentic arcade 'Shot Down in Action' combat casualty report and gameplay stats."""
@@ -5232,14 +5948,15 @@ class SkyAceGame(QWidget):
 
     def draw_audio_menu(self, painter):
         painter.save()
-        # 1. Dark high-opacity military backdrop overlay (blocks distracting background game noise)
-        painter.fillRect(self.rect(), QColor(6, 10, 16, 235))
+        h_h = (46 if getattr(self, "is_mini_header", False) else 108) if self.state == "playing" else 0
+        # 1. Dark high-opacity military backdrop overlay ONLY over playfield below header
+        painter.fillRect(QRect(0, h_h, self.width(), self.height() - h_h), QColor(6, 10, 16, 235))
 
-        dlg_w = 490
-        dlg_h = 446
-        dlg_x = (self.width() - dlg_w) // 2
-        dlg_y = (self.height() - dlg_h) // 2
-        dlg_rect = QRect(dlg_x, dlg_y, dlg_w, dlg_h)
+        dlg_rect = self.get_audio_dialog_rect()
+        dlg_w = dlg_rect.width()
+        dlg_h = dlg_rect.height()
+        dlg_x = dlg_rect.x()
+        dlg_y = dlg_rect.y()
 
         # Deep matte black chassis
         painter.fillRect(dlg_rect, QColor(13, 20, 30))
@@ -5424,10 +6141,10 @@ class SkyAceGame(QWidget):
         painter.drawText(dlg_x + 20, preset_y + 17, "PRESETS:")
 
         presets = [
-            ("MUTE", 0.0, 0.0, 0.0, QRect(dlg_x + 88, preset_y, 76, 26)),
-            ("DEFAULT", 0.50, 0.50, 0.30, QRect(dlg_x + 172, preset_y, 96, 26)),
-            ("WARZONE", 0.20, 1.00, 0.75, QRect(dlg_x + 276, preset_y, 92, 26)),
-            ("MUSIC ONLY", 0.75, 0.20, 0.20, QRect(dlg_x + 376, preset_y, 96, 26)),
+            ("MUTE", 0.0, 0.0, 0.0, QRect(dlg_x + 84, preset_y, 68, 26)),
+            ("DEFAULT", 0.50, 0.50, 0.30, QRect(dlg_x + 158, preset_y, 84, 26)),
+            ("WARZONE", 0.20, 1.00, 0.75, QRect(dlg_x + 248, preset_y, 86, 26)),
+            ("MUSIC", 0.75, 0.20, 0.20, QRect(dlg_x + 340, preset_y, 88, 26)),
         ]
         for name, m, b, e, prect in presets:
             painter.fillRect(prect, QColor(24, 38, 54))
@@ -5439,14 +6156,14 @@ class SkyAceGame(QWidget):
             painter.drawText(prect, Qt.AlignCenter, name)
 
         # Controls Legend (Bold, High Visibility)
-        info_y = dlg_y + 348
-        painter.setFont(QFont("Menlo", 9, QFont.Bold))
+        info_y = dlg_y + 346
+        painter.setFont(QFont("Menlo", 8, QFont.Bold))
         painter.setPen(QColor(240, 248, 255))
         painter.drawText(QRect(dlg_x, info_y, dlg_w, 20), Qt.AlignCenter,
                          "[▲/▼ or Click] Channel  •  [◀/▶ or Drag] Volume  •  [T] Test SFX")
 
         # Save & Resume Mission button (Bold High-Contrast Banner)
-        save_btn_rect = QRect(dlg_x + 50, dlg_y + 380, dlg_w - 100, 40)
+        save_btn_rect = QRect(dlg_x + 36, dlg_y + 378, dlg_w - 72, 38)
         save_grad = QLinearGradient(save_btn_rect.left(), save_btn_rect.top(), save_btn_rect.right(), save_btn_rect.bottom())
         save_grad.setColorAt(0.0, QColor(36, 64, 98))
         save_grad.setColorAt(1.0, QColor(18, 32, 50))
@@ -5454,7 +6171,7 @@ class SkyAceGame(QWidget):
         painter.setBrush(Qt.NoBrush)
         painter.setPen(QPen(QColor(255, 220, 60), 2))
         painter.drawRect(save_btn_rect)
-        painter.setFont(QFont("Menlo", 11, QFont.Bold))
+        painter.setFont(QFont("Menlo", 10, QFont.Bold))
         painter.setPen(QColor(255, 255, 255))
         painter.drawText(save_btn_rect, Qt.AlignCenter, "★ CLOSE & RESUME MISSION [M / ESC] ★")
 
@@ -5562,9 +6279,14 @@ class SkyAceGame(QWidget):
                     painter.setPen(border_col)
                     painter.drawRect(rect)
 
-                    # Plane 3D thumbnail (compact, centered vertically)
-                    pix = self.cache[k]["level_0"]
-                    painter.drawPixmap(QRect(rect.left() + 6, rect.top() + 18, 68, 68), pix)
+                    # Plane 3D thumbnail or roll showcase
+                    s_frames = self.showcase_frames.get(k) if (is_selected and hasattr(self, "showcase_frames")) else None
+                    if s_frames:
+                        f_idx = (self.showcase_tick // 2) % len(s_frames)
+                        painter.drawPixmap(QRect(rect.left() + 6, rect.top() + 18, 68, 68), s_frames[f_idx])
+                    else:
+                        pix = self.cache[k]["level_0"]
+                        painter.drawPixmap(QRect(rect.left() + 6, rect.top() + 18, 68, 68), pix)
 
                     # Text details with exact fit
                     key_tag = (i + 1) % 10
@@ -5586,7 +6308,7 @@ class SkyAceGame(QWidget):
                 # Footer
                 painter.setPen(QColor(160, 180, 200))
                 painter.setFont(font_sm)
-                painter.drawText(QRect(0, self.height() - 28, self.width(), 24), Qt.AlignCenter, "[1-9, 0] Select Fighter  •  [Click] Card  •  [Esc] Exit")
+                painter.drawText(QRect(0, self.height() - 28, self.width(), 24), Qt.AlignCenter, "[Arrows / 1-9, 0] Select  •  [Enter / Click] Confirm  •  [Esc] Exit")
 
             elif self.hangar_step == 2:
                 # Step 2: Choose Enemy Theater
@@ -5607,18 +6329,35 @@ class SkyAceGame(QWidget):
                     ry = 110 + row * (row_h + 8)
                     rect = QRect(rx, ry, col_w, row_h)
 
+                    is_selected = (getattr(self, "selected_theater", p_info["default_rival"]) == tk)
                     is_default = (p_info["default_rival"] == tk)
-                    bg_col = QColor(38, 52, 70, 240) if is_default else QColor(22, 34, 48, 225)
-                    border_col = QColor(255, 210, 50) if is_default else QColor(60, 100, 150)
+                    bg_col = QColor(38, 54, 78, 240) if is_selected else QColor(22, 34, 48, 225)
+                    border_col = QColor(255, 215, 50) if is_selected else (QColor(100, 180, 240) if is_default else QColor(60, 100, 150))
 
                     painter.fillRect(rect, bg_col)
                     painter.setPen(border_col)
                     painter.drawRect(rect)
 
-                    # Boss icon preview
-                    boss_pix = self.enemy_sprites[tk]["boss"].get("pristine")
-                    if boss_pix:
-                        painter.drawPixmap(QRect(rect.left() + 6, rect.top() + 26, 68, 48), boss_pix)
+                    # Opponent Fighter 3D thumbnail or roll showcase
+                    th_to_fighter = {
+                        "imperial": "zero", "allied": "p38", "luftwaffe": "bf109",
+                        "raf": "spitfire", "vvs": "yak3", "canada": "mosquito",
+                        "mediterranean": "folgore", "france": "d520", "poland": "pzl11",
+                        "czech": "avia"
+                    }
+                    opp_plane = th_to_fighter.get(tk, "zero")
+                    s_frames = self.showcase_frames.get(opp_plane) if is_selected else None
+                    if s_frames:
+                        f_idx = (self.showcase_tick // 2) % len(s_frames)
+                        painter.drawPixmap(QRect(rect.left() + 6, rect.top() + 18, 68, 68), s_frames[f_idx])
+                    else:
+                        pix = self.cache.get(opp_plane, {}).get("level_0")
+                        if pix:
+                            painter.drawPixmap(QRect(rect.left() + 6, rect.top() + 18, 68, 68), pix)
+                        else:
+                            boss_pix = self.enemy_sprites[tk]["boss"].get("pristine")
+                            if boss_pix:
+                                painter.drawPixmap(QRect(rect.left() + 6, rect.top() + 26, 68, 48), boss_pix)
 
                     # Information
                     key_tag = (i + 1) % 10
@@ -5639,7 +6378,7 @@ class SkyAceGame(QWidget):
                 # Footer
                 painter.setPen(QColor(160, 180, 200))
                 painter.setFont(font_sm)
-                painter.drawText(QRect(0, self.height() - 28, self.width(), 24), Qt.AlignCenter, "[1-9, 0] Choose Theater  •  [Enter] Recommended Rival  •  [Esc/Back] Change Plane")
+                painter.drawText(QRect(0, self.height() - 28, self.width(), 24), Qt.AlignCenter, "[Arrows / 1-9, 0] Choose Theater  •  [Enter] Confirm  •  [Esc/Back] Change Plane")
 
                 if self.audio_menu_open:
                     self.draw_audio_menu(painter)
@@ -6321,11 +7060,11 @@ class SkyAceGame(QWidget):
 
         # Scale & Position
         if self.state == "takeoff":
-            cur_scale = 0.82 if self.takeoff_tick < 110 else (0.82 + 0.18 * min(1.0, (self.takeoff_tick - 110)/50.0))
+            cur_scale = 0.42 if self.takeoff_tick < 110 else (0.42 + 0.58 * min(1.0, (self.takeoff_tick - 110)/50.0))
             shadow_dist = int(6 + 28 * min(1.0, (self.takeoff_tick - 110)/50.0)) if self.takeoff_tick >= 110 else 6
             plane_y = self.y
         elif self.state == "landing":
-            cur_scale = 1.0 if self.landing_tick < 40 else (1.0 - 0.18 * min(1.0, (self.landing_tick - 40)/55.0))
+            cur_scale = 1.0 if self.landing_tick < 40 else (1.0 - 0.58 * min(1.0, (self.landing_tick - 40)/55.0))
             shadow_dist = int(34 - 28 * min(1.0, (self.landing_tick - 40)/55.0)) if self.landing_tick >= 40 else 34
             plane_y = self.y
         elif self.is_looping:
@@ -6597,118 +7336,34 @@ class SkyAceGame(QWidget):
             f_alpha = int(220 * (self.failsafe_flash_ticks / 24.0))
             painter.fillRect(self.rect(), QColor(255, 245, 220, f_alpha))
 
-        # 16. Tactical HUD
-        painter.fillRect(QRect(12, 12, self.width() - 24, 110), QColor(10, 18, 30, 225))
-        painter.setBrush(Qt.NoBrush)
-        painter.setPen(QColor(50, 120, 180))
-        painter.drawRect(QRect(12, 12, self.width() - 24, 110))
+        painter.restore()
 
-        font_bold = QFont("Menlo", 11, QFont.Bold)
-        font_sm = QFont("Menlo", 10)
+        # 16. Option 1 Sleek In-Game HUD
+        self.draw_option1_hud(painter)
 
-        p_info = self.nation_info[self.current_plane]
-        t_info = self.theaters[self.enemy_theater]
-
-        painter.setFont(font_bold)
-        painter.setPen(QColor(245, 210, 40))
-        if self.is_secret_mission:
-            plane_title = f"{p_info['flag']} [COALITION] {p_info['name']}"
-        else:
-            plane_title = f"{p_info['flag']} {p_info['name']}"
-        painter.drawText(24, 30, plane_title)
-        painter.setPen(QColor(255, 255, 255))
-        painter.drawText(self.width() - 210, 30, f"SCORE: {self.score:06d}")
-        self.draw_audio_button(painter, self.get_audio_button_rect(), is_hud=True)
-
-        painter.setFont(font_sm)
-        # Armor gauge
-        pips = "■ " * self.hp + "□ " * (self.max_hp - self.hp)
-        if self.hp >= 4: col = QColor(100, 240, 120)
-        elif self.hp == 3: col = QColor(230, 220, 50)
-        elif self.hp == 2: col = QColor(255, 140, 30)
-        else: col = QColor(255, 50, 50) if (self.prop_tick // 4) % 2 == 0 else QColor(255, 180, 50)
-
-        painter.setPen(QColor(255, 215, 60))
-        if self.is_secret_mission:
-            painter.drawText(24, 48, "LIVES: ✈ (1)")
-        else:
-            lives_icons = "✈ " * self.lives
-            painter.drawText(24, 48, f"LIVES: {lives_icons.strip()}")
-
-        painter.setPen(col)
-        painter.drawText(132, 48, f"ARMOR: [ {pips.strip()} ]   BOMBS: {'★ ' * self.bombs_remaining}")
-
-        # Tactical Air Support Status Callout
-        if self.air_support_active and self.air_support_obj:
-            rem_s = max(0, self.air_support_timer // 60)
-            painter.setPen(QColor(100, 255, 150))
-            painter.drawText(self.width() - 220, 48, f"📻 SUPPORT: {self.air_support_obj['hero'].upper()} [{rem_s}s]")
-        elif self.air_support_ready:
-            pulse_col = QColor(255, 225, 70) if (self.prop_tick // 6) % 2 == 0 else QColor(100, 255, 120)
-            painter.setPen(pulse_col)
-            painter.drawText(self.width() - 220, 48, "📻 SUPPORT [PRESS 'C']")
-
-        # Sortie clock / Boss radar
-        elapsed_secs = self.mission_ticks // 60
-        if self.boss and self.boss.get("active"):
-            clock_text = f"⚠ BOSS: {self.boss['title']} ⚠"
-        else:
-            total_secs = self.boss_target_ticks // 60
-            rem_secs = max(0, (self.boss_target_ticks - self.mission_ticks) // 60)
-            clock_text = f"SORTIE: {elapsed_secs//60:02d}:{elapsed_secs%60:02d} (BOSS IN {rem_secs}s)"
-
-        if self.is_secret_mission and self.secret_wingmen:
-            w_status = " • ".join([f"{w['name'][:7]}: {w['hp']}HP" for w in self.secret_wingmen])
-            painter.setPen(QColor(255, 200, 100))
-            painter.drawText(24, 66, f"WINGMEN: {w_status}")
-            painter.setPen(QColor(180, 220, 255))
-            if self.cartel_hangar and self.cartel_hangar.get("active"):
-                painter.drawText(self.width() - 220, 66, "OBJECTIVE: HANGAR")
-            else:
-                painter.drawText(self.width() - 220, 66, f"SORTIE: {elapsed_secs//60:02d}:{elapsed_secs%60:02d} / 02:00")
-        else:
-            painter.setPen(QColor(180, 220, 255))
-            painter.drawText(24, 66, f"THEATER: {t_info['name']}  •  {clock_text}")
-
-        if self.is_secret_mission:
-            painter.setPen(QColor(255, 215, 60))
-            painter.drawText(24, 84, "WEAPONS: [ ★ ALL COMBAT WEAPONS ACTIVE ★ ]")
-        else:
-            w_name = self.weapon_names[self.current_plane][self.weapons[self.weapon_idx]]
-            painter.setPen(QColor(255, 180, 40))
-            painter.drawText(24, 84, f"WEAPON: [ {w_name} ]  (CYCLE: 'Q'/'E')")
-
-        painter.setPen(QColor(140, 170, 200))
-        painter.drawText(24, 102, "[Z/Click] Fire  •  [B] Bomb  •  [C] Air Support  •  [Space] Loop  •  [P] Pause")
+        # 16.1 Battle Matchup Badge at Bottom Center ([Flag] VS [Flag])
+        self.draw_battle_matchup_badge(painter)
 
         if self.banner_timer > 0:
             has_boss_gauge = (self.boss and self.boss["active"]) or (self.cartel_hangar and self.cartel_hangar["active"])
-            banner_y = 162 if has_boss_gauge else 130
+            hud_y = 52 if getattr(self, "is_mini_header", False) else 114
+            banner_y = hud_y + 44 if not has_boss_gauge else hud_y + 72
             painter.fillRect(QRect(20, banner_y, self.width() - 40, 26), QColor(25, 35, 50, 230))
             painter.setBrush(Qt.NoBrush)
             painter.setPen(QColor(255, 225, 70))
             painter.setFont(QFont("Menlo", 8, QFont.Bold))
             painter.drawText(QRect(20, banner_y, self.width() - 40, 26), Qt.AlignCenter, self.banner_text)
 
-        # Footer
-        painter.fillRect(QRect(12, self.height() - 36, self.width() - 24, 26), QColor(10, 18, 30, 220))
-        painter.setBrush(Qt.NoBrush)
-        painter.setPen(QColor(50, 120, 180))
-        painter.drawRect(QRect(12, self.height() - 36, self.width() - 24, 26))
-        painter.setPen(QColor(200, 225, 250))
-        painter.drawText(24, self.height() - 19, "CONTROLS: [Arrows/WASD] Fly  •  [Z] Fire  •  [B] Bomb  •  [C] Air Support  •  [Space] Loop  •  [M] Audio")
-
-        painter.restore()
-
-        # Pause Overlay
-        if self.is_paused and not self.audio_menu_open:
+        # Pause Overlay (hidden when Help modal or Audio menu is active)
+        if self.is_paused and not self.audio_menu_open and not getattr(self, "show_help_modal", False):
             painter.save()
-            painter.fillRect(self.rect(), QColor(6, 12, 20, 205))
+            h_h = 46 if getattr(self, "is_mini_header", False) else 108
+            painter.fillRect(QRect(0, h_h, self.width(), self.height() - h_h), QColor(6, 12, 20, 205))
             
-            p_w = 440
-            p_h = 190
+            p_w = 420
+            p_h = 180
             p_x = (self.width() - p_w) // 2
-            p_y = (self.height() - p_h) // 2
+            p_y = h_h + (self.height() - h_h - p_h) // 2
             p_rect = QRect(p_x, p_y, p_w, p_h)
             
             painter.fillRect(p_rect, QColor(8, 14, 22, 245))
@@ -6732,6 +7387,100 @@ class SkyAceGame(QWidget):
         if self.audio_menu_open:
             self.draw_audio_menu(painter)
 
+        if getattr(self, "show_help_modal", False):
+            self.draw_help_modal(painter)
+
+        # Always draw the Arcade Template Header ON TOP so it is never covered up or dimmed
+        self.draw_template_header(painter)
+
+        # Preview Recording Indicator Pill
+        if hasattr(self, "preview_rec_status") and not getattr(self, "preview_rec_done", False):
+            painter.save()
+            pill_rect = QRect(self.width() - 140, 14, 125, 24)
+            is_active = getattr(self, "preview_rec_active", False)
+            bg = QColor(225, 30, 45, 240) if is_active else QColor(15, 22, 35, 220)
+            painter.fillRect(pill_rect, bg)
+            painter.setPen(QColor(255, 60, 60) if not is_active else QColor(255, 255, 255))
+            painter.drawRect(pill_rect)
+            painter.setFont(QFont("Menlo", 9, QFont.Bold))
+            painter.setPen(QColor(255, 255, 255))
+            painter.drawText(pill_rect, Qt.AlignCenter, self.preview_rec_status)
+            painter.restore()
+
+    def start_preview_recording_scheduler(self, delay_sec=20, duration_sec=8):
+        """Schedules automated in-process WebP gameplay preview recording after delay_sec."""
+        import time
+        import threading
+        import subprocess
+        import shutil
+        from pathlib import Path
+        from PySide6.QtCore import QTimer, Qt
+
+        self.preview_rec_active = False
+        self.preview_rec_done = False
+        self.preview_rec_frames = []
+        self.preview_rec_start_time = time.time()
+        self.preview_rec_delay = delay_sec
+        self.preview_rec_duration = duration_sec
+        self.preview_rec_tmp_dir = Path("/tmp/skyace_preview_rec")
+        if self.preview_rec_tmp_dir.exists():
+            shutil.rmtree(self.preview_rec_tmp_dir, ignore_errors=True)
+        self.preview_rec_tmp_dir.mkdir(parents=True, exist_ok=True)
+        self.preview_rec_status = f"REC IN {delay_sec}s"
+
+        self.rec_timer = QTimer(self)
+
+        def rec_tick():
+            if getattr(self, "preview_rec_done", False):
+                self.rec_timer.stop()
+                return
+            now = time.time()
+            elapsed = now - self.preview_rec_start_time
+            if elapsed < self.preview_rec_delay:
+                rem_cd = max(1, int(math.ceil(self.preview_rec_delay - elapsed)))
+                self.preview_rec_status = f"REC IN {rem_cd}s"
+                self.update()
+                return
+
+            rec_elapsed = elapsed - self.preview_rec_delay
+            if rec_elapsed < self.preview_rec_duration:
+                self.preview_rec_active = True
+                rem_rec = max(1, int(math.ceil(self.preview_rec_duration - rec_elapsed)))
+                self.preview_rec_status = f"● REC {rem_rec}s"
+                pix = self.grab()
+                scaled = pix.scaled(320, 414, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                f_idx = len(self.preview_rec_frames)
+                f_path = self.preview_rec_tmp_dir / f"frame_{f_idx:04d}.png"
+                scaled.save(str(f_path), "PNG")
+                self.preview_rec_frames.append(f_path)
+                self.update()
+            else:
+                self.preview_rec_active = False
+                self.preview_rec_done = True
+                self.rec_timer.stop()
+                self.preview_rec_status = "SAVED!"
+                self.banner_text = "★ GAMEPLAY WEBP PREVIEW CAPTURED & SAVED! ★"
+                self.banner_timer = 150
+                self.update()
+
+                def assemble():
+                    out_webp = current_dir.parent.parent / "assets" / "previews" / "skyace.webp"
+                    out_webp.parent.mkdir(parents=True, exist_ok=True)
+                    cmd = ["img2webp", "-loop", "0", "-d", "80", "-q", "80"]
+                    for fp in sorted(self.preview_rec_tmp_dir.glob("frame_*.png")):
+                        cmd.append(str(fp))
+                    cmd.extend(["-o", str(out_webp)])
+                    try:
+                        subprocess.run(cmd, check=True)
+                        print(f"[Sky Ace] Gameplay preview saved to {out_webp} ({len(self.preview_rec_frames)} frames)")
+                    except Exception as err:
+                        print(f"[Sky Ace] Error compiling webp preview: {err}")
+
+                threading.Thread(target=assemble, daemon=True).start()
+
+        self.rec_timer.timeout.connect(rec_tick)
+        self.rec_timer.start(80)
+
     def closeEvent(self, event):
         if hasattr(self, "prop_audio"):
             self.prop_audio.stop()
@@ -6739,8 +7488,16 @@ class SkyAceGame(QWidget):
         super().closeEvent(event)
 
 if __name__ == "__main__":
+    if "--bake-3d" in sys.argv:
+        from engine.bake_3d_frames import bake_all_planes
+        bake_all_planes(verbose=True)
+        sys.exit(0)
+
     app = QApplication(sys.argv)
     window = SkyAceGame()
+    if "--record-preview" in sys.argv:
+        window.start_preview_recording_scheduler(delay_sec=20, duration_sec=8)
+
     if "--secret-play" in sys.argv:
         window.start_secret_mission("ho229")
     elif "--secret" in sys.argv:

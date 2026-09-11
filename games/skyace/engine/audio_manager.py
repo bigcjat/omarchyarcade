@@ -200,7 +200,7 @@ class SoundManager:
                 pass
 
         track_path = None
-        extensions = [".wav", ".ogg"] if self.is_mac else [".ogg", ".wav"]
+        extensions = [".ogg", ".wav"]
         for ext in extensions:
             candidate = self.sounds_dir / f"{track_name}{ext}"
             if candidate.exists():

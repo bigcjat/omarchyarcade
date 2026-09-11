@@ -23,7 +23,7 @@ ApplicationWindow {
     property color themeAccentAlt: "#e6458e"
 
     property bool splashEnabled: true
-    property string selectedCategory: "LIBRARY"
+    property string selectedCategory: "FEATURED"
     property string searchQuery: ""
     property string viewMode: "sidebar" // "grid", "carousel", "desktop", "sidebar"
     property var catalogData: []
@@ -142,6 +142,9 @@ ApplicationWindow {
     }
 
     function setViewMode(mode) {
+        if (selectedCategory === "FEATURED") {
+            selectedCategory = "ALL";
+        }
         if (mode === viewMode) return;
         viewMode = mode;
         if (typeof arcadeBackend !== "undefined" && arcadeBackend.setViewMode) {
@@ -207,6 +210,7 @@ ApplicationWindow {
     }
 
     property var categoryList: [
+        { name: "FEATURED", label: "⭐ Featured" },
         { name: "LIBRARY", label: "💾 My Library (31)" },
         { name: "ALL", label: "🎮 All Games (31)" },
         { name: "ACTION ARCADE", label: "⚡ Action (10)" },
@@ -272,6 +276,7 @@ ApplicationWindow {
 
     function refreshCategories() {
         categoryList = [
+            { name: "FEATURED", label: "⭐ Featured" },
             { name: "LIBRARY", label: "💾 My Library (" + getLibraryCount() + ")" },
             { name: "ALL", label: "🎮 All Games (" + getPlayableCount("ALL") + ")" },
             { name: "ACTION ARCADE", label: "⚡ Action (" + getPlayableCount("ACTION ARCADE") + ")" },
@@ -340,7 +345,9 @@ ApplicationWindow {
             var isUnrel = (g.status === "unreleased");
 
             var matchesCat = false;
-            if (cat === "LIBRARY") {
+            if (cat === "FEATURED") {
+                matchesCat = !isUnrel;
+            } else if (cat === "LIBRARY") {
                 matchesCat = !isUnrel && root.isInstalled(g.id);
             } else if (cat === "ALL") {
                 // "ALL" displays released playable games (unreleased games are in COMING SOON)
@@ -778,12 +785,26 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
+            // 0. Featured Showcase Page
+            ViewFeatured {
+                id: featuredPageView
+                anchors.fill: parent
+                visible: root.selectedCategory === "FEATURED" && root.searchQuery === ""
+                catalog: root.catalogData
+                onGameLaunched: function(gameId) {
+                    root.launchGame(gameId);
+                }
+                onDetailRequested: function(data) {
+                    detailSheet.open(data);
+                }
+            }
+
             // 1. Grid View (Floppy Wall)
             ScrollView {
                 id: gridScroll
                 anchors.fill: parent
                 clip: true
-                visible: root.viewMode === "grid"
+                visible: (root.selectedCategory !== "FEATURED" || root.searchQuery !== "") && root.viewMode === "grid"
                 contentWidth: gridScroll.width
                 contentHeight: flowGrid.height + 60
                 ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
@@ -832,7 +853,7 @@ ApplicationWindow {
             ViewCarousel {
                 id: carouselView
                 anchors.fill: parent
-                visible: root.viewMode === "carousel"
+                visible: (root.selectedCategory !== "FEATURED" || root.searchQuery !== "") && root.viewMode === "carousel"
                 games: root.filteredGames
                 selectedIndex: root.focusedIndex
                 onGameSelected: function(idx) {
@@ -850,7 +871,7 @@ ApplicationWindow {
             ViewDesktop {
                 id: desktopView
                 anchors.fill: parent
-                visible: root.viewMode === "desktop"
+                visible: (root.selectedCategory !== "FEATURED" || root.searchQuery !== "") && root.viewMode === "desktop"
                 games: root.filteredGames
                 selectedIndex: root.focusedIndex
                 onGameSelected: function(idx) {
@@ -868,7 +889,7 @@ ApplicationWindow {
             ViewSidebar {
                 id: sidebarView
                 anchors.fill: parent
-                visible: root.viewMode === "sidebar"
+                visible: (root.selectedCategory !== "FEATURED" || root.searchQuery !== "") && root.viewMode === "sidebar"
                 games: root.filteredGames
                 selectedIndex: root.focusedIndex
                 onGameSelected: function(idx) {
@@ -886,7 +907,7 @@ ApplicationWindow {
             ColumnLayout {
                 anchors.centerIn: parent
                 spacing: 12
-                visible: root.filteredGames.length === 0
+                visible: (root.selectedCategory !== "FEATURED" || root.searchQuery !== "") && root.filteredGames.length === 0
                 z: 50
 
                 Text {
@@ -1291,6 +1312,20 @@ ApplicationWindow {
                 } else if (event.key === Qt.Key_Down || event.key === Qt.Key_J) {
                     root.focusedIndex = Math.min(total - 1, root.focusedIndex + cols);
                     root.ensureFocusedVisible();
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            if (root.selectedCategory === "FEATURED" && root.searchQuery === "") {
+                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    root.launchGame("skyace");
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_Space) {
+                    if (featuredPageView.skyAceData) {
+                        detailSheet.open(featuredPageView.skyAceData);
+                    }
                     event.accepted = true;
                     return;
                 }

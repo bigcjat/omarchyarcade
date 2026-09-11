@@ -88,7 +88,7 @@ PALETTES = {
 # 3D RENDERER WITH Z-BUFFER AND CEL-SHADING
 # =============================================================================
 def render_3d_frame(mesh, roll_deg=0.0, pitch_deg=0.0, yaw_deg=0.0, prop_angle=0.0, 
-                    style="arcade", size=256, scale=1.75):
+                    style="arcade", size=256, scale=1.75, R_matrix=None):
     """
     Renders the 3D mesh into a transparent RGBA image with cel-shading and crisp inking.
     """
@@ -96,35 +96,38 @@ def render_3d_frame(mesh, roll_deg=0.0, pitch_deg=0.0, yaw_deg=0.0, prop_angle=0
     palette = config["materials"]
     l_dir = config["light_dir"] / np.linalg.norm(config["light_dir"])
 
-    # Rotation matrices
-    # 1. Roll (Bank around Y axis: left roll dips left wing, lifts right wing, leans canopy left)
-    r_rad = math.radians(roll_deg)
-    cr, sr = math.cos(r_rad), math.sin(r_rad)
-    R_roll = np.array([
-        [ cr, 0.0,  sr],
-        [0.0, 1.0, 0.0],
-        [-sr, 0.0,  cr]
-    ])
+    if R_matrix is not None:
+        R_total = R_matrix
+    else:
+        # Rotation matrices
+        # 1. Roll (Bank around Y axis: left roll dips left wing, lifts right wing, leans canopy left)
+        r_rad = math.radians(roll_deg)
+        cr, sr = math.cos(r_rad), math.sin(r_rad)
+        R_roll = np.array([
+            [ cr, 0.0,  sr],
+            [0.0, 1.0, 0.0],
+            [-sr, 0.0,  cr]
+        ])
 
-    # 2. Pitch (Loop around X axis)
-    p_rad = math.radians(pitch_deg)
-    cp, sp = math.cos(p_rad), math.sin(p_rad)
-    R_pitch = np.array([
-        [1.0,  0.0,  0.0],
-        [0.0,   cp,  -sp],
-        [0.0,   sp,   cp]
-    ])
+        # 2. Pitch (Loop around X axis)
+        p_rad = math.radians(pitch_deg)
+        cp, sp = math.cos(p_rad), math.sin(p_rad)
+        R_pitch = np.array([
+            [1.0,  0.0,  0.0],
+            [0.0,   cp,  -sp],
+            [0.0,   sp,   cp]
+        ])
 
-    # 3. Yaw (Turn around Z axis: left turn turns nose left, tail right)
-    y_rad = math.radians(yaw_deg)
-    cy, sy = math.cos(y_rad), math.sin(y_rad)
-    R_yaw = np.array([
-        [ cy,  sy, 0.0],
-        [-sy,  cy, 0.0],
-        [0.0, 0.0, 1.0]
-    ])
+        # 3. Yaw (Turn around Z axis: left turn turns nose left, tail right)
+        y_rad = math.radians(yaw_deg)
+        cy, sy = math.cos(y_rad), math.sin(y_rad)
+        R_yaw = np.array([
+            [ cy,  sy, 0.0],
+            [-sy,  cy, 0.0],
+            [0.0, 0.0, 1.0]
+        ])
 
-    R_total = R_yaw @ R_pitch @ R_roll
+        R_total = R_yaw @ R_pitch @ R_roll
 
     # Transform all vertices
     V_raw = np.array(mesh.vertices)
