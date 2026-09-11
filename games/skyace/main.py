@@ -2827,11 +2827,35 @@ class SkyAceGame(QWidget):
         dlg_y = h_h + (self.height() - h_h - dlg_h) // 2
         return QRect(dlg_x, dlg_y, dlg_w, dlg_h)
 
+    def get_hangar_help_rect(self):
+        return QRect(16, 20, 116, 28)
+
+    def draw_template_help_button(self, painter, rect):
+        painter.save()
+        is_active = getattr(self, "show_help_modal", False)
+        # Template subheader pill styling: radius 8, border 1
+        painter.setBrush(QColor(26, 40, 60) if is_active else QColor(16, 26, 40))
+        painter.setPen(QPen(QColor(255, 215, 60) if is_active else QColor(48, 78, 114), 1))
+        painter.drawRoundedRect(rect, 8, 8)
+
+        # Template gold '?' on left
+        painter.setFont(QFont("Arial", 11, QFont.Bold))
+        painter.setPen(QColor(255, 215, 60))
+        painter.drawText(QRect(rect.left() + 8, rect.top(), 16, rect.height()), Qt.AlignCenter, "?")
+
+        # Template 'How to Play' label
+        painter.setFont(QFont("Arial", 9, QFont.Bold))
+        painter.setPen(QColor(255, 215, 60) if is_active else QColor(240, 248, 255))
+        painter.drawText(QRect(rect.left() + 26, rect.top(), rect.width() - 28, rect.height()), Qt.AlignLeft | Qt.AlignVCenter, "How to Play")
+        painter.restore()
+
     def get_header_rects(self):
+        m_w, m_h = 440, 430
+        m_x = (self.width() - m_w) // 2
+        m_y = (self.height() - m_h) // 2
+        modal_close_rect = QRect(m_x + (m_w - 120) // 2, m_y + m_h - 70, 120, 32)
         if getattr(self, "is_mini_header", False):
             my = 13
-            h_h = 46 if self.state == "playing" else 0
-            m_y = h_h + (self.height() - h_h - 360) // 2
             return {
                 "is_mini": True,
                 "pause": QRect(self.width() - 170, my, 26, 28),
@@ -2839,12 +2863,10 @@ class SkyAceGame(QWidget):
                 "sound": QRect(self.width() - 106, my, 26, 28),
                 "restart": QRect(self.width() - 74, my, 26, 28),
                 "view_mode": QRect(self.width() - 42, my, 26, 28),
-                "modal_close": QRect((self.width() - 440) // 2 + 130, m_y + 306, 180, 36)
+                "modal_close": modal_close_rect
             }
         else:
             r2_y = 68
-            h_h = 108 if self.state == "playing" else 0
-            m_y = h_h + (self.height() - h_h - 360) // 2
             return {
                 "is_mini": False,
                 "help": QRect(16, r2_y, 116, 28),
@@ -2852,7 +2874,7 @@ class SkyAceGame(QWidget):
                 "sound": QRect(self.width() - 176, r2_y, 62, 28),
                 "restart": QRect(self.width() - 106, r2_y, 64, 28),
                 "view_mode": QRect(self.width() - 36, r2_y, 24, 28),
-                "modal_close": QRect((self.width() - 440) // 2 + 130, m_y + 306, 180, 36)
+                "modal_close": modal_close_rect
             }
 
     def draw_template_header(self, painter):
@@ -2947,14 +2969,9 @@ class SkyAceGame(QWidget):
 
             # Row 2: Subheader Action Bar
             r2_y = 68
-            # [? How to Play]
+            # [? How to Play] (Standard Template Button)
             h_btn = rects["help"]
-            painter.setBrush(QColor(20, 32, 48))
-            painter.setPen(QPen(QColor(255, 215, 60) if getattr(self, "show_help_modal", False) else QColor(50, 80, 120), 1))
-            painter.drawRoundedRect(h_btn, 5, 5)
-            painter.setFont(QFont("Arial", 9, QFont.Bold))
-            painter.setPen(QColor(255, 215, 60) if getattr(self, "show_help_modal", False) else QColor(220, 235, 250))
-            painter.drawText(h_btn, Qt.AlignCenter, "? How to Play (H)")
+            self.draw_template_help_button(painter, h_btn)
 
             # [⏸ Pause (P)]
             p_btn = rects["pause"]
@@ -3144,58 +3161,74 @@ class SkyAceGame(QWidget):
 
     def draw_help_modal(self, painter):
         painter.save()
-        h_h = (46 if getattr(self, "is_mini_header", False) else 108) if self.state == "playing" else 0
-        # Backdrop dimming ONLY over the playfield below the header
-        painter.fillRect(QRect(0, h_h, self.width(), self.height() - h_h), QColor(6, 12, 20, 215))
+        # Fullscreen backdrop dimming overlay matching template/main.qml (color: "#b3000000")
+        painter.fillRect(self.rect(), QColor(0, 0, 0, 195))
 
-        m_w, m_h = 440, 360
+        m_w, m_h = 440, 430
         m_x = (self.width() - m_w) // 2
-        m_y = h_h + (self.height() - h_h - m_h) // 2
+        m_y = (self.height() - m_h) // 2
         modal_rect = QRect(m_x, m_y, m_w, m_h)
 
-        painter.fillRect(modal_rect, QColor(14, 22, 34, 250))
-        painter.setPen(QPen(QColor(255, 215, 60), 2))
-        painter.drawRoundedRect(modal_rect, 8, 8)
+        # Template modal card: radius 12, border 1
+        painter.setBrush(QColor(16, 24, 38, 252))
+        painter.setPen(QPen(QColor(255, 215, 60), 1.5))
+        painter.drawRoundedRect(modal_rect, 12, 12)
 
-        # Title
-        painter.setFont(QFont("Arial", 14, QFont.Bold))
+        # Header Title: HOW TO PLAY (matching template/main.qml line 698)
+        painter.setFont(QFont("Arial", 16, QFont.Bold))
         painter.setPen(QColor(255, 215, 60))
-        painter.drawText(QRect(m_x, m_y + 16, m_w, 26), Qt.AlignCenter, "★ FLIGHT & COMBAT MANUAL ★")
+        painter.drawText(QRect(m_x, m_y + 18, m_w, 24), Qt.AlignCenter, "HOW TO PLAY")
 
-        painter.setFont(QFont("Arial", 9))
-        painter.setPen(QColor(160, 195, 230))
-        painter.drawText(QRect(m_x, m_y + 44, m_w, 18), Qt.AlignCenter, "Tactical Carrier Air Wing Operations")
+        painter.setFont(QFont("Arial", 9, QFont.Bold))
+        painter.setPen(QColor(140, 175, 210))
+        painter.drawText(QRect(m_x, m_y + 42, m_w, 16), Qt.AlignCenter, "SKY ACE 194X • TACTICAL WWII CARRIER ARCADE")
 
-        # Controls Grid
+        # Controls List (matching template pill design)
         controls = [
-            ("FLIGHT CONTROLS", "[Arrows] or [WASD] or Mouse Flight"),
-            ("PRIMARY GUNS", "[Z] or [Left Click] (Hold to Autofire)"),
-            ("HEAVY ORDNANCE", "[B] (Clears screen & destroys fleet)"),
-            ("AIR SUPPORT", "[C] (Summons hero wingman sortie)"),
-            ("BARREL LOOP", "[Space] / [Enter] (Evade incoming flak)"),
-            ("CYCLE WEAPONS", "[Q] / [E] (Cannons, Rockets, Spread)"),
-            ("MINI HEADER", "[Shift+F] or [F] (Toggle micro-HUD)"),
-            ("AUDIO / PAUSE", "[M] Audio Console • [P] Pause Game")
+            ("Arrows / WASD", "Flight Maneuvering & Mouse Aim"),
+            ("Z / Left Click", "Primary Cannons (Hold to Autofire)"),
+            ("Space / Enter",  "Barrel Roll Loop (Evade Flak)"),
+            ("B",              "Heavy Ordnance (Clear Screen Fleet)"),
+            ("C",              "Wingman Sortie (Tactical Air Support)"),
+            ("Q / E",          "Cycle Weapons (Rockets, Spread)"),
+            ("Shift+F",        "Full / Compact View (Micro-HUD)"),
+            ("M • P • ?",      "Sound Console • Pause • Help Manual")
         ]
 
-        p_y = m_y + 74
-        for action, binding in controls:
-            painter.setFont(QFont("Menlo", 9, QFont.Bold))
-            painter.setPen(QColor(255, 230, 90))
-            painter.drawText(m_x + 24, p_y, action)
-            painter.setFont(QFont("Menlo", 8))
-            painter.setPen(QColor(220, 235, 250))
-            painter.drawText(m_x + 180, p_y, binding)
-            p_y += 26
+        p_y = m_y + 70
+        for key_text, desc_text in controls:
+            pill_rect = QRect(m_x + 24, p_y, 114, 22)
+            painter.setBrush(QColor(24, 38, 60))
+            painter.setPen(QPen(QColor(52, 82, 120), 1))
+            painter.drawRoundedRect(pill_rect, 4, 4)
 
-        # Close Button
-        btn_close = self.get_header_rects()["modal_close"]
-        painter.fillRect(btn_close, QColor(36, 56, 82))
-        painter.setPen(QPen(QColor(255, 215, 60), 1.5))
-        painter.drawRoundedRect(btn_close, 6, 6)
+            painter.setFont(QFont("Menlo", 8, QFont.Bold))
+            painter.setPen(QColor(255, 230, 90))
+            painter.drawText(pill_rect, Qt.AlignCenter, key_text)
+
+            painter.setFont(QFont("Arial", 9))
+            painter.setPen(QColor(220, 235, 250))
+            painter.drawText(QRect(m_x + 148, p_y, m_w - 170, 22), Qt.AlignLeft | Qt.AlignVCenter, desc_text)
+            p_y += 28
+
+        # "GOT IT" Button (matching template/main.qml lines 715-732)
+        btn_w, btn_h = 120, 32
+        btn_x = m_x + (m_w - btn_w) // 2
+        btn_y = m_y + m_h - 70
+        btn_rect = QRect(btn_x, btn_y, btn_w, btn_h)
+
+        painter.setBrush(QColor(255, 215, 60))
+        painter.setPen(Qt.NoPen)
+        painter.drawRoundedRect(btn_rect, 6, 6)
+
         painter.setFont(QFont("Arial", 10, QFont.Bold))
-        painter.setPen(QColor(255, 255, 255))
-        painter.drawText(btn_close, Qt.AlignCenter, "✕ CLOSE MANUAL [H / ESC]")
+        painter.setPen(QColor(14, 20, 30))
+        painter.drawText(btn_rect, Qt.AlignCenter, "GOT IT")
+
+        # Attribution Footnote (matching template/main.qml line 735)
+        painter.setFont(QFont("Arial", 9))
+        painter.setPen(QColor(130, 160, 195, 190))
+        painter.drawText(QRect(m_x, m_y + m_h - 26, m_w, 18), Qt.AlignCenter, "Created by Chris Thompson (@bigcjat) with Gemini")
 
         painter.restore()
 
@@ -3384,7 +3417,7 @@ class SkyAceGame(QWidget):
             if h_rects["modal_close"].contains(mx, my):
                 self.set_help_modal(False)
             else:
-                m_w, m_h = 440, 360
+                m_w, m_h = 440, 430
                 m_x = (self.width() - m_w) // 2
                 m_y = (self.height() - m_h) // 2
                 modal_rect = QRect(m_x, m_y, m_w, m_h)
@@ -3400,6 +3433,11 @@ class SkyAceGame(QWidget):
                 self.set_audio_menu(False)
                 return
             self.handle_audio_menu_mouse(mx, my, is_press=True)
+            return
+
+        # Check Help button in Hangar
+        if self.state == "hangar" and self.get_hangar_help_rect().contains(mx, my):
+            self.toggle_help_modal()
             return
 
         # Check Template Header buttons in playing mode
@@ -3562,8 +3600,8 @@ class SkyAceGame(QWidget):
             self.toggle_header_mode()
             return
 
-        # [H] toggles Help Modal anywhere (or returns to hangar if in game_over)
-        if key == Qt.Key_H:
+        # [H] or [?] toggles Help Modal anywhere (or returns to hangar if in game_over)
+        if key == Qt.Key_H or key == Qt.Key_Question or (key == Qt.Key_Slash and (event.modifiers() & Qt.ShiftModifier)):
             if self.state == "game_over":
                 self.state = "hangar"
                 self.hangar_step = 1
@@ -6247,6 +6285,7 @@ class SkyAceGame(QWidget):
             painter.setPen(QColor(245, 215, 50))
             painter.setFont(font_title)
             painter.drawText(QRect(0, 24, self.width(), 36), Qt.AlignCenter, "★ SKY ACE • 194X ★")
+            self.draw_template_help_button(painter, self.get_hangar_help_rect())
             self.draw_audio_button(painter, self.get_audio_button_rect(), is_hud=False)
             painter.setPen(QColor(180, 210, 240))
             painter.setFont(font_body)
@@ -6382,10 +6421,14 @@ class SkyAceGame(QWidget):
 
                 if self.audio_menu_open:
                     self.draw_audio_menu(painter)
+                if getattr(self, "show_help_modal", False):
+                    self.draw_help_modal(painter)
                 return
 
             if self.audio_menu_open:
                 self.draw_audio_menu(painter)
+            if getattr(self, "show_help_modal", False):
+                self.draw_help_modal(painter)
             return
 
         # ---------------------------------------------------------------------
@@ -7384,14 +7427,14 @@ class SkyAceGame(QWidget):
             painter.drawText(QRect(p_x, p_y + 116, p_w, 22), Qt.AlignCenter, "PRESS [M] FOR AUDIO CONSOLE")
             painter.restore()
 
+        # Draw the Arcade Template Header
+        self.draw_template_header(painter)
+
         if self.audio_menu_open:
             self.draw_audio_menu(painter)
 
         if getattr(self, "show_help_modal", False):
             self.draw_help_modal(painter)
-
-        # Always draw the Arcade Template Header ON TOP so it is never covered up or dimmed
-        self.draw_template_header(painter)
 
         # Preview Recording Indicator Pill
         if hasattr(self, "preview_rec_status") and not getattr(self, "preview_rec_done", False):
