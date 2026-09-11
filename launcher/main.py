@@ -76,6 +76,7 @@ class ArcadeBackend(QObject):
     favoritesChanged = Signal("QVariantList")
     wallpaperChanged = Signal(str)
     feltColorChanged = Signal(str)
+    feltStyleChanged = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -386,6 +387,36 @@ class ArcadeBackend(QObject):
         except Exception as e:
             print(f"[Arcade] Error saving felt color: {e}")
         self.feltColorChanged.emit(color)
+
+    @Slot(result=str)
+    def getFeltStyle(self) -> str:
+        """Returns the poker felt pattern style ('suited' or 'monogram', defaults to 'suited')."""
+        settings_file = self._get_settings_path()
+        if settings_file.exists():
+            try:
+                data = json.loads(settings_file.read_text(encoding="utf-8"))
+                return data.get("poker_felt_style", "suited")
+            except Exception:
+                pass
+        return "suited"
+
+    @Slot(str)
+    def setFeltStyle(self, style: str):
+        """Persists the poker felt pattern style ('suited' or 'monogram')."""
+        settings_file = self._get_settings_path()
+        data = {}
+        if settings_file.exists():
+            try:
+                data = json.loads(settings_file.read_text(encoding="utf-8"))
+            except Exception:
+                data = {}
+        data["poker_felt_style"] = style
+        try:
+            settings_file.parent.mkdir(parents=True, exist_ok=True)
+            settings_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        except Exception as e:
+            print(f"[Arcade] Error saving felt style: {e}")
+        self.feltStyleChanged.emit(style)
 
     @Slot(str)
     def installGame(self, game_id: str):

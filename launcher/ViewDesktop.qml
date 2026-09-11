@@ -13,6 +13,7 @@ Item {
     property var favoritesList: (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getFavorites) ? arcadeBackend.getFavorites() : []
     property string activeWallpaper: (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getDesktopWallpaper) ? arcadeBackend.getDesktopWallpaper() : "poker"
     property string feltColor: (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getFeltColor) ? arcadeBackend.getFeltColor() : "#0a5c36"
+    property string feltStyle: (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getFeltStyle) ? arcadeBackend.getFeltStyle() : "suited"
     
     // Active selection & open window state
     property var selectedItem: null // { type: "folder" | "game", data: ... }
@@ -37,6 +38,9 @@ Item {
         }
         function onFeltColorChanged(col) {
             desktopView.feltColor = col;
+        }
+        function onFeltStyleChanged(st) {
+            desktopView.feltStyle = st;
         }
     }
 
@@ -208,8 +212,8 @@ Item {
             Image {
                 anchors.fill: parent
                 fillMode: Image.Tile
-                source: "../assets/poker_felt_pattern.svg"
-                opacity: 0.90
+                source: desktopView.feltStyle === "monogram" ? "../assets/poker_felt_monogram.svg" : "../assets/poker_felt_suited.svg"
+                opacity: 0.95
             }
 
             // 3. Overhead Casino Lamp Lighting (Radial Spotlight Vignette & Subtle Weave)
@@ -898,7 +902,7 @@ Item {
                 anchors.bottom: parent.bottom
                 anchors.margins: 16
                 width: 320
-                height: desktopView.activeWallpaper === "poker" ? 395 : 240
+                height: desktopView.activeWallpaper === "poker" ? 440 : 240
                 radius: 8
                 color: "#161928"
                 border.color: "#3b82f6"
@@ -1009,6 +1013,68 @@ Item {
                         visible: desktopView.activeWallpaper === "poker"
 
                         Rectangle { Layout.fillWidth: true; height: 1; color: "#252b40" }
+
+                        // Pattern Style Toggle: Suited Cloth vs Monogram Cloth
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 6
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 26
+                                radius: 4
+                                color: desktopView.feltStyle !== "monogram" ? "#0284c7" : "#1a1f30"
+                                border.color: desktopView.feltStyle !== "monogram" ? "#38bdf8" : "#2f3854"
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "♠ Suited Cloth"
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: desktopView.feltStyle !== "monogram" ? "#ffffff" : "#94a3b8"
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        desktopView.feltStyle = "suited";
+                                        if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.setFeltStyle) {
+                                            arcadeBackend.setFeltStyle("suited");
+                                        }
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 26
+                                radius: 4
+                                color: desktopView.feltStyle === "monogram" ? "#0284c7" : "#1a1f30"
+                                border.color: desktopView.feltStyle === "monogram" ? "#38bdf8" : "#2f3854"
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "⬡ Monogram Only"
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: desktopView.feltStyle === "monogram" ? "#ffffff" : "#94a3b8"
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        desktopView.feltStyle = "monogram";
+                                        if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.setFeltStyle) {
+                                            arcadeBackend.setFeltStyle("monogram");
+                                        }
+                                    }
+                                }
+                            }
+                        }
 
                         RowLayout {
                             Layout.fillWidth: true
