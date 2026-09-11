@@ -17,10 +17,12 @@ Free Opposing Theaters & Super Fortress Bosses:
 - 🇷🇺 Eastern Front (VVS Red Star Formations & Pe-8 Heavy Fortress)
 """
 
+import os
 import sys
 import math
 import random
 import json
+import tomllib
 from pathlib import Path
 # Soft optional import for 3D engine developer mode
 try:
@@ -40,6 +42,40 @@ sys.path.insert(0, str(current_dir / "engine"))
 
 from audio_manager import SoundManager
 from prop_audio import ProceduralPropAudio
+
+def find_omarchy_colors_file():
+    env_path = os.environ.get("OMARCHY_THEME_FILE")
+    if env_path and Path(env_path).is_file():
+        return Path(env_path)
+
+    home = Path.home()
+    candidates = [
+        home / ".local" / "state" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".local" / "state" / "omarchy" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "colors.toml",
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    return None
+
+def get_omarchy_theme():
+    theme_path = find_omarchy_colors_file()
+    if not theme_path:
+        return None
+    try:
+        with open(theme_path, "rb") as f:
+            data = tomllib.load(f)
+        c = data.get("colors") if isinstance(data.get("colors"), dict) else data
+        return {
+            "background": c.get("background") or c.get("bg"),
+            "foreground": c.get("foreground") or c.get("fg"),
+            "accent": c.get("accent") or c.get("primary") or c.get("color4"),
+            "muted": c.get("muted") or c.get("color8"),
+        }
+    except Exception:
+        return None
 
 def pil_to_qpixmap(pil_img):
     """Converts a PIL RGBA image to a PySide6 QPixmap if 3D developer dependencies are installed."""
@@ -121,6 +157,7 @@ class SkyAceGame(QWidget):
         self.audio_slider_dragging = None  # 0, 1, 2 or None
         self.mouse_cursor_pos = None
         self.matchup_badge_hovered = False
+        self.omarchy_theme = get_omarchy_theme()
 
         # Game States: "hangar", "transition", "takeoff", "playing", "landing", "round_clear", "victory"
         self.state = "hangar"
@@ -3170,13 +3207,23 @@ class SkyAceGame(QWidget):
         modal_rect = QRect(m_x, m_y, m_w, m_h)
 
         # Template modal card: radius 12, border 1
-        painter.setBrush(QColor(16, 24, 38, 252))
-        painter.setPen(QPen(QColor(255, 215, 60), 1.5))
+        card_bg = QColor(16, 24, 38, 252)
+        accent_col = QColor(255, 215, 60)
+        theme = getattr(self, "omarchy_theme", None)
+        if theme:
+            if theme.get("background"):
+                card_bg = QColor(theme["background"])
+                card_bg.setAlpha(252)
+            if theme.get("accent"):
+                accent_col = QColor(theme["accent"])
+
+        painter.setBrush(card_bg)
+        painter.setPen(QPen(accent_col, 1.5))
         painter.drawRoundedRect(modal_rect, 12, 12)
 
         # Header Title: HOW TO PLAY (matching template/main.qml line 698)
         painter.setFont(QFont("Arial", 16, QFont.Bold))
-        painter.setPen(QColor(255, 215, 60))
+        painter.setPen(accent_col)
         painter.drawText(QRect(m_x, m_y + 18, m_w, 24), Qt.AlignCenter, "HOW TO PLAY")
 
         painter.setFont(QFont("Arial", 9, QFont.Bold))

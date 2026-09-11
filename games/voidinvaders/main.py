@@ -123,14 +123,32 @@ def load_all_omarchy_themes():
             themes[t["id"]] = t
     return themes
 
+def find_omarchy_colors_file():
+    env_path = os.environ.get("OMARCHY_THEME_FILE")
+    if env_path and Path(env_path).is_file():
+        return Path(env_path)
+
+    home = Path.home()
+    candidates = [
+        home / ".local" / "state" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".local" / "state" / "omarchy" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "colors.toml",
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    return None
+
+
 def load_system_theme():
-    theme_path = Path.home() / ".config" / "omarchy" / "current" / "theme" / "colors.toml"
-    if not theme_path.is_file():
+    theme_path = find_omarchy_colors_file()
+    if not theme_path or not theme_path.is_file():
         return None
     try:
         with open(theme_path, "rb") as f:
             data = tomllib.load(f)
-        colors = data.get("colors", {})
+        colors = data.get("colors") if isinstance(data.get("colors"), dict) else data
         accent = colors.get("accent", colors.get("color4", "#89b4fa"))
         bg = colors.get("background", "#181825")
         fg = colors.get("foreground", "#cdd6f4")
@@ -206,11 +224,11 @@ def main():
         elif "catppuccin" in all_themes:
             root.applyTheme(all_themes["catppuccin"], "Catppuccin")
 
-    theme_file = Path.home() / ".config" / "omarchy" / "current" / "theme" / "colors.toml"
+    theme_file = find_omarchy_colors_file()
     watcher = QFileSystemWatcher()
-    if theme_file.parent.exists():
+    if theme_file and theme_file.parent.exists():
         watcher.addPath(str(theme_file.parent))
-    if theme_file.exists():
+    if theme_file and theme_file.exists():
         watcher.addPath(str(theme_file))
 
     def on_theme_file_changed(path):

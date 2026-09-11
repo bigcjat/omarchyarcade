@@ -358,10 +358,16 @@ class ArcadeBackend(QObject):
             return
 
         try:
+            theme_path = find_omarchy_colors_file()
+            env = os.environ.copy()
+            if theme_path and theme_path.is_file():
+                env["OMARCHY_THEME_FILE"] = str(theme_path)
+
             print(f"[Arcade] Launching game: {game_id} via {cmd}")
             proc = subprocess.Popen(
                 cmd,
                 cwd=str(game_dir),
+                env=env,
                 start_new_session=True
             )
             self._active_processes.append(proc)
@@ -400,9 +406,16 @@ class ArcadeBackend(QObject):
 
 
 def find_omarchy_colors_file():
+    env_path = os.environ.get("OMARCHY_THEME_FILE")
+    if env_path and Path(env_path).is_file():
+        return Path(env_path)
+
+    home = Path.home()
     candidates = [
-        Path.home() / ".config" / "omarchy" / "current" / "theme" / "colors.toml",
-        Path.home() / ".config" / "omarchy" / "colors.toml",
+        home / ".local" / "state" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".local" / "state" / "omarchy" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "colors.toml",
     ]
     for c in candidates:
         if c.is_file():
@@ -428,16 +441,57 @@ def get_theme_colors():
         try:
             with open(theme_path, "rb") as f:
                 data = tomllib.load(f)
-                if "colors" in data:
-                    c = data["colors"]
-                    if "background" in c: colors["themeBackground"] = c["background"]
-                    if "surface" in c: colors["themeSurface"] = c["surface"]
-                    if "text" in c: colors["themeText"] = c["text"]
-                    if "accent" in c: colors["themeAccent"] = c["accent"]
-                    if "accent_alt" in c: colors["themeAccentAlt"] = c["accent_alt"]
-                    if "border" in c: colors["themeBorder"] = c["border"]
-                    if "surface_light" in c: colors["themeSurfaceLight"] = c["surface_light"]
-                    if "text_muted" in c: colors["themeTextMuted"] = c["text_muted"]
+                c = data.get("colors") if isinstance(data.get("colors"), dict) else data
+
+                bg = c.get("background") or c.get("bg")
+                fg = c.get("foreground") or c.get("fg") or c.get("text")
+                accent = c.get("accent") or c.get("primary") or c.get("color4")
+                accent_alt = c.get("accent_alt") or c.get("color5") or c.get("color1") or c.get("color3")
+                muted = c.get("muted") or c.get("text_muted") or c.get("color8") or c.get("subtext")
+                border = c.get("border") or c.get("color8") or c.get("selection")
+
+                if bg:
+                    colors["themeBackground"] = bg
+                    try:
+                        from PySide6.QtGui import QColor
+                        qc = QColor(bg)
+                        lum = 0.299 * qc.redF() + 0.587 * qc.greenF() + 0.114 * qc.blueF()
+                        if lum < 0.5:
+                            colors["themeSurface"] = qc.lighter(115).name()
+                            colors["themeSurfaceLight"] = qc.lighter(130).name()
+                            if not border:
+                                colors["themeBorder"] = qc.lighter(145).name()
+                        else:
+                            colors["themeSurface"] = qc.darker(108).name()
+                            colors["themeSurfaceLight"] = qc.darker(118).name()
+                            if not border:
+                                colors["themeBorder"] = qc.darker(125).name()
+                    except Exception:
+                        pass
+
+                if fg:
+                    colors["themeText"] = fg
+                    if not muted:
+                        try:
+                            from PySide6.QtGui import QColor
+                            qc_fg = QColor(fg)
+                            colors["themeTextMuted"] = qc_fg.darker(135).name()
+                        except Exception:
+                            pass
+
+                if accent:
+                    colors["themeAccent"] = accent
+                if accent_alt:
+                    colors["themeAccentAlt"] = accent_alt
+                if muted:
+                    colors["themeTextMuted"] = muted
+                if border:
+                    colors["themeBorder"] = border
+                if "surface" in c:
+                    colors["themeSurface"] = c["surface"]
+                if "surface_light" in c:
+                    colors["themeSurfaceLight"] = c["surface_light"]
+
         except Exception as e:
             print(f"[Arcade] Notice: Could not read theme colors: {e}")
 

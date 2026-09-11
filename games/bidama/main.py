@@ -147,27 +147,33 @@ ALL_THEMES = {
 }
 
 def find_omarchy_colors_file():
+    env_path = os.environ.get("OMARCHY_THEME_FILE")
+    if env_path and Path(env_path).is_file():
+        return Path(env_path)
+
+    home = Path.home()
     candidates = [
-        Path.home() / ".config" / "omarchy" / "current" / "theme" / "colors.toml",
-        Path.home() / ".config" / "omarchy" / "theme" / "colors.toml",
+        home / ".local" / "state" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".local" / "state" / "omarchy" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "colors.toml",
     ]
     for c in candidates:
         if c.is_file():
             return c
     return None
 
-def load_toml_colors(path):
+def load_toml_colors(file_path):
     try:
-        with open(path, "rb") as f:
+        with open(file_path, "rb") as f:
             data = tomllib.load(f)
-        colors = {}
-        for k, v in data.items():
-            if isinstance(v, str):
-                v_str = v.strip().strip('"').strip("'")
-                if re.match(r"^#[0-9a-fA-F]{6}$", v_str):
-                    colors[k] = v_str
-        return colors
-    except Exception:
+        if isinstance(data, dict) and "colors" in data and isinstance(data["colors"], dict):
+            merged = dict(data)
+            merged.update(data["colors"])
+            return merged
+        return data
+    except Exception as e:
+        print(f"Warning: Failed to load {file_path}: {e}", file=sys.stderr)
         return None
 
 def main():

@@ -190,9 +190,15 @@ def load_all_omarchy_themes():
 ALL_THEMES = load_all_omarchy_themes()
 
 def find_omarchy_colors_file():
+    env_path = os.environ.get("OMARCHY_THEME_FILE")
+    if env_path and Path(env_path).is_file():
+        return Path(env_path)
+
     home = Path.home()
     candidates = [
+        home / ".local" / "state" / "omarchy" / "current" / "theme" / "colors.toml",
         home / ".config" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".local" / "state" / "omarchy" / "theme" / "colors.toml",
         home / ".config" / "omarchy" / "colors.toml",
     ]
     for c in candidates:
@@ -204,7 +210,11 @@ def load_toml_colors(file_path):
     try:
         with open(file_path, "rb") as f:
             data = tomllib.load(f)
-            return data.get("colors", data)
+        if isinstance(data, dict) and "colors" in data and isinstance(data["colors"], dict):
+            merged = dict(data)
+            merged.update(data["colors"])
+            return merged
+        return data
     except Exception as e:
         print(f"Warning: Failed to load {file_path}: {e}", file=sys.stderr)
         return None

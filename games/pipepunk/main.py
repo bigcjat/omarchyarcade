@@ -166,30 +166,33 @@ ALL_THEMES = {
 }
 
 def find_omarchy_colors_file():
+    env_path = os.environ.get("OMARCHY_THEME_FILE")
+    if env_path and Path(env_path).is_file():
+        return Path(env_path)
+
+    home = Path.home()
     candidates = [
-        Path.home() / ".config/omarchy/current/theme/colors.toml",
-        Path.home() / ".config/omarchy/theme/colors.toml",
-        Path.home() / ".cache/omarchy/theme/colors.toml",
+        home / ".local" / "state" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".local" / "state" / "omarchy" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "colors.toml",
     ]
     for c in candidates:
         if c.is_file():
             return c
     return None
 
-def load_toml_colors(colors_file):
+def load_toml_colors(file_path):
     try:
-        with open(colors_file, "rb") as f:
+        with open(file_path, "rb") as f:
             data = tomllib.load(f)
-        theme = {}
-        special = data.get("special", {})
-        colors = data.get("colors", {})
-        if "background" in special: theme["background"] = special["background"]
-        if "foreground" in special: theme["foreground"] = special["foreground"]
-        if "accent" in special: theme["accent"] = special["accent"]
-        for k in ["color0", "color1", "color2", "color3", "color4", "color5", "color6", "color7"]:
-            if k in colors: theme[k] = colors[k]
-        return theme
-    except Exception:
+        if isinstance(data, dict) and "colors" in data and isinstance(data["colors"], dict):
+            merged = dict(data)
+            merged.update(data["colors"])
+            return merged
+        return data
+    except Exception as e:
+        print(f"Warning: Failed to load {file_path}: {e}", file=sys.stderr)
         return None
 
 

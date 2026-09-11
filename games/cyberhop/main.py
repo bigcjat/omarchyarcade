@@ -137,9 +137,27 @@ def load_all_omarchy_themes():
                 themes[theme_file.parent.name.lower()] = t
     return themes
 
+def find_omarchy_colors_file():
+    env_path = os.environ.get("OMARCHY_THEME_FILE")
+    if env_path and Path(env_path).is_file():
+        return Path(env_path)
+
+    home = Path.home()
+    candidates = [
+        home / ".local" / "state" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".local" / "state" / "omarchy" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "colors.toml",
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    return None
+
+
 def load_system_theme():
-    theme_path = Path.home() / ".config" / "omarchy" / "current" / "theme" / "colors.toml"
-    if theme_path.exists():
+    theme_path = find_omarchy_colors_file()
+    if theme_path and theme_path.exists():
         return parse_toml_theme(theme_path)
     return None
 
@@ -203,11 +221,11 @@ def main():
         elif "catppuccin" in all_themes:
             root.applyTheme(all_themes["catppuccin"], "Catppuccin")
 
-    theme_file = Path.home() / ".config" / "omarchy" / "current" / "theme" / "colors.toml"
+    theme_file = find_omarchy_colors_file()
     watcher = QFileSystemWatcher()
-    if theme_file.parent.exists():
+    if theme_file and theme_file.parent.exists():
         watcher.addPath(str(theme_file.parent))
-    if theme_file.exists():
+    if theme_file and theme_file.exists():
         watcher.addPath(str(theme_file))
 
     def on_theme_file_changed(path):

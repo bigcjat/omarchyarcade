@@ -125,7 +125,7 @@ def parse_toml_theme(path: Path):
     try:
         with open(path, "rb") as f:
             data = tomllib.load(f)
-        colors = data.get("colors", {})
+        colors = data.get("colors") if isinstance(data.get("colors"), dict) else data
         return {
             "bg": colors.get("base", "#181825"),
             "fg": colors.get("text", "#cdd6f4"),
@@ -137,6 +137,24 @@ def parse_toml_theme(path: Path):
         }
     except Exception:
         return {}
+
+def find_omarchy_colors_file():
+    env_path = os.environ.get("OMARCHY_THEME_FILE")
+    if env_path and Path(env_path).is_file():
+        return Path(env_path)
+
+    home = Path.home()
+    candidates = [
+        home / ".local" / "state" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "current" / "theme" / "colors.toml",
+        home / ".local" / "state" / "omarchy" / "theme" / "colors.toml",
+        home / ".config" / "omarchy" / "colors.toml",
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    return None
+
 
 def main():
     app = QGuiApplication(sys.argv)
@@ -173,11 +191,11 @@ def main():
 
     root = engine.rootObjects()[0]
 
-    theme_path = Path.home() / ".config/omarchy/current/theme/colors.toml"
+    theme_path = find_omarchy_colors_file()
     theme_name_path = Path.home() / ".config/omarchy/current/theme.name"
 
     def update_theme():
-        if theme_path.exists():
+        if theme_path and theme_path.exists():
             theme_data = parse_toml_theme(theme_path)
             t_name = "Custom"
             if theme_name_path.exists():
@@ -187,13 +205,13 @@ def main():
                     pass
             root.applyTheme(theme_data, t_name)
 
-    if theme_path.exists():
+    if theme_path and theme_path.exists():
         update_theme()
 
     watcher = QFileSystemWatcher()
-    if theme_path.parent.exists():
+    if theme_path and theme_path.parent.exists():
         watcher.addPath(str(theme_path.parent))
-    if theme_path.exists():
+    if theme_path and theme_path.exists():
         watcher.addPath(str(theme_path))
 
     def on_theme_changed():
