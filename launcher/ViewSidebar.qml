@@ -452,15 +452,16 @@ Item {
 
                             // Action Buttons (Flow wrapping prevents clipping on small widths!)
                             Flow {
+                                id: actionButtonsFlow
                                 width: parent.width
                                 spacing: 10
 
-                                readonly property bool activeHasUpdate: activeGame ? (typeof root !== "undefined" && root.hasGameUpdate ? root.hasGameUpdate(activeGame.id, activeGame.version || "") : (typeof arcadeBackend !== "undefined" && arcadeBackend.hasGameUpdate ? arcadeBackend.hasGameUpdate(activeGame.id, activeGame.version || "") : false)) : false
-                                readonly property bool activeInstalled: activeGame ? (typeof root !== "undefined" && root.isInstalled ? root.isInstalled(activeGame.id) : true) : true
+                                readonly property bool activeHasUpdate: activeGame ? (typeof root !== "undefined" && root.hasGameUpdate ? root.hasGameUpdate(activeGame.id, activeGame.version || "") : (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.hasGameUpdate ? arcadeBackend.hasGameUpdate(activeGame.id, activeGame.version || "") : false)) : false
+                                readonly property bool activeInstalled: activeGame ? (typeof root !== "undefined" && root.isInstalled ? root.isInstalled(activeGame.id) : (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.isGameInstalled ? arcadeBackend.isGameInstalled(activeGame.id) : true)) : true
 
                                 // Update Button (prominent cyan)
                                 Rectangle {
-                                    visible: parent.activeHasUpdate
+                                    visible: actionButtonsFlow.activeHasUpdate
                                     height: sidebarView.isNarrow ? 38 : 44
                                     width: sidebarView.isNarrow ? 150 : 180
                                     radius: 8
@@ -497,23 +498,23 @@ Item {
                                     height: sidebarView.isNarrow ? 38 : 44
                                     width: sidebarView.isNarrow ? 150 : 180
                                     radius: 8
-                                    color: !parent.activeInstalled ? (sidebarPlayMouse.containsMouse ? "#10b981" : "#059669") : (sidebarPlayMouse.containsMouse ? Qt.lighter(themeAccent, 1.15) : themeAccent)
-                                    border.color: !parent.activeInstalled ? "#34d399" : Qt.lighter(themeAccent, 1.4)
+                                    color: !actionButtonsFlow.activeInstalled ? (sidebarPlayMouse.containsMouse ? "#10b981" : "#059669") : (sidebarPlayMouse.containsMouse ? Qt.lighter(themeAccent, 1.15) : themeAccent)
+                                    border.color: !actionButtonsFlow.activeInstalled ? "#34d399" : Qt.lighter(themeAccent, 1.4)
                                     border.width: 1
 
                                     RowLayout {
                                         anchors.centerIn: parent
                                         spacing: 6
                                         Text {
-                                            text: !parent.activeInstalled ? "⬇" : "▶"
+                                            text: !actionButtonsFlow.activeInstalled ? "⬇" : "▶"
                                             font.pixelSize: sidebarView.isNarrow ? 12 : 14
-                                            color: !parent.activeInstalled ? "#ffffff" : "#09090e"
+                                            color: !actionButtonsFlow.activeInstalled ? "#ffffff" : "#09090e"
                                         }
                                         Text {
-                                            text: !parent.activeInstalled ? ("GET (" + (activeGame && activeGame.size ? activeGame.size : "") + ")") : "PLAY GAME"
+                                            text: !actionButtonsFlow.activeInstalled ? ("GET (" + (activeGame && activeGame.size ? activeGame.size : "") + ")") : "PLAY GAME"
                                             font.pixelSize: sidebarView.isNarrow ? 11 : 13
                                             font.bold: true
-                                            color: !parent.activeInstalled ? "#ffffff" : "#09090e"
+                                            color: !actionButtonsFlow.activeInstalled ? "#ffffff" : "#09090e"
                                         }
                                     }
 
@@ -524,7 +525,7 @@ Item {
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             if (activeGame) {
-                                                if (!parent.activeInstalled) {
+                                                if (!actionButtonsFlow.activeInstalled || actionButtonsFlow.activeHasUpdate) {
                                                     sidebarView.detailRequested(activeGame);
                                                 } else {
                                                     sidebarView.gameLaunched(activeGame.id);
