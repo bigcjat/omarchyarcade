@@ -1,0 +1,13 @@
+{
+  "venvPath": ".",
+  "venv": ".venv",
+  "include": [
+    "launcher",
+    "games",
+    "tools"
+  ],
+  "extraPaths": [
+    "games/skyace",
+    "games/skyace/engine"
+  ]
+}

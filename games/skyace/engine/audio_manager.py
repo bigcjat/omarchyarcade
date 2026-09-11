@@ -12,6 +12,17 @@ import atexit
 import subprocess
 from pathlib import Path
 
+try:
+    from PySide6.QtCore import QUrl
+    from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput, QSoundEffect
+    HAS_QT_AUDIO = True
+except ImportError:
+    HAS_QT_AUDIO = False
+    QUrl = None  # type: ignore
+    QMediaPlayer = None  # type: ignore
+    QAudioOutput = None  # type: ignore
+    QSoundEffect = None  # type: ignore
+
 class SoundManager:
     def __init__(self, sounds_dir):
         self.sounds_dir = Path(sounds_dir)
@@ -64,16 +75,15 @@ class SoundManager:
 
         # Hardware-accelerated low-latency sound effects
         self.effects = {}
-        try:
-            from PySide6.QtMultimedia import QSoundEffect
-            from PySide6.QtCore import QUrl
-            for wav in self.sounds_dir.glob("*.wav"):
-                eff = QSoundEffect()
-                eff.setSource(QUrl.fromLocalFile(str(wav.resolve())))
-                eff.setVolume(self.battle_volume)
-                self.effects[wav.stem] = eff
-        except Exception:
-            self.effects = {}
+        if HAS_QT_AUDIO and QSoundEffect and QUrl:
+            try:
+                for wav in self.sounds_dir.glob("*.wav"):
+                    eff = QSoundEffect()
+                    eff.setSource(QUrl.fromLocalFile(str(wav.resolve())))
+                    eff.setVolume(self.battle_volume)
+                    self.effects[wav.stem] = eff
+            except Exception:
+                self.effects = {}
 
         # Comprehensive audio alias mapping so game triggers always resolve correctly
         self.aliases = {
@@ -125,15 +135,15 @@ class SoundManager:
         self.current_bgm = None
         self.bgm_player = None
         self.bgm_audio = None
-        try:
-            from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
-            self.bgm_player = QMediaPlayer()
-            self.bgm_audio = QAudioOutput()
-            self.bgm_player.setAudioOutput(self.bgm_audio)
-            self.bgm_audio.setVolume(self.music_volume)
-        except Exception:
-            self.bgm_player = None
-            self.bgm_audio = None
+        if HAS_QT_AUDIO and QMediaPlayer and QAudioOutput:
+            try:
+                self.bgm_player = QMediaPlayer()
+                self.bgm_audio = QAudioOutput()
+                self.bgm_player.setAudioOutput(self.bgm_audio)
+                self.bgm_audio.setVolume(self.music_volume)
+            except Exception:
+                self.bgm_player = None
+                self.bgm_audio = None
 
         atexit.register(self.shutdown)
 
@@ -145,9 +155,8 @@ class SoundManager:
                 self.bgm_audio.setVolume(self.music_volume)
             except Exception:
                 pass
-        if self.bgm_player:
+        if self.bgm_player and QMediaPlayer:
             try:
-                from PySide6.QtMultimedia import QMediaPlayer
                 if self.music_volume <= 0.005:
                     self.bgm_player.pause()
                 elif self.current_bgm and self.bgm_player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
@@ -187,13 +196,11 @@ class SoundManager:
 
     def play_bgm(self, track_name, loop=True):
         """Plays background music loop seamlessly inside the Qt application process."""
-        import os
         if os.environ.get("QT_QPA_PLATFORM") == "offscreen":
             return
 
-        if self.current_bgm == track_name and self.bgm_player:
+        if self.current_bgm == track_name and self.bgm_player and QMediaPlayer:
             try:
-                from PySide6.QtMultimedia import QMediaPlayer
                 if self.bgm_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
                     return
             except Exception:
@@ -212,14 +219,12 @@ class SoundManager:
 
         self.current_bgm = track_name
 
-        if self.bgm_player and self.bgm_audio:
+        if self.bgm_player and self.bgm_audio and QUrl:
             try:
-                from PySide6.QtCore import QUrl
-                from PySide6.QtMultimedia import QMediaPlayer
                 self.bgm_player.stop()
                 self.bgm_audio.setVolume(self.music_volume)
                 self.bgm_player.setSource(QUrl.fromLocalFile(str(track_path.resolve())))
-                self.bgm_player.setLoops(QMediaPlayer.Infinite if loop else 1)
+                self.bgm_player.setLoops(-1 if loop else 1)
                 if self.music_volume > 0.005:
                     self.bgm_player.play()
             except Exception as ex:
@@ -230,9 +235,9 @@ class SoundManager:
         self.current_bgm = None
         if self.bgm_player:
             try:
-                from PySide6.QtCore import QUrl
                 self.bgm_player.stop()
-                self.bgm_player.setSource(QUrl())
+                if QUrl:
+                    self.bgm_player.setSource(QUrl())
             except Exception:
                 pass
 
@@ -241,7 +246,6 @@ class SoundManager:
         self.stop_bgm()
         if self.bgm_player:
             try:
-                self.bgm_player.setAudioOutput(None)
                 self.bgm_player.deleteLater()
             except Exception:
                 pass
@@ -253,4 +257,3 @@ class SoundManager:
                 pass
             self.bgm_audio = None
         self.effects.clear()
-
