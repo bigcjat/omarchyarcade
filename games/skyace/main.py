@@ -581,6 +581,7 @@ class SkyAceGame(QWidget):
                 "damaged": QPixmap(str(sprites_dir / f"{k}_damaged.png")),
                 "wreck": QPixmap(str(sprites_dir / f"{k}_wreck.png")),
             }
+        self.structure_sprites = self.ground_sprites
         self.cutscene_sprites = {
             "wreckage": QPixmap(str(sprites_dir / "cutscene_fighter_wreckage.png")),
             "photo_wreckage": QPixmap(str(sprites_dir / "cutscene_photo_wreckage.png")),
@@ -6725,7 +6726,7 @@ class SkyAceGame(QWidget):
                 if g["type"] == "tank":
                     pix = self.tank_sprites.get(g_model, {}).get(stage_name)
                 else:
-                    pix = self.structure_sprites.get(g_model, {}).get(stage_name)
+                    pix = self.ground_sprites.get(g_model, {}).get(stage_name)
 
                 if not pix or pix.isNull():
                     continue
