@@ -1281,7 +1281,7 @@ ApplicationWindow {
                     ColumnLayout {
                         spacing: 2
                         Text { text: "Omarchy Arcade"; font.pixelSize: 20; font.bold: true; color: "#FFFFFF" }
-                        Text { text: "Version 1.0.0 • Pure QML & Offline Suite"; font.pixelSize: 11; color: themeAccent }
+                        Text { text: "Version " + (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getLauncherVersion ? arcadeBackend.getLauncherVersion() : "1.1.1") + " • Pure QML & Offline Suite"; font.pixelSize: 11; color: themeAccent }
                     }
                     Item { Layout.fillWidth: true }
                     Text {
@@ -1586,7 +1586,7 @@ ApplicationWindow {
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                                 Text {
-                                    text: (root.lastCheckedTimeStr !== "" ? ("Last verified: " + root.lastCheckedTimeStr + " • ") : "") + "Installed version: v" + (root.updateReport ? root.updateReport.launcher.current_version : "1.0.0")
+                                    text: (root.lastCheckedTimeStr !== "" ? ("Last verified: " + root.lastCheckedTimeStr + " • ") : "") + "Installed version: v" + (root.updateReport ? root.updateReport.launcher.current_version : (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getLauncherVersion ? arcadeBackend.getLauncherVersion() : "1.1.1"))
                                     font.family: "monospace"
                                     font.pixelSize: 11
                                     color: "#94a3b8"

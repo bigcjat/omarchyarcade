@@ -48,7 +48,7 @@ else:
     CATALOG_PATH = DATA_DIR / "catalog.json"
     ASSETS_DIR = DATA_DIR / "assets"
 
-CURRENT_LAUNCHER_VERSION = "1.0.0"
+CURRENT_LAUNCHER_VERSION = "1.1.1"
 
 GAMES_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -194,7 +194,13 @@ class ArcadeBackend(QObject):
             return True  # Installed prior to version stamping -> outdated!
         try:
             installed_v = version_file.read_text(encoding="utf-8").strip()
-            return installed_v != str(catalog_version).strip()
+            cat_v = str(catalog_version).strip()
+            try:
+                p_cat = tuple(int(x) for x in cat_v.lstrip("v").split(".") if x.isdigit())
+                p_inst = tuple(int(x) for x in installed_v.lstrip("v").split(".") if x.isdigit())
+                return p_cat > p_inst
+            except Exception:
+                return installed_v != cat_v
         except Exception:
             return True
 
@@ -667,7 +673,15 @@ class ArcadeBackend(QObject):
 
         current_lv = self.getLauncherVersion()
         remote_lv = str(cat_data.get("launcher_version", current_lv)).strip()
-        launcher_has_update = (remote_lv != current_lv and remote_lv != "")
+        def is_newer(remote: str, current: str) -> bool:
+            try:
+                p_rem = tuple(int(x) for x in remote.lstrip("v").split(".") if x.isdigit())
+                p_cur = tuple(int(x) for x in current.lstrip("v").split(".") if x.isdigit())
+                return p_rem > p_cur
+            except Exception:
+                return remote != current and bool(remote)
+
+        launcher_has_update = is_newer(remote_lv, current_lv)
         launcher_changelog = cat_data.get("launcher_changelog", [
             "Performance and stability enhancements",
             "Updated game catalog entries"
@@ -770,7 +784,7 @@ class ArcadeBackend(QObject):
                                     f.write(ext.read())
 
                 # Resolve new version
-                new_v = "1.1.0"
+                new_v = "1.1.1"
                 try:
                     cat_f = dest_dir.parent / "catalog.json" if dest_dir.name == "launcher" else BASE_DIR / "catalog.json"
                     if cat_f.exists():

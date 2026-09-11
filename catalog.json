@@ -1,14 +1,15 @@
 {
   "version": 6,
   "app_name": "Omarchy Arcade",
-  "launcher_version": "1.1.0",
+  "launcher_version": "1.1.1",
   "launcher_changelog": [
-    "macOS zero-dependency distribution & standalone DMG bundle",
-    "New In-App Update Center with full patch notes & changelog summaries",
-    "One-click 'Update All' batch updater for launcher and games",
-    "Enhanced desktop & carousel transitions and UI responsiveness"
+    "Cleaned up game detail sheet footer layout and removed redundant favorite button",
+    "Bundled poker felt SVG wallpapers and added resilient self-healing resolution",
+    "Fixed Linux FreeType emoji glyph spacing across desktop, sidebar, and detail views",
+    "Enhanced sidebar contrast and readability with crisp typography",
+    "One-click 'Update All' batch updater for launcher and games"
   ],
-  "updated_at": "2026-09-12T04:58:00Z",
+  "updated_at": "2026-09-12T06:28:00Z",
   "games": [
     {
       "id": "2048",

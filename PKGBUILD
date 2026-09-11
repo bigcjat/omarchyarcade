@@ -1,6 +1,6 @@
 # Maintainer: Chris Thompson
 pkgname=omarchy-arcade
-pkgver=1.0.0
+pkgver=1.1.1
 pkgrel=1
 pkgdesc="Curated native desktop retro arcade suite and launcher for Omarchy Linux"
 arch=('any')

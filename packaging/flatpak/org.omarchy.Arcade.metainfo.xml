@@ -27,6 +27,11 @@
   <content_rating type="oars-1.1" />
   
   <releases>
+    <release version="1.1.1" date="2026-09-12">
+      <description>
+        <p>Refined game detail layout, bundled poker felt wallpapers, Linux FreeType font glyph fixes, and in-app update center.</p>
+      </description>
+    </release>
     <release version="1.0.0" date="2026-09-11">
       <description>
         <p>Curated suite of 39 native desktop retro arcade games featuring Featured discovery shelves, retro 3.5" floppy carousel, instant search, and zero bloat.</p>
