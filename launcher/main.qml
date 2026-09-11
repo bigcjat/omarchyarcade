@@ -36,12 +36,39 @@ ApplicationWindow {
     property var updateReport: null
     property bool isUpdatingAll: false
     property string updateStatusText: ""
+    property bool isCheckingUpdates: false
+    property string checkFeedbackText: ""
+    property string lastCheckedTimeStr: ""
+
+    Timer {
+        id: checkFeedbackTimer
+        interval: 4000
+        repeat: false
+        onTriggered: {
+            root.checkFeedbackText = "";
+        }
+    }
 
     function checkUpdates() {
-        if (typeof arcadeBackend !== "undefined" && arcadeBackend.checkForUpdates) {
-            var rep = arcadeBackend.checkForUpdates();
-            updateReport = rep;
-            availableUpdatesCount = rep.total_updates_count || 0;
+        if (root.isCheckingUpdates) return;
+        root.isCheckingUpdates = true;
+        root.checkFeedbackText = "Checking for updates...";
+        if (typeof arcadeBackend !== "undefined" && arcadeBackend) {
+            if (arcadeBackend.checkForUpdatesAsync) {
+                arcadeBackend.checkForUpdatesAsync();
+            } else if (arcadeBackend.checkForUpdates) {
+                var rep = arcadeBackend.checkForUpdates();
+                updateReport = rep;
+                availableUpdatesCount = rep.total_updates_count || 0;
+                root.isCheckingUpdates = false;
+                var now = new Date();
+                var timeStr = now.toLocaleTimeString(Qt.locale(), Locale.ShortFormat);
+                root.lastCheckedTimeStr = timeStr;
+                root.checkFeedbackText = (availableUpdatesCount > 0) ? ("Found " + availableUpdatesCount + " update" + (availableUpdatesCount === 1 ? "" : "s") + "!") : ("Up to date (" + timeStr + ")");
+                checkFeedbackTimer.restart();
+            }
+        } else {
+            root.isCheckingUpdates = false;
         }
     }
 
@@ -125,9 +152,23 @@ ApplicationWindow {
             root.requestActivate();
             keyboardController.forceActiveFocus();
         }
+        function onCheckUpdatesStarted() {
+            root.isCheckingUpdates = true;
+            root.checkFeedbackText = "Checking for updates...";
+        }
         function onUpdatesChecked(report) {
+            root.isCheckingUpdates = false;
             root.updateReport = report;
             root.availableUpdatesCount = report.total_updates_count || 0;
+            var now = new Date();
+            var timeStr = now.toLocaleTimeString(Qt.locale(), Locale.ShortFormat);
+            root.lastCheckedTimeStr = timeStr;
+            if (report.total_updates_count > 0) {
+                root.checkFeedbackText = "Found " + report.total_updates_count + " update" + (report.total_updates_count === 1 ? "" : "s") + "!";
+            } else {
+                root.checkFeedbackText = "All up to date (" + timeStr + ")";
+            }
+            checkFeedbackTimer.restart();
         }
         function onBatchUpdateStarted(total) {
             root.isUpdatingAll = true;
@@ -744,12 +785,20 @@ ApplicationWindow {
                             text: "🔄"
                             font.pixelSize: 13
                             anchors.verticalCenter: parent.verticalCenter
+                            transformOrigin: Item.Center
+                            RotationAnimation on rotation {
+                                from: 0
+                                to: 360
+                                duration: 800
+                                loops: Animation.Infinite
+                                running: root.isCheckingUpdates
+                            }
                         }
                         Text {
-                            text: root.availableUpdatesCount > 0 ? ("Updates (" + root.availableUpdatesCount + ")") : "Updates"
+                            text: root.isCheckingUpdates ? "Checking..." : (root.availableUpdatesCount > 0 ? ("Updates (" + root.availableUpdatesCount + ")") : "Updates")
                             font.pixelSize: 12
-                            font.bold: root.availableUpdatesCount > 0
-                            color: root.availableUpdatesCount > 0 ? themeAccent : themeText
+                            font.bold: root.availableUpdatesCount > 0 || root.isCheckingUpdates
+                            color: root.isCheckingUpdates ? "#38bdf8" : (root.availableUpdatesCount > 0 ? themeAccent : themeText)
                             visible: !root.isCompact
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -1398,11 +1447,58 @@ ApplicationWindow {
                         width: parent.width
                         spacing: 12
 
+                        // 0. Active Check In-Progress Banner
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 52
+                            visible: root.isCheckingUpdates
+                            radius: 8
+                            color: "#0c1b2b"
+                            border.color: "#00f0ff"
+                            border.width: 1
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 16
+                                anchors.rightMargin: 16
+                                spacing: 12
+
+                                Text {
+                                    text: "🔄"
+                                    font.pixelSize: 16
+                                    transformOrigin: Item.Center
+                                    RotationAnimation on rotation {
+                                        from: 0
+                                        to: 360
+                                        duration: 800
+                                        loops: Animation.Infinite
+                                        running: root.isCheckingUpdates
+                                    }
+                                }
+
+                                ColumnLayout {
+                                    spacing: 2
+                                    Layout.fillWidth: true
+                                    Text {
+                                        text: "Checking for updates..."
+                                        font.pixelSize: 12
+                                        font.bold: true
+                                        color: "#38bdf8"
+                                    }
+                                    Text {
+                                        text: "Fetching latest catalog and release notes from GitHub"
+                                        font.pixelSize: 10
+                                        color: "#94a3b8"
+                                    }
+                                }
+                            }
+                        }
+
                         // 1. Up-to-date banner when no updates exist
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 120
-                            visible: root.availableUpdatesCount === 0 && !root.isUpdatingAll
+                            visible: root.availableUpdatesCount === 0 && !root.isUpdatingAll && !root.isCheckingUpdates
                             radius: 8
                             color: "#111822"
                             border.color: "#1e293b"
@@ -1425,7 +1521,7 @@ ApplicationWindow {
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                                 Text {
-                                    text: "Installed version: v" + (root.updateReport ? root.updateReport.launcher.current_version : "1.0.0")
+                                    text: (root.lastCheckedTimeStr !== "" ? ("Last verified: " + root.lastCheckedTimeStr + " • ") : "") + "Installed version: v" + (root.updateReport ? root.updateReport.launcher.current_version : "1.0.0")
                                     font.family: "monospace"
                                     font.pixelSize: 11
                                     color: "#94a3b8"
@@ -1646,34 +1742,74 @@ ApplicationWindow {
                 // Footer
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 10
+                    spacing: 12
 
+                    // "Check Again" Action Button
                     Rectangle {
+                        id: checkAgainBtn
                         Layout.preferredHeight: 36
-                        Layout.preferredWidth: 140
+                        Layout.preferredWidth: checkAgainRow.implicitWidth + 24
                         radius: 6
-                        color: checkAgainMouse.containsMouse ? "#262638" : "#1a1a26"
-                        border.color: "#2e2e40"
+                        color: root.isCheckingUpdates ? "#182234" : (checkAgainMouse.containsMouse ? "#262638" : "#1a1a26")
+                        border.color: root.isCheckingUpdates ? "#00f0ff" : (checkAgainMouse.containsMouse ? "#475569" : "#2e2e40")
                         border.width: 1
 
                         Row {
+                            id: checkAgainRow
                             anchors.centerIn: parent
-                            spacing: 6
-                            Text { text: "🔄"; font.pixelSize: 12 }
+                            spacing: 8
+
                             Text {
-                                text: "Check Again"
+                                text: "🔄"
+                                font.pixelSize: 12
+                                anchors.verticalCenter: parent.verticalCenter
+                                transformOrigin: Item.Center
+                                RotationAnimation on rotation {
+                                    from: 0
+                                    to: 360
+                                    duration: 800
+                                    loops: Animation.Infinite
+                                    running: root.isCheckingUpdates
+                                }
+                            }
+                            Text {
+                                text: root.isCheckingUpdates ? "Checking..." : "Check Again"
                                 font.pixelSize: 11
                                 font.bold: true
-                                color: "#cbd5e1"
+                                color: root.isCheckingUpdates ? "#38bdf8" : "#cbd5e1"
+                                anchors.verticalCenter: parent.verticalCenter
                             }
                         }
 
                         MouseArea {
                             id: checkAgainMouse
                             anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.checkUpdates()
+                            hoverEnabled: !root.isCheckingUpdates
+                            cursorShape: root.isCheckingUpdates ? Qt.ArrowCursor : Qt.PointingHandCursor
+                            onClicked: {
+                                if (!root.isCheckingUpdates) {
+                                    root.checkUpdates();
+                                }
+                            }
+                        }
+                    }
+
+                    // Status / Result Feedback Indicator
+                    RowLayout {
+                        spacing: 6
+                        visible: root.isCheckingUpdates || root.checkFeedbackText !== "" || root.lastCheckedTimeStr !== ""
+
+                        Text {
+                            text: root.isCheckingUpdates ? "⏳" : (root.availableUpdatesCount > 0 ? "🔔" : "✓")
+                            font.pixelSize: 11
+                            color: root.isCheckingUpdates ? "#38bdf8" : (root.availableUpdatesCount > 0 ? "#38bdf8" : "#22c55e")
+                        }
+
+                        Text {
+                            text: root.isCheckingUpdates ? "Contacting update servers..." : (root.checkFeedbackText !== "" ? root.checkFeedbackText : ("Last checked: " + root.lastCheckedTimeStr))
+                            font.pixelSize: 11
+                            font.bold: root.isCheckingUpdates || root.checkFeedbackText !== ""
+                            color: root.isCheckingUpdates ? "#38bdf8" : (root.checkFeedbackText !== "" ? (root.availableUpdatesCount > 0 ? "#38bdf8" : "#22c55e") : "#64748b")
                         }
                     }
 

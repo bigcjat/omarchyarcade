@@ -54,6 +54,7 @@ class ArcadeBackend(QObject):
     themeChanged = Signal("QVariantMap")
 
     # In-App Update Center signals
+    checkUpdatesStarted = Signal()
     updatesChecked = Signal("QVariantMap")
     launcherUpdateStarted = Signal()
     launcherUpdated = Signal(str)
@@ -507,6 +508,19 @@ class ArcadeBackend(QObject):
         }
         self.updatesChecked.emit(report)
         return report
+
+    @Slot()
+    def checkForUpdatesAsync(self):
+        """Asynchronously checks for updates in a background worker thread."""
+        import threading
+        self.checkUpdatesStarted.emit()
+
+        def worker():
+            import time
+            time.sleep(0.3)  # Brief breathing time so UI transition is cleanly visible
+            self.checkForUpdates()
+
+        threading.Thread(target=worker, daemon=True).start()
 
     @Slot()
     def updateLauncher(self):
