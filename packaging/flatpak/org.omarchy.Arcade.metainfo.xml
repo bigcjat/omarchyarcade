@@ -27,9 +27,9 @@
   <content_rating type="oars-1.1" />
   
   <releases>
-    <release version="1.0.0" date="2026-09-06">
+    <release version="1.0.0" date="2026-09-11">
       <description>
-        <p>Initial release with 19 arcade games and interactive retro floppy launcher.</p>
+        <p>Curated suite of 39 native desktop retro arcade games featuring Featured discovery shelves, retro 3.5" floppy carousel, instant search, and zero bloat.</p>
       </description>
     </release>
   </releases>

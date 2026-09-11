@@ -8,13 +8,13 @@ url="https://github.com/bigcjat/omarchyarcade"
 license=('custom')
 depends=('python' 'python-pyside6' 'qt6-declarative' 'qt6-svg' 'qt6-multimedia')
 makedepends=()
-source=("$pkgname-$pkgver.tar.gz::https://github.com/bigcjat/omarchyarcade/archive/refs/tags/v$pkgver.tar.gz")
+source=("$pkgname-main.tar.gz::https://github.com/bigcjat/omarchyarcade/archive/refs/heads/main.tar.gz")
 sha256sums=('SKIP')
 
 package() {
-    local src="$srcdir/omarchyarcade-$pkgver"
+    local src="$srcdir/omarchyarcade-main"
     if [ ! -d "$src" ]; then
-        src="$srcdir"
+        src="$startdir"
     fi
     local dest="$pkgdir/usr/share/omarchy-arcade"
 

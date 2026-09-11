@@ -70,7 +70,7 @@ Install Omarchy Arcade however you prefer—as an automated single command, a na
 
 ### Option 1: Standalone AppImage (Zero-Install Executable)
 
-Download the single `Omarchy_Arcade-x86_64.AppImage` executable from [GitHub Releases](https://github.com/bigcjat/omarchyarcade/releases), make it executable, and run—zero git cloning and zero system changes:
+Download the single `Omarchy_Arcade-x86_64.AppImage` executable from [GitHub Releases](https://github.com/bigcjat/omarchyarcade/releases) (or build it locally via `./packaging/appimage/build_appimage.sh`), make it executable, and run—zero system changes:
 
 ```bash
 chmod +x Omarchy_Arcade-x86_64.AppImage
@@ -108,13 +108,14 @@ flatpak run org.omarchy.Arcade
 
 ---
 
-### Option 4: Native Arch / Omarchy Package (`pacman`)
+### Option 4: Native Arch / Omarchy Package (`makepkg` / `pacman`)
 
-Install directly via `pacman`:
+Build and install natively using the included [`PKGBUILD`](PKGBUILD):
 
 ```bash
-curl -sSLO https://github.com/bigcjat/omarchyarcade/releases/latest/download/omarchy-arcade-1.0.0-1-any.pkg.tar.zst
-sudo pacman -U omarchy-arcade-1.0.0-1-any.pkg.tar.zst
+git clone https://github.com/bigcjat/omarchyarcade.git
+cd omarchyarcade
+makepkg -si
 ```
 
 *Cleanly uninstall anytime with `sudo pacman -R omarchy-arcade`.*
