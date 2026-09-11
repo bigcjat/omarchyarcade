@@ -299,17 +299,17 @@ ApplicationWindow {
     }
 
     property var categoryList: [
-        { name: "FEATURED", label: "⭐ Featured" },
-        { name: "LIBRARY", label: "💾 My Library (31)" },
-        { name: "ALL", label: "🎮 All Games (31)" },
-        { name: "ACTION ARCADE", label: "⚡ Action (10)" },
-        { name: "PUZZLES & GRID LOGIC", label: "🧩 Puzzles (4)" },
-        { name: "BLOCKS & MERGING", label: "🧱 Blocks (2)" },
-        { name: "BOARD & TABLETOP", label: "♟️ Tabletop (7)" },
-        { name: "CARDS & CASINO", label: "🃏 Cards (3)" },
-        { name: "CASUAL AIM & PHYSICS", label: "🫧 Casual (2)" },
-        { name: "WORD & TRIVIA", label: "🔤 Word (1)" },
-        { name: "UNRELEASED", label: "⏳ Coming Soon (0)" }
+        { name: "FEATURED", icon: "⭐", label: "Featured" },
+        { name: "LIBRARY", icon: "💾", label: "My Library (31)" },
+        { name: "ALL", icon: "🎮", label: "All Games (31)" },
+        { name: "ACTION ARCADE", icon: "⚡", label: "Action (10)" },
+        { name: "PUZZLES & GRID LOGIC", icon: "🧩", label: "Puzzles (4)" },
+        { name: "BLOCKS & MERGING", icon: "🧱", label: "Blocks (2)" },
+        { name: "BOARD & TABLETOP", icon: "♟️", label: "Tabletop (7)" },
+        { name: "CARDS & CASINO", icon: "🃏", label: "Cards (3)" },
+        { name: "CASUAL AIM & PHYSICS", icon: "🫧", label: "Casual (2)" },
+        { name: "WORD & TRIVIA", icon: "🔤", label: "Word (1)" },
+        { name: "UNRELEASED", icon: "⏳", label: "Coming Soon (0)" }
     ]
 
     onSelectedCategoryChanged: {
@@ -365,17 +365,17 @@ ApplicationWindow {
 
     function refreshCategories() {
         categoryList = [
-            { name: "FEATURED", label: "⭐ Featured" },
-            { name: "LIBRARY", label: "💾 My Library (" + getLibraryCount() + ")" },
-            { name: "ALL", label: "🎮 All Games (" + getPlayableCount("ALL") + ")" },
-            { name: "ACTION ARCADE", label: "⚡ Action (" + getPlayableCount("ACTION ARCADE") + ")" },
-            { name: "PUZZLES & GRID LOGIC", label: "🧩 Puzzles (" + getPlayableCount("PUZZLES & GRID LOGIC") + ")" },
-            { name: "BLOCKS & MERGING", label: "🧱 Blocks (" + getPlayableCount("BLOCKS & MERGING") + ")" },
-            { name: "BOARD & TABLETOP", label: "♟️ Tabletop (" + getPlayableCount("BOARD & TABLETOP") + ")" },
-            { name: "CARDS & CASINO", label: "🃏 Cards (" + getPlayableCount("CARDS & CASINO") + ")" },
-            { name: "CASUAL AIM & PHYSICS", label: "🫧 Casual (" + getPlayableCount("CASUAL AIM & PHYSICS") + ")" },
-            { name: "WORD & TRIVIA", label: "🔤 Word (" + getPlayableCount("WORD & TRIVIA") + ")" },
-            { name: "UNRELEASED", label: "⏳ Coming Soon (" + getUnreleasedCount() + ")" }
+            { name: "FEATURED", icon: "⭐", label: "Featured" },
+            { name: "LIBRARY", icon: "💾", label: "My Library (" + getLibraryCount() + ")" },
+            { name: "ALL", icon: "🎮", label: "All Games (" + getPlayableCount("ALL") + ")" },
+            { name: "ACTION ARCADE", icon: "⚡", label: "Action (" + getPlayableCount("ACTION ARCADE") + ")" },
+            { name: "PUZZLES & GRID LOGIC", icon: "🧩", label: "Puzzles (" + getPlayableCount("PUZZLES & GRID LOGIC") + ")" },
+            { name: "BLOCKS & MERGING", icon: "🧱", label: "Blocks (" + getPlayableCount("BLOCKS & MERGING") + ")" },
+            { name: "BOARD & TABLETOP", icon: "♟️", label: "Tabletop (" + getPlayableCount("BOARD & TABLETOP") + ")" },
+            { name: "CARDS & CASINO", icon: "🃏", label: "Cards (" + getPlayableCount("CARDS & CASINO") + ")" },
+            { name: "CASUAL AIM & PHYSICS", icon: "🫧", label: "Casual (" + getPlayableCount("CASUAL AIM & PHYSICS") + ")" },
+            { name: "WORD & TRIVIA", icon: "🔤", label: "Word (" + getPlayableCount("WORD & TRIVIA") + ")" },
+            { name: "UNRELEASED", icon: "⏳", label: "Coming Soon (" + getUnreleasedCount() + ")" }
         ];
     }
 
@@ -605,12 +605,18 @@ ApplicationWindow {
 
                                 RowLayout {
                                     anchors.centerIn: parent
-                                    spacing: 5
+                                    spacing: 6
 
-                                    Text {
-                                        text: modelData.icon
-                                        font.pixelSize: 12
-                                        color: root.viewMode === modelData.id ? "#09090e" : (viewBtnMouse.containsMouse ? "#FFFFFF" : "#94a3b8")
+                                    Item {
+                                        Layout.preferredWidth: 16
+                                        Layout.preferredHeight: 16
+                                        Layout.alignment: Qt.AlignVCenter
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: modelData.icon
+                                            font.pixelSize: 12
+                                            color: root.viewMode === modelData.id ? "#09090e" : (viewBtnMouse.containsMouse ? "#FFFFFF" : "#94a3b8")
+                                        }
                                     }
 
                                     Text {
@@ -652,7 +658,17 @@ ApplicationWindow {
                         anchors.rightMargin: 10
                         spacing: 8
 
-                        Text { text: "🔍"; font.pixelSize: 12; opacity: 0.7 }
+                        Item {
+                            Layout.preferredWidth: 16
+                            Layout.preferredHeight: 16
+                            Layout.alignment: Qt.AlignVCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: "🔍"
+                                font.pixelSize: 12
+                                opacity: 0.7
+                            }
+                        }
 
                         TextInput {
                             id: searchInput
@@ -729,11 +745,16 @@ ApplicationWindow {
                     contentItem: Row {
                         id: helpRow
                         anchors.centerIn: parent
-                        spacing: 6
-                        Text {
-                            text: "❓"
-                            font.pixelSize: 13
+                        spacing: 7
+                        Item {
+                            width: 16
+                            height: 16
                             anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: "❓"
+                                font.pixelSize: 13
+                            }
                         }
                         Text {
                             text: "About"
@@ -777,18 +798,23 @@ ApplicationWindow {
                     contentItem: Row {
                         id: updateRow
                         anchors.centerIn: parent
-                        spacing: 6
-                        Text {
-                            text: "🔄"
-                            font.pixelSize: 13
+                        spacing: 7
+                        Item {
+                            width: 16
+                            height: 16
                             anchors.verticalCenter: parent.verticalCenter
-                            transformOrigin: Item.Center
-                            RotationAnimation on rotation {
-                                from: 0
-                                to: 360
-                                duration: 800
-                                loops: Animation.Infinite
-                                running: root.isCheckingUpdates
+                            Text {
+                                anchors.centerIn: parent
+                                text: "🔄"
+                                font.pixelSize: 13
+                                transformOrigin: Item.Center
+                                RotationAnimation on rotation {
+                                    from: 0
+                                    to: 360
+                                    duration: 800
+                                    loops: Animation.Infinite
+                                    running: root.isCheckingUpdates
+                                }
                             }
                         }
                         Text {
@@ -841,18 +867,36 @@ ApplicationWindow {
                         Rectangle {
                             height: 30
                             radius: 15
-                            width: pillText.implicitWidth + 22
+                            width: pillRow.implicitWidth + 24
                             color: root.selectedCategory === modelData.name ? themeAccent : (pillMouse.containsMouse ? "#262638" : "#1a1a24")
                             border.color: root.selectedCategory === modelData.name ? themeAccent : (pillMouse.containsMouse ? "#3b3b50" : "#2a2a3a")
                             border.width: 1
 
-                            Text {
-                                id: pillText
+                            Row {
+                                id: pillRow
                                 anchors.centerIn: parent
-                                text: modelData.label
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: root.selectedCategory === modelData.name ? "#0a0a0f" : (pillMouse.containsMouse ? "#FFFFFF" : "#cbd5e1")
+                                spacing: 7
+
+                                Item {
+                                    width: 16
+                                    height: 16
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    visible: Boolean(modelData.icon)
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: modelData.icon || ""
+                                        font.pixelSize: 12
+                                    }
+                                }
+
+                                Text {
+                                    id: pillText
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: modelData.label
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    color: root.selectedCategory === modelData.name ? "#0a0a0f" : (pillMouse.containsMouse ? "#FFFFFF" : "#cbd5e1")
+                                }
                             }
 
                             MouseArea {
@@ -1197,6 +1241,7 @@ ApplicationWindow {
     // =========================================================================
     GameDetailSheet {
         id: detailSheet
+        objectName: "detailSheet"
         onPlayRequested: function(gameId) {
             root.launchGame(gameId);
         }
@@ -1362,18 +1407,32 @@ ApplicationWindow {
                     Rectangle {
                         visible: root.availableUpdatesCount > 0 && !root.isUpdatingAll
                         Layout.preferredHeight: 34
-                        Layout.preferredWidth: updateAllBtnText.implicitWidth + 24
+                        Layout.preferredWidth: updateAllRow.implicitWidth + 24
                         radius: 6
                         color: updateAllMouse.pressed ? Qt.darker(themeAccent, 1.4) : (updateAllMouse.containsMouse ? Qt.lighter(themeAccent, 1.2) : themeAccent)
 
-                        Text {
-                            id: updateAllBtnText
+                        Row {
+                            id: updateAllRow
                             anchors.centerIn: parent
-                            text: "🚀 UPDATE ALL (" + root.availableUpdatesCount + ")"
-                            font.family: "monospace"
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: "#09090e"
+                            spacing: 6
+                            Item {
+                                width: 14
+                                height: 14
+                                anchors.verticalCenter: parent.verticalCenter
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "🚀"
+                                    font.pixelSize: 11
+                                }
+                            }
+                            Text {
+                                text: "UPDATE ALL (" + root.availableUpdatesCount + ")"
+                                font.family: "monospace"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: "#09090e"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                         }
 
                         MouseArea {
@@ -1463,16 +1522,22 @@ ApplicationWindow {
                                 anchors.rightMargin: 16
                                 spacing: 12
 
-                                Text {
-                                    text: "🔄"
-                                    font.pixelSize: 16
-                                    transformOrigin: Item.Center
-                                    RotationAnimation on rotation {
-                                        from: 0
-                                        to: 360
-                                        duration: 800
-                                        loops: Animation.Infinite
-                                        running: root.isCheckingUpdates
+                                Item {
+                                    Layout.preferredWidth: 20
+                                    Layout.preferredHeight: 20
+                                    Layout.alignment: Qt.AlignVCenter
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "🔄"
+                                        font.pixelSize: 16
+                                        transformOrigin: Item.Center
+                                        RotationAnimation on rotation {
+                                            from: 0
+                                            to: 360
+                                            duration: 800
+                                            loops: Animation.Infinite
+                                            running: root.isCheckingUpdates
+                                        }
                                     }
                                 }
 
@@ -1759,17 +1824,22 @@ ApplicationWindow {
                             anchors.centerIn: parent
                             spacing: 8
 
-                            Text {
-                                text: "🔄"
-                                font.pixelSize: 12
+                            Item {
+                                width: 16
+                                height: 16
                                 anchors.verticalCenter: parent.verticalCenter
-                                transformOrigin: Item.Center
-                                RotationAnimation on rotation {
-                                    from: 0
-                                    to: 360
-                                    duration: 800
-                                    loops: Animation.Infinite
-                                    running: root.isCheckingUpdates
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "🔄"
+                                    font.pixelSize: 12
+                                    transformOrigin: Item.Center
+                                    RotationAnimation on rotation {
+                                        from: 0
+                                        to: 360
+                                        duration: 800
+                                        loops: Animation.Infinite
+                                        running: root.isCheckingUpdates
+                                    }
                                 }
                             }
                             Text {

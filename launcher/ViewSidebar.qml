@@ -187,7 +187,7 @@ Item {
                             // Status dot / update badge / get badge
                             Rectangle {
                                 readonly property bool showBadge: rowItem.hasUpdate || !rowItem.installed
-                                width: rowItem.hasUpdate ? (sidebarView.isNarrow ? 44 : 50) : (!rowItem.installed ? (sidebarView.isNarrow ? 36 : 42) : (sidebarView.isNarrow ? 6 : 8))
+                                width: rowItem.hasUpdate ? (sidebarView.isNarrow ? 50 : 56) : (!rowItem.installed ? (sidebarView.isNarrow ? 40 : 46) : (sidebarView.isNarrow ? 6 : 8))
                                 height: showBadge ? (sidebarView.isNarrow ? 15 : 18) : (sidebarView.isNarrow ? 6 : 8)
                                 radius: showBadge ? 4 : (width / 2)
                                 color: rowItem.hasUpdate ? "#0284c7" : (!rowItem.installed ? "#065f46" : "#22c55e")
@@ -197,10 +197,16 @@ Item {
                                 Row {
                                     anchors.centerIn: parent
                                     visible: rowItem.hasUpdate
-                                    spacing: 2
-                                    Text {
-                                        text: "🔄"
-                                        font.pixelSize: sidebarView.isNarrow ? 7 : 8
+                                    spacing: 3
+                                    Item {
+                                        width: 10
+                                        height: 10
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "🔄"
+                                            font.pixelSize: sidebarView.isNarrow ? 7 : 8
+                                        }
                                     }
                                     Text {
                                         text: "UPDATE"
@@ -208,17 +214,24 @@ Item {
                                         font.pixelSize: sidebarView.isNarrow ? 7 : 8
                                         font.bold: true
                                         color: "#f0f9ff"
+                                        anchors.verticalCenter: parent.verticalCenter
                                     }
                                 }
 
                                 Row {
                                     anchors.centerIn: parent
                                     visible: !rowItem.hasUpdate && !rowItem.installed
-                                    spacing: 2
-                                    Text {
-                                        text: "⬇"
-                                        font.pixelSize: sidebarView.isNarrow ? 7 : 8
-                                        color: "#ecfdf5"
+                                    spacing: 3
+                                    Item {
+                                        width: 9
+                                        height: 9
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "⬇"
+                                            font.pixelSize: sidebarView.isNarrow ? 7 : 8
+                                            color: "#ecfdf5"
+                                        }
                                     }
                                     Text {
                                         text: "GET"
@@ -226,6 +239,7 @@ Item {
                                         font.pixelSize: sidebarView.isNarrow ? 7 : 8
                                         font.bold: true
                                         color: "#ecfdf5"
+                                        anchors.verticalCenter: parent.verticalCenter
                                     }
                                 }
                             }
@@ -482,11 +496,17 @@ Item {
 
                                     RowLayout {
                                         anchors.centerIn: parent
-                                        spacing: 6
-                                        Text {
-                                            text: actionButtonsFlow.activeHasUpdate ? "🔄" : (!actionButtonsFlow.activeInstalled ? "⬇" : "▶")
-                                            font.pixelSize: sidebarView.isNarrow ? 12 : 14
-                                            color: "#FFFFFF"
+                                        spacing: 7
+                                        Item {
+                                            Layout.preferredWidth: 16
+                                            Layout.preferredHeight: 16
+                                            Layout.alignment: Qt.AlignVCenter
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: actionButtonsFlow.activeHasUpdate ? "🔄" : (!actionButtonsFlow.activeInstalled ? "⬇" : "▶")
+                                                font.pixelSize: sidebarView.isNarrow ? 12 : 14
+                                                color: "#FFFFFF"
+                                            }
                                         }
                                         Text {
                                             text: actionButtonsFlow.activeHasUpdate ? ("UPDATE (v" + (activeGame ? activeGame.version : "") + ")") :
@@ -494,6 +514,7 @@ Item {
                                             font.pixelSize: sidebarView.isNarrow ? 11 : 13
                                             font.bold: true
                                             color: "#FFFFFF"
+                                            Layout.alignment: Qt.AlignVCenter
                                         }
                                     }
 
@@ -525,8 +546,24 @@ Item {
                                     RowLayout {
                                         anchors.centerIn: parent
                                         spacing: 6
-                                        Text { text: "ℹ"; font.pixelSize: 12; color: "#94a3b8" }
-                                        Text { text: "Full Details"; font.pixelSize: sidebarView.isNarrow ? 11 : 12; font.bold: true; color: "#cbd5e1" }
+                                        Item {
+                                            Layout.preferredWidth: 14
+                                            Layout.preferredHeight: 14
+                                            Layout.alignment: Qt.AlignVCenter
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "ℹ"
+                                                font.pixelSize: 12
+                                                color: "#94a3b8"
+                                            }
+                                        }
+                                        Text {
+                                            text: "Full Details"
+                                            font.pixelSize: sidebarView.isNarrow ? 11 : 12
+                                            font.bold: true
+                                            color: "#cbd5e1"
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
                                     }
 
                                     MouseArea {
@@ -554,15 +591,22 @@ Item {
                                     RowLayout {
                                         anchors.centerIn: parent
                                         spacing: 6
-                                        Text {
-                                            text: sidebarFavBtn.isFav ? "❤️" : "🤍"
-                                            font.pixelSize: 12
+                                        Item {
+                                            Layout.preferredWidth: 16
+                                            Layout.preferredHeight: 16
+                                            Layout.alignment: Qt.AlignVCenter
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: sidebarFavBtn.isFav ? "❤️" : "🤍"
+                                                font.pixelSize: 12
+                                            }
                                         }
                                         Text {
                                             text: sidebarFavBtn.isFav ? "Favorited" : "Favorite"
                                             font.pixelSize: sidebarView.isNarrow ? 11 : 12
                                             font.bold: true
                                             color: sidebarFavBtn.isFav ? "#fb7185" : "#cbd5e1"
+                                            Layout.alignment: Qt.AlignVCenter
                                         }
                                     }
 
@@ -637,12 +681,26 @@ Item {
                                 anchors.margins: 14
                                 spacing: 6
 
-                                Text {
-                                    text: "🎮 CONTROLS"
-                                    font.family: "monospace"
-                                    font.pixelSize: 10
-                                    font.bold: true
-                                    color: themeAccent
+                                RowLayout {
+                                    spacing: 6
+                                    Item {
+                                        Layout.preferredWidth: 14
+                                        Layout.preferredHeight: 14
+                                        Layout.alignment: Qt.AlignVCenter
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "🎮"
+                                            font.pixelSize: 11
+                                        }
+                                    }
+                                    Text {
+                                        text: "CONTROLS"
+                                        font.family: "monospace"
+                                        font.pixelSize: 10
+                                        font.bold: true
+                                        color: themeAccent
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
                                 }
 
                                 Text {

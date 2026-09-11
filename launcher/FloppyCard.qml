@@ -268,7 +268,7 @@ Item {
             anchors.top: parent.top
             anchors.right: parent.right
             anchors.margins: 6
-            width: 58
+            width: 62
             height: 18
             radius: 9
             color: "#0284c7"
@@ -279,11 +279,16 @@ Item {
 
             Row {
                 anchors.centerIn: parent
-                spacing: 3
-                Text {
-                    text: "🔄"
-                    font.pixelSize: 8
+                spacing: 4
+                Item {
+                    width: 10
+                    height: 10
                     anchors.verticalCenter: parent.verticalCenter
+                    Text {
+                        anchors.centerIn: parent
+                        text: "🔄"
+                        font.pixelSize: 8
+                    }
                 }
                 Text {
                     text: "UPDATE"
@@ -302,7 +307,7 @@ Item {
             anchors.top: parent.top
             anchors.right: parent.right
             anchors.margins: 6
-            width: 48
+            width: 50
             height: 18
             radius: 9
             color: "#065f46"
@@ -313,12 +318,17 @@ Item {
 
             Row {
                 anchors.centerIn: parent
-                spacing: 3
-                Text {
-                    text: "⬇"
-                    font.pixelSize: 8
-                    color: "#ecfdf5"
+                spacing: 4
+                Item {
+                    width: 9
+                    height: 9
                     anchors.verticalCenter: parent.verticalCenter
+                    Text {
+                        anchors.centerIn: parent
+                        text: "⬇"
+                        font.pixelSize: 8
+                        color: "#ecfdf5"
+                    }
                 }
                 Text {
                     text: "GET"

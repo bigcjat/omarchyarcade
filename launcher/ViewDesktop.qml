@@ -332,12 +332,23 @@ Item {
 
                         RowLayout {
                             spacing: 8
+                            Item {
+                                Layout.preferredWidth: 16
+                                Layout.preferredHeight: 16
+                                Layout.alignment: Qt.AlignVCenter
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "📁"
+                                    font.pixelSize: 13
+                                }
+                            }
                             Text {
-                                text: "📁 SYSTEM FOLDERS"
+                                text: "SYSTEM FOLDERS"
                                 font.family: "monospace"
                                 font.pixelSize: 11
                                 font.bold: true
                                 color: Qt.alpha("#ffffff", 0.75)
+                                Layout.alignment: Qt.AlignVCenter
                             }
                             Rectangle {
                                 Layout.fillWidth: true
@@ -483,12 +494,23 @@ Item {
 
                         RowLayout {
                             spacing: 8
+                            Item {
+                                Layout.preferredWidth: 16
+                                Layout.preferredHeight: 16
+                                Layout.alignment: Qt.AlignVCenter
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "❤️"
+                                    font.pixelSize: 13
+                                }
+                            }
                             Text {
-                                text: "❤️ PINNED FAVORITES ON DESKTOP"
+                                text: "PINNED FAVORITES ON DESKTOP"
                                 font.family: "monospace"
                                 font.pixelSize: 11
                                 font.bold: true
                                 color: Qt.alpha("#ffffff", 0.75)
+                                Layout.alignment: Qt.AlignVCenter
                             }
                             Rectangle {
                                 Layout.fillWidth: true
@@ -629,11 +651,21 @@ Item {
                             RowLayout {
                                 anchors.centerIn: parent
                                 spacing: 10
-                                Text { text: "🤍"; font.pixelSize: 18 }
+                                Item {
+                                    Layout.preferredWidth: 20
+                                    Layout.preferredHeight: 20
+                                    Layout.alignment: Qt.AlignVCenter
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "🤍"
+                                        font.pixelSize: 18
+                                    }
+                                }
                                 Text {
-                                    text: "No favorite games pinned yet. Click the ❤️ Favorite button on any game to pin it directly to your desktop!"
+                                    text: "No favorite games pinned yet. Click the Favorite button on any game to pin it directly to your desktop!"
                                     font.pixelSize: 12
                                     color: Qt.alpha("#ffffff", 0.7)
+                                    Layout.alignment: Qt.AlignVCenter
                                 }
                             }
                         }
@@ -685,12 +717,25 @@ Item {
                             anchors.rightMargin: 12
                             spacing: 8
 
+                            Item {
+                                Layout.preferredWidth: 16
+                                Layout.preferredHeight: 16
+                                Layout.alignment: Qt.AlignVCenter
+                                visible: desktopView.openFolder !== null
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: desktopView.openFolder ? desktopView.openFolder.icon : ""
+                                    font.pixelSize: 12
+                                }
+                            }
+
                             Text {
-                                text: desktopView.openFolder ? (desktopView.openFolder.icon + " " + desktopView.openFolder.label) : ""
+                                text: desktopView.openFolder ? desktopView.openFolder.label : ""
                                 font.family: "monospace"
                                 font.pixelSize: 12
                                 font.bold: true
                                 color: "#ffffff"
+                                Layout.alignment: Qt.AlignVCenter
                             }
 
                             Rectangle {
@@ -902,12 +947,24 @@ Item {
 
                     RowLayout {
                         Layout.fillWidth: true
+                        spacing: 8
+                        Item {
+                            Layout.preferredWidth: 16
+                            Layout.preferredHeight: 16
+                            Layout.alignment: Qt.AlignVCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: "🖼️"
+                                font.pixelSize: 12
+                            }
+                        }
                         Text {
-                            text: "🖼️ DESKTOP WALLPAPER"
+                            text: "DESKTOP WALLPAPER"
                             font.family: "monospace"
                             font.pixelSize: 11
                             font.bold: true
                             color: "#ffffff"
+                            Layout.alignment: Qt.AlignVCenter
                         }
                         Item { Layout.fillWidth: true }
                         Text {
@@ -1009,12 +1066,27 @@ Item {
                                 border.color: desktopView.feltStyle !== "monogram" ? "#38bdf8" : "#2f3854"
                                 border.width: 1
 
-                                Text {
+                                Row {
                                     anchors.centerIn: parent
-                                    text: "♠ Suited Cloth"
-                                    font.pixelSize: 10
-                                    font.bold: true
-                                    color: desktopView.feltStyle !== "monogram" ? "#ffffff" : "#94a3b8"
+                                    spacing: 5
+                                    Item {
+                                        width: 12
+                                        height: 12
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "♠"
+                                            font.pixelSize: 11
+                                            color: desktopView.feltStyle !== "monogram" ? "#ffffff" : "#94a3b8"
+                                        }
+                                    }
+                                    Text {
+                                        text: "Suited Cloth"
+                                        font.pixelSize: 10
+                                        font.bold: true
+                                        color: desktopView.feltStyle !== "monogram" ? "#ffffff" : "#94a3b8"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
                                 }
 
                                 MouseArea {
@@ -1060,12 +1132,24 @@ Item {
 
                         RowLayout {
                             Layout.fillWidth: true
+                            spacing: 6
+                            Item {
+                                Layout.preferredWidth: 14
+                                Layout.preferredHeight: 14
+                                Layout.alignment: Qt.AlignVCenter
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "🎰"
+                                    font.pixelSize: 11
+                                }
+                            }
                             Text {
-                                text: "🎰 FELT COLOR PALETTE"
+                                text: "FELT COLOR PALETTE"
                                 font.family: "monospace"
                                 font.pixelSize: 10
                                 font.bold: true
                                 color: "#38bdf8"
+                                Layout.alignment: Qt.AlignVCenter
                             }
                             Item { Layout.fillWidth: true }
                             Text {
@@ -1256,20 +1340,37 @@ Item {
                     }
                 }
 
-                // Status Description Text
+                // Status Description Icon + Text (Separated to eliminate Linux FreeType emoji overlap)
+                Item {
+                    Layout.preferredWidth: 16
+                    Layout.preferredHeight: 16
+                    Layout.alignment: Qt.AlignVCenter
+                    Text {
+                        anchors.centerIn: parent
+                        text: {
+                            if (desktopView.selectedItem) {
+                                return desktopView.selectedItem.type === "folder" ? "📁" : "🎮";
+                            }
+                            if (desktopView.openFolder) return "📂";
+                            return "🖥️";
+                        }
+                        font.pixelSize: 12
+                    }
+                }
+
                 Text {
                     text: {
                         if (desktopView.selectedItem) {
                             if (desktopView.selectedItem.type === "folder") {
-                                return "📁 " + desktopView.selectedItem.data.label + " • " + desktopView.getGamesForCategory(desktopView.selectedItem.data.cat).length + " games";
+                                return desktopView.selectedItem.data.label + " • " + desktopView.getGamesForCategory(desktopView.selectedItem.data.cat).length + " games";
                             } else {
-                                return "🎮 " + desktopView.selectedItem.data.title + " • " + desktopView.selectedItem.data.category + " • " + (desktopView.selectedItem.data.size || "");
+                                return desktopView.selectedItem.data.title + " • " + desktopView.selectedItem.data.category + " • " + (desktopView.selectedItem.data.size || "");
                             }
                         }
                         if (desktopView.openFolder) {
                             return "Viewing " + desktopView.openFolder.label;
                         }
-                        return "🖥️ Desktop • Double-click a folder to open, or double-click a game to play";
+                        return "Desktop • Double-click a folder to open, or double-click a game to play";
                     }
                     font.family: "monospace"
                     font.pixelSize: 11
@@ -1277,6 +1378,7 @@ Item {
                     color: "#cbd5e1"
                     elide: Text.ElideRight
                     Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
                 }
 
                 // Actions for Selected Item
@@ -1294,12 +1396,26 @@ Item {
                         border.color: "#353f5c"
                         border.width: 1
 
-                        Text {
+                        Row {
                             anchors.centerIn: parent
-                            text: "📂 Open Folder"
-                            font.pixelSize: 10
-                            font.bold: true
-                            color: "#00f0ff"
+                            spacing: 6
+                            Item {
+                                width: 14
+                                height: 14
+                                anchors.verticalCenter: parent.verticalCenter
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "📂"
+                                    font.pixelSize: 11
+                                }
+                            }
+                            Text {
+                                text: "Open Folder"
+                                font.pixelSize: 10
+                                font.bold: true
+                                color: "#00f0ff"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                         }
 
                         MouseArea {
@@ -1344,25 +1460,41 @@ Item {
                     }
 
                     Rectangle {
+                        id: selPlayBtn
                         visible: desktopView.selectedItem && desktopView.selectedItem.type === "game"
                         readonly property var selGame: (desktopView.selectedItem && desktopView.selectedItem.type === "game") ? desktopView.selectedItem.data : null
                         readonly property bool installed: selGame ? (typeof root !== "undefined" && root.isInstalled ? root.isInstalled(selGame.id) : true) : true
                         readonly property bool hasUpdate: selGame ? (typeof root !== "undefined" && root.hasGameUpdate ? root.hasGameUpdate(selGame.id, selGame.version || "") : false) : false
 
                         height: 28
-                        width: Math.max(90, taskbarBtnText.implicitWidth + 16)
+                        width: Math.max(90, taskbarBtnRow.implicitWidth + 20)
                         radius: 4
                         color: hasUpdate ? "#0284c7" : (installed ? "#00f0ff" : "#059669")
                         border.color: hasUpdate ? "#38bdf8" : (installed ? "#67e8f9" : "#34d399")
                         border.width: 1
 
-                        Text {
-                            id: taskbarBtnText
+                        Row {
+                            id: taskbarBtnRow
                             anchors.centerIn: parent
-                            text: parent.hasUpdate ? "🔄 Update" : (parent.installed ? "▶ Play" : ("⬇ Get (" + (parent.selGame && parent.selGame.size ? parent.selGame.size : "") + ")"))
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: (parent.hasUpdate || !parent.installed) ? "#FFFFFF" : "#09090e"
+                            spacing: 6
+                            Item {
+                                width: 14
+                                height: 14
+                                anchors.verticalCenter: parent.verticalCenter
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: selPlayBtn.hasUpdate ? "🔄" : (selPlayBtn.installed ? "▶" : "⬇")
+                                    font.pixelSize: 11
+                                    color: (selPlayBtn.hasUpdate || !selPlayBtn.installed) ? "#FFFFFF" : "#09090e"
+                                }
+                            }
+                            Text {
+                                text: selPlayBtn.hasUpdate ? "Update" : (selPlayBtn.installed ? "Play" : ("Get (" + (selPlayBtn.selGame && selPlayBtn.selGame.size ? selPlayBtn.selGame.size : "") + ")"))
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: (selPlayBtn.hasUpdate || !selPlayBtn.installed) ? "#FFFFFF" : "#09090e"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                         }
 
                         MouseArea {
@@ -1394,13 +1526,23 @@ Item {
                     Row {
                         id: wpBtnText
                         anchors.centerIn: parent
-                        spacing: 5
-                        Text { text: "🖼️"; font.pixelSize: 11 }
+                        spacing: 6
+                        Item {
+                            width: 14
+                            height: 14
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: "🖼️"
+                                font.pixelSize: 11
+                            }
+                        }
                         Text {
                             text: "Wallpaper"
                             font.pixelSize: 10
                             font.bold: true
                             color: desktopView.showWallpaperPicker ? "#00f0ff" : "#cbd5e1"
+                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
 

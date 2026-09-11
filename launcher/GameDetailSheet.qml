@@ -270,10 +270,15 @@ Rectangle {
                         anchors.centerIn: parent
                         spacing: 6
 
-                        Text {
-                            text: detailSheet.confirmingUninstall ? "⚠️" : "🗑️"
-                            font.pixelSize: 11
+                        Item {
+                            width: 14
+                            height: 14
                             anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: detailSheet.confirmingUninstall ? "⚠️" : "🗑️"
+                                font.pixelSize: 11
+                            }
                         }
 
                         Text {
@@ -320,11 +325,16 @@ Rectangle {
                     Row {
                         id: favRow
                         anchors.centerIn: parent
-                        spacing: 6
-                        Text {
-                            text: footerFavBtn.isFav ? "❤️" : "🤍"
-                            font.pixelSize: 12
+                        spacing: 7
+                        Item {
+                            width: 16
+                            height: 16
                             anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: footerFavBtn.isFav ? "❤️" : "🤍"
+                                font.pixelSize: 12
+                            }
                         }
                         Text {
                             text: footerFavBtn.isFav ? "Favorited" : "Favorite"
@@ -402,13 +412,18 @@ Rectangle {
 
                     Row {
                         anchors.centerIn: parent
-                        spacing: 7
+                        spacing: 8
 
-                        Text {
-                            text: detailSheet.isUnreleased ? "🔒" : (detailSheet.isDownloading ? "⏳" : (detailSheet.hasUpdate ? "🔄" : (detailSheet.isInstalled ? "▶" : "⬇")))
-                            font.pixelSize: 11
-                            color: detailSheet.isUnreleased ? "#f59e0b" : "#FFFFFF"
+                        Item {
+                            width: 16
+                            height: 16
                             anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: detailSheet.isUnreleased ? "🔒" : (detailSheet.isDownloading ? "⏳" : (detailSheet.hasUpdate ? "🔄" : (detailSheet.isInstalled ? "▶" : "⬇")))
+                                font.pixelSize: 12
+                                color: detailSheet.isUnreleased ? "#f59e0b" : "#FFFFFF"
+                            }
                         }
 
                         Text {
@@ -809,8 +824,17 @@ Rectangle {
                                     spacing: 8
 
                                     RowLayout {
-                                        spacing: 7
-                                        Text { text: "🔄"; font.pixelSize: 13 }
+                                        spacing: 8
+                                        Item {
+                                            Layout.preferredWidth: 16
+                                            Layout.preferredHeight: 16
+                                            Layout.alignment: Qt.AlignVCenter
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "🔄"
+                                                font.pixelSize: 13
+                                            }
+                                        }
                                         Text {
                                             text: "WHAT'S NEW IN v" + (gameData ? gameData.version : "")
                                             font.family: "monospace"
@@ -818,6 +842,7 @@ Rectangle {
                                             font.bold: true
                                             color: "#00f0ff"
                                             font.letterSpacing: 1
+                                            Layout.alignment: Qt.AlignVCenter
                                         }
                                     }
 

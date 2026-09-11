@@ -271,11 +271,22 @@ Item {
                             anchors.rightMargin: 14
                             spacing: 8
 
+                            Item {
+                                Layout.preferredWidth: 14
+                                Layout.preferredHeight: 14
+                                Layout.alignment: Qt.AlignVCenter
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "🎮"
+                                    font.pixelSize: 11
+                                }
+                            }
                             Text {
-                                text: "🎮 CONTROLS:"
+                                text: "CONTROLS:"
                                 font.pixelSize: 11
                                 font.bold: true
                                 color: "#94a3b8"
+                                Layout.alignment: Qt.AlignVCenter
                             }
 
                             Text {
@@ -315,10 +326,16 @@ Item {
                             RowLayout {
                                 anchors.centerIn: parent
                                 spacing: 8
-                                Text {
-                                    text: playBtn.isActiveHasUpdate ? "🔄" : (playBtn.isActiveInstalled ? "▶" : "⬇")
-                                    font.pixelSize: 14
-                                    color: (playBtn.isActiveHasUpdate || !playBtn.isActiveInstalled) ? "#FFFFFF" : "#0a0a10"
+                                Item {
+                                    Layout.preferredWidth: 16
+                                    Layout.preferredHeight: 16
+                                    Layout.alignment: Qt.AlignVCenter
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: playBtn.isActiveHasUpdate ? "🔄" : (playBtn.isActiveInstalled ? "▶" : "⬇")
+                                        font.pixelSize: 14
+                                        color: (playBtn.isActiveHasUpdate || !playBtn.isActiveInstalled) ? "#FFFFFF" : "#0a0a10"
+                                    }
                                 }
                                 Text {
                                     text: playBtn.isActiveHasUpdate ? "UPDATE GAME" : (playBtn.isActiveInstalled ? "PLAY GAME" : ("GET (" + (activeGame && activeGame.size ? activeGame.size : "") + ")"))
@@ -326,12 +343,14 @@ Item {
                                     font.bold: true
                                     font.letterSpacing: 0.5
                                     color: (playBtn.isActiveHasUpdate || !playBtn.isActiveInstalled) ? "#FFFFFF" : "#0a0a10"
+                                    Layout.alignment: Qt.AlignVCenter
                                 }
                                 Text {
                                     text: "[Enter]"
                                     font.family: "monospace"
                                     font.pixelSize: 10
                                     color: (playBtn.isActiveHasUpdate || !playBtn.isActiveInstalled) ? "#e2e8f0" : "#1e293b"
+                                    Layout.alignment: Qt.AlignVCenter
                                 }
                             }
 
@@ -364,16 +383,23 @@ Item {
                             RowLayout {
                                 anchors.centerIn: parent
                                 spacing: 6
-                                Text {
-                                    text: "ℹ"
-                                    font.pixelSize: 13
-                                    color: "#94a3b8"
+                                Item {
+                                    Layout.preferredWidth: 14
+                                    Layout.preferredHeight: 14
+                                    Layout.alignment: Qt.AlignVCenter
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "ℹ"
+                                        font.pixelSize: 13
+                                        color: "#94a3b8"
+                                    }
                                 }
                                 Text {
                                     text: "Full Details"
                                     font.pixelSize: 12
                                     font.bold: true
                                     color: detailMouse.containsMouse ? "#FFFFFF" : "#cbd5e1"
+                                    Layout.alignment: Qt.AlignVCenter
                                 }
                             }
 

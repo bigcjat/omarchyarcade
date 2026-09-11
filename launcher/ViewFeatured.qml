@@ -305,10 +305,16 @@ Item {
                                     id: playBtnRow
                                     anchors.centerIn: parent
                                     spacing: 8
-                                    Text {
-                                        text: heroPlayBtn.skyAceHasUpdate ? "🔄" : (heroPlayBtn.skyAceInstalled ? "▶" : "⬇")
-                                        font.pixelSize: 13
-                                        color: "#FFFFFF"
+                                    Item {
+                                        width: 16
+                                        height: 16
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: heroPlayBtn.skyAceHasUpdate ? "🔄" : (heroPlayBtn.skyAceInstalled ? "▶" : "⬇")
+                                            font.pixelSize: 13
+                                            color: "#FFFFFF"
+                                        }
                                     }
                                     Text {
                                         id: playBtnText
@@ -316,6 +322,7 @@ Item {
                                         font.pixelSize: 12
                                         font.bold: true
                                         color: "#FFFFFF"
+                                        anchors.verticalCenter: parent.verticalCenter
                                     }
                                 }
 
@@ -432,12 +439,22 @@ Item {
                                 id: gitPillRow
                                 anchors.centerIn: parent
                                 spacing: 6
-                                Text { text: "🐙"; font.pixelSize: 11 }
+                                Item {
+                                    width: 14
+                                    height: 14
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "🐙"
+                                        font.pixelSize: 11
+                                    }
+                                }
                                 Text {
                                     text: "100% Open Source & Auditable"
                                     font.pixelSize: 10
                                     font.bold: true
                                     color: gitMouse.containsMouse ? "#f1f5f9" : "#94a3b8"
+                                    anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
 
@@ -489,12 +506,17 @@ Item {
                                 Row {
                                     id: badgeRow
                                     anchors.centerIn: parent
-                                    spacing: 5
+                                    spacing: 6
 
-                                    Text {
-                                        text: modelData.icon
-                                        font.pixelSize: 11
+                                    Item {
+                                        width: 14
+                                        height: 14
                                         anchors.verticalCenter: parent.verticalCenter
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: modelData.icon
+                                            font.pixelSize: 11
+                                        }
                                     }
 
                                     Text {
@@ -533,15 +555,22 @@ Item {
                         spacing: 2
                         RowLayout {
                             spacing: 8
-                            Text {
-                                text: "⭐"
-                                font.pixelSize: 18
+                            Item {
+                                Layout.preferredWidth: 22
+                                Layout.preferredHeight: 22
+                                Layout.alignment: Qt.AlignVCenter
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "⭐"
+                                    font.pixelSize: 18
+                                }
                             }
                             Text {
                                 text: "STAFF PICKS"
                                 font.pixelSize: 18
                                 font.bold: true
                                 color: "#FFFFFF"
+                                Layout.alignment: Qt.AlignVCenter
                             }
                         }
                         Text {
@@ -648,15 +677,22 @@ Item {
                         spacing: 2
                         RowLayout {
                             spacing: 8
-                            Text {
-                                text: "🔥"
-                                font.pixelSize: 18
+                            Item {
+                                Layout.preferredWidth: 22
+                                Layout.preferredHeight: 22
+                                Layout.alignment: Qt.AlignVCenter
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "🔥"
+                                    font.pixelSize: 18
+                                }
                             }
                             Text {
                                 text: "NEW RELEASES"
                                 font.pixelSize: 18
                                 font.bold: true
                                 color: "#FFFFFF"
+                                Layout.alignment: Qt.AlignVCenter
                             }
                         }
                         Text {
@@ -818,17 +854,24 @@ Item {
                                         Row {
                                             id: shelfBtnRow
                                             anchors.centerIn: parent
-                                            spacing: 4
-                                            Text {
-                                                text: shelfPlayBtn.itemHasUpdate ? "🔄" : (shelfPlayBtn.itemInstalled ? "▶" : "⬇")
-                                                font.pixelSize: 10
-                                                color: shelfPlayBtn.itemHasUpdate ? "#ffffff" : (shelfPlayBtn.itemInstalled ? (playSmallMouse.containsMouse ? "#09090e" : "#00f0ff") : "#ecfdf5")
+                                            spacing: 5
+                                            Item {
+                                                width: 12
+                                                height: 12
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: shelfPlayBtn.itemHasUpdate ? "🔄" : (shelfPlayBtn.itemInstalled ? "▶" : "⬇")
+                                                    font.pixelSize: 10
+                                                    color: shelfPlayBtn.itemHasUpdate ? "#ffffff" : (shelfPlayBtn.itemInstalled ? (playSmallMouse.containsMouse ? "#09090e" : "#00f0ff") : "#ecfdf5")
+                                                }
                                             }
                                             Text {
                                                 text: shelfPlayBtn.itemHasUpdate ? "UPDATE" : (shelfPlayBtn.itemInstalled ? "PLAY" : "GET")
                                                 font.pixelSize: 10
                                                 font.bold: true
                                                 color: shelfPlayBtn.itemHasUpdate ? "#ffffff" : (shelfPlayBtn.itemInstalled ? (playSmallMouse.containsMouse ? "#09090e" : "#00f0ff") : "#ecfdf5")
+                                                anchors.verticalCenter: parent.verticalCenter
                                             }
                                         }
 
