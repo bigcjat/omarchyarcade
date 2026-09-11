@@ -1563,6 +1563,52 @@
       "date_added": "2026-09-11",
       "staff_pick": true,
       "featured": true
+    },
+    {
+      "id": "domainrush",
+      "title": "DomainRush",
+      "ref": "OA-040",
+      "category": "Action Arcade",
+      "floppy_color": "#080B12",
+      "grid_color": "#06B6D4",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "5-Player High-Octane Territory Combat",
+      "description": "Pilot your combat skimmer across an obsidian digital arena against 4 tactical AI rivals. Carve laser trails to enclose and capture territory while slicing vulnerable opponent tails. Race to reach 50% domain dominance or survive as the last skimmer standing.",
+      "instructions": [
+        "Steer your skimmer with Arrow keys, WASD, or Vim keys (H/J/K/L).",
+        "Hold Space or Shift to engage Nitro Boost for high-speed intercepts and evasions.",
+        "Leave your home base to draw laser trails. Returning to home territory encloses and captures all grid space inside!",
+        "Your tail is vulnerable while outside home territory! Slice opponent trails to eliminate them and wipe their domain.",
+        "Collect pulsing blue Energy Cores for instant 5x5 expansion shockwaves and Nitro refueling.",
+        "Win instantly by capturing 50% of the arena grid, or by eliminating all 4 rival bots."
+      ],
+      "controls": {
+        "keyboard": "Arrows / WASD / Vim (H/J/K/L) to Steer, Space/Shift for Nitro, P or Esc to Pause, Shift+F for Full View, R to Restart, M for Audio, ? for Help"
+      },
+      "folder": "games/domainrush",
+      "entrypoint": "games/domainrush/main.py",
+      "cover_image": "assets/covers/domainrush.png",
+      "size": "828 KB",
+      "size_bytes": 847501,
+      "download_size": "828 KB",
+      "keywords": [
+        "domainrush",
+        "domain rush",
+        "territory",
+        "paperio",
+        "xonix",
+        "qix",
+        "skimmer",
+        "tron",
+        "light cycle",
+        "arcade",
+        "combat",
+        "multiplayer"
+      ],
+      "date_added": "2026-09-12",
+      "staff_pick": true,
+      "featured": true
     }
   ]
 }

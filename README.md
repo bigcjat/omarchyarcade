@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Offline-Forever-00f0ff?style=flat-square" alt="Offline Forever"/>
   <img src="https://img.shields.io/badge/Telemetry-Zero-10b981?style=flat-square" alt="Zero Telemetry"/>
   <img src="https://img.shields.io/badge/Ads-Zero-f59e0b?style=flat-square" alt="Zero Ads"/>
-  <img src="https://img.shields.io/badge/Games-39%20Included-ec4899?style=flat-square" alt="39 Games"/>
+  <img src="https://img.shields.io/badge/Games-40%20Included-ec4899?style=flat-square" alt="40 Games"/>
   <img src="https://img.shields.io/badge/Interface-Keyboard--Primary-8b5cf6?style=flat-square" alt="Keyboard-Primary"/>
   <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-38bdf8?style=flat-square" alt="Linux | macOS | Windows"/>
 </p>
@@ -152,7 +152,7 @@ Download `Omarchy_Arcade-Windows-x64.zip` from [GitHub Releases](https://github.
 
 ---
 
-## The 39 Games Included
+## The 40 Games Included
 
 Every game includes full offline documentation, keyboard controls mappings, and standalone launch capabilities:
 
@@ -197,6 +197,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **Mahjong Solitaire** | Puzzles & Logic | **1.0 MB** | True 3D hardware-accelerated obsidian tile matching with 5-tier elevation depth. | [Manual](games/mahjongsolitaire/README.md) |
 | **Pipe Punk** | Puzzles & Logic | **1.1 MB** | Victorian steampunk boiler pipe puzzle with real-time fluid dynamics, cast-iron obstacles & analog gauges. | [Manual](games/pipepunk/README.md) |
 | **Sky Ace** | Action Arcade | **40.6 MB** | 194X WW2 Pacific & Global aerial combat (*Python / PySide6 QPainter engine with 3D pre-baked warbirds, bank physics & carrier landings*). | [Manual](games/skyace/README.md) |
+| **DomainRush** | Action Arcade | **828 KB** | 5-player tactical territory battle with laser trails, multi-archetype bot AI, and first-to-50% dominance sprint. | [Manual](games/domainrush/README.md) |
 
 ---
 
