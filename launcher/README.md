@@ -18,7 +18,7 @@
 ---
 
 <p align="center">
-  <img src="../assets/splashscreen.png" alt="Omarchy Arcade Presentation" width="680"/>
+  <img src="../assets/launcher_preview.png" alt="Omarchy Arcade Desktop Launcher" width="840"/>
 </p>
 
 ## Meet Omarchy Arcade
@@ -36,6 +36,14 @@ Modern casual gaming has been bogged down by online logins, tracking SDKs, ad ne
 * 🎨 **Live System Theme Syncing:** Connects directly with your Omarchy desktop theme (`colors.toml`). Switch themes on your desktop and the arcade hot-reloads its colors on the fly.
 * 🪟 **Tiling-Native Flow:** Launch a game and the launcher automatically hides to keep your workspace clear. Exit the game and the launcher instantly reappears and re-focuses.
 * 🎮 **39 Built-In Games:** Air combat action, blocks, puzzles, retro vector space combat, casino card games, grandmaster chess, tactical checkers, klondike solitaire, video poker terminal, backgammon, reversi, japanese tatami marbles, tactical tank combat engineering, city simulation, and classic action arcade games—ready to launch in milliseconds.
+
+### Technology & Architecture
+
+While the majority of Omarchy Arcade titles are built with native declarative **Qt6 / QML and JavaScript** for ultra-lightweight, 60+ FPS vector gameplay, the arcade suite accommodates specialized runtimes:
+
+* **OmarchyBolo II (`games/omarchybolo`):** Written in **TypeScript** as a true multiplatform architecture that runs seamlessly both as a native desktop client in the launcher and directly in any modern web browser with peer-to-peer WebRTC networking.
+* **Sky Ace (`games/skyace`):** Powered by a custom **Python & PySide6 / QPainter** tactical flight engine with pre-baked 3D aircraft frames, dynamic bank physics, carrier landings, and zero heavy external game library dependencies.
+* **OmarchyCity (`games/bytecity`):** Integrates the legendary 1989 **C++ Micropolis** city simulation core for high-speed local urban modeling.
 
 ---
 
@@ -98,7 +106,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **Backgammon** | Board & Tabletop | **355 KB** | Classic 2-Player Point-To-Point Board Strategy | [Manual](../games/backgammon/README.md) |
 | **Reversi** | Board & Tabletop | **427 KB** | Timeless 8×8 Territorial Disc-Flipping Strategy | [Manual](../games/reversi/README.md) |
 | **Bīdama** | Casual Aim & Physics | **492 KB** | Artisanal Japanese Tatami Glass Marbles & Pitch Line Cascades | [Manual](../games/bidama/README.md) |
-| **OmarchyBolo II** | Action Arcade | **1.0 MB** | Tactical Combined Arms, Combat Engineering & Serverless WebRTC Warfare | [Manual](../games/omarchybolo/README.md) |
+| **OmarchyBolo II** | Action Arcade | **1.0 MB** | Classic tactical armored tank warfare inspired by Stuart Cheshire's Bolo (*TypeScript multiplatform: native desktop & direct browser via WebRTC*). | [Manual](../games/omarchybolo/README.md) |
 | **Starframe** | Action Arcade | **1.0 MB** | Tactical Neon Vector Starfighter Combat & Kinetic Ramming | [Manual](../games/starframe/README.md) |
 | **Slime's Adventure** | Action Arcade | **1.1 MB** | Subterranean Cavern Slime Gravity Runner | [Manual](../games/slimesadventure/README.md) |
 | **Dr. Virus** | Blocks & Merging | **544 KB** | Retro Medical Virus Elimination Puzzle | [Manual](../games/drvirus/README.md) |
@@ -108,7 +116,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **Fold** | Puzzles & Grid Logic | **1.2 MB** | Tactile Japanese Origami Crease & Geometric Fold Puzzle | [Manual](../games/fold/README.md) |
 | **Mahjong Solitaire** | Puzzles & Grid Logic | **1.0 MB** | True 3D Hardware-Accelerated Obsidian Tile Matching Solitaire | [Manual](../games/mahjongsolitaire/README.md) |
 | **Pipe Punk** | Puzzles & Grid Logic | **1.1 MB** | Steampunk Victorian Municipal Boiler Pipe Routing Puzzle | [Manual](../games/pipepunk/README.md) |
-| **Sky Ace** | Action Arcade | **40.6 MB** | 194X Global Air War • 10 Theaters & 3D Warbirds | [Manual](../games/skyace/README.md) |
+| **Sky Ace** | Action Arcade | **40.6 MB** | 194X Global Air War • 10 Theaters & 3D Warbirds (*Python / PySide6 QPainter engine with 3D pre-baked warbirds, bank physics & carrier landings*). | [Manual](../games/skyace/README.md) |
 
 ---
 

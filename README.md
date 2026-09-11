@@ -18,7 +18,7 @@
 ---
 
 <p align="center">
-  <img src="assets/splashscreen.png" alt="Omarchy Arcade Presentation" width="680"/>
+  <img src="assets/launcher_preview.png" alt="Omarchy Arcade Desktop Launcher" width="860"/>
 </p>
 
 ## Rediscover Pure Arcade Gaming
@@ -28,10 +28,19 @@ Modern gaming on phones and mainstream operating systems has been ruined by mand
 **Omarchy Arcade** brings back the joy of authentic personal computing: instant, distraction-free games you actually own on your machine, built with high-performance native **Qt6 / QML** and hardware-accelerated vectors.
 
 * 🔌 **True Offline Play:** Zero internet sockets, zero accounts, zero telemetry, and zero DRM. Works forever—on flights, off-grid, during outages, or whenever you want to disconnect.
+* ⭐ **Featured Discovery Experience:** Starts directly on a curated showcase featuring the **Sky Ace** hero video trailer, Staff Picks floppy carousel, and newest release shelf.
 * ⚡ **Keyboard-Primary for Power Users:** Full Vim (`HJKL`) and Arrow key navigation, numbers `1`–`9` for instant category switching, and `/` search. Designed from the ground up for tiling window managers.
 * 🎨 **Live System Theme Sync:** Automatically reads your active Omarchy system theme (`~/.config/omarchy/current/theme/colors.toml`) in real time. Switch themes (`Super + Space`) and the entire arcade shifts colors instantly.
 * 🪟 **Tiling-Native Process Lifecycle:** Launch any game and the launcher hides itself automatically to keep your workspace clear. Close the game, and the launcher reappears and regains active focus instantly.
 * 💾 **Tactile 3.5" Disk Presentation:** Nostalgic floppy disks with painted retro box art, animated selection halos, and Steam-style modal sheets featuring live gameplay previews.
+
+### Technology & Architecture
+
+While the majority of Omarchy Arcade titles are built with native declarative **Qt6 / QML and JavaScript** for ultra-lightweight, 60+ FPS vector gameplay, the arcade suite accommodates specialized runtimes:
+
+* **OmarchyBolo II (`games/omarchybolo`):** Written in **TypeScript** as a true multiplatform architecture that runs seamlessly both as a native desktop client in the launcher and directly in any modern web browser with peer-to-peer WebRTC networking.
+* **Sky Ace (`games/skyace`):** Powered by a custom **Python & PySide6 / QPainter** tactical flight engine with pre-baked 3D aircraft frames, dynamic bank physics, carrier landings, and zero heavy external game library dependencies.
+* **OmarchyCity (`games/bytecity`):** Integrates the legendary 1989 **C++ Micropolis** city simulation core for high-speed local urban modeling.
 
 ---
 
@@ -145,7 +154,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **Backgammon** | Tabletop & Board | **355 KB** | Tactile classic board strategy with doubling cube, multiple themes, and lookahead AI. | [Manual](games/backgammon/README.md) |
 | **Reversi** | Tabletop & Board | **427 KB** | Timeless 8×8 disc-flipping strategy with valid move projections and multi-tier AI. | [Manual](games/reversi/README.md) |
 | **Bīdama** | Casual Aim & Physics | **492 KB** | Japanese tatami marbles tribute to Lose Your Marbles with urushi pitch line and dual gravity collapse. | [Manual](games/bidama/README.md) |
-| **OmarchyBolo II** | Action Arcade | **1.0 MB** | Classic tactical armored tank warfare inspired by Stuart Cheshire's Bolo with P2P WebRTC. | [Manual](games/omarchybolo/README.md) |
+| **OmarchyBolo II** | Action Arcade | **1.0 MB** | Classic tactical armored tank warfare inspired by Stuart Cheshire's Bolo (*TypeScript multiplatform: native desktop & direct browser via WebRTC*). | [Manual](games/omarchybolo/README.md) |
 | **Starframe** | Action Arcade | **1.0 MB** | Tactical neon vector space shooter with 3 starfighter classes, CRT bloom, and kinetic shield ramming. | [Manual](games/starframe/README.md) |
 | **Slime's Adventure** | Action Arcade | **1.1 MB** | Subterranean cavern gravity runner with dough-rolling Japanese teardrop slime. | [Manual](games/slimesadventure/README.md) |
 | **Dr. Virus** | Blocks & Merging | **544 KB** | Retro medical puzzle with cascading gravity, living reactive viruses, and multi-stage progression. | [Manual](games/drvirus/README.md) |
@@ -155,7 +164,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **Fold** | Puzzles & Logic | **1.2 MB** | Tactile geometric paper folding & crease logic puzzle with 100 historical archetypes. | [Manual](games/fold/README.md) |
 | **Mahjong Solitaire** | Puzzles & Logic | **1.0 MB** | True 3D hardware-accelerated obsidian tile matching with 5-tier elevation depth. | [Manual](games/mahjongsolitaire/README.md) |
 | **Pipe Punk** | Puzzles & Logic | **1.1 MB** | Victorian steampunk boiler pipe puzzle with real-time fluid dynamics, cast-iron obstacles & analog gauges. | [Manual](games/pipepunk/README.md) |
-| **Sky Ace** | Action Arcade | **40.6 MB** | 194X WW2 Pacific & Global aerial combat homage with 10 global theaters, 3D pre-baked warbirds, carrier landings & super fortress bosses. | [Manual](games/skyace/README.md) |
+| **Sky Ace** | Action Arcade | **40.6 MB** | 194X WW2 Pacific & Global aerial combat (*Python / PySide6 QPainter engine with 3D pre-baked warbirds, bank physics & carrier landings*). | [Manual](games/skyace/README.md) |
 
 ---
 
