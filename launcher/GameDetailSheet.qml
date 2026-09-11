@@ -23,8 +23,6 @@ Rectangle {
         onTriggered: detailSheet.confirmingUninstall = false
     }
 
-    property var favoritesList: []
-
     signal playRequested(string gameId)
     signal closeRequested()
 
@@ -48,9 +46,6 @@ Rectangle {
                 detailSheet.confirmingUninstall = false;
             }
         }
-        function onFavoritesChanged(favs) {
-            detailSheet.favoritesList = favs;
-        }
     }
 
     function open(data) {
@@ -61,9 +56,6 @@ Rectangle {
         if (typeof arcadeBackend !== "undefined" && data) {
             isInstalled = arcadeBackend.isGameInstalled(data.id);
             hasUpdate = arcadeBackend.hasGameUpdate(data.id, data.version || "");
-            if (arcadeBackend.getFavorites) {
-                favoritesList = arcadeBackend.getFavorites();
-            }
         } else {
             isInstalled = true;
             hasUpdate = false;
@@ -306,53 +298,6 @@ Rectangle {
                                 if (gameData && typeof arcadeBackend !== "undefined" && arcadeBackend.uninstallGame) {
                                     arcadeBackend.uninstallGame(gameData.id);
                                 }
-                            }
-                        }
-                    }
-                }
-
-                // Favorite / Pin to Desktop Button
-                Rectangle {
-                    id: footerFavBtn
-                    Layout.preferredHeight: 38
-                    Layout.preferredWidth: favRow.implicitWidth + 24
-                    radius: 6
-                    readonly property bool isFav: gameData ? (detailSheet.favoritesList.indexOf(gameData.id) !== -1) : false
-                    color: isFav ? (favMouse.containsMouse ? "#45122a" : "#2d0f1e") : (favMouse.containsMouse ? "#262638" : "#1a1a26")
-                    border.color: isFav ? "#f43f5e" : (favMouse.containsMouse ? "#474760" : "#2e2e40")
-                    border.width: 1
-
-                    Row {
-                        id: favRow
-                        anchors.centerIn: parent
-                        spacing: 7
-                        Item {
-                            width: 16
-                            height: 16
-                            anchors.verticalCenter: parent.verticalCenter
-                            Text {
-                                anchors.centerIn: parent
-                                text: footerFavBtn.isFav ? "❤️" : "🤍"
-                                font.pixelSize: 12
-                            }
-                        }
-                        Text {
-                            text: footerFavBtn.isFav ? "Favorited" : "Favorite"
-                            font.pixelSize: 12
-                            font.bold: true
-                            color: footerFavBtn.isFav ? "#fb7185" : (favMouse.containsMouse ? "#FFFFFF" : "#94a3b8")
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-
-                    MouseArea {
-                        id: favMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (gameData && typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.toggleFavorite) {
-                                arcadeBackend.toggleFavorite(gameData.id);
                             }
                         }
                     }
