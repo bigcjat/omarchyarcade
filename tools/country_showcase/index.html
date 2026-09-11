@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sky Ace • 10-Country Satellite Terrain Verification</title>
+    <style>
+        body {
+            background: #0d1117;
+            color: #e6edf3;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 24px;
+        }
+        h1 { color: #f0883e; margin-bottom: 4px; font-size: 28px; }
+        p.sub { color: #8b949e; margin-top: 0; margin-bottom: 32px; font-size: 15px; }
+        .theater-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 32px;
+        }
+        .theater-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        .theater-title { font-size: 20px; font-weight: bold; color: #58a6ff; }
+        .theater-region { font-size: 14px; color: #7ee787; font-family: monospace; }
+        .theater-desc { font-size: 14px; color: #8b949e; margin-bottom: 16px; line-height: 1.5; }
+        .preview-box { text-align: center; }
+        .preview-box img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+    <h1>Sky Ace • 10-Country Satellite Terrain Verification</h1>
+    <p class="sub">Reviewing every country terrain to guarantee 100% appropriate historical rural terrain: NO golf courses, NO airports, NO modern highways, NO sensitive facilities. Raw satellite vs. Style A Cel-Shade.</p>
+
+    <div class="theater-card" id="japan">
+        <div class="theater-header">
+            <span class="theater-title">🇯🇵 Japan (Imperial Navy Theater)</span>
+            <span class="theater-region">Rural Niigata / Tokamachi Terraced Valleys & Forests (37.1° N, 138.65° E)</span>
+        </div>
+        <p class="theater-desc"><strong>Landscape Check:</strong> Timeless mountain valleys, Shinano river bend, pine forests, terraced rice paddies. Pure nature, NO golf courses or modern facilities.</p>
+        <div class="preview-box">
+            <img src="japan_comparison.jpg" alt="Japan (Imperial Navy Theater) Comparison">
+        </div>
+    </div>
+
+    <div class="theater-card" id="germany">
+        <div class="theater-header">
+            <span class="theater-title">🇩🇪 Germany (Luftwaffe Western Front)</span>
+            <span class="theater-region">Bavaria / Hallertau Countryside (48.65° N, 11.85° E)</span>
+        </div>
+        <p class="theater-desc"><strong>Landscape Check:</strong> Traditional rolling Bavarian farmland, agrarian patchwork plots, forest clusters, dirt tractor tracks.</p>
+        <div class="preview-box">
+            <img src="germany_comparison.jpg" alt="Germany (Luftwaffe Western Front) Comparison">
+        </div>
+    </div>
+
+    <div class="theater-card" id="britain">
+        <div class="theater-header">
+            <span class="theater-title">🇬🇧 Britain (Battle of Britain / RAF)</span>
+            <span class="theater-region">Sussex Downs & Kent Farmland (51.05° N, -1.75° E)</span>
+        </div>
+        <p class="theater-desc"><strong>Landscape Check:</strong> Historic English rolling chalk downs, hedgerow patchwork fields, copses, winding country lanes.</p>
+        <div class="preview-box">
+            <img src="britain_comparison.jpg" alt="Britain (Battle of Britain / RAF) Comparison">
+        </div>
+    </div>
+
+    <div class="theater-card" id="usa_pacific">
+        <div class="theater-header">
+            <span class="theater-title">🇺🇸 USA / South Pacific (Allied Theater)</span>
+            <span class="theater-region">Kauai / South Pacific Tropical Ridge & Valley (22.05° N, -159.55° E)</span>
+        </div>
+        <p class="theater-desc"><strong>Landscape Check:</strong> Lush tropical green mountain ridges, jungle valleys, pristine volcanic rainforest.</p>
+        <div class="preview-box">
+            <img src="usa_pacific_comparison.jpg" alt="USA / South Pacific (Allied Theater) Comparison">
+        </div>
+    </div>
+
+    <div class="theater-card" id="russia">
+        <div class="theater-header">
+            <span class="theater-title">🇷🇺 Russia (Eastern Front / VVS)</span>
+            <span class="theater-region">Kursk / Central Steppe Countryside (51.55° N, 36.65° E)</span>
+        </div>
+        <p class="theater-desc"><strong>Landscape Check:</strong> Open agricultural plains, historic WW2 tank battle territory, expansive wheat plots, shelterbelt forests.</p>
+        <div class="preview-box">
+            <img src="russia_comparison.jpg" alt="Russia (Eastern Front / VVS) Comparison">
+        </div>
+    </div>
+
+    <div class="theater-card" id="france">
+        <div class="theater-header">
+            <span class="theater-title">🇫🇷 France (Battle of France)</span>
+            <span class="theater-region">Normandy Bocage Countryside (49.18° N, 0.35° E)</span>
+        </div>
+        <p class="theater-desc"><strong>Landscape Check:</strong> Historic Normandy hedgerows (bocage), rural pastures, apple orchards, stone farm hamlets.</p>
+        <div class="preview-box">
+            <img src="france_comparison.jpg" alt="France (Battle of France) Comparison">
+        </div>
+    </div>
+
+    <div class="theater-card" id="italy">
+        <div class="theater-header">
+            <span class="theater-title">🇮🇹 Italy (Mediterranean Theater)</span>
+            <span class="theater-region">Tuscany / Val d'Orcia Rolling Hills (43.05° N, 11.65° E)</span>
+        </div>
+        <p class="theater-desc"><strong>Landscape Check:</strong> UNESCO timeless agricultural hills, golden wheat contours, olive groves, winding cypress roads.</p>
+        <div class="preview-box">
+            <img src="italy_comparison.jpg" alt="Italy (Mediterranean Theater) Comparison">
+        </div>
+    </div>
+
+    <div class="theater-card" id="canada">
+        <div class="theater-header">
+            <span class="theater-title">🇨🇦 Canada (North Atlantic / RCAF)</span>
+            <span class="theater-region">Canadian Rockies / Banff & Yoho Range (51.35° N, 116.25° W)</span>
+        </div>
+        <p class="theater-desc"><strong>Landscape Check:</strong> Majestic snow-crested granite peaks, turquoise glacial alpine lakes, avalanche chutes, and deep evergreen pine valleys.</p>
+        <div class="preview-box">
+            <img src="canada_comparison.jpg" alt="Canada (North Atlantic / RCAF) Comparison">
+        </div>
+    </div>
+
+    <div class="theater-card" id="poland">
+        <div class="theater-header">
+            <span class="theater-title">🇵🇱 Poland (Invasion of Poland)</span>
+            <span class="theater-region">Roztocze / Zamość Rural Strip-Farmland (50.75° N, 23.45° E)</span>
+        </div>
+        <p class="theater-desc"><strong>Landscape Check:</strong> Pure rural agrarian strip fields (narrow ribbon plots of wheat and clover), pine woods, and dirt tracks. Zero city housing grids.</p>
+        <div class="preview-box">
+            <img src="poland_comparison.jpg" alt="Poland (Invasion of Poland) Comparison">
+        </div>
+    </div>
+
+    <div class="theater-card" id="czech">
+        <div class="theater-header">
+            <span class="theater-title">🇨🇿 Czech (Central Europe / Border Defense)</span>
+            <span class="theater-region">South Moravian Wave Hills (48.98° N, 17.02° E)</span>
+        </div>
+        <p class="theater-desc"><strong>Landscape Check:</strong> Famous Moravian rolling waves of green and ochre soil, vineyard contours, rural tranquility.</p>
+        <div class="preview-box">
+            <img src="czech_comparison.jpg" alt="Czech (Central Europe / Border Defense) Comparison">
+        </div>
+    </div>
+
+</body>
+</html>

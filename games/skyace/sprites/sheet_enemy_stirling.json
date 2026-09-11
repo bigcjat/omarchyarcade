@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "image": "sheet_enemy_stirling.png",
+    "size": {
+      "w": 576,
+      "h": 160
+    },
+    "cell": {
+      "w": 192,
+      "h": 160
+    },
+    "cols": 3,
+    "rows": 1
+  },
+  "frames": {
+    "fly_0": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 160
+      }
+    },
+    "fly_1": {
+      "frame": {
+        "x": 192,
+        "y": 0,
+        "w": 192,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 160
+      }
+    },
+    "damaged_engine": {
+      "frame": {
+        "x": 384,
+        "y": 0,
+        "w": 192,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 160
+      }
+    }
+  }
+}

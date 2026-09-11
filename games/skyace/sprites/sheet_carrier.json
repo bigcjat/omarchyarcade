@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "image": "sheet_carrier.png",
+    "size": {
+      "w": 512,
+      "h": 512
+    },
+    "cell": {
+      "w": 256,
+      "h": 512
+    },
+    "cols": 2,
+    "rows": 1
+  },
+  "frames": {
+    "deck_idle": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 512
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 512
+      }
+    },
+    "deck_launching": {
+      "frame": {
+        "x": 256,
+        "y": 0,
+        "w": 256,
+        "h": 512
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 512
+      }
+    }
+  }
+}

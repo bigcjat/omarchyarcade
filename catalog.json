@@ -1419,6 +1419,48 @@
         "logic puzzle",
         "arcade"
       ]
+    },
+    {
+      "id": "skyace",
+      "title": "Sky Ace",
+      "ref": "OA-039",
+      "category": "Action Arcade",
+      "floppy_color": "#232328",
+      "grid_color": "#0284C7",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Classic 1942 Pacific Theater Aerial Combat Shooter",
+      "description": "Pilot the legendary twin-boom P-38 Super Ace through treacherous Pacific skies. Execute 360° evasive loops, intercept red squadrons to claim POW upgrades, team up with escort wingmen, and defeat giant Ayako super-bombers before landing on aircraft carriers.",
+      "instructions": [
+        "Maneuver your fighter using Arrow Keys, WASD, or Vim keys (H/J/K/L). Tap Space or J to fire twin machine cannons.",
+        "Execute evasive Loop-the-Loop maneuvers (B, K, Shift, or Enter) to become invulnerable and shake enemy bullet swarms.",
+        "Destroy entire Red Fighter Squadrons to spawn versatile POW power-ups (Quad Shot, Wingmen Escorts, Extra Loops, and Screen-Clearing Mega Bombs).",
+        "Survive island flak barrages and down the multi-engine fortress boss to perform an aircraft carrier landing for victory bonuses."
+      ],
+      "controls": {
+        "keyboard": "Arrows / WASD / Vim (HJKL) to fly, Space / J to Fire, B / K / Shift / Enter to Loop, R to restart, M to mute, ? for help",
+        "mouse": "Mouse movement to steer, Click to fire, Right-click to loop"
+      },
+      "folder": "games/skyace",
+      "entrypoint": "games/skyace/main.py",
+      "cover_image": "assets/covers/skyace.png",
+      "size": "950 KB",
+      "size_bytes": 972800,
+      "download_size": "950 KB",
+      "keywords": [
+        "1942",
+        "1943",
+        "sky ace",
+        "p38",
+        "shmup",
+        "shooter",
+        "airplane",
+        "dogfight",
+        "wwii",
+        "pacific",
+        "capcom",
+        "arcade"
+      ]
     }
   ]
 }
