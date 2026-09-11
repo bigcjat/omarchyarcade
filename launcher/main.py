@@ -449,6 +449,7 @@ def ensure_launcher_assets():
     if (BASE_DIR / ".git").exists() and (BASE_DIR / "games").is_dir():
         return
     required_files = [
+        "ViewFeatured.qml",
         "ViewCarousel.qml",
         "ViewDesktop.qml",
         "ViewSidebar.qml",

@@ -93,6 +93,7 @@ Item {
             // =====================================================================
             Rectangle {
                 id: heroBox
+                readonly property bool isCompact: heroBox.width < 720
                 width: parent.width
                 height: isCompact ? 270 : 310
                 radius: 14
@@ -100,8 +101,6 @@ Item {
                 border.color: "#0284C7"
                 border.width: 1.5
                 clip: true
-
-                readonly property bool isCompact: heroBox.width < 720
 
                 // Background animated preview / video
                 Item {
