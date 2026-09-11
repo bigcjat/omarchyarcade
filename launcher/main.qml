@@ -113,10 +113,13 @@ ApplicationWindow {
             if (detailSheet.gameData && detailSheet.gameData.id === gameId) {
                 detailSheet.isDownloading = false;
                 detailSheet.isInstalled = true;
+                detailSheet.hasUpdate = false;
             }
             root.refreshCategories();
             root.updateFilter();
-            root.launchGame(gameId);
+            if (!root.isUpdatingAll) {
+                root.checkUpdates();
+            }
         }
         function onGameUninstalled(gameId) {
             root.installedChangeTracker++;
