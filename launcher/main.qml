@@ -31,6 +31,25 @@ ApplicationWindow {
     property int focusedIndex: 0
     property string focusedGameTitle: ""
 
+    // Update Center State
+    property int availableUpdatesCount: 0
+    property var updateReport: null
+    property bool isUpdatingAll: false
+    property string updateStatusText: ""
+
+    function checkUpdates() {
+        if (typeof arcadeBackend !== "undefined" && arcadeBackend.checkForUpdates) {
+            var rep = arcadeBackend.checkForUpdates();
+            updateReport = rep;
+            availableUpdatesCount = rep.total_updates_count || 0;
+        }
+    }
+
+    function openUpdateCenter() {
+        checkUpdates();
+        updateModal.visible = true;
+    }
+
     onActiveFocusItemChanged: {
         if (!activeFocusItem && keyboardController) {
             keyboardController.forceActiveFocus();
@@ -103,6 +122,28 @@ ApplicationWindow {
             root.raise();
             root.requestActivate();
             keyboardController.forceActiveFocus();
+        }
+        function onUpdatesChecked(report) {
+            root.updateReport = report;
+            root.availableUpdatesCount = report.total_updates_count || 0;
+        }
+        function onBatchUpdateStarted(total) {
+            root.isUpdatingAll = true;
+            root.updateStatusText = "Starting batch update (0/" + total + ")...";
+        }
+        function onBatchUpdateProgress(cur, total, msg) {
+            root.isUpdatingAll = true;
+            root.updateStatusText = msg;
+            root.updateFilter();
+        }
+        function onBatchUpdateFinished() {
+            root.isUpdatingAll = false;
+            root.updateStatusText = "All updates installed successfully!";
+            root.checkUpdates();
+            root.updateFilter();
+        }
+        function onLauncherUpdated(newVer) {
+            root.updateStatusText = "Launcher updated to v" + newVer + "! Restart to apply.";
         }
     }
 
@@ -183,7 +224,7 @@ ApplicationWindow {
 
     function isInstalled(gameId) {
         if (!gameId) return false;
-        if (typeof arcadeBackend !== "undefined" && arcadeBackend.isGameInstalled) {
+        if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.isGameInstalled) {
             return arcadeBackend.isGameInstalled(gameId);
         }
         return true;
@@ -191,7 +232,7 @@ ApplicationWindow {
 
     function hasGameUpdate(gameId, version) {
         if (!gameId) return false;
-        if (typeof arcadeBackend !== "undefined" && arcadeBackend.hasGameUpdate) {
+        if (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.hasGameUpdate) {
             return arcadeBackend.hasGameUpdate(gameId, version || "");
         }
         return false;
@@ -297,6 +338,7 @@ ApplicationWindow {
             if (savedMode) root.viewMode = savedMode;
         }
         loadCatalog();
+        root.checkUpdates();
         keyboardController.forceActiveFocus();
     }
 
@@ -639,6 +681,54 @@ ApplicationWindow {
                     }
 
                     onClicked: aboutModal.visible = true
+                }
+
+                // Update Center Button (Highlights when updates are available)
+                Button {
+                    id: updateBtn
+                    Layout.preferredHeight: 36
+                    Layout.preferredWidth: root.isCompact ? 36 : updateRow.implicitWidth + 22
+
+                    background: Rectangle {
+                        radius: 8
+                        color: updateBtn.down ? themeSurfaceLight : (root.availableUpdatesCount > 0 ? Qt.alpha(themeAccent, 0.18) : (updateBtn.hovered ? "#262638" : "transparent"))
+                        border.color: root.availableUpdatesCount > 0 ? themeAccent : themeBorder
+                        border.width: root.availableUpdatesCount > 0 ? 1.5 : 1
+
+                        // Glow indicator dot when updates are pending
+                        Rectangle {
+                            anchors.top: parent.top
+                            anchors.right: parent.right
+                            anchors.topMargin: 5
+                            anchors.rightMargin: 5
+                            width: 8
+                            height: 8
+                            radius: 4
+                            color: themeAccent
+                            visible: root.availableUpdatesCount > 0
+                        }
+                    }
+
+                    contentItem: Row {
+                        id: updateRow
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Text {
+                            text: "🔄"
+                            font.pixelSize: 13
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: root.availableUpdatesCount > 0 ? ("Updates (" + root.availableUpdatesCount + ")") : "Updates"
+                            font.pixelSize: 12
+                            font.bold: root.availableUpdatesCount > 0
+                            color: root.availableUpdatesCount > 0 ? themeAccent : themeText
+                            visible: !root.isCompact
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    onClicked: root.openUpdateCenter()
                 }
             }
         }
@@ -1150,6 +1240,448 @@ ApplicationWindow {
     }
 
     // =========================================================================
+    // UPDATE CENTER MODAL (Changelog Summaries & Batch Update All)
+    // =========================================================================
+    Rectangle {
+        id: updateModal
+        anchors.fill: parent
+        color: "#e60a0a10"
+        z: 310
+        visible: false
+
+        MouseArea { anchors.fill: parent; onClicked: if (!root.isUpdatingAll) updateModal.visible = false }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: Math.min(parent.width * 0.92, 640)
+            height: Math.min(parent.height * 0.88, 560)
+            radius: 12
+            color: "#161622"
+            border.color: root.availableUpdatesCount > 0 ? themeAccent : themeBorder
+            border.width: 1.5
+
+            MouseArea { anchors.fill: parent }
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 22
+                spacing: 14
+
+                // Header
+                RowLayout {
+                    spacing: 10
+                    Text { text: "🔄"; font.pixelSize: 24 }
+                    ColumnLayout {
+                        spacing: 2
+                        Text { text: "Update Center"; font.pixelSize: 18; font.bold: true; color: "#FFFFFF" }
+                        Text {
+                            text: root.availableUpdatesCount > 0 ? (root.availableUpdatesCount + " updates available") : "All software & games are up to date"
+                            font.pixelSize: 11
+                            color: root.availableUpdatesCount > 0 ? themeAccent : "#22c55e"
+                        }
+                    }
+                    Item { Layout.fillWidth: true }
+
+                    // Batch Update All Button
+                    Rectangle {
+                        visible: root.availableUpdatesCount > 0 && !root.isUpdatingAll
+                        Layout.preferredHeight: 34
+                        Layout.preferredWidth: updateAllBtnText.implicitWidth + 24
+                        radius: 6
+                        color: updateAllMouse.pressed ? Qt.darker(themeAccent, 1.4) : (updateAllMouse.containsMouse ? Qt.lighter(themeAccent, 1.2) : themeAccent)
+
+                        Text {
+                            id: updateAllBtnText
+                            anchors.centerIn: parent
+                            text: "🚀 UPDATE ALL (" + root.availableUpdatesCount + ")"
+                            font.family: "monospace"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: "#09090e"
+                        }
+
+                        MouseArea {
+                            id: updateAllMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (typeof arcadeBackend !== "undefined") {
+                                    arcadeBackend.updateAllGames();
+                                }
+                            }
+                        }
+                    }
+
+                    // Close icon
+                    Text {
+                        text: "✕"
+                        font.pixelSize: 16
+                        color: "#94a3b8"
+                        visible: !root.isUpdatingAll
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: updateModal.visible = false
+                        }
+                    }
+                }
+
+                Rectangle { Layout.fillWidth: true; height: 1; color: themeBorder }
+
+                // Live status bar when updating
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 36
+                    visible: root.isUpdatingAll || (root.updateStatusText.length > 0)
+                    radius: 6
+                    color: "#0e1e2d"
+                    border.color: themeAccent
+                    border.width: 1
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        spacing: 8
+                        Text {
+                            text: root.isUpdatingAll ? "⏳" : "✓"
+                            font.pixelSize: 12
+                        }
+                        Text {
+                            text: root.updateStatusText
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.isUpdatingAll ? themeAccent : "#22c55e"
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+                    }
+                }
+
+                // Scrollable List of Available Updates
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    ScrollBar.vertical.policy: ScrollBar.AsNeeded
+
+                    ColumnLayout {
+                        width: parent.width
+                        spacing: 12
+
+                        // 1. Up-to-date banner when no updates exist
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 120
+                            visible: root.availableUpdatesCount === 0 && !root.isUpdatingAll
+                            radius: 8
+                            color: "#111822"
+                            border.color: "#1e293b"
+                            border.width: 1
+
+                            ColumnLayout {
+                                anchors.centerIn: parent
+                                spacing: 8
+                                Text {
+                                    text: "✓"
+                                    font.pixelSize: 32
+                                    color: "#22c55e"
+                                    Layout.alignment: Qt.AlignHCenter
+                                }
+                                Text {
+                                    text: "Omarchy Arcade & All Games Are Up to Date!"
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                    color: "#f8fafc"
+                                    Layout.alignment: Qt.AlignHCenter
+                                }
+                                Text {
+                                    text: "Installed version: v" + (root.updateReport ? root.updateReport.launcher.current_version : "1.0.0")
+                                    font.family: "monospace"
+                                    font.pixelSize: 11
+                                    color: "#94a3b8"
+                                    Layout.alignment: Qt.AlignHCenter
+                                }
+                            }
+                        }
+
+                        // 2. Launcher Update Card (if launcher has update)
+                        Rectangle {
+                            Layout.fillWidth: true
+                            visible: Boolean(root.updateReport && root.updateReport.launcher && root.updateReport.launcher.has_update)
+                            implicitHeight: launcherCardCol.implicitHeight + 24
+                            radius: 8
+                            color: "#0f172a"
+                            border.color: themeAccent
+                            border.width: 1.5
+
+                            ColumnLayout {
+                                id: launcherCardCol
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.margins: 14
+                                spacing: 8
+
+                                RowLayout {
+                                    spacing: 8
+                                    Text { text: "💾"; font.pixelSize: 16 }
+                                    Text {
+                                        text: "OMARCHY ARCADE LAUNCHER"
+                                        font.pixelSize: 13
+                                        font.bold: true
+                                        color: "#FFFFFF"
+                                    }
+                                    Rectangle {
+                                        height: 20
+                                        radius: 4
+                                        Layout.preferredWidth: launcherVerText.implicitWidth + 12
+                                        color: Qt.alpha(themeAccent, 0.2)
+                                        border.color: themeAccent
+                                        border.width: 1
+                                        Text {
+                                            id: launcherVerText
+                                            anchors.centerIn: parent
+                                            text: root.updateReport ? ("v" + root.updateReport.launcher.current_version + " ➔ v" + root.updateReport.launcher.new_version) : ""
+                                            font.family: "monospace"
+                                            font.pixelSize: 10
+                                            font.bold: true
+                                            color: themeAccent
+                                        }
+                                    }
+                                    Item { Layout.fillWidth: true }
+
+                                    Rectangle {
+                                        Layout.preferredHeight: 28
+                                        Layout.preferredWidth: updateLauncherBtnText.implicitWidth + 16
+                                        radius: 5
+                                        color: updateLauncherMouse.containsMouse ? themeAccent : "transparent"
+                                        border.color: themeAccent
+                                        border.width: 1
+                                        Text {
+                                            id: updateLauncherBtnText
+                                            anchors.centerIn: parent
+                                            text: "UPDATE"
+                                            font.family: "monospace"
+                                            font.pixelSize: 10
+                                            font.bold: true
+                                            color: updateLauncherMouse.containsMouse ? "#09090e" : themeAccent
+                                        }
+                                        MouseArea {
+                                            id: updateLauncherMouse
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                if (typeof arcadeBackend !== "undefined") {
+                                                    arcadeBackend.updateLauncher();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    text: "WHAT'S NEW:"
+                                    font.family: "monospace"
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: "#94a3b8"
+                                }
+
+                                Repeater {
+                                    model: (root.updateReport && root.updateReport.launcher && root.updateReport.launcher.changelog) ? root.updateReport.launcher.changelog : []
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 8
+                                        Text { text: "•"; font.pixelSize: 12; color: themeAccent; Layout.alignment: Qt.AlignTop }
+                                        Text {
+                                            text: modelData
+                                            font.pixelSize: 11
+                                            color: "#e2e8f0"
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 3. Outdated Games Cards
+                        Repeater {
+                            model: (root.updateReport && root.updateReport.games) ? root.updateReport.games : []
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                implicitHeight: gameCardCol.implicitHeight + 24
+                                radius: 8
+                                color: "#14141e"
+                                border.color: "#2e2e42"
+                                border.width: 1
+
+                                ColumnLayout {
+                                    id: gameCardCol
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.top: parent.top
+                                    anchors.margins: 14
+                                    spacing: 8
+
+                                    RowLayout {
+                                        spacing: 8
+                                        Text { text: "🎮"; font.pixelSize: 16 }
+                                        Text {
+                                            text: modelData.title
+                                            font.pixelSize: 13
+                                            font.bold: true
+                                            color: "#FFFFFF"
+                                        }
+                                        Rectangle {
+                                            height: 18
+                                            radius: 4
+                                            Layout.preferredWidth: gVerText.implicitWidth + 10
+                                            color: "#1e1e2d"
+                                            border.color: "#3e3e56"
+                                            border.width: 1
+                                            Text {
+                                                id: gVerText
+                                                anchors.centerIn: parent
+                                                text: "v" + modelData.current_version + " ➔ v" + modelData.new_version
+                                                font.family: "monospace"
+                                                font.pixelSize: 9
+                                                font.bold: true
+                                                color: "#38bdf8"
+                                            }
+                                        }
+                                        Item { Layout.fillWidth: true }
+
+                                        Rectangle {
+                                            Layout.preferredHeight: 28
+                                            Layout.preferredWidth: updateSingleGameBtnText.implicitWidth + 16
+                                            radius: 5
+                                            color: updateGameMouse.containsMouse ? "#00f0ff" : "transparent"
+                                            border.color: "#00f0ff"
+                                            border.width: 1
+                                            Text {
+                                                id: updateSingleGameBtnText
+                                                anchors.centerIn: parent
+                                                text: "UPDATE"
+                                                font.family: "monospace"
+                                                font.pixelSize: 10
+                                                font.bold: true
+                                                color: updateGameMouse.containsMouse ? "#09090e" : "#00f0ff"
+                                            }
+                                            MouseArea {
+                                                id: updateGameMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: {
+                                                    if (typeof arcadeBackend !== "undefined") {
+                                                        arcadeBackend.installGame(modelData.id);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Text {
+                                        text: "WHAT'S NEW:"
+                                        font.family: "monospace"
+                                        font.pixelSize: 10
+                                        font.bold: true
+                                        color: "#94a3b8"
+                                    }
+
+                                    Repeater {
+                                        model: modelData.changelog || []
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            spacing: 8
+                                            Text { text: "★"; font.pixelSize: 10; color: "#38bdf8"; Layout.alignment: Qt.AlignTop }
+                                            Text {
+                                                text: modelData
+                                                font.pixelSize: 11
+                                                color: "#cbd5e1"
+                                                wrapMode: Text.WordWrap
+                                                Layout.fillWidth: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Footer
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    Rectangle {
+                        Layout.preferredHeight: 36
+                        Layout.preferredWidth: 140
+                        radius: 6
+                        color: checkAgainMouse.containsMouse ? "#262638" : "#1a1a26"
+                        border.color: "#2e2e40"
+                        border.width: 1
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 6
+                            Text { text: "🔄"; font.pixelSize: 12 }
+                            Text {
+                                text: "Check Again"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: "#cbd5e1"
+                            }
+                        }
+
+                        MouseArea {
+                            id: checkAgainMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.checkUpdates()
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Rectangle {
+                        Layout.preferredHeight: 36
+                        Layout.preferredWidth: 100
+                        radius: 6
+                        color: updateCloseMouse.containsMouse ? "#262638" : "#1a1a26"
+                        border.color: "#2e2e40"
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Close"
+                            font.pixelSize: 12
+                            font.bold: true
+                            color: "#cbd5e1"
+                        }
+
+                        MouseArea {
+                            id: updateCloseMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: updateModal.visible = false
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // =========================================================================
     // CANONICAL RETRO STARTUP SPLASH SCREEN
     // =========================================================================
     SplashScreen {
@@ -1173,6 +1705,14 @@ ApplicationWindow {
             if (aboutModal.visible) {
                 if (event.key === Qt.Key_Escape) {
                     aboutModal.visible = false;
+                    root.restoreKeyboardFocus();
+                    event.accepted = true;
+                }
+                return;
+            }
+            if (updateModal.visible) {
+                if (event.key === Qt.Key_Escape && !root.isUpdatingAll) {
+                    updateModal.visible = false;
                     root.restoreKeyboardFocus();
                     event.accepted = true;
                 }

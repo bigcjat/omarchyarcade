@@ -7,6 +7,7 @@ This directory contains the build specifications and metadata for distributing O
 | **Native Arch / Omarchy** | `pacman` / AUR (`makepkg -si`) | [`PKGBUILD`](../PKGBUILD) |
 | **Flatpak** | Flathub / Sandboxed desktop | [`flatpak/org.omarchy.Arcade.yml`](flatpak/org.omarchy.Arcade.yml) |
 | **AppImage** | Universal portable executable | [`appimage/build_appimage.sh`](appimage/build_appimage.sh) |
+| **macOS Bundle & DMG** | Apple Silicon & Intel macOS | [`macos/build_macos_app.sh`](macos/build_macos_app.sh) |
 
 ---
 
@@ -56,3 +57,23 @@ Generates a standalone `Omarchy_Arcade-x86_64.AppImage` that runs anywhere on Li
 # Run the generated AppImage:
 ./Omarchy_Arcade-x86_64.AppImage
 ```
+
+---
+
+## 4. macOS Standalone Application Bundle & DMG
+
+Generates a standalone `Omarchy Arcade.app` and drag-and-drop `Omarchy_Arcade-macOS.dmg` with zero Homebrew or terminal prerequisites:
+
+```bash
+# Run the macOS build script:
+./packaging/macos/build_macos_app.sh
+
+# The output DMG is saved at:
+# Omarchy_Arcade-macOS.dmg
+```
+
+For one-command terminal installs on macOS:
+```bash
+curl -sSL https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/install.sh | bash
+```
+

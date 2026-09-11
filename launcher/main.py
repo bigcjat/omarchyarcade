@@ -38,6 +38,8 @@ else:
     CATALOG_PATH = DATA_DIR / "catalog.json"
     ASSETS_DIR = DATA_DIR / "assets"
 
+CURRENT_LAUNCHER_VERSION = "1.0.0"
+
 GAMES_DIR.mkdir(parents=True, exist_ok=True)
 
 class ArcadeBackend(QObject):
@@ -50,6 +52,15 @@ class ArcadeBackend(QObject):
     gameUninstalled = Signal(str)
     _processExited = Signal(str)
     themeChanged = Signal("QVariantMap")
+
+    # In-App Update Center signals
+    updatesChecked = Signal("QVariantMap")
+    launcherUpdateStarted = Signal()
+    launcherUpdated = Signal(str)
+    launcherUpdateFailed = Signal(str)
+    batchUpdateStarted = Signal(int)
+    batchUpdateProgress = Signal(int, int, str)
+    batchUpdateFinished = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -152,16 +163,18 @@ class ArcadeBackend(QObject):
     @Slot(str, str, result=bool)
     def hasGameUpdate(self, game_id: str, catalog_version: str) -> bool:
         """Checks if an installed game has an update available compared to catalog.json."""
-        # Only skip update checking if running directly inside a development git clone
-        if (BASE_DIR / ".git").is_dir():
-            return False
         if not game_id or not catalog_version:
             return False
         game_dir = GAMES_DIR / game_id
         if not (game_dir / "main.py").exists() and not (game_dir / "main.qml").exists():
-            return False
+            user_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "games" / game_id
+            if not (user_dir / "main.py").exists() and not (user_dir / "main.qml").exists():
+                return False
+            game_dir = user_dir
         version_file = game_dir / ".version"
         if not version_file.exists():
+            if (BASE_DIR / ".git").is_dir():
+                return False
             return True  # Installed prior to version stamping -> outdated!
         try:
             installed_v = version_file.read_text(encoding="utf-8").strip()
@@ -403,6 +416,251 @@ class ArcadeBackend(QObject):
     @Slot()
     def quit(self):
         QGuiApplication.quit()
+
+    @Slot(result=str)
+    def getLauncherVersion(self) -> str:
+        """Returns the current launcher version."""
+        for v_path in [
+            LAUNCHER_DIR / ".launcher_version",
+            Path.home() / ".local" / "share" / "omarchy-arcade" / "launcher" / ".launcher_version",
+            Path.home() / ".local" / "share" / "omarchy-arcade" / ".launcher_version"
+        ]:
+            if v_path.exists():
+                try:
+                    return v_path.read_text(encoding="utf-8").strip()
+                except Exception:
+                    pass
+        return CURRENT_LAUNCHER_VERSION
+
+    @Slot(result="QVariantMap")
+    def checkForUpdates(self) -> dict:
+        """Fetches latest catalog.json and returns a full report of available launcher and game updates."""
+        import urllib.request
+        import time
+        remote_url = f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/catalog.json?_={int(time.time())}"
+        cat_data = {}
+        try:
+            req = urllib.request.Request(
+                remote_url,
+                headers={"User-Agent": "OmarchyArcade/1.0", "Cache-Control": "no-cache", "Pragma": "no-cache"}
+            )
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                cat_data = json.loads(resp.read().decode("utf-8"))
+        except Exception as e:
+            print(f"[Arcade] checkForUpdates remote fetch notice: {e}, reading local catalog...")
+            if CATALOG_PATH.exists():
+                try:
+                    cat_data = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
+                except Exception:
+                    cat_data = {}
+
+        current_lv = self.getLauncherVersion()
+        remote_lv = str(cat_data.get("launcher_version", current_lv)).strip()
+        launcher_has_update = (remote_lv != current_lv and remote_lv != "")
+        launcher_changelog = cat_data.get("launcher_changelog", [
+            "Performance and stability enhancements",
+            "Updated game catalog entries"
+        ])
+
+        outdated_games = []
+        for g in cat_data.get("games", []):
+            gid = g.get("id")
+            gver = g.get("version", "")
+            if not gid or not gver:
+                continue
+            if self.isGameInstalled(gid) and self.hasGameUpdate(gid, gver):
+                # Resolve current installed version
+                inst_ver = "1.0.0"
+                for cand in [GAMES_DIR / gid / ".version", Path.home() / ".local" / "share" / "omarchy-arcade" / "games" / gid / ".version"]:
+                    if cand.exists():
+                        try:
+                            inst_ver = cand.read_text(encoding="utf-8").strip()
+                            break
+                        except Exception:
+                            pass
+
+                outdated_games.append({
+                    "id": gid,
+                    "title": g.get("title", gid),
+                    "current_version": inst_ver,
+                    "new_version": gver,
+                    "changelog": g.get("changelog", ["General improvements and gameplay polish"]),
+                    "size": g.get("size", ""),
+                    "category": g.get("category", "")
+                })
+
+        report = {
+            "launcher": {
+                "has_update": launcher_has_update,
+                "current_version": current_lv,
+                "new_version": remote_lv,
+                "changelog": launcher_changelog
+            },
+            "games": outdated_games,
+            "total_updates_count": (1 if launcher_has_update else 0) + len(outdated_games)
+        }
+        self.updatesChecked.emit(report)
+        return report
+
+    @Slot()
+    def updateLauncher(self):
+        """Downloads updated launcher payload from GitHub in the background."""
+        def worker():
+            import urllib.request
+            import tarfile
+            import io
+            self.launcherUpdateStarted.emit()
+            try:
+                print("[Arcade] Downloading launcher update from GitHub...")
+                url = "https://codeload.github.com/bigcjat/omarchyarcade/tar.gz/main"
+                req = urllib.request.Request(url, headers={"User-Agent": "OmarchyArcade/1.0"})
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    tar_data = resp.read()
+
+                dest_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "launcher"
+                if (BASE_DIR / ".git").is_dir() and (BASE_DIR / "launcher").is_dir():
+                    dest_dir = BASE_DIR / "launcher"
+                dest_dir.mkdir(parents=True, exist_ok=True)
+
+                prefix = "omarchyarcade-main/launcher/"
+                count = 0
+                with tarfile.open(fileobj=io.BytesIO(tar_data), mode="r:gz") as tar:
+                    for member in tar.getmembers():
+                        if member.name.startswith(prefix) and member.name != prefix:
+                            rel = member.name[len(prefix):]
+                            t_file = dest_dir / rel
+                            if member.isdir():
+                                t_file.mkdir(parents=True, exist_ok=True)
+                            else:
+                                t_file.parent.mkdir(parents=True, exist_ok=True)
+                                ext = tar.extractfile(member)
+                                if ext:
+                                    with open(t_file, "wb") as f:
+                                        f.write(ext.read())
+                                    count += 1
+                        elif member.name == "omarchyarcade-main/catalog.json":
+                            ext = tar.extractfile(member)
+                            if ext:
+                                cat_dest = dest_dir.parent / "catalog.json" if dest_dir.name == "launcher" else BASE_DIR / "catalog.json"
+                                with open(cat_dest, "wb") as f:
+                                    f.write(ext.read())
+
+                # Resolve new version
+                new_v = "1.1.0"
+                try:
+                    cat_f = dest_dir.parent / "catalog.json" if dest_dir.name == "launcher" else BASE_DIR / "catalog.json"
+                    if cat_f.exists():
+                        cat_j = json.loads(cat_f.read_text(encoding="utf-8"))
+                        new_v = cat_j.get("launcher_version", new_v)
+                except Exception:
+                    pass
+
+                (dest_dir / ".launcher_version").write_text(new_v, encoding="utf-8")
+                print(f"[Arcade] Launcher update complete: v{new_v} ({count} files)")
+                self.launcherUpdated.emit(new_v)
+            except Exception as e:
+                print(f"[Arcade] Launcher update error: {e}")
+                self.launcherUpdateFailed.emit(str(e))
+
+        t = threading.Thread(target=worker, daemon=True)
+        t.start()
+
+    @Slot()
+    def updateAllGames(self):
+        """Batch downloads and applies all available game updates and launcher updates."""
+        def worker():
+            import urllib.request
+            import tarfile
+            import io
+            report = self.checkForUpdates()
+            games_to_update = report.get("games", [])
+            launcher_needs_update = report.get("launcher", {}).get("has_update", False)
+            total = len(games_to_update) + (1 if launcher_needs_update else 0)
+
+            if total == 0:
+                self.batchUpdateFinished.emit()
+                return
+
+            self.batchUpdateStarted.emit(total)
+
+            try:
+                print("[Arcade] Fetching single archive payload for batch updates...")
+                url = "https://codeload.github.com/bigcjat/omarchyarcade/tar.gz/main"
+                req = urllib.request.Request(url, headers={"User-Agent": "OmarchyArcade/1.0"})
+                with urllib.request.urlopen(req, timeout=45) as resp:
+                    tar_data = resp.read()
+
+                with tarfile.open(fileobj=io.BytesIO(tar_data), mode="r:gz") as tar:
+                    step = 0
+                    # 1. Update each game
+                    for g in games_to_update:
+                        step += 1
+                        gid = g["id"]
+                        gtitle = g["title"]
+                        self.batchUpdateProgress.emit(step, total, f"Updating {gtitle} ({step}/{total})...")
+
+                        prefix = f"omarchyarcade-main/games/{gid}/"
+                        dest = GAMES_DIR / gid
+                        dest.mkdir(parents=True, exist_ok=True)
+
+                        for member in tar.getmembers():
+                            if member.name.startswith(prefix) and member.name != prefix:
+                                rel = member.name[len(prefix):]
+                                target_f = dest / rel
+                                if member.isdir():
+                                    target_f.mkdir(parents=True, exist_ok=True)
+                                else:
+                                    target_f.parent.mkdir(parents=True, exist_ok=True)
+                                    ext = tar.extractfile(member)
+                                    if ext:
+                                        with open(target_f, "wb") as f:
+                                            f.write(ext.read())
+
+                        (dest / ".version").write_text(g["new_version"], encoding="utf-8")
+                        self.gameInstalled.emit(gid)
+
+                    # 2. Update launcher if needed
+                    if launcher_needs_update:
+                        step += 1
+                        self.batchUpdateProgress.emit(step, total, f"Updating Omarchy Arcade UI ({step}/{total})...")
+                        dest_dir = Path.home() / ".local" / "share" / "omarchy-arcade" / "launcher"
+                        if (BASE_DIR / ".git").is_dir() and (BASE_DIR / "launcher").is_dir():
+                            dest_dir = BASE_DIR / "launcher"
+                        dest_dir.mkdir(parents=True, exist_ok=True)
+
+                        prefix = "omarchyarcade-main/launcher/"
+                        for member in tar.getmembers():
+                            if member.name.startswith(prefix) and member.name != prefix:
+                                rel = member.name[len(prefix):]
+                                t_file = dest_dir / rel
+                                if member.isdir():
+                                    t_file.mkdir(parents=True, exist_ok=True)
+                                else:
+                                    t_file.parent.mkdir(parents=True, exist_ok=True)
+                                    ext = tar.extractfile(member)
+                                    if ext:
+                                        with open(t_file, "wb") as f:
+                                            f.write(ext.read())
+                            elif member.name == "omarchyarcade-main/catalog.json":
+                                ext = tar.extractfile(member)
+                                if ext:
+                                    cat_dest = dest_dir.parent / "catalog.json" if dest_dir.name == "launcher" else BASE_DIR / "catalog.json"
+                                    with open(cat_dest, "wb") as f:
+                                        f.write(ext.read())
+
+                        new_lv = report["launcher"]["new_version"]
+                        (dest_dir / ".launcher_version").write_text(new_lv, encoding="utf-8")
+                        self.launcherUpdated.emit(new_lv)
+
+                print("[Arcade] Batch update finished successfully!")
+                self.batchUpdateFinished.emit()
+
+            except Exception as e:
+                print(f"[Arcade] Batch update error: {e}")
+                self.batchUpdateFinished.emit()
+
+        t = threading.Thread(target=worker, daemon=True)
+        t.start()
 
 
 def find_omarchy_colors_file():

@@ -1,7 +1,14 @@
 {
-  "version": 5,
+  "version": 6,
   "app_name": "Omarchy Arcade",
-  "updated_at": "2026-09-10T11:00:00Z",
+  "launcher_version": "1.1.0",
+  "launcher_changelog": [
+    "macOS zero-dependency distribution & standalone DMG bundle",
+    "New In-App Update Center with full patch notes & changelog summaries",
+    "One-click 'Update All' batch updater for launcher and games",
+    "Enhanced desktop & carousel transitions and UI responsiveness"
+  ],
+  "updated_at": "2026-09-12T04:58:00Z",
   "games": [
     {
       "id": "2048",
@@ -1503,7 +1510,13 @@
       "category": "Action Arcade",
       "floppy_color": "#232328",
       "grid_color": "#0284C7",
-      "version": "1.0.0",
+      "version": "1.1.0",
+      "changelog": [
+        "Carrier Recovery Polish: All remaining airborne enemies & warships detonate for bonus points",
+        "Cinematic cloud-parting descent upon landing approach",
+        "Sweep and disarm all active combat hazards on touchdown",
+        "Procedural radial engine audio telemetry & bank-synchronized soundscapes"
+      ],
       "status": "released",
       "tagline": "194X Global Air War \u2022 10 Theaters & 3D Warbirds",
       "description": "Pilot legendary WW2 fighters across 10 global theaters. Featuring pre-baked 3D airframes, aerodynamic roll and banking physics, carrier arrested landings, dynamic cloud decks, destructible naval fleets, and colossal Super Fortress multi-phase bosses.",

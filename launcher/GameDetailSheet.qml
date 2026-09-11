@@ -739,6 +739,61 @@ Rectangle {
                                 wrapMode: Text.WordWrap
                             }
 
+                            // What's New In This Update Card (Shown only when update is available)
+                            Rectangle {
+                                Layout.fillWidth: true
+                                visible: detailSheet.hasUpdate && Boolean(gameData && gameData.changelog && gameData.changelog.length > 0)
+                                implicitHeight: changelogCol.implicitHeight + 24
+                                radius: 8
+                                color: "#0c1824"
+                                border.color: "#00f0ff"
+                                border.width: 1.5
+
+                                ColumnLayout {
+                                    id: changelogCol
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.top: parent.top
+                                    anchors.margins: 14
+                                    spacing: 8
+
+                                    RowLayout {
+                                        spacing: 7
+                                        Text { text: "🔄"; font.pixelSize: 13 }
+                                        Text {
+                                            text: "WHAT'S NEW IN v" + (gameData ? gameData.version : "")
+                                            font.family: "monospace"
+                                            font.pixelSize: 11
+                                            font.bold: true
+                                            color: "#00f0ff"
+                                            font.letterSpacing: 1
+                                        }
+                                    }
+
+                                    Repeater {
+                                        model: (gameData && gameData.changelog) ? gameData.changelog : []
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            spacing: 8
+                                            Text {
+                                                text: "★"
+                                                font.pixelSize: 10
+                                                color: "#38bdf8"
+                                                Layout.alignment: Qt.AlignTop
+                                            }
+                                            Text {
+                                                text: modelData
+                                                font.pixelSize: 11
+                                                lineHeight: 1.3
+                                                color: "#f1f5f9"
+                                                wrapMode: Text.WordWrap
+                                                Layout.fillWidth: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             // How to Play & Controls Card (Naturally expanded, NO nested scroll trap!)
                             Rectangle {
                                 Layout.fillWidth: true

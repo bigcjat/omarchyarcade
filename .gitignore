@@ -23,3 +23,10 @@ assets/covers_original/
 backups/
 skyace_backup.zip
 screenshots/
+
+# Packaging builds & binaries
+build/
+*.dmg
+*.AppImage
+*.iconset
+
