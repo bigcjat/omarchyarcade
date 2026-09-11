@@ -428,7 +428,7 @@ Rectangle {
                     anchors.left: parent.left
                     anchors.leftMargin: 24
                     anchors.right: parent.right
-                    anchors.rightMargin: 24
+                    anchors.rightMargin: 36
                     implicitHeight: contentLayout.implicitHeight
 
                     // Responsive 2-column or 1-column layout
@@ -642,25 +642,6 @@ Rectangle {
                                         font.pixelSize: 10
                                         font.bold: true
                                         color: "#FFFFFF"
-                                    }
-                                }
-
-                                Rectangle {
-                                    height: 22
-                                    radius: 4
-                                    Layout.preferredWidth: refText.implicitWidth + 14
-                                    color: "#22222e"
-                                    border.color: "#383848"
-                                    border.width: 1
-
-                                    Text {
-                                        id: refText
-                                        anchors.centerIn: parent
-                                        text: gameData ? gameData.ref : ""
-                                        font.family: "monospace"
-                                        font.pixelSize: 10
-                                        font.bold: true
-                                        color: "#94a3b8"
                                     }
                                 }
 
