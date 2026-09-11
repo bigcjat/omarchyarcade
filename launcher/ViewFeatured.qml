@@ -373,6 +373,173 @@ Item {
             }
 
             // =====================================================================
+            // 1.5 THE OMARCHY ARCADE PROMISE / MANIFESTO
+            // =====================================================================
+            Rectangle {
+                id: manifestoCard
+                width: parent.width
+                radius: 12
+                color: "#13131d"
+                border.color: "#2a2a3e"
+                border.width: 1
+                implicitHeight: manifestoCol.implicitHeight + 32
+
+                // Subtle top gradient glow (emerald/cyan trust accent)
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 2
+                    radius: 1
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+                        GradientStop { position: 0.0; color: "#00f0ff" }
+                        GradientStop { position: 0.5; color: "#10b981" }
+                        GradientStop { position: 1.0; color: "#3b82f6" }
+                    }
+                }
+
+                ColumnLayout {
+                    id: manifestoCol
+                    anchors.fill: parent
+                    anchors.margins: 18
+                    spacing: 12
+
+                    // Header pill & Title
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        Rectangle {
+                            height: 22
+                            radius: 4
+                            Layout.preferredWidth: promisePillText.implicitWidth + 14
+                            color: "#142828"
+                            border.color: "#059669"
+                            border.width: 1
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 4
+                                Text { text: "🛡️"; font.pixelSize: 10 }
+                                Text {
+                                    id: promisePillText
+                                    text: "THE ARCADE PROMISE"
+                                    font.family: "monospace"
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: "#34d399"
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: "Pure Gaming, The Way It Should Be"
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: "#f8fafc"
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+
+                        // GitHub Auditable Link Pill
+                        Rectangle {
+                            height: 24
+                            radius: 6
+                            Layout.preferredWidth: gitPillRow.implicitWidth + 16
+                            color: gitMouse.containsMouse ? "#242436" : "#1a1a26"
+                            border.color: gitMouse.containsMouse ? "#4b5563" : "#383850"
+                            border.width: 1
+
+                            Row {
+                                id: gitPillRow
+                                anchors.centerIn: parent
+                                spacing: 6
+                                Text { text: "🐙"; font.pixelSize: 11 }
+                                Text {
+                                    text: "100% Open Source & Auditable"
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: gitMouse.containsMouse ? "#f1f5f9" : "#94a3b8"
+                                }
+                            }
+
+                            MouseArea {
+                                id: gitMouse
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                hoverEnabled: true
+                                onClicked: Qt.openUrlExternally("https://github.com/bigcjat/omarchyarcade")
+                            }
+                        }
+                    }
+
+                    // Main manifesto summary
+                    Text {
+                        text: "Free games built for players, not advertisers. Downloaded games are stored directly on your machine and work 100% offline forever."
+                        font.pixelSize: 12
+                        color: "#cbd5e1"
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                    }
+
+                    // Trust Badges Flow Grid
+                    Flow {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        Repeater {
+                            model: [
+                                { icon: "💾", title: "Zero Bloat", desc: "Most fit on a floppy" },
+                                { icon: "🚫", title: "No Ads or Nags", desc: "Zero popups" },
+                                { icon: "🔓", title: "100% DRM-Free", desc: "Yours forever" },
+                                { icon: "💎", title: "No Microtransactions", desc: "Full complete games" },
+                                { icon: "🔒", title: "No Data Collection", desc: "Private & zero telemetry" },
+                                { icon: "👤", title: "No Accounts", desc: "No logins required" },
+                                { icon: "✈️", title: "100% Offline", desc: "Works anywhere" },
+                                { icon: "📖", title: "Open Source", desc: "Transparent code" }
+                            ]
+
+                            Rectangle {
+                                height: 28
+                                width: badgeRow.implicitWidth + 16
+                                radius: 6
+                                color: "#181826"
+                                border.color: "#28283c"
+                                border.width: 1
+
+                                Row {
+                                    id: badgeRow
+                                    anchors.centerIn: parent
+                                    spacing: 5
+
+                                    Text {
+                                        text: modelData.icon
+                                        font.pixelSize: 11
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Text {
+                                        text: modelData.title
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                        color: "#e2e8f0"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Text {
+                                        text: "• " + modelData.desc
+                                        font.pixelSize: 10
+                                        color: "#64748b"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // =====================================================================
             // 2. STAFF PICKS SECTION (6 Curated Games)
             // =====================================================================
             Column {
