@@ -1659,6 +1659,52 @@
       "date_added": "2026-09-12",
       "staff_pick": true,
       "featured": true
+    },
+    {
+      "id": "foxtail",
+      "title": "Foxtail",
+      "ref": "OA-042",
+      "category": "Puzzles & Grid Logic",
+      "floppy_color": "#059669",
+      "grid_color": "#0F172A",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "Fluffy Snow Trench Puzzle • Fill Every Tile",
+      "description": "Guide a clever voxel red fox through snowdrifts to bury and fill every trench tile with its wonderfully fluffy bushy tail. Features 30 handcrafted levels with winding corridors, hairpin U-turns, bottlenecks, blinking animations, full undo/reset, hint guidance, and tactile snow crunch sounds.",
+      "instructions": [
+        "Arrow Keys, WASD, HJKL, or swipe/drag to guide the fox across the snowy terrain.",
+        "Every step carves a trench and extends the fox's luxurious bushy tail behind it.",
+        "Fill 100% of open snow tiles to complete the burrow and unlock the next stage.",
+        "You cannot cross or backtrack over your own tail or collide with obstacles.",
+        "Press [H] or the Hint button for an animated directional clue.",
+        "Press [U] or [Z] to undo steps, [R] to restart, and [N] / [P] to skip levels."
+      ],
+      "controls": {
+        "keyboard": "Arrow Keys / WASD / HJKL to Move, U / Z to Undo, R to Restart, H for Hint",
+        "shortcuts": "N / P for Next/Prev Level, M to Mute, ? or F1 for Help, Esc to Exit"
+      },
+      "folder": "games/foxtail",
+      "entrypoint": "games/foxtail/main.py",
+      "cover_image": "assets/covers/foxtail.png",
+      "size": "850 KB",
+      "size_bytes": 872810,
+      "download_size": "850 KB",
+      "keywords": [
+        "foxtail",
+        "fox",
+        "puzzle",
+        "grid logic",
+        "snow",
+        "winter",
+        "hamiltonian",
+        "trench",
+        "cute",
+        "relaxing",
+        "casual"
+      ],
+      "date_added": "2026-09-13",
+      "staff_pick": true,
+      "featured": true
     }
   ]
 }

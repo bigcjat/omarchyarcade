@@ -152,7 +152,7 @@ Download `Omarchy_Arcade-Windows-x64.zip` from [GitHub Releases](https://github.
 
 ---
 
-## The 40 Games Included
+## The 42 Games Included
 
 Every game includes full offline documentation, keyboard controls mappings, and standalone launch capabilities:
 
@@ -199,6 +199,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **Sky Ace** | Action Arcade | **40.6 MB** | 194X WW2 Pacific & Global aerial combat (*Python / PySide6 QPainter engine with 3D pre-baked warbirds, bank physics & carrier landings*). | [Manual](games/skyace/README.md) |
 | **DomainRush** | Action Arcade | **828 KB** | 5-player tactical territory battle with laser trails, multi-archetype bot AI, and first-to-50% dominance sprint. | [Manual](games/domainrush/README.md) |
 | **VLT Keno** | Cards & Casino | **580 KB** | Authentic 8-in-1 casino video lottery terminal featuring Cleopatra, Power 4X, Caveman 8X, and Gold Mine with live 3D blower physics. | [Manual](games/keno/README.md) |
+| **Foxtail** | Puzzles & Logic | **850 KB** | Fluffy snow trench puzzle guiding a cute voxel fox to fill 30 handcrafted winding burrow levels. | [Manual](games/foxtail/README.md) |
 
 ---
 
