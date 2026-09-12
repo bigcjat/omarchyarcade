@@ -198,6 +198,7 @@ Every game includes full offline documentation, keyboard controls mappings, and 
 | **Pipe Punk** | Puzzles & Logic | **1.1 MB** | Victorian steampunk boiler pipe puzzle with real-time fluid dynamics, cast-iron obstacles & analog gauges. | [Manual](games/pipepunk/README.md) |
 | **Sky Ace** | Action Arcade | **40.6 MB** | 194X WW2 Pacific & Global aerial combat (*Python / PySide6 QPainter engine with 3D pre-baked warbirds, bank physics & carrier landings*). | [Manual](games/skyace/README.md) |
 | **DomainRush** | Action Arcade | **828 KB** | 5-player tactical territory battle with laser trails, multi-archetype bot AI, and first-to-50% dominance sprint. | [Manual](games/domainrush/README.md) |
+| **VLT Keno** | Cards & Casino | **580 KB** | Authentic 8-in-1 casino video lottery terminal featuring Cleopatra, Power 4X, Caveman 8X, and Gold Mine with live 3D blower physics. | [Manual](games/keno/README.md) |
 
 ---
 

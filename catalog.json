@@ -1609,6 +1609,56 @@
       "date_added": "2026-09-12",
       "staff_pick": true,
       "featured": true
+    },
+    {
+      "id": "keno",
+      "title": "VLT Keno",
+      "ref": "OA-041",
+      "category": "Cards & Casino",
+      "floppy_color": "#DC2626",
+      "grid_color": "#F59E0B",
+      "version": "1.0.0",
+      "status": "released",
+      "tagline": "8-in-1 Casino Terminal • Cleopatra, Power, Gold Mine",
+      "description": "Authentic physical casino video lottery terminal. Features 8 iconic game engines with dedicated visual themes: Classic Keno, Power Keno (4X), Super Keno (4X), Cleopatra (12 Free Games @ 2X), Caveman (Lava Eggs up to 8X), Extra Draw (+3 Emergency Balls), Gold Mine (Nugget Cash & Dynamite), and Triple Power (Dual 3X = 9X Mega Multiplier).",
+      "instructions": [
+        "Select 2 to 10 spots on the 80-number grid, swipe across numbers, or use Quick Pick (3, 5, 10, Hot).",
+        "Switch between 8 game engines and themes using [T] or the Game Menu [Esc].",
+        "Press Space or Play to initiate the 20-ball draw from the 3D pneumatic glass blower.",
+        "In Power Keno: 20th ball hitting your pick quadruples (4X) your round win.",
+        "In Super Keno: 1st ball hitting your pick quadruples (4X) your round win.",
+        "In Cleopatra Keno: 20th ball on a winning ticket awards 12 Free Games with 2X payouts.",
+        "In Caveman Keno: Hatch dinosaur eggs for 4X or 8X win multipliers.",
+        "In Extra Draw Keno: Near-miss rounds trigger 3 extra emergency balls.",
+        "In Gold Mine Keno: Unearth shiny gold nuggets and detonate dynamite cash prizes.",
+        "In Triple Power Keno: Hit the first and last balls for a massive 9X mega multiplier."
+      ],
+      "controls": {
+        "keyboard": "Space/Enter to Play, T/1-8 to Switch Variant, Q for Quick Pick, C to Clear, B/X for Bets",
+        "shortcuts": "S to toggle Speed, Shift+F for Full Playfield, M to Mute, ? for Help, Esc for Menu"
+      },
+      "folder": "games/keno",
+      "entrypoint": "games/keno/main.py",
+      "cover_image": "assets/covers/keno.png",
+      "size": "580 KB",
+      "size_bytes": 593920,
+      "download_size": "580 KB",
+      "keywords": [
+        "keno",
+        "vlt",
+        "casino",
+        "lottery",
+        "cleopatra",
+        "power keno",
+        "caveman",
+        "gold mine",
+        "triple power",
+        "gambling",
+        "vegas"
+      ],
+      "date_added": "2026-09-12",
+      "staff_pick": true,
+      "featured": true
     }
   ]
 }

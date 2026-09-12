@@ -212,3 +212,25 @@ When submitting a game for inclusion in the arcade suite:
 3. Test under both light mode (`--theme catppuccin-latte`) and dark mode (`--theme catppuccin`).
 4. Never invoke `root.width = ...` or `root.height = ...` programmatically after launch.
 5. Provide a helpful `README.md` and screenshot in your game's directory.
+
+---
+
+## 🚀 Game Packaging & Release Pipeline
+
+The lifecycle of every arcade game is strictly divided into two phases:
+
+1. **Phase 1: Pre-Approval (Build, Test, Iterate)**:
+   - Focus strictly on core mechanics, QML layout, theme tokens, and local playtesting.
+   - **DO NOT** perform packaging tasks, generate cover art, render disks, edit `catalog.json`, or push to GitHub prior to explicit user approval.
+
+2. **Phase 2: Post-Approval Release (Executed ONLY after explicit user approval)**:
+   - Follow the official 8-step release checklist documented in [`.agents/rules/game_development_workflow.md`](file:///Users/christhompson/arcade/.agents/rules/game_development_workflow.md):
+     1. **Clean up junk files:** Remove temporary scripts, test frame dumps, and debug artifacts.
+     2. **Create in-game screenshot:** Capture `games/<game_id>/screenshot.png` during active, interesting gameplay.
+     3. **Create animated WebP preview:** Generate `assets/previews/<game_id>.webp` (320×288, loop=0, 60ms).
+     4. **Create cover art:** Generate `assets/covers/<game_id>.png` (1200×896, 4:3 painted retro box art, strictly no text/logos) following [`assets/COVER_ART_GUIDE.md`](file:///Users/christhompson/arcade/assets/COVER_ART_GUIDE.md).
+     5. **Create the disk:** Run `.venv/bin/python tools/render_disk.py <game_id>` to generate `games/<game_id>/assets/disk_icon.png`.
+     6. **Update all READMEs:** Create `games/<game_id>/README.md` (using `template/README_TEMPLATE.md`) and add game to root `README.md` catalog table.
+     7. **Update launcher JSON:** Register the game with proper category and floppy color in `catalog.json`.
+     8. **Push to GitHub:** Stage files, commit, and run `git push`.
+
