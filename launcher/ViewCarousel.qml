@@ -4,6 +4,16 @@ import QtQuick.Layouts
 
 Item {
     id: carouselView
+    // Theme properties bound from main launcher or arcadeBackend
+    property bool isDarkMode: (typeof arcadeBackend !== "undefined" && arcadeBackend.isDarkMode !== undefined) ? arcadeBackend.isDarkMode : true
+    property color themeBackground: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeBackground) ? arcadeBackend.themeColors.themeBackground : (isDarkMode ? "#111116" : "#eff1f5")
+    property color themeSurface: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeSurface) ? arcadeBackend.themeColors.themeSurface : (isDarkMode ? "#181822" : "#ffffff")
+    property color themeSurfaceLight: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeSurfaceLight) ? arcadeBackend.themeColors.themeSurfaceLight : (isDarkMode ? "#222230" : "#f1f5f9")
+    property color themeBorder: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeBorder) ? arcadeBackend.themeColors.themeBorder : (isDarkMode ? "#2a2a38" : "#cbd5e1")
+    property color themeText: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeText) ? arcadeBackend.themeColors.themeText : (isDarkMode ? "#ffffff" : "#0f172a")
+    property color themeTextMuted: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeTextMuted) ? arcadeBackend.themeColors.themeTextMuted : (isDarkMode ? "#94a3b8" : "#64748b")
+    property color themeAccent: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeAccent) ? arcadeBackend.themeColors.themeAccent : (isDarkMode ? "#00f0ff" : "#1e66f5")
+    property color themeAccentAlt: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeAccentAlt) ? arcadeBackend.themeColors.themeAccentAlt : (isDarkMode ? "#e6458e" : "#d20f39")
     anchors.fill: parent
 
     property var games: []
@@ -30,7 +40,7 @@ Item {
     // --- Ambient Glow Background ---
     Rectangle {
         anchors.fill: parent
-        color: "#0c0c11"
+        color: !isDarkMode ? themeBackground : "#0c0c11"
 
         Rectangle {
             anchors.centerIn: parent
@@ -70,7 +80,7 @@ Item {
                     text: "No games to showcase in this category"
                     font.pixelSize: 16
                     font.bold: true
-                    color: "#94a3b8"
+                    color: !isDarkMode ? "#64748b" : "#94a3b8"
                     Layout.alignment: Qt.AlignHCenter
                 }
             }
@@ -86,8 +96,8 @@ Item {
                     Layout.preferredWidth: Math.min(parent.width * 0.44, 480)
                     Layout.fillHeight: true
                     radius: 12
-                    color: "#161622"
-                    border.color: (activeGame && activeGame.floppy_color) ? activeGame.floppy_color : themeAccent
+                    color: !isDarkMode ? "#ffffff" : "#161622"
+                    border.color: (activeGame && activeGame.floppy_color) ? activeGame.floppy_color : (!isDarkMode ? "#cbd5e1" : themeAccent)
                     border.width: 1.5
                     clip: true
 
@@ -137,7 +147,7 @@ Item {
                         gradient: Gradient {
                             orientation: Gradient.Vertical
                             GradientStop { position: 0.0; color: "transparent" }
-                            GradientStop { position: 1.0; color: "#0d0d16" }
+                            GradientStop { position: 1.0; color: !isDarkMode ? "#f2ffffff" : "#0d0d16" }
                         }
 
                         RowLayout {
@@ -199,7 +209,7 @@ Item {
                             text: activeGame ? activeGame.title : ""
                             font.pixelSize: 26
                             font.bold: true
-                            color: "#FFFFFF"
+                            color: !isDarkMode ? "#0f172a" : "#FFFFFF"
                             elide: Text.ElideRight
                             Layout.fillWidth: true
                         }
@@ -210,8 +220,8 @@ Item {
                             width: instLabel.implicitWidth + 14
                             height: 22
                             radius: 11
-                            color: installed ? "#103522" : "#2d2010"
-                            border.color: installed ? "#22c55e" : "#f59e0b"
+                            color: installed ? (!isDarkMode ? "#dcfce7" : "#103522") : (!isDarkMode ? "#fef3c7" : "#2d2010")
+                            border.color: installed ? (!isDarkMode ? "#86efac" : "#22c55e") : (!isDarkMode ? "#fcd34d" : "#f59e0b")
                             border.width: 1
 
                             RowLayout {
@@ -220,7 +230,7 @@ Item {
                                 Text {
                                     text: parent.parent.installed ? "●" : "○"
                                     font.pixelSize: 8
-                                    color: parent.parent.installed ? "#22c55e" : "#f59e0b"
+                                    color: parent.parent.installed ? (!isDarkMode ? "#16a34a" : "#22c55e") : (!isDarkMode ? "#d97706" : "#f59e0b")
                                 }
                                 Text {
                                     id: instLabel
@@ -228,7 +238,7 @@ Item {
                                     font.family: "monospace"
                                     font.pixelSize: 9
                                     font.bold: true
-                                    color: parent.parent.installed ? "#4ade80" : "#fbbf24"
+                                    color: parent.parent.installed ? (!isDarkMode ? "#15803d" : "#4ade80") : (!isDarkMode ? "#b45309" : "#fbbf24")
                                 }
                             }
                         }
@@ -239,7 +249,7 @@ Item {
                         text: activeGame ? activeGame.tagline : ""
                         font.pixelSize: 14
                         font.italic: true
-                        color: "#94a3b8"
+                        color: !isDarkMode ? "#475569" : "#94a3b8"
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
@@ -249,7 +259,7 @@ Item {
                         text: activeGame ? activeGame.description : ""
                         font.pixelSize: 13
                         lineHeight: 1.35
-                        color: "#cbd5e1"
+                        color: !isDarkMode ? "#334155" : "#cbd5e1"
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
                         Layout.maximumHeight: 90
@@ -261,8 +271,8 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 38
                         radius: 8
-                        color: "#161622"
-                        border.color: "#28283a"
+                        color: !isDarkMode ? "#ffffff" : "#161622"
+                        border.color: !isDarkMode ? "#cbd5e1" : "#28283a"
                         border.width: 1
 
                         RowLayout {
@@ -285,7 +295,7 @@ Item {
                                 text: "CONTROLS:"
                                 font.pixelSize: 11
                                 font.bold: true
-                                color: "#94a3b8"
+                                color: !isDarkMode ? "#64748b" : "#94a3b8"
                                 Layout.alignment: Qt.AlignVCenter
                             }
 
@@ -293,7 +303,7 @@ Item {
                                 text: activeGame && activeGame.controls ? (typeof activeGame.controls === "string" ? activeGame.controls : (activeGame.controls.keyboard || activeGame.controls.mouse || "Keyboard & Mouse")) : "Keyboard & Mouse"
                                 font.pixelSize: 11
                                 font.bold: true
-                                color: "#f1f5f9"
+                                color: !isDarkMode ? "#0f172a" : "#f1f5f9"
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
                             }
@@ -376,8 +386,8 @@ Item {
                             height: 44
                             Layout.preferredWidth: 150
                             radius: 8
-                            color: detailMouse.containsMouse ? "#262638" : "#1a1a24"
-                            border.color: detailMouse.containsMouse ? "#4b4b66" : "#303042"
+                            color: !isDarkMode ? (detailMouse.containsMouse ? "#e2e8f0" : "#ffffff") : (detailMouse.containsMouse ? "#262638" : "#1a1a24")
+                            border.color: !isDarkMode ? "#cbd5e1" : (detailMouse.containsMouse ? "#4b4b66" : "#303042")
                             border.width: 1
 
                             RowLayout {
@@ -391,14 +401,14 @@ Item {
                                         anchors.centerIn: parent
                                         text: "ℹ"
                                         font.pixelSize: 13
-                                        color: "#94a3b8"
+                                        color: !isDarkMode ? "#64748b" : "#94a3b8"
                                     }
                                 }
                                 Text {
                                     text: "Full Details"
                                     font.pixelSize: 12
                                     font.bold: true
-                                    color: detailMouse.containsMouse ? "#FFFFFF" : "#cbd5e1"
+                                    color: !isDarkMode ? "#0f172a" : (detailMouse.containsMouse ? "#FFFFFF" : "#cbd5e1")
                                     Layout.alignment: Qt.AlignVCenter
                                 }
                             }
@@ -426,8 +436,8 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 180
-            color: "#0e0e16"
-            border.color: "#1f1f2e"
+            color: !isDarkMode ? "#ffffff" : "#0e0e16"
+            border.color: !isDarkMode ? "#cbd5e1" : "#1f1f2e"
             border.width: 1
 
             // Shelf metallic rail header line
@@ -452,8 +462,8 @@ Item {
                 width: 32
                 height: 54
                 radius: 6
-                color: leftArrowMouse.containsMouse ? "#252538" : "#161622"
-                border.color: leftArrowMouse.containsMouse ? themeAccent : "#2d2d3e"
+                color: !isDarkMode ? (leftArrowMouse.containsMouse ? "#e2e8f0" : "#ffffff") : (leftArrowMouse.containsMouse ? "#252538" : "#161622")
+                border.color: !isDarkMode ? "#cbd5e1" : (leftArrowMouse.containsMouse ? themeAccent : "#2d2d3e")
                 border.width: 1
                 z: 20
 
@@ -461,7 +471,7 @@ Item {
                     anchors.centerIn: parent
                     text: "◀"
                     font.pixelSize: 14
-                    color: leftArrowMouse.containsMouse ? themeAccent : "#94a3b8"
+                    color: leftArrowMouse.containsMouse ? themeAccent : (!isDarkMode ? "#475569" : "#94a3b8")
                 }
 
                 MouseArea {
@@ -487,8 +497,8 @@ Item {
                 width: 32
                 height: 54
                 radius: 6
-                color: rightArrowMouse.containsMouse ? "#252538" : "#161622"
-                border.color: rightArrowMouse.containsMouse ? themeAccent : "#2d2d3e"
+                color: !isDarkMode ? (rightArrowMouse.containsMouse ? "#e2e8f0" : "#ffffff") : (rightArrowMouse.containsMouse ? "#252538" : "#161622")
+                border.color: !isDarkMode ? "#cbd5e1" : (rightArrowMouse.containsMouse ? themeAccent : "#2d2d3e")
                 border.width: 1
                 z: 20
 
@@ -496,7 +506,7 @@ Item {
                     anchors.centerIn: parent
                     text: "▶"
                     font.pixelSize: 14
-                    color: rightArrowMouse.containsMouse ? themeAccent : "#94a3b8"
+                    color: rightArrowMouse.containsMouse ? themeAccent : (!isDarkMode ? "#475569" : "#94a3b8")
                 }
 
                 MouseArea {

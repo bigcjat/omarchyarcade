@@ -18,7 +18,19 @@ Window {
     property color themeFg: "#cdd6f4"
     property color themeSubtext: "#a6adc8"
     property color themeAccent: "#89b4fa"
-    property color themeBtnFg: "#11111b"
+    property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
+
+    function colorLuminance(col) {
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
+        return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+    }
+
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
+    property color themeCardHover: isDarkMode ? "#313244" : "#f1f5f9"
 
     property string currentThemeName: "Catppuccin"
     property bool splashEnabled: true
@@ -38,25 +50,64 @@ Window {
 
     color: themeBg
 
-    Behavior on themeBg { ColorAnimation { duration: 250 } }
-    Behavior on themeBoardBg { ColorAnimation { duration: 250 } }
-    Behavior on themeCardBg { ColorAnimation { duration: 250 } }
-    Behavior on themeFg { ColorAnimation { duration: 250 } }
-    Behavior on themeSubtext { ColorAnimation { duration: 250 } }
-    Behavior on themeAccent { ColorAnimation { duration: 250 } }
-    Behavior on themeBorder { ColorAnimation { duration: 250 } }
-
     function applyTheme(data, name) {
         if (!data || typeof data !== "object") return;
-        if (data.bg) themeBg = data.bg;
-        if (data.fg) themeFg = data.fg;
+        var bg = data.background || data.bg || "#181825";
+        var fg = data.foreground || data.fg || "#cdd6f4";
+        var accent = data.accent || "#89b4fa";
+        var c0 = data.color0 || "#1e1e2e";
+        var c8 = data.color8 || data.color0 || "#313244";
+
+        themeBg = bg;
+        themeFg = fg;
+        themeAccent = accent;
+
+        var lum = colorLuminance(bg);
+        if (lum > 0.5) {
+            themeBoardBg = "#11111b";
+            themeCardBg = "#ffffff";
+            themeCardHover = "#f1f5f9";
+            themeSubtext = "#6c6f85";
+            themeBorder = Qt.rgba(0, 0, 0, 0.12);
+            themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+        } else {
+            themeBoardBg = Qt.darker(bg, 1.25);
+            themeCardBg = c0;
+            themeCardHover = "#313244";
+            themeSubtext = "#a6adc8";
+            themeBorder = c8;
+            themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+        }
+
         if (data.boardBg) themeBoardBg = data.boardBg;
         if (data.cardBg) themeCardBg = data.cardBg;
         if (data.border) themeBorder = data.border;
         if (data.subtext) themeSubtext = data.subtext;
-        if (data.accent) themeAccent = data.accent;
         if (name) currentThemeName = name;
-        gameCanvas.requestPaint();
+        if (typeof gameCanvas !== "undefined" && gameCanvas) gameCanvas.requestPaint();
+    }
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            accent: "#1e66f5",
+            cardBg: "#ffffff",
+            boardBg: "#11111b",
+            border: "#ccd0da",
+            subtext: "#6c6f85"
+        } : {
+            background: "#181825",
+            foreground: "#cdd6f4",
+            accent: "#89b4fa",
+            cardBg: "#1e1e2e",
+            boardBg: "#11111b",
+            border: "#313244",
+            subtext: "#a6adc8"
+        };
+        applyTheme(tData, nextIsLight ? "Omarchy Light" : "Omarchy Dark");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     function playSound(name) {
@@ -220,314 +271,341 @@ Window {
             }
         }
 
-        Column {
-            id: mainLayout
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : parent.top
-            anchors.topMargin: root.isTiledDesktopMode ? 8 : 14
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 14
+        // =====================================================================
+        // HEADER BAR BACKGROUND (Adapts to themeBg flush across top)
+        // =====================================================================
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 14
-            anchors.rightMargin: 14
-            spacing: 10
+            height: (headerItem.visible ? headerItem.y + headerItem.height + (subheaderItem.visible ? subheaderItem.height + 20 : 12) : 0)
+            color: root.themeBg
+            z: 10
+        }
 
-            // 1. HEADER (Title + Score Badges)
-            Item {
-                id: headerItem
-                visible: !root.isTiledDesktopMode
-                width: parent.width
-                height: root.isTiledDesktopMode ? 0 : 52
+        // =====================================================================
+        // 2048 DESIGN STANDARD: ROW 1 (Header Item)
+        // =====================================================================
+        Item {
+            id: headerItem
+            visible: !root.isTiledDesktopMode
+            anchors.top: parent.top
+            anchors.topMargin: visible ? 16 : 0
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: visible ? 52 : 0
+            z: 20
 
-                Text {
-                    id: gameTitle
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "OrbPop"
-                    font.family: root.monoFontFamily
-                    font.pixelSize: 32
-                    font.bold: true
-                    color: root.themeAccent
-                }
+            Text {
+                id: gameTitle
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                text: "OrbPop"
+                font.family: root.monoFontFamily
+                font.pixelSize: 32
+                font.bold: true
+                color: root.themeAccent
+            }
 
-                Row {
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 8
+            Row {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
 
-                    // SCORE BADGE
-                    Rectangle {
-                        width: 82
-                        height: 48
-                        radius: 8
-                        color: root.themeCardBg
-                        border.color: root.themeBorder
-                        border.width: 1
+                // SCORE BADGE
+                Rectangle {
+                    width: 82
+                    height: 48
+                    radius: 8
+                    color: root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
 
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 2
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "SCORE"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 10
-                                font.bold: true
-                                color: root.themeSubtext
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: root.score.toString()
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 15
-                                font.bold: true
-                                color: root.themeFg
-                            }
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "SCORE"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.score.toString()
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 15
+                            font.bold: true
+                            color: root.themeFg
                         }
                     }
+                }
 
-                    // BEST BADGE
-                    Rectangle {
-                        width: 82
-                        height: 48
-                        radius: 8
-                        color: root.themeCardBg
-                        border.color: root.themeBorder
-                        border.width: 1
+                // BEST BADGE
+                Rectangle {
+                    width: 82
+                    height: 48
+                    radius: 8
+                    color: root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
 
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 2
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "BEST"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 10
-                                font.bold: true
-                                color: root.themeSubtext
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "BEST"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.highScore.toString()
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 15
+                            font.bold: true
+                            color: root.themeFg
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // 2048 DESIGN STANDARD: ROW 2 (Subheader Action Bar)
+        // =====================================================================
+        Item {
+            id: subheaderItem
+            visible: !root.isTiledDesktopMode
+            anchors.top: headerItem.bottom
+            anchors.topMargin: visible ? 10 : 0
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: visible ? 34 : 0
+            z: 20
+
+            Row {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
+
+                // Next Orb Badge
+                Rectangle {
+                    width: 76
+                    height: 32
+                    radius: 8
+                    color: root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Text {
+                            text: "NEXT"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: root.themeSubtext
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Rectangle {
+                            width: 14
+                            height: 14
+                            radius: 7
+                            color: {
+                                var cols = ["#f38ba8", "#a6e3a1", "#89b4fa", "#f9e2af", "#cba6f7"];
+                                return cols[(root.nextColor - 1) % cols.length] || "#89b4fa";
                             }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: root.highScore.toString()
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 15
-                                font.bold: true
-                                color: root.themeFg
-                            }
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+                }
+
+                // Level Badge
+                Rectangle {
+                    width: 58
+                    height: 32
+                    radius: 8
+                    color: root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Text {
+                            text: "LVL"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: root.themeSubtext
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: root.level.toString()
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: root.themeAccent
+                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
                 }
             }
 
-            // 2. SUBHEADER (Next Orb Indicator & Actions)
-            Item {
-                id: subheaderItem
-                width: parent.width
-                height: 34
+            readonly property bool isCrowded: subheaderItem.width < 500
 
-                Row {
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 8
+            Row {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: subheaderItem.isCrowded ? 6 : 8
 
-                    // Next Orb Badge
-                    Rectangle {
-                        width: 76
-                        height: 32
-                        radius: 8
-                        color: root.themeCardBg
-                        border.color: root.themeBorder
-                        border.width: 1
+                // Help Button
+                Rectangle {
+                    id: helpBtn
+                    width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
+                    height: 32
+                    radius: 8
+                    color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
+                    border.width: 1
 
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 6
-                            Text {
-                                text: "NEXT"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 10
-                                font.bold: true
-                                color: root.themeSubtext
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                            Rectangle {
-                                width: 14
-                                height: 14
-                                radius: 7
-                                color: {
-                                    var cols = ["#f38ba8", "#a6e3a1", "#89b4fa", "#f9e2af", "#cba6f7"];
-                                    return cols[(root.nextColor - 1) % cols.length] || "#89b4fa";
-                                }
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
+                    Row {
+                        id: helpRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "?"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: root.themeAccent
+                        }
+                        Text {
+                            text: "How to Play"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 12
+                            color: root.themeFg
+                            visible: !subheaderItem.isCrowded
                         }
                     }
 
-                    // Level Badge
-                    Rectangle {
-                        width: 58
-                        height: 32
-                        radius: 8
-                        color: root.themeCardBg
-                        border.color: root.themeBorder
-                        border.width: 1
-
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 5
-                            Text {
-                                text: "LVL"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 10
-                                font.bold: true
-                                color: root.themeSubtext
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                            Text {
-                                text: root.level.toString()
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 13
-                                font.bold: true
-                                color: root.themeAccent
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
+                    MouseArea {
+                        id: helpMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.showHelp = !root.showHelp;
+                            root.playSound("click");
                         }
                     }
                 }
 
-                readonly property bool isCrowded: subheaderItem.width < 500
+                // Mute Button
+                Rectangle {
+                    id: muteBtn
+                    width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
+                    height: 32
+                    radius: 8
+                    color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: muteMouse.containsMouse ? root.themeAccent : root.themeBorder
+                    border.width: 1
 
-                Row {
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: subheaderItem.isCrowded ? 6 : 8
-
-                    // Help Button
-                    Rectangle {
-                        width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
-                        height: 32
-                        radius: 8
-                        color: helpMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.2) : root.themeCardBg
-                        border.color: root.themeBorder
-                        border.width: 1
-
-                        Row {
-                            id: helpRow
-                            anchors.centerIn: parent
-                            spacing: 4
-                            Text {
-                                text: "?"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 13
-                                font.bold: true
-                                color: root.themeFg
-                            }
-                            Text {
-                                text: "How to Play"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 12
-                                color: root.themeFg
-                                visible: !subheaderItem.isCrowded
-                            }
+                    Row {
+                        id: muteRow
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Text {
+                            text: root.isMuted ? "🔇" : "🔊"
+                            font.pixelSize: 13
                         }
-
-                        MouseArea {
-                            id: helpMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.showHelp = !root.showHelp;
-                                root.playSound("click");
-                            }
+                        Text {
+                            text: root.isMuted ? "Muted" : "Audio"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 12
+                            color: root.themeFg
+                            visible: !subheaderItem.isCrowded
                         }
                     }
 
-                    // Mute Button
-                    Rectangle {
-                        width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
-                        height: 32
-                        radius: 8
-                        color: muteMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.2) : root.themeCardBg
-                        border.color: root.themeBorder
-                        border.width: 1
+                    MouseArea {
+                        id: muteMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
+                }
 
-                        Row {
-                            id: muteRow
-                            anchors.centerIn: parent
-                            spacing: 5
-                            Text {
-                                text: root.isMuted ? "🔇" : "🔊"
-                                font.pixelSize: 13
-                            }
-                            Text {
-                                text: root.isMuted ? "Muted" : "Audio"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 12
-                                color: root.themeFg
-                                visible: !subheaderItem.isCrowded
-                            }
+                // Restart Button
+                Rectangle {
+                    id: restartBtn
+                    width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
+                    height: 32
+                    radius: 8
+                    color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+
+                    Row {
+                        id: restartRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "🔄"
+                            font.pixelSize: 13
+                            visible: subheaderItem.isCrowded
                         }
-
-                        MouseArea {
-                            id: muteMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.toggleMute()
+                        Text {
+                            text: "Restart (R)"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 12
+                            font.bold: true
+                            color: root.themeBtnFg
+                            visible: !subheaderItem.isCrowded
                         }
                     }
 
-                    // Restart Button
-                    Rectangle {
-                        width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
-                        height: 32
-                        radius: 8
-                        color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-
-                        Row {
-                            id: restartRow
-                            anchors.centerIn: parent
-                            spacing: 4
-                            Text {
-                                text: "🔄"
-                                font.pixelSize: 13
-                                visible: subheaderItem.isCrowded
-                            }
-                            Text {
-                                text: "Restart (R)"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: root.themeBtnFg
-                                visible: !subheaderItem.isCrowded
-                            }
-                        }
-
-                        MouseArea {
-                            id: restartMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.startNewGame();
-                                root.playSound("click");
-                            }
+                    MouseArea {
+                        id: restartMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.startNewGame();
+                            root.playSound("click");
                         }
                     }
                 }
             }
+        }
 
-            // 3. BOARD CONTAINER
-            Rectangle {
-                id: boardContainer
-                width: parent.width
-                height: parent.height - (root.isTiledDesktopMode ? 46 : (headerItem.height + subheaderItem.height + 20))
-                radius: 12
-                color: root.themeBoardBg
-                border.color: root.themeBorder
-                border.width: 1
-                clip: true
+        // =====================================================================
+        // 3. BOARD CONTAINER (Flush Edge-to-Edge)
+        // =====================================================================
+        Rectangle {
+            id: boardContainer
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 8 : 0
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 0
+            anchors.left: parent.left
+            anchors.right: parent.right
+            color: root.themeBoardBg
+            border.color: "transparent"
+            border.width: 0
+            radius: 0
+            clip: true
 
                 Canvas {
                     id: gameCanvas
@@ -570,7 +648,7 @@ Window {
                         if (Engine.gameState === "playing" && !Engine.projectile) {
                             var pts = Engine.getTrajectoryPoints();
                             if (pts.length > 1) {
-                                ctx.strokeStyle = Qt.rgba(root.themeFg.r, root.themeFg.g, root.themeFg.b, 0.25);
+                                ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
                                 ctx.lineWidth = 1.8;
                                 ctx.setLineDash([4, 6]);
                                 ctx.beginPath();
@@ -606,38 +684,8 @@ Window {
                             drawBubble(ctx, proj.x, proj.y, proj.radius * 0.94, proj.color);
                         }
 
-                        // 6. Draw Cannon Launcher
-                        ctx.save();
-                        ctx.translate(Engine.cannonX, Engine.cannonY);
-                        ctx.rotate(Engine.cannonAngle);
-
-                        // Launcher Barrel
-                        ctx.fillStyle = root.themeCardBg;
-                        ctx.strokeStyle = root.themeBorder;
-                        var bw = rad * 1.1;
-                        var bh = rad * 1.5;
-                        var bx = -rad * 0.55;
-                        var by = -rad * 1.8;
-                        ctx.beginPath();
-                        ctx.rect(bx, by, bw, bh);
-                        ctx.fill();
-                        ctx.stroke();
-
-                        ctx.restore();
-
-                        // Cannon Base
-                        ctx.fillStyle = root.themeCardBg;
-                        ctx.strokeStyle = root.themeBorder;
-                        ctx.lineWidth = 2;
-                        ctx.beginPath();
-                        ctx.arc(Engine.cannonX, Engine.cannonY, rad * 1.15, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.stroke();
-
-                        // Loaded Orb inside Cannon
-                        if (!Engine.projectile) {
-                            drawBubble(ctx, Engine.cannonX, Engine.cannonY, rad * 0.85, Engine.currentOrbColor);
-                        }
+                        // 6. Draw Cannon Launcher (High-end arcade mechanical turret)
+                        drawCannon(ctx, rad);
 
                         // 7. Draw Particles
                         for (var p = 0; p < Engine.particles.length; p++) {
@@ -649,6 +697,140 @@ Window {
                             ctx.fill();
                             ctx.globalAlpha = 1.0;
                         }
+                    }
+
+                    function drawCannon(ctx, rad) {
+                        var cx = Engine.cannonX;
+                        var cy = Engine.cannonY;
+                        var angle = Engine.cannonAngle;
+
+                        // 1. Cannon Turret Base (Fixed Mount & Rotary Ring)
+                        ctx.save();
+
+                        // Outer Swivel Gear / Base Plate
+                        var baseR = rad * 1.25;
+                        var baseGrad = ctx.createRadialGradient(cx - baseR * 0.25, cy - baseR * 0.25, baseR * 0.1, cx, cy, baseR);
+                        baseGrad.addColorStop(0, "#363b48");
+                        baseGrad.addColorStop(0.7, "#242831");
+                        baseGrad.addColorStop(1, "#181a20");
+                        ctx.fillStyle = baseGrad;
+                        ctx.strokeStyle = "#4a5264";
+                        ctx.lineWidth = 2.0;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, baseR, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        // Mechanical Rivets on Base Ring
+                        ctx.fillStyle = "#5c657a";
+                        for (var i = 0; i < 8; i++) {
+                            var rAngle = i * (Math.PI / 4.0);
+                            var rx = cx + Math.cos(rAngle) * (baseR * 0.84);
+                            var ry = cy + Math.sin(rAngle) * (baseR * 0.84);
+                            ctx.beginPath();
+                            ctx.arc(rx, ry, Math.max(1.5, rad * 0.08), 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+
+                        // Inner Recessed Orb Cradle (Dark well)
+                        var cradleR = rad * 0.96;
+                        ctx.fillStyle = "#111317";
+                        ctx.strokeStyle = "#2e333e";
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cradleR, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        ctx.restore();
+
+                        // 2. Rotating Launcher Barrel
+                        ctx.save();
+                        ctx.translate(cx, cy);
+                        ctx.rotate(angle);
+
+                        var bw = rad * 1.1;
+                        var bh = rad * 1.55;
+                        var bx = -bw * 0.5;
+                        var by = -rad * 1.85;
+
+                        // Barrel Main Body with Linear Metallic Shading
+                        var barrelGrad = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+                        barrelGrad.addColorStop(0, "#252932");
+                        barrelGrad.addColorStop(0.25, "#434a58");
+                        barrelGrad.addColorStop(0.65, "#2f3440");
+                        barrelGrad.addColorStop(1, "#1b1d24");
+                        ctx.fillStyle = barrelGrad;
+                        ctx.strokeStyle = "#505869";
+                        ctx.lineWidth = 1.5;
+
+                        ctx.beginPath();
+                        var lipR = Math.max(2, rad * 0.12);
+                        // Beveled / Rounded Barrel Tube
+                        ctx.moveTo(bx + lipR, by);
+                        ctx.lineTo(bx + bw - lipR, by);
+                        ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + lipR);
+                        ctx.lineTo(bx + bw, by + bh);
+                        ctx.lineTo(bx, by + bh);
+                        ctx.lineTo(bx, by + lipR);
+                        ctx.quadraticCurveTo(bx, by, bx + lipR, by);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.stroke();
+
+                        // Reinforced Muzzle Collar at tip
+                        var collarH = rad * 0.32;
+                        var collarW = bw * 1.08;
+                        var collarX = -collarW * 0.5;
+                        var collarY = by;
+                        var collarGrad = ctx.createLinearGradient(collarX, 0, collarX + collarW, 0);
+                        collarGrad.addColorStop(0, "#333845");
+                        collarGrad.addColorStop(0.3, "#5a6375");
+                        collarGrad.addColorStop(0.7, "#3d4352");
+                        collarGrad.addColorStop(1, "#22252e");
+                        ctx.fillStyle = collarGrad;
+                        ctx.strokeStyle = "#636d82";
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.rect(collarX, collarY, collarW, collarH);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        // Muzzle Aperture (Recessed dark opening where bubble fires from)
+                        ctx.fillStyle = "#0c0d11";
+                        ctx.beginPath();
+                        ctx.ellipse(0, collarY + 1.5, bw * 0.38, collarH * 0.3, 0, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Glowing Aim Sight / Centerline Indicator
+                        ctx.strokeStyle = Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.85);
+                        ctx.lineWidth = 2.0;
+                        ctx.beginPath();
+                        ctx.moveTo(0, by + collarH + 3);
+                        ctx.lineTo(0, by + bh - 4);
+                        ctx.stroke();
+
+                        // Aim Notch at muzzle
+                        ctx.fillStyle = root.themeAccent;
+                        ctx.beginPath();
+                        ctx.arc(0, collarY + collarH * 0.5, Math.max(1.8, rad * 0.09), 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.restore();
+
+                        // 3. Loaded Orb inside Cradle
+                        if (!Engine.projectile) {
+                            drawBubble(ctx, cx, cy, rad * 0.85, Engine.currentOrbColor);
+                        }
+
+                        // Retaining Rim Arc in front of the orb for 3D depth
+                        ctx.save();
+                        ctx.strokeStyle = "rgba(74, 82, 100, 0.65)";
+                        ctx.lineWidth = 2.0;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, rad * 0.94, Math.PI * 0.2, Math.PI * 0.8);
+                        ctx.stroke();
+                        ctx.restore();
                     }
 
                     function drawBubble(ctx, cx, cy, radius, colorIdx) {
@@ -750,7 +932,6 @@ Window {
 
             }
         }
-    }
 
     function shoot() {
         Engine.fireProjectile({
@@ -824,6 +1005,11 @@ Window {
             }
             if (event.key === Qt.Key_M) {
                 root.toggleMute();
+                event.accepted = true;
+                return;
+            }
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
                 event.accepted = true;
                 return;
             }

@@ -234,7 +234,6 @@ games/<game_name>/
 ├── main.qml                # QtQuick root, 2048 layout, HUD, canvas, overlays
 ├── SplashScreen.qml        # Canonical arcade startup sequence (identical copy)
 ├── GameEngine.js           # Core physics, math, and game loop logic
-├── Themes.js               # All 22 official Omarchy desktop themes
 ├── omarchy_arcade.svg      # Canonical vector emblem
 ├── omarchy_arcade_text.svg # Canonical retro text logo
 ├── sounds/                 # Synthesized WAV sound effects

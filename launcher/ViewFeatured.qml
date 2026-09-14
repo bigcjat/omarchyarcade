@@ -4,14 +4,27 @@ import QtQuick.Layouts
 
 Item {
     id: featuredView
+    // Theme properties bound from main launcher or arcadeBackend
+    property bool isDarkMode: (typeof arcadeBackend !== "undefined" && arcadeBackend.isDarkMode !== undefined) ? arcadeBackend.isDarkMode : true
+    property color themeBackground: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeBackground) ? arcadeBackend.themeColors.themeBackground : (isDarkMode ? "#111116" : "#eff1f5")
+    property color themeSurface: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeSurface) ? arcadeBackend.themeColors.themeSurface : (isDarkMode ? "#181822" : "#ffffff")
+    property color themeSurfaceLight: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeSurfaceLight) ? arcadeBackend.themeColors.themeSurfaceLight : (isDarkMode ? "#222230" : "#f1f5f9")
+    property color themeBorder: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeBorder) ? arcadeBackend.themeColors.themeBorder : (isDarkMode ? "#2a2a38" : "#cbd5e1")
+    property color themeText: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeText) ? arcadeBackend.themeColors.themeText : (isDarkMode ? "#ffffff" : "#0f172a")
+    property color themeTextMuted: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeTextMuted) ? arcadeBackend.themeColors.themeTextMuted : (isDarkMode ? "#94a3b8" : "#64748b")
+    property color themeAccent: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeAccent) ? arcadeBackend.themeColors.themeAccent : (isDarkMode ? "#00f0ff" : "#1e66f5")
+    property color themeAccentAlt: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeAccentAlt) ? arcadeBackend.themeColors.themeAccentAlt : (isDarkMode ? "#e6458e" : "#d20f39")
     objectName: "featuredView"
     anchors.fill: parent
 
+    property alias scrollY: featuredScroll.contentY
     property var catalog: []
     signal gameLaunched(string gameId)
     signal detailRequested(var gameData)
 
-    // Helper functions to resolve game data
+    Component.onCompleted: {
+        console.log("[Arcade] ViewFeatured isDarkMode is: " + isDarkMode);
+    }
     function getGameById(id) {
         if (!catalog) return null;
         for (var i = 0; i < catalog.length; i++) {
@@ -46,7 +59,7 @@ Item {
     // --- Ambient Background ---
     Rectangle {
         anchors.fill: parent
-        color: typeof root !== "undefined" ? root.themeBackground : "#111116"
+        color: typeof root !== "undefined" ? themeBackground : "#111116"
 
         // Subtle ambient glow from top
         Rectangle {
@@ -97,8 +110,8 @@ Item {
                 width: parent.width
                 height: isCompact ? 270 : 310
                 radius: 14
-                color: "#161622"
-                border.color: "#0284C7"
+                color: !isDarkMode ? "#ffffff" : "#161622"
+                border.color: !isDarkMode ? "#cbd5e1" : "#0284C7"
                 border.width: 1.5
                 clip: true
 
@@ -125,10 +138,10 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: "#400a0e17" }
-                            GradientStop { position: 0.45; color: "#800a0e17" }
-                            GradientStop { position: 0.85; color: "#ea0c121e" }
-                            GradientStop { position: 1.0; color: "#fc090d18" }
+                            GradientStop { position: 0.0; color: !isDarkMode ? "#15000000" : "#400a0e17" }
+                            GradientStop { position: 0.45; color: !isDarkMode ? "#25000000" : "#800a0e17" }
+                            GradientStop { position: 0.85; color: !isDarkMode ? "#40000000" : "#ea0c121e" }
+                            GradientStop { position: 1.0; color: !isDarkMode ? "#55000000" : "#fc090d18" }
                         }
                     }
 
@@ -136,7 +149,7 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         color: "transparent"
-                        border.color: "#300284c7"
+                        border.color: !isDarkMode ? "#200284c7" : "#300284c7"
                         border.width: 1
                         radius: 14
                     }
@@ -147,25 +160,28 @@ Item {
                 Row {
                     anchors.left: parent.left
                     anchors.top: parent.top
-                    anchors.margins: 20
+                    anchors.margins: 18
                     spacing: 8
+                    z: 5
 
                     Rectangle {
                         height: 26
-                        width: premiereText.implicitWidth + 20
-                        radius: 13
-                        color: "#0284C7"
+                        width: premiereRow.implicitWidth + 16
+                        radius: 6
+                        color: !isDarkMode ? "#0284c7" : "#0284c7"
 
                         Row {
+                            id: premiereRow
                             anchors.centerIn: parent
                             spacing: 6
                             Text {
+                                anchors.verticalCenter: parent.verticalCenter
                                 text: "★"
                                 font.pixelSize: 11
                                 color: "#FFFFFF"
                             }
                             Text {
-                                id: premiereText
+                                anchors.verticalCenter: parent.verticalCenter
                                 text: "FEATURED PREMIERE"
                                 font.pixelSize: 10
                                 font.bold: true
@@ -178,8 +194,8 @@ Item {
                         height: 26
                         width: refBadgeText.implicitWidth + 16
                         radius: 6
-                        color: "#20000000"
-                        border.color: "#800284c7"
+                        color: !isDarkMode ? "#e0f2fe" : "#20000000"
+                        border.color: !isDarkMode ? "#7dd3fc" : "#800284c7"
                         border.width: 1
 
                         Text {
@@ -189,7 +205,7 @@ Item {
                             font.family: "Menlo, Consolas, monospace"
                             font.pixelSize: 11
                             font.bold: true
-                            color: "#38bdf8"
+                            color: !isDarkMode ? "#0369a1" : "#38bdf8"
                         }
                     }
                 }
@@ -200,8 +216,8 @@ Item {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     height: heroBox.isCompact ? 120 : 100
-                    color: "#f0080b12"
-                    border.color: "#1e293b"
+                    color: !isDarkMode ? "#ffffff" : "#f0080b12"
+                    border.color: !isDarkMode ? "#cbd5e1" : "#1e293b"
                     border.width: 1
 
                     // Top accent border line
@@ -232,15 +248,15 @@ Item {
                                     text: "SKY ACE"
                                     font.pixelSize: heroBox.isCompact ? 20 : 24
                                     font.bold: true
-                                    color: "#FFFFFF"
+                                    color: !isDarkMode ? "#0f172a" : "#FFFFFF"
                                 }
 
                                 Rectangle {
                                     height: 18
                                     width: actionTag.implicitWidth + 12
                                     radius: 4
-                                    color: "#1e3a8a"
-                                    border.color: "#38bdf8"
+                                    color: !isDarkMode ? "#dbeafe" : "#1e3a8a"
+                                    border.color: !isDarkMode ? "#93c5fd" : "#38bdf8"
                                     border.width: 1
 
                                     Text {
@@ -249,7 +265,7 @@ Item {
                                         text: "Action Arcade"
                                         font.pixelSize: 9
                                         font.bold: true
-                                        color: "#93c5fd"
+                                        color: !isDarkMode ? "#1e40af" : "#93c5fd"
                                     }
                                 }
 
@@ -257,8 +273,8 @@ Item {
                                     height: 18
                                     width: sizeTag.implicitWidth + 12
                                     radius: 4
-                                    color: "#14532d"
-                                    border.color: "#4ade80"
+                                    color: !isDarkMode ? "#dcfce7" : "#14532d"
+                                    border.color: !isDarkMode ? "#86efac" : "#4ade80"
                                     border.width: 1
 
                                     Text {
@@ -267,7 +283,7 @@ Item {
                                         text: "40.6 MB"
                                         font.pixelSize: 9
                                         font.bold: true
-                                        color: "#86efac"
+                                        color: !isDarkMode ? "#166534" : "#86efac"
                                     }
                                 }
                             }
@@ -275,7 +291,7 @@ Item {
                             Text {
                                 text: "194X Global Air War • 10 Theaters & Pre-Baked 3D Warbirds • Multi-Phase Fortress Bosses"
                                 font.pixelSize: heroBox.isCompact ? 11 : 12
-                                color: "#94a3b8"
+                                color: !isDarkMode ? "#475569" : "#94a3b8"
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
                             }
@@ -347,8 +363,8 @@ Item {
                                 width: detailBtnText.implicitWidth + 24
                                 height: 40
                                 radius: 8
-                                color: detailBtnMouse.containsMouse ? "#2a2d3d" : "#1a1d2d"
-                                border.color: "#3b4261"
+                                color: !isDarkMode ? (detailBtnMouse.containsMouse ? "#e2e8f0" : "#ffffff") : (detailBtnMouse.containsMouse ? "#2a2d3d" : "#1a1d2d")
+                                border.color: !isDarkMode ? "#cbd5e1" : "#3b4261"
                                 border.width: 1
                                 scale: detailBtnMouse.pressed ? 0.96 : 1.0
                                 Behavior on scale { NumberAnimation { duration: 80 } }
@@ -359,7 +375,7 @@ Item {
                                     text: "ⓘ DETAILS"
                                     font.pixelSize: 11
                                     font.bold: true
-                                    color: "#cbd5e1"
+                                    color: !isDarkMode ? "#0f172a" : "#cbd5e1"
                                 }
 
                                 MouseArea {
@@ -386,8 +402,8 @@ Item {
                 id: manifestoCard
                 width: parent.width
                 radius: 12
-                color: "#13131d"
-                border.color: "#2a2a3e"
+                color: !isDarkMode ? "#ffffff" : "#13131d"
+                border.color: !isDarkMode ? "#cbd5e1" : "#2a2a3e"
                 border.width: 1
                 implicitHeight: manifestoCol.implicitHeight + 32
 
@@ -421,48 +437,44 @@ Item {
                             text: "Remember when operating systems came with games?"
                             font.pixelSize: 14
                             font.bold: true
-                            color: "#f8fafc"
+                            color: !isDarkMode ? "#0f172a" : "#f8fafc"
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }
 
                         // GitHub Auditable Link Pill
                         Rectangle {
-                            height: 24
-                            radius: 6
-                            Layout.preferredWidth: gitPillRow.implicitWidth + 16
-                            color: gitMouse.containsMouse ? "#242436" : "#1a1a26"
-                            border.color: gitMouse.containsMouse ? "#4b5563" : "#383850"
+                            height: 26
+                            radius: 13
+                            color: ghMouse.containsMouse ? (!isDarkMode ? "#e2e8f0" : "#222538") : (!isDarkMode ? "#f1f5f9" : "#181a28")
+                            border.color: ghMouse.containsMouse ? "#38bdf8" : (!isDarkMode ? "#cbd5e1" : "#2c3148")
                             border.width: 1
+                            Layout.preferredWidth: ghRow.implicitWidth + 20
 
-                            Row {
-                                id: gitPillRow
+                            RowLayout {
+                                id: ghRow
                                 anchors.centerIn: parent
                                 spacing: 6
-                                Item {
-                                    width: 14
-                                    height: 14
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "🐙"
-                                        font.pixelSize: 11
-                                    }
-                                }
+
                                 Text {
-                                    text: "100% Open Source & Auditable"
+                                    text: "Auditable on GitHub"
                                     font.pixelSize: 10
                                     font.bold: true
-                                    color: gitMouse.containsMouse ? "#f1f5f9" : "#94a3b8"
-                                    anchors.verticalCenter: parent.verticalCenter
+                                    color: !isDarkMode ? "#1e293b" : "#e2e8f0"
+                                }
+
+                                Text {
+                                    text: "↗"
+                                    font.pixelSize: 11
+                                    color: "#38bdf8"
                                 }
                             }
 
                             MouseArea {
-                                id: gitMouse
+                                id: ghMouse
                                 anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
                                 hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
                                 onClicked: Qt.openUrlExternally("https://github.com/bigcjat/omarchyarcade")
                             }
                         }
@@ -472,7 +484,7 @@ Item {
                     Text {
                         text: "Solitaire, Minesweeper, Pinball — operating systems used to ship with a suite of lightweight, instant, offline games right out of the box. Modern OSs replaced them with ads and app stores. Omarchy Arcade brings back the default games suite: free, zero bloat, completely offline, and 100% open source."
                         font.pixelSize: 12
-                        color: "#cbd5e1"
+                        color: !isDarkMode ? "#475569" : "#cbd5e1"
                         Layout.fillWidth: true
                         lineHeight: 1.25
                         wrapMode: Text.WordWrap
@@ -499,8 +511,8 @@ Item {
                                 height: 28
                                 width: badgeRow.implicitWidth + 16
                                 radius: 6
-                                color: "#181826"
-                                border.color: "#28283c"
+                                color: !isDarkMode ? "#f8fafc" : "#181826"
+                                border.color: !isDarkMode ? "#e2e8f0" : "#28283c"
                                 border.width: 1
 
                                 Row {
@@ -523,15 +535,16 @@ Item {
                                         text: modelData.title
                                         font.pixelSize: 11
                                         font.bold: true
-                                        color: "#e2e8f0"
+                                        color: !isDarkMode ? "#0f172a" : "#f1f5f9"
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
 
                                     Text {
                                         text: "• " + modelData.desc
                                         font.pixelSize: 10
-                                        color: "#64748b"
+                                        color: !isDarkMode ? "#64748b" : "#94a3b8"
                                         anchors.verticalCenter: parent.verticalCenter
+                                        visible: featuredView.width > 680
                                     }
                                 }
                             }
@@ -569,14 +582,14 @@ Item {
                                 text: "STAFF PICKS"
                                 font.pixelSize: 18
                                 font.bold: true
-                                color: "#FFFFFF"
+                                color: !isDarkMode ? "#0f172a" : "#FFFFFF"
                                 Layout.alignment: Qt.AlignVCenter
                             }
                         }
                         Text {
                             text: "Handcrafted retro arcade favorites curated by the team"
                             font.pixelSize: 12
-                            color: "#94a3b8"
+                            color: !isDarkMode ? "#64748b" : "#94a3b8"
                         }
                     }
 
@@ -589,15 +602,15 @@ Item {
                             width: 32
                             height: 32
                             radius: 6
-                            color: leftArrMouse.containsMouse ? "#2a2d3d" : "#1a1d2d"
-                            border.color: "#334155"
+                            color: !isDarkMode ? (leftArrMouse.containsMouse ? "#e2e8f0" : "#ffffff") : (leftArrMouse.containsMouse ? "#2a2d3d" : "#1a1d2d")
+                            border.color: !isDarkMode ? "#cbd5e1" : "#334155"
                             border.width: 1
 
                             Text {
                                 anchors.centerIn: parent
                                 text: "◀"
                                 font.pixelSize: 11
-                                color: leftArrMouse.containsMouse ? "#00f0ff" : "#94a3b8"
+                                color: !isDarkMode ? (leftArrMouse.containsMouse ? themeAccent : "#475569") : (leftArrMouse.containsMouse ? "#00f0ff" : "#94a3b8")
                             }
                             MouseArea {
                                 id: leftArrMouse
@@ -611,15 +624,15 @@ Item {
                             width: 32
                             height: 32
                             radius: 6
-                            color: rightArrMouse.containsMouse ? "#2a2d3d" : "#1a1d2d"
-                            border.color: "#334155"
+                            color: !isDarkMode ? (rightArrMouse.containsMouse ? "#e2e8f0" : "#ffffff") : (rightArrMouse.containsMouse ? "#2a2d3d" : "#1a1d2d")
+                            border.color: !isDarkMode ? "#cbd5e1" : "#334155"
                             border.width: 1
 
                             Text {
                                 anchors.centerIn: parent
                                 text: "▶"
                                 font.pixelSize: 11
-                                color: rightArrMouse.containsMouse ? "#00f0ff" : "#94a3b8"
+                                color: !isDarkMode ? (rightArrMouse.containsMouse ? themeAccent : "#475569") : (rightArrMouse.containsMouse ? "#00f0ff" : "#94a3b8")
                             }
                             MouseArea {
                                 id: rightArrMouse
@@ -691,14 +704,14 @@ Item {
                                 text: "NEW RELEASES"
                                 font.pixelSize: 18
                                 font.bold: true
-                                color: "#FFFFFF"
+                                color: !isDarkMode ? "#0f172a" : "#FFFFFF"
                                 Layout.alignment: Qt.AlignVCenter
                             }
                         }
                         Text {
                             text: "The latest creations fresh out of the Omarchy Arcade lab"
                             font.pixelSize: 12
-                            color: "#94a3b8"
+                            color: !isDarkMode ? "#64748b" : "#94a3b8"
                         }
                     }
                 }
@@ -716,8 +729,8 @@ Item {
                             width: featuredView.width > 900 ? ((parent.width - 36) / 3) : (featuredView.width > 600 ? ((parent.width - 18) / 2) : parent.width)
                             height: 190
                             radius: 12
-                            color: cardMouse.containsMouse ? "#1e2233" : "#161824"
-                            border.color: cardMouse.containsMouse ? (modelData.grid_color || "#00f0ff") : "#282c3f"
+                            color: !isDarkMode ? (cardMouse.containsMouse ? "#ffffff" : "#f8fafc") : (cardMouse.containsMouse ? "#1e2233" : "#161824")
+                            border.color: cardMouse.containsMouse ? (modelData.grid_color || themeAccent) : (!isDarkMode ? "#cbd5e1" : "#282c3f")
                             border.width: cardMouse.containsMouse ? 1.5 : 1
                             scale: cardMouse.pressed ? 0.98 : 1.0
                             Behavior on scale { NumberAnimation { duration: 80 } }
@@ -775,8 +788,8 @@ Item {
                                         height: 20
                                         width: refTagText.implicitWidth + 10
                                         radius: 4
-                                        color: "#181e2b"
-                                        border.color: "#334155"
+                                        color: !isDarkMode ? "#f1f5f9" : "#181e2b"
+                                        border.color: !isDarkMode ? "#cbd5e1" : "#334155"
                                         border.width: 1
 
                                         Text {
@@ -786,7 +799,7 @@ Item {
                                             font.family: "Menlo, monospace"
                                             font.pixelSize: 10
                                             font.bold: true
-                                            color: "#94a3b8"
+                                            color: !isDarkMode ? "#64748b" : "#94a3b8"
                                         }
                                     }
 
@@ -808,7 +821,7 @@ Item {
                                         text: modelData.title || ""
                                         font.pixelSize: 16
                                         font.bold: true
-                                        color: "#FFFFFF"
+                                        color: !isDarkMode ? "#0f172a" : "#FFFFFF"
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
                                     }
@@ -816,7 +829,7 @@ Item {
                                     Text {
                                         text: modelData.tagline || modelData.description || ""
                                         font.pixelSize: 11
-                                        color: "#94a3b8"
+                                        color: !isDarkMode ? "#475569" : "#94a3b8"
                                         elide: Text.ElideRight
                                         maximumLineCount: 2
                                         wrapMode: Text.WordWrap
@@ -847,8 +860,14 @@ Item {
                                         width: Math.max(76, shelfBtnRow.implicitWidth + 20)
                                         height: 28
                                         radius: 6
-                                        color: shelfPlayBtn.itemHasUpdate ? (playSmallMouse.containsMouse ? "#0284c7" : "#0369a1") : (shelfPlayBtn.itemInstalled ? (playSmallMouse.containsMouse ? "#00f0ff" : "#182834") : (playSmallMouse.containsMouse ? "#059669" : "#064e3b"))
-                                        border.color: shelfPlayBtn.itemHasUpdate ? "#38bdf8" : (shelfPlayBtn.itemInstalled ? "#00f0ff" : "#34d399")
+                                        color: shelfPlayBtn.itemHasUpdate ? (playSmallMouse.containsMouse ? "#0284c7" : "#0369a1") :
+                                               (shelfPlayBtn.itemInstalled ?
+                                                   (!isDarkMode ? (playSmallMouse.containsMouse ? "#2563eb" : "#dbeafe") : (playSmallMouse.containsMouse ? "#00f0ff" : "#182834")) :
+                                                   (!isDarkMode ? (playSmallMouse.containsMouse ? "#059669" : "#dcfce7") : (playSmallMouse.containsMouse ? "#059669" : "#064e3b")))
+                                        border.color: shelfPlayBtn.itemHasUpdate ? "#38bdf8" :
+                                                      (shelfPlayBtn.itemInstalled ?
+                                                          (!isDarkMode ? "#3b82f6" : "#00f0ff") :
+                                                          (!isDarkMode ? "#10b981" : "#34d399"))
                                         border.width: 1
 
                                         Row {
@@ -863,14 +882,20 @@ Item {
                                                     anchors.centerIn: parent
                                                     text: shelfPlayBtn.itemHasUpdate ? "🔄" : (shelfPlayBtn.itemInstalled ? "▶" : "⬇")
                                                     font.pixelSize: 10
-                                                    color: shelfPlayBtn.itemHasUpdate ? "#ffffff" : (shelfPlayBtn.itemInstalled ? (playSmallMouse.containsMouse ? "#09090e" : "#00f0ff") : "#ecfdf5")
+                                                    color: shelfPlayBtn.itemHasUpdate ? "#ffffff" :
+                                                           (shelfPlayBtn.itemInstalled ?
+                                                               (!isDarkMode ? (playSmallMouse.containsMouse ? "#ffffff" : "#1d4ed8") : (playSmallMouse.containsMouse ? "#09090e" : "#00f0ff")) :
+                                                               (!isDarkMode ? (playSmallMouse.containsMouse ? "#ffffff" : "#15803d") : "#ecfdf5"))
                                                 }
                                             }
                                             Text {
                                                 text: shelfPlayBtn.itemHasUpdate ? "UPDATE" : (shelfPlayBtn.itemInstalled ? "PLAY" : "GET")
                                                 font.pixelSize: 10
                                                 font.bold: true
-                                                color: shelfPlayBtn.itemHasUpdate ? "#ffffff" : (shelfPlayBtn.itemInstalled ? (playSmallMouse.containsMouse ? "#09090e" : "#00f0ff") : "#ecfdf5")
+                                                color: shelfPlayBtn.itemHasUpdate ? "#ffffff" :
+                                                       (shelfPlayBtn.itemInstalled ?
+                                                           (!isDarkMode ? (playSmallMouse.containsMouse ? "#ffffff" : "#1d4ed8") : (playSmallMouse.containsMouse ? "#09090e" : "#00f0ff")) :
+                                                           (!isDarkMode ? (playSmallMouse.containsMouse ? "#ffffff" : "#15803d") : "#ecfdf5"))
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
                                         }

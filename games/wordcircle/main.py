@@ -174,24 +174,32 @@ class SoundManager(QObject):
 # =============================================================================
 # THEME UTILITIES
 # =============================================================================
-def load_all_omarchy_themes():
-    """Parses Themes.js for all predefined Omarchy color schemes."""
-    themes_js = Path(__file__).resolve().parent / "Themes.js"
-    if not themes_js.is_file():
-        return {}
-    with open(themes_js, "r", encoding="utf-8") as f:
-        content = f.read()
-    themes = {}
-    blocks = re.findall(r"\{([^{}]+)\}", content)
-    for b in blocks:
-        t = {}
-        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", b):
-            t[k] = v
-        if "id" in t and "name" in t:
-            themes[t["id"]] = t
-    return themes
-
-ALL_THEMES = load_all_omarchy_themes()
+DEFAULT_PRESETS = {
+    "dark": {
+        "name": "Catppuccin Mocha",
+        "background": "#181825",
+        "foreground": "#cdd6f4",
+        "accent": "#38bdf8",
+        "color0": "#1e1e2e",
+        "color8": "#313244",
+        "cardBg": "#1e1e2e",
+        "boardBg": "#11111b",
+        "border": "#313244",
+        "subtext": "#a6adc8",
+    },
+    "light": {
+        "name": "Light Mode",
+        "background": "#eff1f5",
+        "foreground": "#0f172a",
+        "accent": "#0284c7",
+        "color0": "#ffffff",
+        "color8": "#cbd5e1",
+        "cardBg": "#ffffff",
+        "boardBg": "#e2e8f0",
+        "border": "#cbd5e1",
+        "subtext": "#64748b",
+    }
+}
 
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
@@ -276,11 +284,10 @@ def main():
 
     # 1. Explicit Theme CLI Override
     if theme_arg:
-        clean_arg = theme_arg.lower().replace("_", "-")
-        if clean_arg in ALL_THEMES:
-            t = ALL_THEMES[clean_arg]
-            root_obj.applyTheme(t, t["name"])
-            print(f"Applied theme: {t['name']}")
+        t = get_preset_theme(theme_arg)
+        if t:
+            root_obj.applyTheme(t, t.get("name", theme_arg.capitalize()))
+            print(f"Applied theme: {t.get('name', theme_arg)}")
         else:
             custom_path = Path(theme_arg).expanduser().resolve()
             if custom_path.is_file():
@@ -323,10 +330,10 @@ def main():
             def apply_system_scheme():
                 scheme = app.styleHints().colorScheme()
                 if scheme == Qt.ColorScheme.Light:
-                    target_theme = ALL_THEMES.get("catppuccin-latte") or ALL_THEMES.get("github-light")
+                    target_theme = get_preset_theme("light")
                     name = "System Light"
                 else:
-                    target_theme = ALL_THEMES.get("catppuccin") or ALL_THEMES.get("tokyonight")
+                    target_theme = get_preset_theme("dark")
                     name = "System Dark"
 
                 if target_theme:
@@ -343,12 +350,19 @@ def main():
     # Screenshot / automation helpers
     if "--screenshot" in sys.argv:
         root_obj.setProperty("splashEnabled", False)
+        root_obj.setProperty("showLevelSelect", False)
+        out_idx = sys.argv.index("--screenshot") + 1
+        out_file = sys.argv[out_idx] if out_idx < len(sys.argv) and not sys.argv[out_idx].startswith("--") else "screenshot.png"
+        out_path = Path(out_file).resolve()
+        
+        try:
+            root_obj.screenshotSaved.connect(lambda p: app.quit())
+        except Exception:
+            pass
+
         def capture():
-            out_idx = sys.argv.index("--screenshot") + 1
-            out_file = sys.argv[out_idx] if out_idx < len(sys.argv) and not sys.argv[out_idx].startswith("--") else "screenshot.png"
-            out_path = Path(out_file).resolve()
             root_obj.captureScreenshot(str(out_path), False)
-            QTimer.singleShot(400, app.quit)
+            QTimer.singleShot(500, app.quit)
         QTimer.singleShot(350, capture)
 
     if "--screenshot-help" in sys.argv:
@@ -359,13 +373,6 @@ def main():
             root_obj.captureScreenshot(str(out_path), False)
             QTimer.singleShot(400, app.quit)
         QTimer.singleShot(350, capture_help)
-
-    if "--screenshot-splash" in sys.argv:
-        def capture_splash():
-            out_path = Path(__file__).resolve().parent / "screenshot_splash.png"
-            root_obj.captureScreenshot(str(out_path), False)
-            QTimer.singleShot(400, app.quit)
-        QTimer.singleShot(600, capture_splash)
 
     print("Arcade game template running. Press Esc or ? for help, R to restart.")
     sys.exit(app.exec())

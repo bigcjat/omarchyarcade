@@ -12,6 +12,9 @@ Window {
     title: "WordCircle"
 
     // =========================================================================
+    signal screenshotSaved(string filePath)
+
+    // =========================================================================
     // OMARCHY THEME TOKENS (Auto-synchronized from colors.toml)
     // =========================================================================
     property color themeBg: "#181825"
@@ -23,9 +26,15 @@ Window {
     property color themeAccent: "#38bdf8"
     property color themeBtnBg: themeAccent
     property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
+    property color themeCardHover: isDarkMode ? Qt.lighter(themeCardBg, 1.15) : "#f1f5f9"
 
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
@@ -44,7 +53,7 @@ Window {
     property bool splashEnabled: true
     property bool isMuted: true
     property bool showHelp: false
-    property bool showLevelSelect: true
+    property bool showLevelSelect: false
     property int previewLength: 5
     property bool isTiledDesktopMode: root.height < 540 || root.width < 440
     property alias fullPlayfield: root.isTiledDesktopMode
@@ -52,7 +61,7 @@ Window {
     on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    property string helpText: "• Connect Letters: Click & drag across wheel or type letters\n• Submit Word: Release drag or press ENTER\n• New Game: Click 🎲 New Game or Ctrl+N\n• Shuffle Letters: Click 🔀 or press SPACE\n• Undo Letter: BACKSPACE\n• Clear Selection: ESC\n• Full/Compact View: Shift+F\n• Mute Sound: Ctrl+M\n• Restart Level: Ctrl+R"
+    property string helpText: "• Connect Letters: Click & drag across wheel or type letters\n• Submit Word: Release drag or press ENTER\n• New Game: Click 🎲 New Game or Ctrl+N\n• Shuffle Letters: Click 🔀 or press SPACE\n• Undo Letter: BACKSPACE\n• Clear Selection: ESC\n• Toggle Theme: Ctrl+T\n• Full/Compact View: Shift+F\n• Mute Sound: Ctrl+M\n• Restart Level: Ctrl+R"
 
     // Engine bindings
     property var activeIndices: Engine.activeIndices
@@ -121,33 +130,56 @@ Window {
         var bg = data.background || data.bg || "#181825";
         var fg = data.foreground || data.fg || "#cdd6f4";
         var accent = data.accent || "#38bdf8";
-        var c0 = data.color0 || "#313244";
+        var c0 = data.color0 || "#1e1e2e";
         var c8 = data.color8 || data.color0 || "#45475a";
 
         themeBg = bg;
-        themeFg = fg;
         themeAccent = accent;
-        themeBorder = c8;
 
         var lum = colorLuminance(bg);
         if (lum > 0.5) {
-            themeBoardBg = Qt.darker(bg, 1.06);
-            themeCardBg = Qt.darker(bg, 1.03);
-            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
-            themeBorder = c8 || Qt.darker(bg, 1.15);
+            themeFg = fg || "#0f172a";
+            themeBoardBg = data.boardBg || "#e2e8f0";
+            themeCardBg = data.cardBg || "#ffffff";
+            themeBorder = data.border || "#cbd5e1";
+            themeSubtext = data.subtext || "#64748b";
             themeBtnBg = accent;
-            themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+            themeBtnFg = "#ffffff";
         } else {
-            themeBoardBg = Qt.darker(bg, 1.25);
-            themeCardBg = c0;
-            themeSubtext = "#a6adc8";
-            themeBorder = c8;
+            themeFg = fg;
+            themeBoardBg = data.boardBg || Qt.darker(bg, 1.25);
+            themeCardBg = data.cardBg || c0;
+            themeBorder = data.border || c8;
+            themeSubtext = data.subtext || "#a6adc8";
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         }
 
         gridCanvas.requestPaint();
         wheelCanvas.requestPaint();
+    }
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#0f172a",
+            accent: "#0284c7",
+            cardBg: "#ffffff",
+            boardBg: "#e2e8f0",
+            border: "#cbd5e1",
+            subtext: "#64748b"
+        } : {
+            background: "#181825",
+            foreground: "#cdd6f4",
+            accent: "#38bdf8",
+            cardBg: "#1e1e2e",
+            boardBg: "#11111b",
+            border: "#313244",
+            subtext: "#a6adc8"
+        };
+        applyTheme(tData, nextIsLight ? "Light Mode" : "Dark Mode");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     function playSound(name) {
@@ -300,6 +332,12 @@ Window {
 
             if (hasCtrl && event.key === Qt.Key_R) {
                 root.restartGame();
+                event.accepted = true;
+                return;
+            }
+
+            if (hasCtrl && event.key === Qt.Key_T) {
+                root.cycleTheme();
                 event.accepted = true;
                 return;
             }
@@ -503,31 +541,6 @@ Window {
 
             readonly property bool isCrowded: width < 480
 
-            // Left: Chapter Badge (strictly bounded to never overlap utility buttons)
-            Rectangle {
-                id: chapterBadge
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                height: 26
-                radius: 6
-                width: Math.min(chapterText.implicitWidth + 16, Math.max(0, subheaderItem.width - buttonRow.width - 16))
-                color: Qt.alpha(root.themeAccent, 0.15)
-                border.color: root.themeAccent
-                border.width: 1
-                visible: width > 50 && !subheaderItem.isCrowded
-                clip: true
-
-                Text {
-                    id: chapterText
-                    anchors.centerIn: parent
-                    text: "✨ " + root.currentChapter
-                    font.pixelSize: 10
-                    font.bold: true
-                    color: root.themeAccent
-                    elide: Text.ElideRight
-                }
-            }
-
             // Right: Utility Controls
             Row {
                 id: buttonRow
@@ -540,7 +553,7 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : 98
                     radius: 6
-                    color: newPzMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: newPzMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.themeAccent
                     border.width: 1
 
@@ -568,7 +581,7 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : 68
                     radius: 6
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
 
@@ -582,6 +595,7 @@ Window {
                     MouseArea {
                         id: helpMouse
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.showHelp = !root.showHelp
                     }
@@ -592,7 +606,7 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : 68
                     radius: 6
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.isMuted ? root.themeBorder : root.themeAccent
                     border.width: 1
 
@@ -606,6 +620,7 @@ Window {
                     MouseArea {
                         id: muteMouse
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.toggleMute()
                     }
@@ -628,6 +643,7 @@ Window {
                     MouseArea {
                         id: shuffleMouse
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             Engine.shuffleLetters();
@@ -676,7 +692,7 @@ Window {
                 spacing: 6
 
                 Rectangle {
-                    width: 24; height: 24; radius: 4; color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    width: 24; height: 24; radius: 4; color: root.themeCardBg; border.color: root.themeBorder; border.width: 1
                     Text { text: "🔀"; font.pixelSize: 10; anchors.centerIn: parent }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -685,7 +701,7 @@ Window {
                 }
 
                 Rectangle {
-                    width: 24; height: 24; radius: 4; color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    width: 24; height: 24; radius: 4; color: root.themeCardBg; border.color: root.themeBorder; border.width: 1
                     Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 10; anchors.centerIn: parent }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.toggleMute() }
                 }
@@ -730,91 +746,61 @@ Window {
                             var ctx = getContext("2d");
                             ctx.clearRect(0, 0, width, height);
 
-                            var lvl = Engine.currentLevel;
-                            if (!lvl || !lvl.words || lvl.words.length === 0) return;
+                            var grid = Engine.gridMatrix;
+                            if (!grid || grid.length === 0) return;
 
-                            var rows = lvl.grid_rows || 6;
-                            var cols = lvl.grid_cols || 6;
+                            var rows = grid.length;
+                            var cols = grid[0].length;
 
-                            // Calculate optimal cell size and padding
-                            var maxCellW = (width - 40) / cols;
-                            var maxCellH = (height - 40) / rows;
-                            var cellSize = Math.floor(Math.min(maxCellW, maxCellH, 44));
-                            var cellGap = 4;
+                            var availW = width - 24;
+                            var availH = height - 24;
+                            var cellSize = Math.min(availW / cols, availH / rows, 48);
 
-                            var totalGridW = cols * (cellSize + cellGap) - cellGap;
-                            var totalGridH = rows * (cellSize + cellGap) - cellGap;
-                            var startX = Math.floor((width - totalGridW) / 2);
-                            var startY = Math.floor((height - totalGridH) / 2);
+                            var startX = (width - cols * cellSize) / 2;
+                            var startY = (height - rows * cellSize) / 2;
 
-                            // Build full cell occupancy map
-                            var cellMap = {}; // "r,c" -> { char, found }
-                            var targetWords = lvl.words;
-                            var foundList = Engine.foundWords || [];
-
-                            for (var w = 0; w < targetWords.length; w++) {
-                                var tw = targetWords[w];
-                                var isFound = foundList.indexOf(tw.word) !== -1;
-                                var dr = (tw.dir === "down") ? 1 : 0;
-                                var dc = (tw.dir === "across") ? 1 : 0;
-
-                                for (var k = 0; k < tw.word.length; k++) {
-                                    var cr = tw.row + k * dr;
-                                    var cc = tw.col + k * dc;
-                                    var key = cr + "," + cc;
-                                    var ch = tw.word.charAt(k);
-                                    if (!cellMap[key]) {
-                                        cellMap[key] = { char: ch, found: isFound };
-                                    } else if (isFound) {
-                                        cellMap[key].found = true;
-                                    }
-                                }
-                            }
-
-                            // Draw Crossword Tiles
                             for (var r = 0; r < rows; r++) {
                                 for (var c = 0; c < cols; c++) {
-                                    var kKey = r + "," + c;
-                                    var cell = cellMap[kKey];
-                                    if (!cell) continue;
+                                    var cell = grid[r][c];
+                                    if (!cell.active) continue;
 
-                                    var x = startX + c * (cellSize + cellGap);
-                                    var y = startY + r * (cellSize + cellGap);
-                                    var rad = Math.min(6, Math.floor(cellSize * 0.18));
+                                    var x = startX + c * cellSize + 2;
+                                    var y = startY + r * cellSize + 2;
+                                    var size = cellSize - 4;
+                                    var rad = 6;
 
-                                    // Tile base
                                     ctx.beginPath();
                                     ctx.moveTo(x + rad, y);
-                                    ctx.lineTo(x + cellSize - rad, y);
-                                    ctx.quadraticCurveTo(x + cellSize, y, x + cellSize, y + rad);
-                                    ctx.lineTo(x + cellSize, y + cellSize - rad);
-                                    ctx.quadraticCurveTo(x + cellSize, y + cellSize, x + cellSize - rad, y + cellSize);
-                                    ctx.lineTo(x + rad, y + cellSize);
-                                    ctx.quadraticCurveTo(x, y + cellSize, x, y + cellSize - rad);
+                                    ctx.lineTo(x + size - rad, y);
+                                    ctx.arcTo(x + size, y, x + size, y + rad, rad);
+                                    ctx.lineTo(x + size, y + size - rad);
+                                    ctx.arcTo(x + size, y + size, x + size - rad, y + size, rad);
+                                    ctx.lineTo(x + rad, y + size);
+                                    ctx.arcTo(x, y + size, x, y + size - rad, rad);
                                     ctx.lineTo(x, y + rad);
-                                    ctx.quadraticCurveTo(x, y, x + rad, y);
+                                    ctx.arcTo(x, y, x + rad, y, rad);
                                     ctx.closePath();
 
                                     if (cell.found) {
                                         // Discovered tile (glowing accent highlight)
-                                        ctx.fillStyle = Qt.alpha(root.themeAccent, 0.22);
+                                        ctx.fillStyle = root.isDarkMode ? Qt.alpha(root.themeAccent, 0.22) : Qt.alpha(root.themeAccent, 0.16);
                                         ctx.fill();
                                         ctx.strokeStyle = root.themeAccent;
                                         ctx.lineWidth = 1.5;
                                         ctx.stroke();
 
                                         // Letter
-                                        ctx.fillStyle = "#FFFFFF";
+                                        ctx.fillStyle = root.isDarkMode ? "#FFFFFF" : root.themeFg;
                                         ctx.font = "bold " + Math.floor(cellSize * 0.52) + "px " + root.monoFontFamily;
                                         ctx.textAlign = "center";
                                         ctx.textBaseline = "middle";
                                         ctx.fillText(cell.char, x + cellSize / 2, y + cellSize / 2);
                                     } else {
                                         // Undiscovered slot (subtle placeholder)
-                                        ctx.fillStyle = Qt.alpha(root.themeCardBg, 0.9);
+                                        ctx.fillStyle = root.isDarkMode ? Qt.alpha(root.themeCardBg, 0.9) : "#ffffff";
                                         ctx.fill();
-                                        ctx.strokeStyle = Qt.alpha(root.themeBorder, 0.8);
-                                        ctx.lineWidth = 1;
+                                        ctx.strokeStyle = root.isDarkMode ? Qt.alpha(root.themeBorder, 0.8) : "#cbd5e1";
+                                        ctx.lineWidth = root.isDarkMode ? 1 : 1.5;
                                         ctx.stroke();
                                     }
                                 }
@@ -856,52 +842,57 @@ Window {
                     color: root.feedbackMessage ? 
                            (root.feedbackType === "success" ? Qt.alpha("#22c55e", 0.18) : 
                             (root.feedbackType === "bonus" ? Qt.alpha("#f59e0b", 0.2) : Qt.alpha("#ef4444", 0.18))) :
-                           (root.activeWord ? Qt.alpha(root.themeAccent, 0.14) : "transparent")
+                           (root.activeWord ? Qt.alpha(root.themeAccent, 0.14) : (root.isDarkMode ? root.themeCardBg : "#ffffff"))
                     border.color: root.feedbackMessage ? 
                                  (root.feedbackType === "success" ? "#22c55e" : 
                                   (root.feedbackType === "bonus" ? "#f59e0b" : "#ef4444")) :
-                                 (root.activeWord ? root.themeAccent : "transparent")
+                                 (root.activeWord ? root.themeAccent : (root.isDarkMode ? root.themeBorder : "#cbd5e1"))
                     border.width: 1
 
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                    Text {
+                    Row {
                         anchors.centerIn: parent
-                        text: root.feedbackMessage ? root.feedbackMessage : (root.activeWord ? root.activeWord : "Drag or Type to Spell Words")
-                        font.family: root.monoFontFamily
-                        font.pixelSize: root.feedbackMessage ? 13 : (root.activeWord ? 17 : 12)
-                        font.bold: true
-                        font.letterSpacing: root.activeWord ? 3 : 1
-                        color: root.feedbackMessage ? 
-                               (root.feedbackType === "success" ? "#4ade80" : 
-                                (root.feedbackType === "bonus" ? "#fbbf24" : "#f87171")) :
-                               (root.activeWord ? "#FFFFFF" : root.themeSubtext)
+                        spacing: 8
+
+                        Text {
+                            text: root.feedbackMessage ? 
+                                  (root.feedbackType === "success" ? "✓" : (root.feedbackType === "bonus" ? "★" : "✕")) : 
+                                  (root.activeWord ? "⚡" : "")
+                            font.pixelSize: 14
+                            font.bold: true
+                            color: root.feedbackMessage ? 
+                                   (root.feedbackType === "success" ? "#22c55e" : (root.feedbackType === "bonus" ? "#f59e0b" : "#ef4444")) : 
+                                   root.themeAccent
+                            visible: text !== ""
+                        }
+
+                        Text {
+                            text: root.feedbackMessage ? root.feedbackMessage : (root.activeWord ? root.activeWord : "Connect letters to form words")
+                            font.pixelSize: root.feedbackMessage ? 13 : (root.activeWord ? 15 : 12)
+                            font.bold: root.feedbackMessage || root.activeWord
+                            font.letterSpacing: root.activeWord ? 3 : 0
+                            color: root.feedbackMessage ? 
+                                   (root.feedbackType === "success" ? "#22c55e" : (root.feedbackType === "bonus" ? "#fbbf24" : "#f87171")) : 
+                                   (root.activeWord ? root.themeFg : root.themeSubtext)
+                        }
                     }
                 }
 
-                // 3. BOTTOM HALF: Interactive Circular Letter Dial
-                Rectangle {
+                // 3. BOTTOM HALF: Interactive Circle Wheel Container
+                Item {
                     id: wheelContainer
                     width: parent.width
                     height: parent.height - crosswordBox.height - activeWordPill.height - 12
-                    color: root.themeBoardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    radius: 12
-                    clip: true
 
-                    // Circular letter placement math
-                    readonly property real centerX: width / 2
-                    readonly property real centerY: height / 2
-                    readonly property real wheelRadius: Math.max(50, Math.min(width, height) * 0.38)
-                    readonly property real nodeRadius: Math.max(18, Math.min(width, height) * 0.088)
+                    readonly property real radius: Math.min(width, height) * 0.38
+                    readonly property real nodeRadius: Math.min(width, height) * 0.115
 
-                    function getNodePosition(idx, count) {
-                        var angle = (idx / count) * 2 * Math.PI - (Math.PI / 2);
+                    function getNodePosition(index, count) {
+                        var angle = (index / count) * 2 * Math.PI - Math.PI / 2;
+                        var cx = width / 2;
+                        var cy = height / 2;
                         return {
-                            x: centerX + wheelRadius * Math.cos(angle),
-                            y: centerY + wheelRadius * Math.sin(angle)
+                            x: cx + radius * Math.cos(angle),
+                            y: cy + radius * Math.sin(angle)
                         };
                     }
 
@@ -915,54 +906,48 @@ Window {
                             ctx.clearRect(0, 0, width, height);
 
                             var letters = Engine.circleLetters || [];
-                            if (letters.length === 0) return;
-
-                            var cx = wheelContainer.centerX;
-                            var cy = wheelContainer.centerY;
-                            var r = wheelContainer.wheelRadius;
-                            var nr = wheelContainer.nodeRadius;
                             var count = letters.length;
-                            var indices = Engine.activeIndices || [];
+                            if (count === 0) return;
 
-                            // Outer ambient guide ring
+                            var cx = width / 2;
+                            var cy = height / 2;
+                            var r = wheelContainer.radius;
+                            var nr = wheelContainer.nodeRadius;
+
+                            // Draw subtle outer guiding ring orbit
                             ctx.beginPath();
                             ctx.arc(cx, cy, r, 0, Math.PI * 2);
                             ctx.strokeStyle = Qt.alpha(root.themeBorder, 0.4);
-                            ctx.lineWidth = 2;
-                            ctx.setLineDash([4, 6]);
+                            ctx.lineWidth = 1.5;
                             ctx.stroke();
-                            ctx.setLineDash([]);
 
-                            // Drawn connection trails between selected nodes
-                            if (indices.length > 0) {
+                            // Draw Connecting Drag Trails
+                            var active = Engine.activeIndices;
+                            if (active.length > 0) {
                                 ctx.beginPath();
-                                var firstPos = wheelContainer.getNodePosition(indices[0], count);
+                                var firstPos = wheelContainer.getNodePosition(active[0], count);
                                 ctx.moveTo(firstPos.x, firstPos.y);
 
-                                for (var k = 1; k < indices.length; k++) {
-                                    var pos = wheelContainer.getNodePosition(indices[k], count);
+                                for (var k = 1; k < active.length; k++) {
+                                    var pos = wheelContainer.getNodePosition(active[k], count);
                                     ctx.lineTo(pos.x, pos.y);
                                 }
 
-                                // If actively dragging with mouse, trace to mouse tip
                                 if (root.isDragging) {
                                     ctx.lineTo(root.dragX, root.dragY);
                                 }
 
                                 ctx.strokeStyle = root.themeAccent;
-                                ctx.lineWidth = 5;
+                                ctx.lineWidth = 4.5;
                                 ctx.lineCap = "round";
                                 ctx.lineJoin = "round";
-                                ctx.shadowColor = root.themeAccent;
-                                ctx.shadowBlur = 12;
                                 ctx.stroke();
-                                ctx.shadowBlur = 0;
                             }
 
-                            // Draw letter node disks
+                            // Draw Letter Nodes (Disks)
                             for (var i = 0; i < count; i++) {
                                 var npos = wheelContainer.getNodePosition(i, count);
-                                var isSelected = indices.indexOf(i) !== -1;
+                                var isSelected = active.indexOf(i) !== -1;
 
                                 ctx.beginPath();
                                 ctx.arc(npos.x, npos.y, nr, 0, Math.PI * 2);
@@ -976,13 +961,13 @@ Window {
 
                                     ctx.fillStyle = root.themeBtnFg;
                                 } else {
-                                    ctx.fillStyle = root.themeCardBg;
+                                    ctx.fillStyle = root.isDarkMode ? root.themeCardBg : "#ffffff";
                                     ctx.fill();
-                                    ctx.strokeStyle = root.themeBorder;
+                                    ctx.strokeStyle = root.isDarkMode ? root.themeBorder : "#cbd5e1";
                                     ctx.lineWidth = 1.5;
                                     ctx.stroke();
 
-                                    ctx.fillStyle = root.themeFg;
+                                    ctx.fillStyle = root.isDarkMode ? root.themeFg : "#0f172a";
                                 }
 
                                 ctx.font = "bold " + Math.floor(nr * 0.95) + "px " + root.monoFontFamily;
@@ -999,7 +984,7 @@ Window {
                         width: wheelContainer.nodeRadius * 1.5
                         height: wheelContainer.nodeRadius * 1.5
                         radius: width / 2
-                        color: centerShuffleMouse.containsMouse ? Qt.alpha(root.themeAccent, 0.25) : Qt.alpha(root.themeCardBg, 0.8)
+                        color: centerShuffleMouse.containsMouse ? Qt.alpha(root.themeAccent, 0.25) : (root.isDarkMode ? Qt.alpha(root.themeCardBg, 0.8) : "#ffffff")
                         border.color: centerShuffleMouse.containsMouse ? root.themeAccent : root.themeBorder
                         border.width: 1.5
 

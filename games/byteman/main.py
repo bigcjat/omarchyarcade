@@ -126,24 +126,32 @@ class SoundManager(QObject):
 # =============================================================================
 # THEME UTILITIES
 # =============================================================================
-def load_all_omarchy_themes():
-    """Parses Themes.js for all predefined Omarchy color schemes."""
-    themes_js = Path(__file__).resolve().parent / "Themes.js"
-    if not themes_js.is_file():
-        return {}
-    with open(themes_js, "r", encoding="utf-8") as f:
-        content = f.read()
-    themes = {}
-    blocks = re.findall(r"\{([^{}]+)\}", content)
-    for b in blocks:
-        t = {}
-        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", b):
-            t[k] = v
-        if "id" in t and "name" in t:
-            themes[t["id"]] = t
-    return themes
-
-ALL_THEMES = load_all_omarchy_themes()
+DEFAULT_PRESETS = {
+    "dark": {
+        "name": "Omarchy Dark",
+        "background": "#1e1e2e",
+        "foreground": "#cdd6f4",
+        "accent": "#f9e2af",
+        "color0": "#181825",
+        "color8": "#313244",
+        "cardBg": "#181825",
+        "boardBg": "#11111b",
+        "border": "#313244",
+        "subtext": "#a6adc8",
+    },
+    "light": {
+        "name": "Omarchy Light",
+        "background": "#eff1f5",
+        "foreground": "#4c4f69",
+        "accent": "#df8e1d",
+        "color0": "#e6e9ef",
+        "color8": "#bcc0cc",
+        "cardBg": "#ffffff",
+        "boardBg": "#e6e9ef",
+        "border": "#ccd0da",
+        "subtext": "#5c5f77",
+    },
+}
 
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
@@ -182,17 +190,12 @@ def main():
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
     os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
 
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print("ByteMan \u2022 Retro Maze Chaser")
+        sys.exit(0)
+
     if "--list-themes" in sys.argv:
-        print(f"Arcade Game Template • Available Themes ({len(ALL_THEMES)} total):\n")
-        print("  Light Themes:")
-        for tid, t in ALL_THEMES.items():
-            if any(term in tid for term in ["light", "snow", "dawn", "white", "latte", "paper"]):
-                print(f"    --theme {tid:<20} -> {t['name']}")
-        print("\n  Dark Themes:")
-        for tid, t in ALL_THEMES.items():
-            if not any(term in tid for term in ["light", "snow", "dawn", "white", "latte", "paper"]):
-                print(f"    --theme {tid:<20} -> {t['name']}")
-        print("\nUsage: python main.py --theme <theme_id>")
+        print("Arcade Game Template \u2022 Preset Themes:\n  --theme light\n  --theme dark\n  --theme <path_to_colors.toml>")
         sys.exit(0)
 
     app = QGuiApplication(sys.argv)
@@ -209,7 +212,6 @@ def main():
         if cp.exists():
             app.setWindowIcon(QIcon(str(cp)))
             break
-
 
     engine = QQmlApplicationEngine()
 
@@ -237,11 +239,11 @@ def main():
 
     # 1. Explicit Theme CLI Override
     if theme_arg:
-        clean_arg = theme_arg.lower().replace("_", "-")
-        if clean_arg in ALL_THEMES:
-            t = ALL_THEMES[clean_arg]
+        clean_arg = theme_arg.lower().strip()
+        if clean_arg in DEFAULT_PRESETS:
+            t = DEFAULT_PRESETS[clean_arg]
             root_obj.applyTheme(t, t["name"])
-            print(f"Applied theme: {t['name']}")
+            print(f"Applied preset theme: {t['name']}")
         else:
             custom_path = Path(theme_arg).expanduser().resolve()
             if custom_path.is_file():
@@ -250,7 +252,7 @@ def main():
                     root_obj.applyTheme(data, custom_path.parent.name.capitalize())
                     print(f"Applied theme from file: {custom_path}")
             else:
-                print(f"Warning: Theme '{theme_arg}' not found. Run with --list-themes.", file=sys.stderr)
+                print(f"Warning: Theme '{theme_arg}' not found.", file=sys.stderr)
 
     # 2. Omarchy Desktop System Theme Detection & Hot-Reloading
     else:
@@ -283,19 +285,11 @@ def main():
         else:
             def apply_system_scheme():
                 scheme = app.styleHints().colorScheme()
-                if scheme == Qt.ColorScheme.Light:
-                    target_theme = ALL_THEMES.get("catppuccin-latte") or ALL_THEMES.get("github-light")
-                    name = "System Light"
-                else:
-                    target_theme = ALL_THEMES.get("catppuccin") or ALL_THEMES.get("tokyonight")
-                    name = "System Dark"
-
-                if target_theme:
-                    root_obj.applyTheme(target_theme, name)
-                    print(f"Detected OS appearance: {name} ({target_theme.get('name')})")
+                target_theme = DEFAULT_PRESETS["light"] if scheme == Qt.ColorScheme.Light else DEFAULT_PRESETS["dark"]
+                root_obj.applyTheme(target_theme, target_theme["name"])
+                print(f"Detected OS appearance: {target_theme['name']}")
 
             apply_system_scheme()
-            # React live when user flips OS Dark / Light appearance in macOS or Linux
             app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
 
     if "--no-splash" in sys.argv:

@@ -126,24 +126,32 @@ class SoundManager(QObject):
 # =============================================================================
 # THEME UTILITIES
 # =============================================================================
-def load_all_omarchy_themes():
-    """Parses Themes.js for all predefined Omarchy color schemes."""
-    themes_js = Path(__file__).resolve().parent / "Themes.js"
-    if not themes_js.is_file():
-        return {}
-    with open(themes_js, "r", encoding="utf-8") as f:
-        content = f.read()
-    themes = {}
-    blocks = re.findall(r"\{([^{}]+)\}", content)
-    for b in blocks:
-        t = {}
-        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", b):
-            t[k] = v
-        if "id" in t and "name" in t:
-            themes[t["id"]] = t
-    return themes
-
-ALL_THEMES = load_all_omarchy_themes()
+DEFAULT_PRESETS = {
+    "dark": {
+        "id": "catppuccin-mocha",
+        "name": "Catppuccin Mocha",
+        "bg": "#181825",
+        "cardBg": "#1e1e2e",
+        "surface": "#1e1e2e",
+        "boardBg": "#05070B",
+        "border": "#313244",
+        "fg": "#cdd6f4",
+        "subtext": "#a6adc8",
+        "accent": "#00E5FF",
+    },
+    "light": {
+        "id": "catppuccin-latte",
+        "name": "Catppuccin Latte",
+        "bg": "#f8fafc",
+        "cardBg": "#ffffff",
+        "surface": "#ffffff",
+        "boardBg": "#05070B",
+        "border": "#cbd5e1",
+        "fg": "#0f172a",
+        "subtext": "#64748b",
+        "accent": "#0099cc",
+    }
+}
 
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
@@ -220,6 +228,8 @@ def main():
         sys.exit(1)
 
     root_obj = engine.rootObjects()[0]
+    if hasattr(root_obj, "screenshotSaved"):
+        root_obj.screenshotSaved.connect(lambda p: app.quit())
 
     # CLI Theme Argument Parsing
     theme_arg = None
@@ -231,10 +241,10 @@ def main():
     # 1. Explicit Theme CLI Override
     if theme_arg:
         clean_arg = theme_arg.lower().replace("_", "-")
-        if clean_arg in ALL_THEMES:
-            t = ALL_THEMES[clean_arg]
+        if clean_arg in DEFAULT_PRESETS:
+            t = DEFAULT_PRESETS[clean_arg]
             root_obj.applyTheme(t, t["name"])
-            print(f"Applied theme: {t['name']}")
+            print(f"Applied preset theme: {t['name']}")
         else:
             custom_path = Path(theme_arg).expanduser().resolve()
             if custom_path.is_file():
@@ -277,15 +287,14 @@ def main():
             def apply_system_scheme():
                 scheme = app.styleHints().colorScheme()
                 if scheme == Qt.ColorScheme.Light:
-                    target_theme = ALL_THEMES.get("catppuccin-latte") or ALL_THEMES.get("github-light")
+                    target_theme = DEFAULT_PRESETS["light"]
                     name = "System Light"
                 else:
-                    target_theme = ALL_THEMES.get("catppuccin") or ALL_THEMES.get("tokyonight")
+                    target_theme = DEFAULT_PRESETS["dark"]
                     name = "System Dark"
 
-                if target_theme:
-                    root_obj.applyTheme(target_theme, name)
-                    print(f"Detected OS appearance: {name} ({target_theme.get('name')})")
+                root_obj.applyTheme(target_theme, name)
+                print(f"Detected OS appearance: {name} ({target_theme.get('name')})")
 
             apply_system_scheme()
             # React live when user flips OS Dark / Light appearance in macOS or Linux

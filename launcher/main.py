@@ -18,8 +18,12 @@ import threading
 from pathlib import Path
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
-from PySide6.QtCore import QObject, Slot, Signal, Property, QTimer, QUrl, QFileSystemWatcher
+from PySide6.QtCore import QObject, Slot, Signal, Property, QTimer, QUrl, QFileSystemWatcher, QMetaObject, Q_ARG, qInstallMessageHandler
 from PySide6.QtQuickControls2 import QQuickStyle
+
+def qt_message_handler(mode, context, message):
+    print(f"[QML] {message}", flush=True)
+qInstallMessageHandler(qt_message_handler)
 
 # Allow local file access for QML XMLHttpRequest if used
 os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
@@ -48,7 +52,7 @@ else:
     CATALOG_PATH = DATA_DIR / "catalog.json"
     ASSETS_DIR = DATA_DIR / "assets"
 
-CURRENT_LAUNCHER_VERSION = "1.1.1"
+CURRENT_LAUNCHER_VERSION = "1.2.0"
 
 GAMES_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -83,19 +87,41 @@ class ArcadeBackend(QObject):
         self._active_processes = []
         self._main_window = None
         self._processExited.connect(self._on_game_finished)
+        self._is_dark_mode = True
+        self._theme_colors = {}
 
     def setMainWindow(self, window):
         self._main_window = window
 
+    @Property(bool, notify=themeChanged)
+    def isDarkMode(self) -> bool:
+        return self._is_dark_mode
+
+    @Property("QVariantMap", notify=themeChanged)
+    def themeColors(self) -> dict:
+        return self._theme_colors
+
+    def update_theme(self, cols: dict):
+        self._theme_colors = cols
+        try:
+            from PySide6.QtGui import QColor
+            bg = cols.get("themeBackground", "#111116")
+            qc = QColor(bg)
+            lum = 0.299 * qc.redF() + 0.587 * qc.greenF() + 0.114 * qc.blueF()
+            self._is_dark_mode = lum < 0.5
+        except Exception:
+            self._is_dark_mode = True
+        self.themeChanged.emit(cols)
+
     @Slot(result="QVariantMap")
     def getThemeColors(self) -> dict:
         """Returns the current theme dictionary to QML."""
-        return get_theme_colors()
+        return self._theme_colors or get_theme_colors()
 
     @Slot("QVariantMap")
     def applyTheme(self, colors: dict):
         """Allows programmatic or test-based theme application."""
-        self.themeChanged.emit(colors)
+        self.update_theme(colors)
 
     @Slot(result=str)
     def getCatalogJson(self) -> str:
@@ -472,30 +498,68 @@ class ArcadeBackend(QObject):
             import tarfile
             import io
             try:
-                print(f"[Arcade] Downloading game: {game_id}...")
-                url = "https://codeload.github.com/bigcjat/omarchyarcade/tar.gz/main"
-                req = urllib.request.Request(url, headers={"User-Agent": "OmarchyArcade/1.0"})
-                with urllib.request.urlopen(req, timeout=30) as resp:
-                    tar_data = resp.read()
+                # 1. Try downloading standalone individual game release archive (~450 KB)
+                dest = GAMES_DIR / game_id
+                dest.mkdir(parents=True, exist_ok=True)
+                count = 0
+                installed = False
 
-                with tarfile.open(fileobj=io.BytesIO(tar_data), mode="r:gz") as tar:
-                    prefix = f"omarchyarcade-main/games/{game_id}/"
-                    dest = GAMES_DIR / game_id
-                    dest.mkdir(parents=True, exist_ok=True)
-                    count = 0
-                    for member in tar.getmembers():
-                        if member.name.startswith(prefix) and member.name != prefix:
-                            rel_path = member.name[len(prefix):]
-                            target_file = dest / rel_path
-                            if member.isdir():
-                                target_file.mkdir(parents=True, exist_ok=True)
-                            else:
-                                target_file.parent.mkdir(parents=True, exist_ok=True)
-                                extracted = tar.extractfile(member)
-                                if extracted:
-                                    with open(target_file, "wb") as f:
-                                        f.write(extracted.read())
-                                    count += 1
+                individual_urls = [
+                    f"https://github.com/bigcjat/omarchyarcade/releases/latest/download/{game_id}.tar.gz",
+                    f"https://raw.githubusercontent.com/bigcjat/omarchyarcade/main/dist/packages/{game_id}.tar.gz"
+                ]
+
+                for ind_url in individual_urls:
+                    try:
+                        req = urllib.request.Request(ind_url, headers={"User-Agent": "OmarchyArcade/1.0"})
+                        with urllib.request.urlopen(req, timeout=15) as resp:
+                            if resp.status == 200:
+                                tar_data = resp.read()
+                                with tarfile.open(fileobj=io.BytesIO(tar_data), mode="r:gz") as tar:
+                                    prefix = f"{game_id}/"
+                                    for member in tar.getmembers():
+                                        rel_path = member.name[len(prefix):] if member.name.startswith(prefix) else member.name
+                                        if not rel_path or rel_path == ".":
+                                            continue
+                                        target_file = dest / rel_path
+                                        if member.isdir():
+                                            target_file.mkdir(parents=True, exist_ok=True)
+                                        else:
+                                            target_file.parent.mkdir(parents=True, exist_ok=True)
+                                            extracted = tar.extractfile(member)
+                                            if extracted:
+                                                with open(target_file, "wb") as f:
+                                                    f.write(extracted.read())
+                                                count += 1
+                                installed = True
+                                print(f"[Arcade] Installed {game_id} via individual game tarball ({count} files)")
+                                break
+                    except Exception:
+                        pass
+
+                # 2. Resilient fallback: download from repository tarball if release asset is not yet published
+                if not installed:
+                    print(f"[Arcade] Fetching {game_id} from repository archive...")
+                    url = "https://codeload.github.com/bigcjat/omarchyarcade/tar.gz/main"
+                    req = urllib.request.Request(url, headers={"User-Agent": "OmarchyArcade/1.0"})
+                    with urllib.request.urlopen(req, timeout=30) as resp:
+                        tar_data = resp.read()
+
+                    with tarfile.open(fileobj=io.BytesIO(tar_data), mode="r:gz") as tar:
+                        prefix = f"omarchyarcade-main/games/{game_id}/"
+                        for member in tar.getmembers():
+                            if member.name.startswith(prefix) and member.name != prefix:
+                                rel_path = member.name[len(prefix):]
+                                target_file = dest / rel_path
+                                if member.isdir():
+                                    target_file.mkdir(parents=True, exist_ok=True)
+                                else:
+                                    target_file.parent.mkdir(parents=True, exist_ok=True)
+                                    extracted = tar.extractfile(member)
+                                    if extracted:
+                                        with open(target_file, "wb") as f:
+                                            f.write(extracted.read())
+                                        count += 1
 
                 # Record installed version stamp
                 try:
@@ -798,7 +862,7 @@ class ArcadeBackend(QObject):
                                     f.write(ext.read())
 
                 # Resolve new version
-                new_v = "1.1.1"
+                new_v = CURRENT_LAUNCHER_VERSION
                 try:
                     cat_f = dest_dir.parent / "catalog.json" if dest_dir.name == "launcher" else BASE_DIR / "catalog.json"
                     if cat_f.exists():
@@ -936,9 +1000,8 @@ def find_omarchy_colors_file():
     return None
 
 
-def get_theme_colors():
-    """Reads the active Omarchy theme colors.toml if present."""
-    colors = {
+DEFAULT_PRESETS = {
+    "dark": {
         "themeBackground": "#111116",
         "themeSurface": "#181822",
         "themeSurfaceLight": "#222230",
@@ -947,10 +1010,45 @@ def get_theme_colors():
         "themeTextMuted": "#94a3b8",
         "themeAccent": "#00f0ff",
         "themeAccentAlt": "#e6458e"
+    },
+    "light": {
+        "themeBackground": "#eff1f5",
+        "themeSurface": "#ffffff",
+        "themeSurfaceLight": "#f1f5f9",
+        "themeBorder": "#cbd5e1",
+        "themeText": "#0f172a",
+        "themeTextMuted": "#64748b",
+        "themeAccent": "#1e66f5",
+        "themeAccentAlt": "#d20f39"
     }
+}
 
-    theme_path = find_omarchy_colors_file()
-    if theme_path:
+
+def get_theme_colors(override_source=None):
+    """Reads active Omarchy theme colors.toml or system appearance fallback."""
+    # Determine default base according to OS color scheme if available
+    base = dict(DEFAULT_PRESETS["dark"])
+    try:
+        app_inst = QGuiApplication.instance()
+        if app_inst and hasattr(app_inst, "styleHints"):
+            if app_inst.styleHints().colorScheme() == Qt.ColorScheme.Light:
+                base = dict(DEFAULT_PRESETS["light"])
+    except Exception:
+        pass
+
+    colors = dict(base)
+
+    theme_path = None
+    if override_source:
+        if isinstance(override_source, str) and override_source.lower() in DEFAULT_PRESETS:
+            return dict(DEFAULT_PRESETS[override_source.lower()])
+        p = Path(override_source).expanduser().resolve()
+        if p.is_file():
+            theme_path = p
+    else:
+        theme_path = find_omarchy_colors_file()
+
+    if theme_path and theme_path.is_file():
         try:
             with open(theme_path, "rb") as f:
                 data = tomllib.load(f)
@@ -970,15 +1068,15 @@ def get_theme_colors():
                         qc = QColor(bg)
                         lum = 0.299 * qc.redF() + 0.587 * qc.greenF() + 0.114 * qc.blueF()
                         if lum < 0.5:
-                            colors["themeSurface"] = qc.lighter(115).name()
-                            colors["themeSurfaceLight"] = qc.lighter(130).name()
+                            colors["themeSurface"] = c.get("surface") or qc.lighter(115).name()
+                            colors["themeSurfaceLight"] = c.get("surface_light") or qc.lighter(130).name()
                             if not border:
                                 colors["themeBorder"] = qc.lighter(145).name()
                         else:
-                            colors["themeSurface"] = qc.darker(108).name()
-                            colors["themeSurfaceLight"] = qc.darker(118).name()
+                            colors["themeSurface"] = c.get("surface") or "#ffffff"
+                            colors["themeSurfaceLight"] = c.get("surface_light") or qc.darker(106).name()
                             if not border:
-                                colors["themeBorder"] = qc.darker(125).name()
+                                colors["themeBorder"] = "#cbd5e1"
                     except Exception:
                         pass
 
@@ -988,7 +1086,8 @@ def get_theme_colors():
                         try:
                             from PySide6.QtGui import QColor
                             qc_fg = QColor(fg)
-                            colors["themeTextMuted"] = qc_fg.darker(135).name()
+                            lum_fg = 0.299 * qc_fg.redF() + 0.587 * qc_fg.greenF() + 0.114 * qc_fg.blueF()
+                            colors["themeTextMuted"] = qc_fg.darker(135).name() if lum_fg > 0.5 else qc_fg.lighter(135).name()
                         except Exception:
                             pass
 
@@ -1081,8 +1180,16 @@ Usage:
     engine.addImportPath(str(LAUNCHER_DIR))
     engine.rootContext().setContextProperty("arcadeBackend", backend)
 
+    # CLI Theme Argument Parsing
+    theme_arg = None
+    if "--theme" in sys.argv:
+        idx = sys.argv.index("--theme")
+        if idx + 1 < len(sys.argv) and not sys.argv[idx + 1].startswith("--"):
+            theme_arg = sys.argv[idx + 1]
+
     # Initial properties
-    colors = get_theme_colors()
+    colors = get_theme_colors(theme_arg)
+    backend.update_theme(colors)
     initial_props = {
         "themeBackground": colors["themeBackground"],
         "themeSurface": colors["themeSurface"],
@@ -1108,26 +1215,81 @@ Usage:
     window = engine.rootObjects()[0]
     backend.setMainWindow(window)
 
-    # Set up live file watcher for Omarchy theme switches
-    colors_file = find_omarchy_colors_file()
-    watcher = None
-    if colors_file:
-        watcher = QFileSystemWatcher(app)
-        watcher.addPath(str(colors_file))
-        if colors_file.parent.exists():
-            watcher.addPath(str(colors_file.parent))
+    def apply_updated_colors(cols):
+        backend.update_theme(cols)
+        for k, v in cols.items():
+            window.setProperty(k, v)
 
-        def on_theme_updated(path):
-            updated_colors = get_theme_colors()
-            backend.themeChanged.emit(updated_colors)
-            if engine.rootObjects():
-                root_obj = engine.rootObjects()[0]
-                for k, v in updated_colors.items():
-                    root_obj.setProperty(k, v)
-            print(f"[Arcade] Omarchy theme live-reloaded from {path}")
+    # 1. If explicit CLI theme was provided, keep it locked
+    if theme_arg:
+        apply_updated_colors(colors)
+        print(f"[Arcade] Applied CLI theme: {theme_arg}")
+    else:
+        # 2. Set up live file watcher for Omarchy theme switches
+        colors_file = find_omarchy_colors_file()
+        if colors_file:
+            watcher = QFileSystemWatcher(app)
+            watcher.addPath(str(colors_file))
+            if colors_file.parent.exists():
+                watcher.addPath(str(colors_file.parent))
 
-        watcher.fileChanged.connect(on_theme_updated)
-        watcher.directoryChanged.connect(on_theme_updated)
+            def on_theme_updated(path):
+                if colors_file.is_file() and str(colors_file) not in watcher.files():
+                    watcher.addPath(str(colors_file))
+                updated_colors = get_theme_colors()
+                apply_updated_colors(updated_colors)
+                print(f"[Arcade] Omarchy theme live-reloaded from {path}")
+
+            watcher.fileChanged.connect(on_theme_updated)
+            watcher.directoryChanged.connect(on_theme_updated)
+        else:
+            # 3. macOS / standard desktop live dark/light appearance changes
+            def on_os_scheme_changed():
+                updated_colors = get_theme_colors()
+                apply_updated_colors(updated_colors)
+                print(f"[Arcade] OS appearance synchronized")
+
+            app.styleHints().colorSchemeChanged.connect(lambda _: on_os_scheme_changed())
+
+    # View mode and modal hooks for automated testing / screenshots
+    if "--view" in sys.argv:
+        v_idx = sys.argv.index("--view") + 1
+        if v_idx < len(sys.argv) and not sys.argv[v_idx].startswith("--"):
+            req_view = sys.argv[v_idx].lower()
+            if req_view == "featured":
+                window.setProperty("selectedCategory", "FEATURED")
+                window.setProperty("searchQuery", "")
+            else:
+                window.setProperty("selectedCategory", "ALL")
+                window.setProperty("viewMode", req_view)
+
+    if "--show-about" in sys.argv:
+        QTimer.singleShot(250, lambda: window.setProperty("cliShowAbout", True))
+
+    if "--show-updates" in sys.argv:
+        QTimer.singleShot(250, lambda: window.setProperty("cliShowUpdates", True))
+
+    if "--show-detail" in sys.argv:
+        d_idx = sys.argv.index("--show-detail") + 1
+        gid = sys.argv[d_idx] if d_idx < len(sys.argv) and not sys.argv[d_idx].startswith("--") else "skyace"
+        QTimer.singleShot(250, lambda: window.setProperty("cliDetailId", gid))
+
+    if "--scroll" in sys.argv:
+        s_idx = sys.argv.index("--scroll") + 1
+        s_val = int(sys.argv[s_idx]) if s_idx < len(sys.argv) and not sys.argv[s_idx].startswith("--") else 480
+        QTimer.singleShot(250, lambda: window.setProperty("featuredScrollY", s_val))
+
+    # Automated screenshot hooks for testing launcher aesthetics
+    if "--screenshot" in sys.argv:
+        window.setProperty("splashEnabled", False)
+        def capture():
+            out_idx = sys.argv.index("--screenshot") + 1
+            out_file = sys.argv[out_idx] if out_idx < len(sys.argv) and not sys.argv[out_idx].startswith("--") else "launcher_screenshot.png"
+            pixmap = app.primaryScreen().grabWindow(window.winId())
+            pixmap.save(out_file)
+            print(f"[Arcade] Saved screenshot to {out_file}")
+            QTimer.singleShot(150, app.quit)
+        QTimer.singleShot(900, capture)
 
     sys.exit(app.exec())
 

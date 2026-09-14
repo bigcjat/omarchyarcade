@@ -12,11 +12,13 @@ Window {
     title: currentThemeName.length > 0 ? "DomainRush • " + currentThemeName : "DomainRush"
 
     // =========================================================================
+    // =========================================================================
     // OMARCHY THEME TOKENS (Auto-synchronized from colors.toml)
     // =========================================================================
     property color themeBg: "#080b12"
     property color themeBoardBg: "#0c101c"
     property color themeCardBg: "#121829"
+    property color themeCardHover: "#1e293b"
     property color themeBorder: "#222c42"
     property color themeFg: "#f8fafc"
     property color themeSubtext: "#94a3b8"
@@ -24,14 +26,40 @@ Window {
     property color themeGold: "#facc15"
     property color themeBtnBg: themeAccent
     property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#080b12" : "#ffffff"
+    readonly property bool isDarkMode: colorLuminance(themeBg) < 0.5
     property string currentThemeName: ""
 
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
     color: themeBg
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            cardBg: "#ffffff",
+            border: "#cbd5e1",
+            subtext: "#64748b",
+            accent: "#0891b2"
+        } : {
+            background: "#080b12",
+            foreground: "#f8fafc",
+            cardBg: "#121829",
+            border: "#222c42",
+            subtext: "#94a3b8",
+            accent: "#06b6d4"
+        };
+        applyTheme(tData, nextIsLight ? "Omarchy Light" : "Omarchy Dark");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
+    }
 
     // =========================================================================
     // DECLARATIVE GAME STATE
@@ -70,28 +98,33 @@ Window {
         var bg = data.background || data.bg || "#080b12";
         var fg = data.foreground || data.fg || "#f8fafc";
         var accent = data.accent || "#06b6d4";
-        var c0 = data.color0 || "#121829";
-        var c8 = data.color8 || "#222c42";
 
         themeBg = bg;
         themeFg = fg;
         themeAccent = accent;
-        themeBorder = c8;
 
         var lum = colorLuminance(bg);
         if (lum > 0.5) {
-            themeBoardBg = Qt.darker(bg, 1.08);
-            themeCardBg = Qt.darker(bg, 1.04);
-            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
+            themeBoardBg = "#0c101c";
+            themeCardBg = data.card_bg || data.cardBg || "#ffffff";
+            themeCardHover = data.card_hover || "#f1f5f9";
+            themeBorder = data.border || "#cbd5e1";
+            themeSubtext = data.subtext || "#64748b";
+            themeBtnBg = accent;
+            themeBtnFg = colorLuminance(accent) > 0.5 ? "#080b12" : "#ffffff";
         } else {
-            themeBoardBg = Qt.darker(bg, 1.25);
-            themeCardBg = c0;
-            themeSubtext = "#94a3b8";
+            themeBoardBg = "#0c101c";
+            themeCardBg = data.card_bg || data.cardBg || "#121829";
+            themeCardHover = data.card_hover || "#1e293b";
+            themeBorder = data.border || "#222c42";
+            themeSubtext = data.subtext || "#94a3b8";
+            themeBtnBg = accent;
+            themeBtnFg = colorLuminance(accent) > 0.5 ? "#080b12" : "#ffffff";
         }
-        themeBtnBg = accent;
-        themeBtnFg = colorLuminance(accent) > 0.5 ? "#080b12" : "#ffffff";
 
-        gameCanvas.requestPaint();
+        if (gameCanvas) {
+            gameCanvas.requestPaint();
+        }
     }
 
     function playSound(name) {
@@ -162,15 +195,17 @@ Window {
         // Game over handled in modal
     }
 
-    function captureScreenshot(filePath, shouldQuit) {
-        var targetItem = (splashScreen && splashScreen.visible && splashScreen.opacity > 0) ? splashScreen : mainContainer;
+    function captureScreenshot(filePath) {
+        if (splashScreen) {
+            splashScreen.visible = false;
+            splashScreen.opacity = 0;
+        }
+        root.splashEnabled = false;
+        var targetItem = mainContainer;
         targetItem.grabToImage(function(result) {
             result.saveToFile(filePath);
             console.log("Screenshot saved successfully to " + filePath);
             root.screenshotSaved(filePath);
-            if (shouldQuit) {
-                Qt.quit();
-            }
         });
     }
 
@@ -245,7 +280,6 @@ Window {
         anchors.fill: parent
         color: root.themeBg
         focus: true
-        Behavior on color { ColorAnimation { duration: 150 } }
 
         Keys.onPressed: function(event) {
             if (splashEnabled && splashScreen.visible && splashScreen.opacity > 0) {
@@ -286,6 +320,12 @@ Window {
 
             if (event.key === Qt.Key_M) {
                 root.toggleMute();
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
                 event.accepted = true;
                 return;
             }
@@ -343,6 +383,18 @@ Window {
             }
         }
 
+        // Background Header Bar (flush arcade layout)
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: root.isTiledDesktopMode ? 0 : (headerItem.height + subheaderItem.height + 28)
+            color: root.themeBg
+            visible: !root.isTiledDesktopMode
+            z: 0
+        }
+
         // =====================================================================
         // ROW 1: HEADER (Title, Domain %, Goal 50%, Rivals, Cuts)
         // =====================================================================
@@ -356,6 +408,7 @@ Window {
             anchors.leftMargin: 16
             anchors.rightMargin: 16
             height: visible ? Math.max(titleCol.height, statsRow.height) : 0
+            z: 1
 
             Column {
                 id: titleCol
@@ -397,55 +450,55 @@ Window {
                 // DOMAIN %
                 Rectangle {
                     width: 76; height: 46; radius: 8
-                    color: root.themeCardBg; border.color: root.themeBorder; border.width: 1
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"; border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"; border.width: 1
                     Column {
                         anchors.centerIn: parent; spacing: 1
-                        Text { text: "DOMAIN"; font.pixelSize: 8; font.bold: true; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { text: root.domainPercent.toFixed(1) + "%"; font.pixelSize: 15; font.bold: true; color: "#38bdf8"; font.family: root.monoFontFamily; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: "DOMAIN"; font.pixelSize: 8; font.bold: true; color: root.isDarkMode ? root.themeSubtext : "#64748b"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: root.domainPercent.toFixed(1) + "%"; font.pixelSize: 15; font.bold: true; color: root.isDarkMode ? "#38bdf8" : "#0284c7"; font.family: root.monoFontFamily; anchors.horizontalCenter: parent.horizontalCenter }
                     }
                 }
 
                 // GOAL (50%)
                 Rectangle {
                     width: 76; height: 46; radius: 8
-                    color: root.themeCardBg; border.color: root.themeBorder; border.width: 1
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"; border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"; border.width: 1
                     Column {
                         anchors.centerIn: parent; spacing: 1
-                        Text { text: "GOAL"; font.pixelSize: 8; font.bold: true; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { text: "50.0%"; font.pixelSize: 15; font.bold: true; color: root.themeGold; font.family: root.monoFontFamily; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: "GOAL"; font.pixelSize: 8; font.bold: true; color: root.isDarkMode ? root.themeSubtext : "#64748b"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: "50.0%"; font.pixelSize: 15; font.bold: true; color: root.isDarkMode ? root.themeGold : "#d97706"; font.family: root.monoFontFamily; anchors.horizontalCenter: parent.horizontalCenter }
                     }
                 }
 
                 // RIVALS REMAINING
                 Rectangle {
                     width: 76; height: 46; radius: 8
-                    color: root.themeCardBg; border.color: root.themeBorder; border.width: 1
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"; border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"; border.width: 1
                     Column {
                         anchors.centerIn: parent; spacing: 1
-                        Text { text: "RIVALS"; font.pixelSize: 8; font.bold: true; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { text: root.livingRivals + " Alive"; font.pixelSize: 14; font.bold: true; color: root.livingRivals <= 1 ? "#f43f5e" : root.themeFg; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: "RIVALS"; font.pixelSize: 8; font.bold: true; color: root.isDarkMode ? root.themeSubtext : "#64748b"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: root.livingRivals + " Alive"; font.pixelSize: 14; font.bold: true; color: root.livingRivals <= 1 ? (root.isDarkMode ? "#f43f5e" : "#dc2626") : (root.isDarkMode ? root.themeFg : "#0f172a"); anchors.horizontalCenter: parent.horizontalCenter }
                     }
                 }
 
                 // CUTS (TAIL KILLS)
                 Rectangle {
                     width: 64; height: 46; radius: 8
-                    color: root.themeCardBg; border.color: root.themeBorder; border.width: 1
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"; border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"; border.width: 1
                     Column {
                         anchors.centerIn: parent; spacing: 1
-                        Text { text: "CUTS"; font.pixelSize: 8; font.bold: true; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { text: root.cutsCount.toString(); font.pixelSize: 15; font.bold: true; color: "#34d399"; font.family: root.monoFontFamily; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: "CUTS"; font.pixelSize: 8; font.bold: true; color: root.isDarkMode ? root.themeSubtext : "#64748b"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: root.cutsCount.toString(); font.pixelSize: 15; font.bold: true; color: root.isDarkMode ? "#34d399" : "#059669"; font.family: root.monoFontFamily; anchors.horizontalCenter: parent.horizontalCenter }
                     }
                 }
 
                 // BEST PEAK
                 Rectangle {
                     width: 68; height: 46; radius: 8
-                    color: root.themeCardBg; border.color: root.themeBorder; border.width: 1
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"; border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"; border.width: 1
                     Column {
                         anchors.centerIn: parent; spacing: 1
-                        Text { text: "BEST"; font.pixelSize: 8; font.bold: true; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { text: root.bestDomainPercent.toFixed(1) + "%"; font.pixelSize: 14; font.bold: true; color: root.themeSubtext; font.family: root.monoFontFamily; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: "BEST"; font.pixelSize: 8; font.bold: true; color: root.isDarkMode ? root.themeSubtext : "#64748b"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: root.bestDomainPercent.toFixed(1) + "%"; font.pixelSize: 14; font.bold: true; color: root.bestDomainPercent > 0 ? (root.isDarkMode ? root.themeAccent : "#15803d") : (root.isDarkMode ? root.themeSubtext : "#94a3b8"); font.family: root.monoFontFamily; anchors.horizontalCenter: parent.horizontalCenter }
                     }
                 }
             }
@@ -464,6 +517,7 @@ Window {
             anchors.leftMargin: 16
             anchors.rightMargin: 16
             height: visible ? 32 : 0
+            z: 1
 
             // Nitro Energy Meter on the Left
             Row {
@@ -496,7 +550,7 @@ Window {
                             height: 8
                             width: 100
                             radius: 4
-                            color: "#14ffffff"
+                            color: root.isDarkMode ? "#14ffffff" : "#e2e8f0"
                             anchors.verticalCenter: parent.verticalCenter
                             clip: true
 
@@ -528,7 +582,7 @@ Window {
                 // Help Button
                 Rectangle {
                     height: 28; width: 96; radius: 6
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.showHelp ? root.themeAccent : root.themeBorder; border.width: 1
                     Row {
                         anchors.centerIn: parent; spacing: 5
@@ -550,7 +604,7 @@ Window {
                 // Pause Button
                 Rectangle {
                     height: 28; width: 84; radius: 6
-                    color: (root.isPaused && root.gameState === "playing") ? root.themeCardBg : (pauseMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
+                    color: (root.isPaused && root.gameState === "playing") ? root.themeCardHover : (pauseMouse.containsMouse ? root.themeCardHover : root.themeCardBg)
                     border.color: (root.isPaused && root.gameState === "playing") ? root.themeAccent : root.themeBorder; border.width: 1
                     Row {
                         anchors.centerIn: parent; spacing: 4
@@ -566,7 +620,7 @@ Window {
                 // Audio Mute
                 Rectangle {
                     height: 28; width: 78; radius: 6
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.isMuted ? root.themeBorder : root.themeAccent; border.width: 1
                     Row {
                         anchors.centerIn: parent; spacing: 4
@@ -659,14 +713,14 @@ Window {
         // =====================================================================
         Item {
             id: playArea
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 6 : 10
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 0
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 12
+            anchors.bottomMargin: 0
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
+            anchors.leftMargin: 0
+            anchors.rightMargin: 0
 
             Rectangle {
                 id: boardContainer
@@ -674,7 +728,7 @@ Window {
                 color: root.themeBoardBg
                 border.color: root.themeBorder
                 border.width: 1
-                radius: 12
+                radius: 0
                 clip: true
 
                 Canvas {
@@ -971,7 +1025,7 @@ Window {
                             text: "RIVALS (5)"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: "#94a3b8"
                         }
 
                         Repeater {
@@ -991,7 +1045,7 @@ Window {
                                     font.pixelSize: 10
                                     font.bold: true
                                     font.strikeout: !modelData.alive
-                                    color: modelData.alive ? root.themeFg : root.themeSubtext
+                                    color: modelData.alive ? "#f8fafc" : "#64748b"
                                     width: 55
                                     elide: Text.ElideRight
                                     anchors.verticalCenter: parent.verticalCenter
@@ -1001,7 +1055,7 @@ Window {
                                     font.pixelSize: 10
                                     font.family: root.monoFontFamily
                                     font.bold: true
-                                    color: modelData.alive ? "#38bdf8" : root.themeSubtext
+                                    color: modelData.alive ? "#38bdf8" : "#64748b"
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
@@ -1220,7 +1274,7 @@ Window {
                             Column {
                                 anchors.centerIn: parent; spacing: 1
                                 Text { text: "PEAK RECORD"; font.pixelSize: 8; font.bold: true; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
-                                Text { text: root.bestDomainPercent.toFixed(1) + "%"; font.pixelSize: 16; font.bold: true; color: root.themeFg; font.family: root.monoFontFamily; anchors.horizontalCenter: parent.horizontalCenter }
+                                Text { text: root.bestDomainPercent.toFixed(1) + "%"; font.pixelSize: 16; font.bold: true; color: "#ffffff"; font.family: root.monoFontFamily; anchors.horizontalCenter: parent.horizontalCenter }
                             }
                         }
                     }
@@ -1447,8 +1501,8 @@ Window {
             height: 32
             width: toastText.implicitWidth + 24
             radius: 16
-            color: root.themeCardBg
-            border.color: root.themeBorder
+            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
             border.width: 1
             opacity: 0
             z: 950
@@ -1458,7 +1512,7 @@ Window {
                 anchors.centerIn: parent
                 font.pixelSize: 11
                 font.bold: true
-                color: root.themeFg
+                color: root.isDarkMode ? root.themeFg : "#0f172a"
             }
 
             Timer {

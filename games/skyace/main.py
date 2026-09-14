@@ -53,6 +53,35 @@ except ImportError:
         from audio_manager import SoundManager
         from prop_audio import ProceduralPropAudio
 
+DEFAULT_PRESETS = {
+    "dark": {
+        "id": "catppuccin-mocha",
+        "name": "Catppuccin Mocha",
+        "bg": "#181825",
+        "boardBg": "#11111b",
+        "cardBg": "#1e1e2e",
+        "cardHover": "#313244",
+        "surface": "#1e1e2e",
+        "border": "#313244",
+        "fg": "#cdd6f4",
+        "subtext": "#a6adc8",
+        "accent": "#89b4fa",
+    },
+    "light": {
+        "id": "catppuccin-latte",
+        "name": "Catppuccin Latte",
+        "bg": "#eff1f5",
+        "boardBg": "#11111b",
+        "cardBg": "#ffffff",
+        "cardHover": "#f1f5f9",
+        "surface": "#ffffff",
+        "border": "#ccd0da",
+        "fg": "#4c4f69",
+        "subtext": "#6c6f85",
+        "accent": "#1e66f5",
+    },
+}
+
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
     if env_path and Path(env_path).is_file():
@@ -70,7 +99,7 @@ def find_omarchy_colors_file():
             return c
     return None
 
-def get_omarchy_theme():
+def load_system_theme():
     theme_path = find_omarchy_colors_file()
     if not theme_path:
         return None
@@ -83,14 +112,22 @@ def get_omarchy_theme():
         c = raw_colors if isinstance(raw_colors, dict) else data
         if not isinstance(c, dict):
             return None
+        bg = c.get("background") or c.get("bg")
+        fg = c.get("foreground") or c.get("fg")
+        accent = c.get("accent") or c.get("primary") or c.get("color4")
         return {
-            "background": c.get("background") or c.get("bg"),
-            "foreground": c.get("foreground") or c.get("fg"),
-            "accent": c.get("accent") or c.get("primary") or c.get("color4"),
-            "muted": c.get("muted") or c.get("color8"),
+            "bg": bg,
+            "fg": fg,
+            "accent": accent,
+            "cardBg": c.get("card") or c.get("surface") or "#ffffff",
+            "border": c.get("border") or "#ccd0da",
+            "subtext": c.get("subtext") or c.get("muted") or c.get("color8"),
         }
     except Exception:
         return None
+
+def get_omarchy_theme():
+    return load_system_theme()
 
 def pil_to_qpixmap(pil_img):
     """Converts a PIL RGBA image to a PySide6 QPixmap if 3D developer dependencies are installed."""
@@ -172,7 +209,10 @@ class SkyAceGame(QWidget):
         self.audio_slider_dragging = None  # 0, 1, 2 or None
         self.mouse_cursor_pos = None
         self.matchup_badge_hovered = False
-        self.omarchy_theme = get_omarchy_theme()
+        self.apply_theme(DEFAULT_PRESETS["dark"])
+        sys_t = load_system_theme()
+        if sys_t:
+            self.apply_theme(sys_t, "System")
 
         # Game States: "hangar", "transition", "takeoff", "playing", "landing", "round_clear", "victory"
         self.state = "hangar"
@@ -2937,22 +2977,51 @@ class SkyAceGame(QWidget):
     def get_hangar_help_rect(self):
         return QRect(16, 20, 116, 28)
 
+    def apply_theme(self, theme_data, name="Custom"):
+        self.current_theme = theme_data
+        self.theme_name = name
+
+        bg_hex = theme_data.get("bg") or theme_data.get("background") or "#181825"
+        c = QColor(bg_hex)
+        lum = (c.red() * 299 + c.green() * 587 + c.blue() * 114) / 1000
+        self.is_dark_mode = lum < 140
+
+        if not self.is_dark_mode:
+            self.theme_bg = QColor(bg_hex)
+            self.theme_board_bg = QColor("#11111b")
+            self.theme_card_bg = QColor(theme_data.get("cardBg") or "#ffffff")
+            self.theme_card_hover = QColor(theme_data.get("cardHover") or "#f1f5f9")
+            self.theme_fg = QColor(theme_data.get("fg") or theme_data.get("foreground") or "#4c4f69")
+            self.theme_subtext = QColor(theme_data.get("subtext") or "#6c6f85")
+            self.theme_accent = QColor(theme_data.get("accent") or "#1e66f5")
+            self.theme_border = QColor(theme_data.get("border") or "#ccd0da")
+        else:
+            self.theme_bg = QColor(bg_hex)
+            self.theme_board_bg = QColor(theme_data.get("boardBg") or "#11111b")
+            self.theme_card_bg = QColor(theme_data.get("cardBg") or "#1e1e2e")
+            self.theme_card_hover = QColor(theme_data.get("cardHover") or "#313244")
+            self.theme_fg = QColor(theme_data.get("fg") or theme_data.get("foreground") or "#cdd6f4")
+            self.theme_subtext = QColor(theme_data.get("subtext") or "#a6adc8")
+            self.theme_accent = QColor(theme_data.get("accent") or "#89b4fa")
+            self.theme_border = QColor(theme_data.get("border") or "#313244")
+        self.update()
+
     def draw_template_help_button(self, painter, rect):
         painter.save()
         is_active = getattr(self, "show_help_modal", False)
         # Template subheader pill styling: radius 8, border 1
-        painter.setBrush(QColor(26, 40, 60) if is_active else QColor(16, 26, 40))
-        painter.setPen(QPen(QColor(255, 215, 60) if is_active else QColor(48, 78, 114), 1))
+        painter.setBrush(self.theme_card_hover if is_active else self.theme_card_bg)
+        painter.setPen(QPen(self.theme_accent if is_active else self.theme_border, 1))
         painter.drawRoundedRect(rect, 8, 8)
 
-        # Template gold '?' on left
+        # Template gold/accent '?' on left
         painter.setFont(QFont("Arial", 11, QFont.Bold))
-        painter.setPen(QColor(255, 215, 60))
+        painter.setPen(self.theme_accent)
         painter.drawText(QRect(rect.left() + 8, rect.top(), 16, rect.height()), Qt.AlignCenter, "?")
 
         # Template 'How to Play' label
         painter.setFont(QFont("Arial", 9, QFont.Bold))
-        painter.setPen(QColor(255, 215, 60) if is_active else QColor(240, 248, 255))
+        painter.setPen(self.theme_accent if is_active else self.theme_fg)
         painter.drawText(QRect(rect.left() + 26, rect.top(), rect.width() - 28, rect.height()), Qt.AlignLeft | Qt.AlignVCenter, "How to Play")
         painter.restore()
 
@@ -2993,20 +3062,20 @@ class SkyAceGame(QWidget):
             # Mini Floating Header (Shift+F Tiled View / Micro-HUD)
             # -----------------------------------------------------------------
             mini_rect = QRect(12, 8, self.width() - 24, 38)
-            painter.fillRect(mini_rect, QColor(10, 18, 30, 235))
-            painter.setPen(QPen(QColor(45, 80, 125), 1))
+            painter.fillRect(mini_rect, self.theme_card_bg)
+            painter.setPen(QPen(self.theme_border, 1))
             painter.drawRoundedRect(mini_rect, 7, 7)
 
             painter.setFont(QFont("Arial", 11, QFont.Bold))
-            painter.setPen(QColor(255, 215, 60))
+            painter.setPen(self.theme_accent)
             painter.drawText(22, 32, "SKY ACE 194X")
 
             painter.setFont(QFont("Menlo", 9, QFont.Bold))
-            painter.setPen(QColor(255, 255, 255))
+            painter.setPen(self.theme_fg)
             painter.drawText(136, 32, f"• {self.score:,}")
 
             painter.setFont(QFont("Menlo", 8))
-            painter.setPen(QColor(160, 195, 230))
+            painter.setPen(self.theme_subtext)
             painter.drawText(215, 32, f"HI:{self.high_score:,}")
 
             # Mini buttons on right
@@ -3017,13 +3086,13 @@ class SkyAceGame(QWidget):
                                    ("view_mode", "⛶")]:
                 b_rect = rects[b_key]
                 is_active = (b_key == "pause" and self.is_paused) or \
-                            (b_key == "help" and getattr(self, "show_help_modal", False)) or \
-                            (b_key == "sound" and self.audio_menu_open)
-                painter.fillRect(b_rect, QColor(20, 34, 52))
-                painter.setPen(QPen(QColor(255, 215, 60) if is_active else QColor(50, 90, 140), 1))
+                             (b_key == "help" and getattr(self, "show_help_modal", False)) or \
+                             (b_key == "sound" and self.audio_menu_open)
+                painter.fillRect(b_rect, self.theme_card_hover if is_active else self.theme_card_bg)
+                painter.setPen(QPen(self.theme_accent if is_active else self.theme_border, 1))
                 painter.drawRoundedRect(b_rect, 4, 4)
                 painter.setFont(QFont("Menlo", 10, QFont.Bold))
-                painter.setPen(QColor(255, 215, 60) if is_active else QColor(240, 248, 255))
+                painter.setPen(self.theme_accent if is_active else self.theme_fg)
                 painter.drawText(b_rect, Qt.AlignCenter, b_icon)
 
         else:
@@ -3032,19 +3101,19 @@ class SkyAceGame(QWidget):
             # -----------------------------------------------------------------
             h_h = 108
             header_rect = QRect(0, 0, self.width(), h_h)
-            painter.fillRect(header_rect, QColor(8, 14, 22, 245))
-            painter.setPen(QPen(QColor(36, 56, 82), 1))
+            painter.fillRect(header_rect, self.theme_bg)
+            painter.setPen(QPen(self.theme_border, 1))
             painter.drawLine(0, h_h, self.width(), h_h)
 
             # Row 1: Title & Subtitle (Left)
             t_info = self.theaters.get(self.enemy_theater, self.theaters["imperial"])
 
             painter.setFont(QFont("Arial", 18, QFont.Bold))
-            painter.setPen(QColor(255, 215, 60))
+            painter.setPen(self.theme_fg)
             painter.drawText(18, 36, "SKY ACE 194X")
 
             painter.setFont(QFont("Arial", 10))
-            painter.setPen(QColor(140, 175, 210))
+            painter.setPen(self.theme_subtext)
             sub_text = f"WWII Tactical Carrier Arcade • {t_info['name']}"
             painter.drawText(18, 52, sub_text)
 
@@ -3052,26 +3121,26 @@ class SkyAceGame(QWidget):
             sc_w, sc_h = 76, 44
             # SCORE Card
             sc_rect = QRect(self.width() - 176, 16, sc_w, sc_h)
-            painter.setBrush(QColor(16, 26, 40))
-            painter.setPen(QPen(QColor(48, 78, 114), 1))
+            painter.setBrush(self.theme_card_bg)
+            painter.setPen(QPen(self.theme_border, 1))
             painter.drawRoundedRect(sc_rect, 6, 6)
             painter.setFont(QFont("Arial", 8, QFont.Bold))
-            painter.setPen(QColor(140, 175, 210))
+            painter.setPen(self.theme_subtext)
             painter.drawText(QRect(sc_rect.left(), sc_rect.top() + 4, sc_w, 14), Qt.AlignCenter, "SCORE")
             painter.setFont(QFont("Menlo", 11, QFont.Bold))
-            painter.setPen(QColor(255, 255, 255))
+            painter.setPen(self.theme_fg)
             painter.drawText(QRect(sc_rect.left(), sc_rect.top() + 18, sc_w, 22), Qt.AlignCenter, f"{self.score:06d}")
 
             # BEST Card
             best_rect = QRect(self.width() - 92, 16, sc_w, sc_h)
-            painter.setBrush(QColor(16, 26, 40))
-            painter.setPen(QPen(QColor(48, 78, 114), 1))
+            painter.setBrush(self.theme_card_bg)
+            painter.setPen(QPen(self.theme_border, 1))
             painter.drawRoundedRect(best_rect, 6, 6)
             painter.setFont(QFont("Arial", 8, QFont.Bold))
-            painter.setPen(QColor(140, 175, 210))
+            painter.setPen(self.theme_subtext)
             painter.drawText(QRect(best_rect.left(), best_rect.top() + 4, sc_w, 14), Qt.AlignCenter, "BEST")
             painter.setFont(QFont("Menlo", 11, QFont.Bold))
-            painter.setPen(QColor(255, 215, 60))
+            painter.setPen(self.theme_accent)
             painter.drawText(QRect(best_rect.left(), best_rect.top() + 18, sc_w, 22), Qt.AlignCenter, f"{self.high_score:06d}")
 
             # Row 2: Subheader Action Bar
@@ -3082,39 +3151,41 @@ class SkyAceGame(QWidget):
 
             # [⏸ Pause (P)]
             p_btn = rects["pause"]
-            painter.setBrush(QColor(20, 32, 48))
-            painter.setPen(QPen(QColor(255, 215, 60) if self.is_paused else QColor(50, 80, 120), 1))
+            p_active = self.is_paused
+            painter.setBrush(self.theme_card_hover if p_active else self.theme_card_bg)
+            painter.setPen(QPen(self.theme_accent if p_active else self.theme_border, 1))
             painter.drawRoundedRect(p_btn, 5, 5)
             painter.setFont(QFont("Arial", 9, QFont.Bold))
-            painter.setPen(QColor(255, 215, 60) if self.is_paused else QColor(220, 235, 250))
+            painter.setPen(self.theme_accent if p_active else self.theme_fg)
             p_label = "▶ Resume" if self.is_paused else "⏸ Pause"
             painter.drawText(p_btn, Qt.AlignCenter, p_label)
 
             # [🔊 Snd (M)]
             s_btn = rects["sound"]
-            painter.setBrush(QColor(20, 32, 48))
-            painter.setPen(QPen(QColor(255, 215, 60) if self.audio_menu_open else QColor(50, 80, 120), 1))
+            s_active = self.audio_menu_open
+            painter.setBrush(self.theme_card_hover if s_active else self.theme_card_bg)
+            painter.setPen(QPen(self.theme_accent if s_active else self.theme_border, 1))
             painter.drawRoundedRect(s_btn, 5, 5)
             painter.setFont(QFont("Arial", 9, QFont.Bold))
-            painter.setPen(QColor(255, 215, 60) if self.audio_menu_open else QColor(220, 235, 250))
-            painter.drawText(s_btn, Qt.AlignCenter, "🔊 Snd (M)")
+            painter.setPen(self.theme_accent if s_active else self.theme_fg)
+            painter.drawText(s_btn, Qt.AlignCenter, "🔊 Snd")
 
             # [🔄 Reset (R)]
             r_btn = rects["restart"]
-            painter.setBrush(QColor(20, 32, 48))
-            painter.setPen(QPen(QColor(50, 80, 120), 1))
+            painter.setBrush(self.theme_card_bg)
+            painter.setPen(QPen(self.theme_border, 1))
             painter.drawRoundedRect(r_btn, 5, 5)
             painter.setFont(QFont("Arial", 9, QFont.Bold))
-            painter.setPen(QColor(220, 235, 250))
+            painter.setPen(self.theme_fg)
             painter.drawText(r_btn, Qt.AlignCenter, "🔄 Reset")
 
             # [⛶ Full / Tiled (Shift+F)]
             f_btn = rects["view_mode"]
-            painter.setBrush(QColor(20, 32, 48))
-            painter.setPen(QPen(QColor(50, 80, 120), 1))
+            painter.setBrush(self.theme_card_bg)
+            painter.setPen(QPen(self.theme_border, 1))
             painter.drawRoundedRect(f_btn, 5, 5)
             painter.setFont(QFont("Arial", 9, QFont.Bold))
-            painter.setPen(QColor(220, 235, 250))
+            painter.setPen(self.theme_fg)
             painter.drawText(f_btn, Qt.AlignCenter, "⛶")
 
         painter.restore()
@@ -3277,30 +3348,26 @@ class SkyAceGame(QWidget):
         modal_rect = QRect(m_x, m_y, m_w, m_h)
 
         # Template modal card: radius 12, border 1
-        card_bg = QColor(16, 24, 38, 252)
-        accent_col = QColor(255, 215, 60)
-        theme = getattr(self, "omarchy_theme", None)
-        if theme:
-            if theme.get("background"):
-                card_bg = QColor(theme["background"])
-                card_bg.setAlpha(252)
-            if theme.get("accent"):
-                accent_col = QColor(theme["accent"])
+        card_bg = self.theme_card_bg
+        accent_col = self.theme_accent
+        border_col = self.theme_border
+        fg_col = self.theme_fg
+        sub_col = self.theme_subtext
 
         painter.setBrush(card_bg)
         painter.setPen(QPen(accent_col, 1.5))
         painter.drawRoundedRect(modal_rect, 12, 12)
 
-        # Header Title: HOW TO PLAY (matching template/main.qml line 698)
+        # Header Title: HOW TO PLAY
         painter.setFont(QFont("Arial", 16, QFont.Bold))
         painter.setPen(accent_col)
         painter.drawText(QRect(m_x, m_y + 18, m_w, 24), Qt.AlignCenter, "HOW TO PLAY")
 
         painter.setFont(QFont("Arial", 9, QFont.Bold))
-        painter.setPen(QColor(140, 175, 210))
+        painter.setPen(sub_col)
         painter.drawText(QRect(m_x, m_y + 42, m_w, 16), Qt.AlignCenter, "SKY ACE 194X • TACTICAL WWII CARRIER ARCADE")
 
-        # Controls List (matching template pill design)
+        # Controls List
         controls = [
             ("Arrows / WASD", "Flight Maneuvering & Mouse Aim"),
             ("Z / Left Click", "Primary Cannons (Hold to Autofire)"),
@@ -3315,26 +3382,26 @@ class SkyAceGame(QWidget):
         p_y = m_y + 70
         for key_text, desc_text in controls:
             pill_rect = QRect(m_x + 24, p_y, 114, 22)
-            painter.setBrush(QColor(24, 38, 60))
-            painter.setPen(QPen(QColor(52, 82, 120), 1))
+            painter.setBrush(self.theme_card_hover)
+            painter.setPen(QPen(border_col, 1))
             painter.drawRoundedRect(pill_rect, 4, 4)
 
             painter.setFont(QFont("Menlo", 8, QFont.Bold))
-            painter.setPen(QColor(255, 230, 90))
+            painter.setPen(accent_col)
             painter.drawText(pill_rect, Qt.AlignCenter, key_text)
 
             painter.setFont(QFont("Arial", 9))
-            painter.setPen(QColor(220, 235, 250))
+            painter.setPen(fg_col)
             painter.drawText(QRect(m_x + 148, p_y, m_w - 170, 22), Qt.AlignLeft | Qt.AlignVCenter, desc_text)
             p_y += 28
 
-        # "GOT IT" Button (matching template/main.qml lines 715-732)
+        # "GOT IT" Button
         btn_w, btn_h = 120, 32
         btn_x = m_x + (m_w - btn_w) // 2
         btn_y = m_y + m_h - 70
         btn_rect = QRect(btn_x, btn_y, btn_w, btn_h)
 
-        painter.setBrush(QColor(255, 215, 60))
+        painter.setBrush(accent_col)
         painter.setPen(Qt.NoPen)
         painter.drawRoundedRect(btn_rect, 6, 6)
 
@@ -3342,9 +3409,9 @@ class SkyAceGame(QWidget):
         painter.setPen(QColor(14, 20, 30))
         painter.drawText(btn_rect, Qt.AlignCenter, "GOT IT")
 
-        # Attribution Footnote (matching template/main.qml line 735)
+        # Attribution Footnote
         painter.setFont(QFont("Arial", 9))
-        painter.setPen(QColor(130, 160, 195, 190))
+        painter.setPen(sub_col)
         painter.drawText(QRect(m_x, m_y + m_h - 26, m_w, 18), Qt.AlignCenter, "Created by Chris Thompson (@bigcjat) with Gemini")
 
         painter.restore()
@@ -7656,13 +7723,87 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     window = SkyAceGame()
-    if "--record-preview" in sys.argv:
-        window.start_preview_recording_scheduler(delay_sec=20, duration_sec=8)
 
-    if "--secret-play" in sys.argv:
-        window.start_secret_mission("ho229")
-    elif "--secret" in sys.argv:
-        window.state = "secret_briefing"
-        window.sound.play_bgm("bgm_boss")
+    requested_theme = None
+    requested_screenshot = None
+    args = sys.argv[1:]
+    i = 0
+    while i < len(args):
+        if args[i] == "--theme" and i + 1 < len(args):
+            requested_theme = args[i + 1]
+            i += 2
+        elif args[i] == "--screenshot" and i + 1 < len(args):
+            requested_screenshot = args[i + 1]
+            i += 2
+        elif args[i] == "--record-preview":
+            window.start_preview_recording_scheduler(delay_sec=20, duration_sec=8)
+            i += 1
+        elif args[i] == "--secret-play":
+            window.start_secret_mission("ho229")
+            i += 1
+        elif args[i] == "--secret":
+            window.state = "secret_briefing"
+            window.sound.play_bgm("bgm_boss")
+            i += 1
+        else:
+            i += 1
+
+    if requested_theme:
+        clean_arg = requested_theme.lower().replace("_", "-")
+        if clean_arg in DEFAULT_PRESETS:
+            t = DEFAULT_PRESETS[clean_arg]
+            window.apply_theme(t, t["name"])
+        else:
+            custom_path = Path(requested_theme).expanduser().resolve()
+            if custom_path.is_file():
+                try:
+                    with open(custom_path, "rb") as f:
+                        data = tomllib.load(f)
+                    c = data.get("colors") if isinstance(data.get("colors"), dict) else data
+                    window.apply_theme(c, custom_path.stem)
+                except Exception:
+                    pass
+            elif any(x in clean_arg for x in ["light", "day", "white", "latte"]):
+                window.apply_theme(DEFAULT_PRESETS["light"], "Light")
+            else:
+                window.apply_theme(DEFAULT_PRESETS["dark"], "Dark")
+    else:
+        sys_t = load_system_theme()
+        if sys_t:
+            window.apply_theme(sys_t, "System")
+        elif app.styleHints().colorScheme() == Qt.ColorScheme.Light:
+            window.apply_theme(DEFAULT_PRESETS["light"], "Catppuccin Latte")
+        else:
+            window.apply_theme(DEFAULT_PRESETS["dark"], "Catppuccin Mocha")
+
+    def on_color_scheme_changed():
+        if requested_theme:
+            return
+        sys_t = load_system_theme()
+        if sys_t:
+            window.apply_theme(sys_t, "System")
+        elif app.styleHints().colorScheme() == Qt.ColorScheme.Light:
+            window.apply_theme(DEFAULT_PRESETS["light"], "Catppuccin Latte")
+        else:
+            window.apply_theme(DEFAULT_PRESETS["dark"], "Catppuccin Mocha")
+
+    app.styleHints().colorSchemeChanged.connect(on_color_scheme_changed)
+
+    # If taking screenshot or requested flight, start mission directly
+    if requested_screenshot or "--play" in sys.argv or "--flight" in sys.argv:
+        window.start_mission("p38", "imperial", 1)
+        window.state = "playing"
+
     window.show()
+
+    if requested_screenshot:
+        def capture_shot():
+            pix = window.grab()
+            out_p = Path(requested_screenshot).expanduser().resolve()
+            out_p.parent.mkdir(parents=True, exist_ok=True)
+            pix.save(str(out_p), "PNG")
+            print(f"[Sky Ace] Screenshot saved to {out_p}")
+            app.quit()
+        QTimer.singleShot(400, capture_shot)
+
     sys.exit(app.exec())

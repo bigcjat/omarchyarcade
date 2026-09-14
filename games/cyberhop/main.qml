@@ -15,11 +15,13 @@ Window {
     property color themeBoardBg: "#1e1e2e"
     property color themeCellGrid: "#252538"
     property color themeCardBg: "#313244"
+    property color themeCardHover: "#45475a"
     property color themeFg: "#cdd6f4"
     property color themeSubtext: "#a6adc8"
     property color themeAccent: "#a6e3a1" // Frog Green
     property color themeBorder: "#45475a"
     property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
+    readonly property bool isDarkMode: colorLuminance(themeBg) < 0.5
     property bool splashEnabled: true
     property bool isMuted: true
     property bool isTiledDesktopMode: root.height < 520 || root.width < 440
@@ -28,22 +30,19 @@ Window {
     on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
+    property color themeCardHover: isDarkMode ? Qt.lighter(themeCardBg, 1.15) : "#f1f5f9"
 
-    function colorLuminance(hex) {
-        if (!hex || typeof hex !== "string") return 0.2;
-        var c = Qt.color(hex);
+    function colorLuminance(col) {
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
-    property string helpText: "• Hop Forward: ↑, W, Space, or Vim K\n• Steer Left/Right: ← / →, A / D, or H / L\n• Hop Back: ↓, S, or Vim J\n• Dodge traffic & high-speed bullet trains\n• Ride floating logs across rivers\n• Full/Compact View: Shift+F\n• Sound: M | Restart: R | Help: ?\n• Keep moving—don't let the eagle catch you!"
-
-    Behavior on themeBg { ColorAnimation { duration: 250 } }
-    Behavior on themeBoardBg { ColorAnimation { duration: 250 } }
-    Behavior on themeCardBg { ColorAnimation { duration: 250 } }
-    Behavior on themeFg { ColorAnimation { duration: 250 } }
-    Behavior on themeSubtext { ColorAnimation { duration: 250 } }
-    Behavior on themeAccent { ColorAnimation { duration: 250 } }
-    Behavior on themeBorder { ColorAnimation { duration: 250 } }
+    property string helpText: "• Hop Forward: ↑, W, Space, or Vim K\n• Steer Left/Right: ← / →, A / D, or H / L\n• Hop Back: ↓, S, or Vim J\n• Dodge traffic & high-speed bullet trains\n• Ride floating logs across rivers\n• Full/Compact View: Shift+F\n• Theme: T | Sound: M | Restart: R | Help: ?\n• Keep moving—don't let the eagle catch you!"
 
     color: themeBg
 
@@ -53,14 +52,54 @@ Window {
 
     function applyTheme(data, name) {
         if (!data || typeof data !== "object") return;
-        if (data.bg) themeBg = data.bg;
-        if (data.fg) themeFg = data.fg;
-        if (data.accent) themeAccent = data.accent;
-        if (data.boardBg) themeBoardBg = data.boardBg;
-        if (data.cardBg) themeCardBg = data.cardBg;
-        if (data.border) themeBorder = data.border;
-        if (data.subtext) themeSubtext = data.subtext;
+        var bg = data.bg || data.background || "#181825";
+        var fg = data.fg || data.foreground || "#cdd6f4";
+        var accent = data.accent || "#a6e3a1";
+        themeBg = bg;
+        themeFg = fg;
+        themeAccent = accent;
+        themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+
+        var lum = colorLuminance(bg);
+        if (lum > 0.5) {
+            themeBoardBg = data.boardBg || "#e2e8f0";
+            themeCardBg = data.card_bg || data.cardBg || "#ffffff";
+            themeCardHover = data.card_hover || "#f1f5f9";
+            themeSubtext = data.subtext || "#5c5f77";
+            themeBorder = data.border || "#ccd0da";
+        } else {
+            themeBoardBg = data.boardBg || "#1e1e2e";
+            themeCardBg = data.card_bg || data.cardBg || "#313244";
+            themeCardHover = data.card_hover || "#45475a";
+            themeSubtext = data.subtext || "#a6adc8";
+            themeBorder = data.border || "#45475a";
+        }
         gameCanvas.requestPaint();
+    }
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            bg: "#eff1f5",
+            fg: "#4c4f69",
+            accent: "#40a02b",
+            boardBg: "#e2e8f0",
+            card_bg: "#ffffff",
+            card_hover: "#f1f5f9",
+            border: "#ccd0da",
+            subtext: "#5c5f77"
+        } : {
+            bg: "#181825",
+            fg: "#cdd6f4",
+            accent: "#a6e3a1",
+            boardBg: "#1e1e2e",
+            card_bg: "#313244",
+            card_hover: "#45475a",
+            border: "#45475a",
+            subtext: "#a6adc8"
+        };
+        applyTheme(tData, nextIsLight ? "Omarchy Light" : "Omarchy Dark");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     function playSound(name) {
@@ -127,7 +166,7 @@ Window {
 
     signal screenshotSaved(string path)
 
-    function captureScreenshot(filePath, shouldQuit) {
+    function captureScreenshot(filePath) {
         if (splashScreen) {
             splashScreen.visible = false;
             splashScreen.opacity = 0;
@@ -138,9 +177,6 @@ Window {
             result.saveToFile(filePath);
             console.log("Screenshot saved successfully to " + filePath);
             root.screenshotSaved(filePath);
-            if (shouldQuit) {
-                Qt.quit();
-            }
         });
     }
 
@@ -167,6 +203,12 @@ Window {
 
             if (event.key === Qt.Key_M) {
                 toggleMute();
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_T) {
+                cycleTheme();
                 event.accepted = true;
                 return;
             }
@@ -207,6 +249,20 @@ Window {
             }
         }
 
+        // =====================================================================
+        // HEADER BAR BACKGROUND (Adapts to system OS / colors.toml theme)
+        // =====================================================================
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: root.isTiledDesktopMode ? 0 : (headerItem.height + subheaderItem.height + 36)
+            color: root.themeBg
+            visible: !root.isTiledDesktopMode
+            z: 0
+        }
+
         // 2048 DESIGN STANDARD: ROW 1 (Header Item)
         Item {
             id: headerItem
@@ -234,7 +290,6 @@ Window {
                     font.pixelSize: Math.max(22, Math.min(36, headerItem.width * 0.07))
                     font.bold: true
                     color: root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
                 Text {
                     width: parent.width
@@ -242,7 +297,6 @@ Window {
                     text: (root.gameState === "gameover" ? "Game Over • Press R to Restart" : (root.gameState === "ready" ? "Press Space to Hop Forward" : "Cross Traffic & Rivers!"))
                     font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
                     color: root.themeSubtext
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
 
@@ -258,10 +312,9 @@ Window {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.16))
                     height: Math.max(42, Math.min(52, headerItem.width * 0.10))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -269,16 +322,17 @@ Window {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "SCORE"
-                            font.pixelSize: 8
+                            font.pixelSize: 9
                             font.bold: true
-                            color: root.themeSubtext
+                            font.letterSpacing: 0.5
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.score.toString()
-                            font.pixelSize: 16
+                            font.pixelSize: 18
                             font.bold: true
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                         }
                     }
                 }
@@ -288,10 +342,9 @@ Window {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.16))
                     height: Math.max(42, Math.min(52, headerItem.width * 0.10))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -299,16 +352,17 @@ Window {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "BEST"
-                            font.pixelSize: 8
+                            font.pixelSize: 9
                             font.bold: true
-                            color: root.themeSubtext
+                            font.letterSpacing: 0.5
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.highScore.toString()
-                            font.pixelSize: 16
+                            font.pixelSize: 18
                             font.bold: true
-                            color: root.highScore > 0 ? root.themeAccent : root.themeSubtext
+                            color: root.highScore > 0 ? (root.isDarkMode ? root.themeAccent : "#15803d") : (root.isDarkMode ? root.themeSubtext : "#94a3b8")
                         }
                     }
                 }
@@ -328,110 +382,67 @@ Window {
             height: root.isTiledDesktopMode ? 0 : 34
             readonly property bool isCrowded: subheaderItem.width < 450
 
-            // Help button
-            Rectangle {
-                id: helpBtn
+            Row {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                height: 32
-                width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
-                radius: 8
-                color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
-                border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
+                spacing: 8
 
-                Row {
-                    id: helpRow
-                    anchors.centerIn: parent
-                    spacing: 6
-                    Rectangle {
-                        width: 16
-                        height: 16
-                        radius: 8
-                        color: root.themeAccent
-                        anchors.verticalCenter: parent.verticalCenter
+                // Help button
+                Rectangle {
+                    id: helpBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
+                    radius: 8
+                    color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: helpRow
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Rectangle {
+                            width: 16
+                            height: 16
+                            radius: 8
+                            color: root.themeAccent
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: "?"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: root.themeBtnFg
+                            }
+                        }
                         Text {
-                            anchors.centerIn: parent
-                            text: "?"
+                            text: "How to Play"
                             font.pixelSize: 11
                             font.bold: true
-                            color: root.themeBtnFg
+                            color: root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
                         }
                     }
-                    Text {
-                        text: "How to Play"
-                        font.pixelSize: 11
-                        font.bold: true
-                        color: root.themeFg
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: !subheaderItem.isCrowded
+
+                    MouseArea {
+                        id: helpMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showHelp = !root.showHelp
                     }
                 }
 
-                MouseArea {
-                    id: helpMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.showHelp = !root.showHelp
-                }
-            }
-
-            // Mute button in Center
-            Rectangle {
-                id: muteBtn
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
-                height: 32
-                width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
-                radius: 8
-                color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                border.color: root.isMuted ? root.themeBorder : root.themeAccent
-                border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
-                Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                Row {
-                    id: muteRow
-                    anchors.centerIn: parent
-                    spacing: 4
-                    Text {
-                        text: root.isMuted ? "🔇" : "🔊"
-                        font.pixelSize: 12
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: root.isMuted ? "Muted" : "Sound"
-                        font.pixelSize: 11
-                        font.bold: true
-                        color: root.isMuted ? root.themeSubtext : root.themeFg
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: !subheaderItem.isCrowded
-                    }
-                }
-
-                MouseArea {
-                    id: muteMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.toggleMute()
-                }
-            }
-
-            // Primary Action Button (Restart)
-                            // View Mode Pill (Windowed vs Full Field)
+                // View Mode Pill (Windowed vs Full Field)
                 Rectangle {
                     id: viewModeBtn
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (viewModeRow.implicitWidth + 18)
                     radius: 8
-                    color: root.fullPlayfield ? root.themeCardBg : (viewModeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
+                    color: root.fullPlayfield ? root.themeCardHover : (viewModeMouse.containsMouse ? root.themeCardHover : root.themeCardBg)
                     border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     Row {
                         id: viewModeRow
@@ -463,8 +474,9 @@ Window {
                         }
                     }
                 }
+            }
 
-                Rectangle {
+            Rectangle {
                 id: restartBtn
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
@@ -472,7 +484,6 @@ Window {
                 width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
                 radius: 8
                 color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-                Behavior on color { ColorAnimation { duration: 150 } }
 
                 Row {
                     id: restartRow
@@ -504,9 +515,7 @@ Window {
             }
         }
 
-        // PLAYFIELD CONTAINER
-        Item {
-                    // =====================================================================
+        // =====================================================================
         // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
         // =====================================================================
         Rectangle {
@@ -605,9 +614,11 @@ Window {
             }
         }
 
-        id: playArea
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 6 : 12
+        // PLAYFIELD CONTAINER
+        Item {
+            id: playArea
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 8
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 16
             anchors.left: parent.left
@@ -1021,7 +1032,7 @@ Window {
 
                     Text {
                         text: "Distance: " + root.score + " hops"
-                        color: root.themeFg
+                        color: "#cdd6f4"
                         font.pixelSize: 18
                         font.family: root.monoFontFamily
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -1037,7 +1048,7 @@ Window {
                         Text {
                             anchors.centerIn: parent
                             text: "PLAY AGAIN"
-                            color: root.themeBg
+                            color: root.themeBtnFg
                             font.bold: true
                             font.pixelSize: 13
                             font.family: root.monoFontFamily
@@ -1054,7 +1065,7 @@ Window {
 
                     Text {
                         text: "Or press R / Space / Enter"
-                        color: root.themeSubtext
+                        color: "#a6adc8"
                         font.pixelSize: 11
                         font.family: root.monoFontFamily
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -1120,7 +1131,7 @@ Window {
                     Text {
                         anchors.centerIn: parent
                         text: "GOT IT"
-                        color: root.themeBg
+                        color: root.themeBtnFg
                         font.bold: true
                         font.pixelSize: 11
                         font.family: root.monoFontFamily

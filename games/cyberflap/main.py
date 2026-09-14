@@ -94,35 +94,50 @@ class SoundManager(QObject):
                 except Exception:
                     pass
 
+DEFAULT_PRESETS = {
+    "dark": {
+        "name": "Omarchy Dark",
+        "bg": "#181825",
+        "fg": "#cdd6f4",
+        "accent": "#a6e3a1",
+        "boardBg": "#1e1e2e",
+        "card_bg": "#313244",
+        "card_hover": "#45475a",
+        "border": "#45475a",
+        "subtext": "#a6adc8"
+    },
+    "light": {
+        "name": "Omarchy Light",
+        "bg": "#eff1f5",
+        "fg": "#4c4f69",
+        "accent": "#40a02b",
+        "boardBg": "#e2e8f0",
+        "card_bg": "#ffffff",
+        "card_hover": "#f1f5f9",
+        "border": "#ccd0da",
+        "subtext": "#5c5f77"
+    }
+}
+
 def parse_toml_theme(path: Path):
     try:
         with open(path, "rb") as f:
             data = tomllib.load(f)
-        colors = {}
-        if "colors" in data:
-            c = data["colors"]
-            colors["bg"] = c.get("background") or c.get("bg") or "#1e1e2e"
-            colors["fg"] = c.get("foreground") or c.get("fg") or "#cdd6f4"
-            colors["accent"] = c.get("accent") or c.get("primary") or "#89b4fa"
-            colors["boardBg"] = c.get("selection_background") or c.get("surface") or "#181825"
-            colors["cardBg"] = c.get("card") or c.get("surface0") or "#313244"
-            colors["border"] = c.get("border") or "#45475a"
-            colors["subtext"] = c.get("subtext") or c.get("subtext0") or "#a6adc8"
-            colors["name"] = data.get("theme", {}).get("name", path.stem.capitalize())
-            return colors
+        colors = data.get("colors") if isinstance(data.get("colors"), dict) else data
+        bg = colors.get("base") or colors.get("background") or "#181825"
+        fg = colors.get("text") or colors.get("foreground") or "#cdd6f4"
+        return {
+            "bg": bg,
+            "fg": fg,
+            "accent": colors.get("green", colors.get("accent", "#a6e3a1")),
+            "boardBg": "#1e1e2e",
+            "card_bg": colors.get("surface0", "#313244"),
+            "card_hover": colors.get("surface1", "#45475a"),
+            "border": colors.get("surface1", "#45475a"),
+            "subtext": colors.get("subtext0", "#a6adc8")
+        }
     except Exception:
-        pass
-    return None
-
-def load_all_omarchy_themes():
-    themes = {}
-    themes_dir = Path.home() / ".config" / "omarchy" / "themes"
-    if themes_dir.exists():
-        for theme_file in themes_dir.glob("*/colors.toml"):
-            t = parse_toml_theme(theme_file)
-            if t:
-                themes[theme_file.parent.name.lower()] = t
-    return themes
+        return {}
 
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
@@ -141,15 +156,18 @@ def find_omarchy_colors_file():
             return c
     return None
 
-
-def load_system_theme():
-    theme_path = find_omarchy_colors_file()
-    if theme_path and theme_path.exists():
-        return parse_toml_theme(theme_path)
-    return None
-
 def main():
-    os.environ["QT_QUICK_CONTROLS_STYLE"] = "Basic"
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+    os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
+
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print("CyberFlap • Retro Gravity Reflex Hopper")
+        sys.exit(0)
+
+    if "--list-themes" in sys.argv:
+        print("Arcade Game Template • Preset Themes:\n  --theme light\n  --theme dark\n  --theme <path_to_colors.toml>")
+        sys.exit(0)
+
     app = QGuiApplication(sys.argv)
     app.setApplicationName("CyberFlap")
     app.setOrganizationName("Omarchy")
@@ -164,7 +182,6 @@ def main():
         if cp.exists():
             app.setWindowIcon(QIcon(str(cp)))
             break
-
 
     base_dir = Path(__file__).resolve().parent
     sounds_dir = base_dir / "sounds"
@@ -183,54 +200,75 @@ def main():
         sys.exit(-1)
 
     root = engine.rootObjects()[0]
-    all_themes = load_all_omarchy_themes()
 
-    requested_theme = None
-    requested_screenshot = None
-    args = sys.argv[1:]
-    i = 0
-    while i < len(args):
-        if args[i] == "--theme" and i + 1 < len(args):
-            requested_theme = args[i + 1].lower()
-            i += 2
-        elif args[i] == "--screenshot" and i + 1 < len(args):
-            requested_screenshot = args[i + 1]
-            i += 2
+    # CLI Theme Argument Parsing
+    theme_arg = None
+    if "--theme" in sys.argv:
+        idx = sys.argv.index("--theme")
+        if idx + 1 < len(sys.argv):
+            theme_arg = sys.argv[idx + 1]
+
+    if theme_arg:
+        clean_arg = theme_arg.lower().strip()
+        if clean_arg in DEFAULT_PRESETS:
+            preset = DEFAULT_PRESETS[clean_arg]
+            root.applyTheme(preset, preset["name"])
+            print(f"Applied preset theme: {preset['name']}")
         else:
-            i += 1
-
-    if requested_theme and requested_theme in all_themes:
-        root.applyTheme(all_themes[requested_theme], requested_theme)
+            custom_path = Path(theme_arg).expanduser().resolve()
+            if custom_path.is_file():
+                data = parse_toml_theme(custom_path)
+                if data:
+                    root.applyTheme(data, custom_path.parent.name.capitalize())
+                    print(f"Applied theme from file: {custom_path}")
+            else:
+                preset = DEFAULT_PRESETS["dark"]
+                root.applyTheme(preset, preset["name"])
     else:
-        sys_theme = load_system_theme()
-        if sys_theme:
-            root.applyTheme(sys_theme, "System")
-        elif "catppuccin" in all_themes:
-            root.applyTheme(all_themes["catppuccin"], "Catppuccin")
+        theme_path = find_omarchy_colors_file()
+        if theme_path and theme_path.exists():
+            data = parse_toml_theme(theme_path)
+            theme_name = theme_path.parent.name.capitalize()
+            root.applyTheme(data, theme_name)
+            print(f"Detected Omarchy theme: {theme_name} ({theme_path})")
 
-    theme_file = find_omarchy_colors_file()
-    watcher = QFileSystemWatcher()
-    if theme_file and theme_file.parent.exists():
-        watcher.addPath(str(theme_file.parent))
-    if theme_file and theme_file.exists():
-        watcher.addPath(str(theme_file))
+            watcher = QFileSystemWatcher(app)
+            watcher.addPath(str(theme_path))
+            if theme_path.parent.exists():
+                watcher.addPath(str(theme_path.parent))
 
-    def on_theme_file_changed(path):
-        QTimer.singleShot(150, update_theme)
+            def on_theme_updated(p):
+                tp = find_omarchy_colors_file()
+                if tp and tp.is_file():
+                    up = parse_toml_theme(tp)
+                    if up:
+                        root.applyTheme(up, tp.parent.name.capitalize())
 
-    def update_theme():
-        if requested_theme: return
-        t = load_system_theme()
-        if t: root.applyTheme(t, "System")
+            watcher.fileChanged.connect(on_theme_updated)
+            watcher.directoryChanged.connect(on_theme_updated)
+        else:
+            def apply_system_scheme():
+                hints = app.styleHints()
+                scheme = hints.colorScheme() if hasattr(hints, "colorScheme") else Qt.ColorScheme.Dark
+                preset = DEFAULT_PRESETS["light"] if scheme == Qt.ColorScheme.Light else DEFAULT_PRESETS["dark"]
+                root.applyTheme(preset, preset["name"])
 
-    watcher.fileChanged.connect(on_theme_file_changed)
-    watcher.directoryChanged.connect(on_theme_file_changed)
+            apply_system_scheme()
+            if hasattr(app.styleHints(), "colorSchemeChanged"):
+                app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
 
-    if requested_screenshot:
-        def do_shot():
-            root.splashEnabled = False
-            root.captureScreenshot(requested_screenshot, True)
-        QTimer.singleShot(1250, do_shot)
+    if "--no-splash" in sys.argv:
+        root.setProperty("splashEnabled", False)
+
+    if "--screenshot" in sys.argv:
+        root.setProperty("splashEnabled", False)
+        def capture():
+            out_idx = sys.argv.index("--screenshot") + 1
+            out_file = sys.argv[out_idx] if out_idx < len(sys.argv) and not sys.argv[out_idx].startswith("--") else "screenshot.png"
+            out_path = Path(out_file).resolve()
+            root.captureScreenshot(str(out_path))
+            QTimer.singleShot(400, app.quit)
+        QTimer.singleShot(350, capture)
 
     sys.exit(app.exec())
 

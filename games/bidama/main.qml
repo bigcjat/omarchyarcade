@@ -10,7 +10,6 @@ ApplicationWindow {
     minimumWidth: 380
     minimumHeight: 440
     title: "Bīdama (ビー玉) • Japanese Tatami Marbles"
-    color: themeBg
 
     // =========================================================================
     // SYSTEM THEME & JAPANESE TATAMI PALETTE
@@ -23,6 +22,7 @@ ApplicationWindow {
     property color themeAccent: "#0284C7"
     property color themeBtnFg: "#FFFFFF"
     property color themeSubtext: "#94A3B8"
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
 
     property string helpText: "• OBJECTIVE:\nAlign 3 or more matching glass marbles along the central black Urushi Pitch Line to clear them and trigger inward gravity collapse. In Duel mode, empty all your chutes or cause your opponent to jam and overflow to win!\n\n• CONTROLS:\n  ◄ / ► or Click Chute: Select chute\n  ▲ / ▼ or Mouse Drag: Slide active chute UP / DOWN (Bounded - no wrap!)\n  Space / Q / E: Shift Pitch Line horizontally\n  Shift+F: Toggle Full / Compact View\n  M: Toggle sound (Default muted)\n  R: Rematch / New Game\n  ? / Esc: Toggle this Guide\n\n• MECHANICS:\n  - 3-Match: Clears line and pulls remaining marbles inward.\n  - 4 or 5-Match: Sends penalty marbles and Kyoto basalt stones to the opponent's chutes.\n  - Drop Wave: A fresh wave of marbles drops across all chutes as the timer counts down.\n  - Overflow Jam: If any chute reaches max capacity (11 marbles), that player jams and loses!"
 
@@ -392,14 +392,40 @@ ApplicationWindow {
         }
     }
 
-    function applyTheme(colors, themeName) {
-        if (!colors) return;
-        if (colors.bg || colors.background) themeBg = colors.bg || colors.background;
-        if (colors.fg || colors.foreground) themeFg = colors.fg || colors.foreground;
-        if (colors.card_bg) themeCardBg = colors.card_bg;
-        if (colors.board_bg) themeBoardBg = colors.board_bg;
-        if (colors.border) themeBorder = colors.border;
-        if (colors.accent) themeAccent = colors.accent;
+    function colorLuminance(c) {
+        if (!c) return 0.2;
+        var qc = (typeof c === "string") ? Qt.color(c) : c;
+        if (!qc || qc.r === undefined) {
+            try { qc = Qt.color(c); } catch (e) { return 0.2; }
+        }
+        return 0.299 * qc.r + 0.587 * qc.g + 0.114 * qc.b;
+    }
+
+    function applyTheme(data, name) {
+        if (!data || typeof data !== "object") return;
+        var bg = data.background || data.bg || "#181825";
+        var fg = data.foreground || data.fg || "#cdd6f4";
+        var accent = data.accent || "#0284C7";
+        var c0 = data.color0 || data.cardBg || data.card_bg || "#1c1c22";
+        var c8 = data.color8 || data.border || "#2e2e3a";
+
+        themeBg = bg;
+        themeAccent = accent;
+
+        var dark = colorLuminance(bg) < 0.5;
+        if (!dark) {
+            themeCardBg = data.cardBg || data.card_bg || "#ffffff";
+            themeBoardBg = data.boardBg || data.board_bg || "#f1f5f9";
+            themeBorder = data.border || "#cbd5e1";
+            themeFg = data.foreground || data.fg || "#0f172a";
+            themeSubtext = data.subtext || "#64748b";
+        } else {
+            themeCardBg = data.cardBg || data.card_bg || c0;
+            themeBoardBg = data.boardBg || data.board_bg || c0;
+            themeBorder = data.border || c8;
+            themeFg = fg;
+            themeSubtext = data.subtext || "#a6adc8";
+        }
     }
 
     function captureScreenshot(filePath, shouldQuit) {
@@ -543,21 +569,30 @@ ApplicationWindow {
         }
 
         // =====================================================================
-        // HEADER: TITLE & CONTROLS
+        // TOP OS-THEMED HEADER BAR (Adapts strictly to user desktop OS theme)
         // =====================================================================
-        Item {
-            id: headerItem
-            visible: !root.isTiledDesktopMode
+        Rectangle {
+            id: headerBar
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.margins: 10
-            height: root.isTiledDesktopMode ? 0 : (40)
+            height: root.isTiledDesktopMode ? 0 : 44
+            visible: !root.isTiledDesktopMode
+            color: root.themeBg
+            border.color: root.themeBorder
+            border.width: 1
+            z: 10
 
-            Row {
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
+            Item {
+                id: headerItem
+                anchors.fill: parent
+                anchors.leftMargin: 10
+                anchors.rightMargin: 10
+
+                Row {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 6
 
                 Text {
                     text: "BĪDAMA"
@@ -765,12 +800,9 @@ ApplicationWindow {
                 }
             }
         }
+    }
 
         // =====================================================================
-        // DUAL TATAMI ARENA (LEFT: PLAYER 1, CENTER: STATUS, RIGHT: RIVAL AI)
-        // =====================================================================
-        Item {
-                    // =====================================================================
         // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
         // =====================================================================
         Rectangle {
@@ -785,8 +817,8 @@ ApplicationWindow {
             height: 38
             radius: 8
             z: 90
-            color: root.themeCardBg
-            border.color: root.themeBorder
+            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
             border.width: 1
 
             Row {
@@ -799,19 +831,19 @@ ApplicationWindow {
                     text: "⚪ Bīdama"
                     font.pixelSize: 11
                     font.bold: true
-                    color: root.themeAccent
+                    color: root.isDarkMode ? root.themeAccent : "#0284c7"
                 }
 
                 Text {
-                    text: "• " + (root.p1Score + " - " + root.p2Score)
+                    text: "• " + (root.playerScore + " - " + root.aiScore)
                     font.pixelSize: 11
                     font.bold: true
-                    color: root.themeFg
+                    color: root.isDarkMode ? root.themeFg : "#0f172a"
                 }
                 Text {
-                    text: "(" + ("STAGE: " + root.currentStage) + ")"
+                    text: "(" + root.gameMode.toUpperCase() + ")"
                     font.pixelSize: 10
-                    color: root.themeSubtext
+                    color: root.isDarkMode ? root.themeSubtext : "#64748b"
                 }
             }
 
@@ -824,7 +856,7 @@ ApplicationWindow {
                 // Full Window Toggle
                 Rectangle {
                     width: 26; height: 26; radius: 5
-                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    color: "transparent"; border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"; border.width: 1
                     Text { text: "🔲"; font.pixelSize: 10; anchors.centerIn: parent }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -838,7 +870,7 @@ ApplicationWindow {
                 // Help
                 Rectangle {
                     width: 26; height: 26; radius: 5
-                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    color: "transparent"; border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"; border.width: 1
                     Text { text: "?"; font.pixelSize: 11; font.bold: true; color: root.themeAccent; anchors.centerIn: parent }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -849,7 +881,7 @@ ApplicationWindow {
                 // Mute
                 Rectangle {
                     width: 26; height: 26; radius: 5
-                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    color: "transparent"; border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"; border.width: 1
                     Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11; anchors.centerIn: parent }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -859,8 +891,12 @@ ApplicationWindow {
             }
         }
 
-        id: dualArena
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
+        // =====================================================================
+        // DUAL TATAMI ARENA (LEFT: PLAYER 1, CENTER: STATUS, RIGHT: RIVAL AI)
+        // =====================================================================
+        Item {
+            id: dualArena
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
@@ -1136,8 +1172,8 @@ ApplicationWindow {
                 anchors.bottom: parent.bottom
                 x: Math.round((parent.width - width) / 2)
                 width: dualArena.centerWidth
-                color: root.themeCardBg
-                border.color: root.themeBorder
+                color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                 border.width: 1
                 radius: 10
 
@@ -1161,20 +1197,20 @@ ApplicationWindow {
                     Column {
                         anchors.horizontalCenter: parent.horizontalCenter
                         spacing: 2
-                        Text { text: "YOU"; font.pixelSize: 8; font.bold: true; color: "#38bdf8"; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { text: root.playerScore.toLocaleString(); font.pixelSize: (parent.width < 60) ? 10 : 12; font.bold: true; color: "#fff"; anchors.horizontalCenter: parent.horizontalCenter }
-                        Rectangle { width: (parent.width < 60) ? 36 : 46; height: 1; color: root.themeBorder; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { text: "RIVAL"; font.pixelSize: 8; font.bold: true; color: "#f87171"; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { text: root.aiScore.toLocaleString(); font.pixelSize: (parent.width < 60) ? 10 : 12; font.bold: true; color: "#fff"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: "YOU"; font.pixelSize: 8; font.bold: true; color: root.isDarkMode ? "#38bdf8" : "#0284c7"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: root.playerScore.toLocaleString(); font.pixelSize: (parent.width < 60) ? 10 : 12; font.bold: true; color: root.isDarkMode ? "#fff" : "#0f172a"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Rectangle { width: (parent.width < 60) ? 36 : 46; height: 1; color: root.isDarkMode ? root.themeBorder : "#cbd5e1"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: "RIVAL"; font.pixelSize: 8; font.bold: true; color: root.isDarkMode ? "#f87171" : "#dc2626"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: root.aiScore.toLocaleString(); font.pixelSize: (parent.width < 60) ? 10 : 12; font.bold: true; color: root.isDarkMode ? "#fff" : "#0f172a"; anchors.horizontalCenter: parent.horizontalCenter }
                     }
 
                     // Drop countdown indicator
                     Column {
                         anchors.horizontalCenter: parent.horizontalCenter
                         spacing: 3
-                        Text { text: "DROP"; font.pixelSize: 7; font.bold: true; color: "#a1a1aa"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: "DROP"; font.pixelSize: 7; font.bold: true; color: root.isDarkMode ? "#a1a1aa" : "#64748b"; anchors.horizontalCenter: parent.horizontalCenter }
                         Rectangle {
-                            width: 10; height: (dualArena.height < 520) ? 36 : 48; radius: 5; color: "#27272a"
+                            width: 10; height: (dualArena.height < 520) ? 36 : 48; radius: 5; color: root.isDarkMode ? "#27272a" : "#e2e8f0"
                             anchors.horizontalCenter: parent.horizontalCenter
                             Rectangle {
                                 anchors.bottom: parent.bottom
@@ -1190,16 +1226,16 @@ ApplicationWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                         spacing: 2
                         visible: dualArena.height >= 480
-                        Text { text: "IN"; font.pixelSize: 7; color: "#a1a1aa"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: "IN"; font.pixelSize: 7; color: root.isDarkMode ? "#a1a1aa" : "#64748b"; anchors.horizontalCenter: parent.horizontalCenter }
                         Row {
                             anchors.horizontalCenter: parent.horizontalCenter
                             spacing: 2
-                            Text { text: "P:" + root.playerGarbageCount; font.pixelSize: 8; color: "#38bdf8" }
+                            Text { text: "P:" + root.playerGarbageCount; font.pixelSize: 8; font.bold: true; color: root.isDarkMode ? "#38bdf8" : "#0284c7" }
                         }
                         Row {
                             anchors.horizontalCenter: parent.horizontalCenter
                             spacing: 2
-                            Text { text: "AI:" + root.aiGarbageCount; font.pixelSize: 8; color: "#f87171" }
+                            Text { text: "AI:" + root.aiGarbageCount; font.pixelSize: 8; font.bold: true; color: root.isDarkMode ? "#f87171" : "#dc2626" }
                         }
                     }
                 }
@@ -1613,14 +1649,14 @@ ApplicationWindow {
         // =====================================================================
         Rectangle {
             id: soundToast
-            anchors.top: headerItem.bottom
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
             anchors.topMargin: root.isTiledDesktopMode ? 6 : 10
             anchors.horizontalCenter: parent.horizontalCenter
             height: 34
             width: toastText.implicitWidth + 32
             radius: 17
-            color: "#13131c"
-            border.color: root.kintsugiGold
+            color: root.isDarkMode ? "#13131c" : "#ffffff"
+            border.color: root.isDarkMode ? root.kintsugiGold : "#cbd5e1"
             border.width: 1.5
             opacity: 0
             z: 300
@@ -1630,7 +1666,7 @@ ApplicationWindow {
                 anchors.centerIn: parent
                 font.pixelSize: 11
                 font.bold: true
-                color: "#FFFFFF"
+                color: root.isDarkMode ? "#FFFFFF" : "#0f172a"
             }
 
             function show(msg) {

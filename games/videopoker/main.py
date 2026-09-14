@@ -170,25 +170,34 @@ class SoundManager(QObject):
                     pass
 
 # =============================================================================
-# THEME UTILITIES (From Master Template)
+# THEME UTILITIES
 # =============================================================================
-def load_all_omarchy_themes():
-    themes_js = Path(__file__).resolve().parent / "Themes.js"
-    if not themes_js.is_file():
-        return {}
-    with open(themes_js, "r", encoding="utf-8") as f:
-        content = f.read()
-    themes = {}
-    blocks = re.findall(r"\{([^{}]+)\}", content)
-    for b in blocks:
-        t = {}
-        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", b):
-            t[k] = v
-        if "id" in t and "name" in t:
-            themes[t["id"]] = t
-    return themes
-
-ALL_THEMES = load_all_omarchy_themes()
+DEFAULT_PRESETS = {
+    "dark": {
+        "name": "Omarchy Dark",
+        "background": "#181825",
+        "foreground": "#cdd6f4",
+        "accent": "#00F0FF",
+        "color0": "#181825",
+        "color8": "#313244",
+        "cardBg": "#1e1e2e",
+        "boardBg": "#11111b",
+        "border": "#313244",
+        "subtext": "#a6adc8",
+    },
+    "light": {
+        "name": "Omarchy Light",
+        "background": "#eff1f5",
+        "foreground": "#0f172a",
+        "accent": "#1e66f5",
+        "color0": "#e6e9ef",
+        "color8": "#bcc0cc",
+        "cardBg": "#ffffff",
+        "boardBg": "#f1f5f9",
+        "border": "#cbd5e1",
+        "subtext": "#64748b",
+    },
+}
 
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
@@ -268,9 +277,9 @@ def main():
             theme_arg = sys.argv[idx + 1]
 
     if theme_arg:
-        clean_arg = theme_arg.lower().replace("_", "-")
-        if clean_arg in ALL_THEMES:
-            t = ALL_THEMES[clean_arg]
+        clean_arg = theme_arg.lower().strip()
+        if clean_arg in DEFAULT_PRESETS:
+            t = DEFAULT_PRESETS[clean_arg]
             root_obj.applyTheme(t, t["name"])
         else:
             custom_path = Path(theme_arg).expanduser().resolve()
@@ -304,16 +313,14 @@ def main():
             def apply_system_scheme():
                 scheme = app.styleHints().colorScheme()
                 if scheme == Qt.ColorScheme.Light:
-                    target_theme = ALL_THEMES.get("catppuccin-latte") or ALL_THEMES.get("github-light")
-                    name = "System Light"
+                    target_theme = DEFAULT_PRESETS["light"]
                 else:
-                    target_theme = ALL_THEMES.get("catppuccin") or ALL_THEMES.get("tokyonight")
-                    name = "System Dark"
+                    target_theme = DEFAULT_PRESETS["dark"]
 
-                if target_theme:
-                    root_obj.applyTheme(target_theme, name)
+                root_obj.applyTheme(target_theme, target_theme["name"])
 
             apply_system_scheme()
+            app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
             app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
 
     # CLI Overrides
@@ -330,6 +337,12 @@ def main():
         if idx + 1 < len(sys.argv):
             root_obj.setProperty("activeGameId", sys.argv[idx + 1])
 
+    if "--deal" in sys.argv:
+        def do_deal():
+            root_obj.setProperty("gameMenuOpen", False)
+            root_obj.handlePrimaryAction()
+        QTimer.singleShot(100, do_deal)
+
     if "--screenshot" in sys.argv:
         root_obj.setProperty("splashEnabled", False)
         def capture():
@@ -338,7 +351,7 @@ def main():
             out_path = Path(out_file).resolve()
             root_obj.captureScreenshot(str(out_path), False)
             QTimer.singleShot(350, app.quit)
-        QTimer.singleShot(300, capture)
+        QTimer.singleShot(400 if "--deal" in sys.argv else 250, capture)
 
     sys.exit(app.exec())
 

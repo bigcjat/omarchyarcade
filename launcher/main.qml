@@ -22,6 +22,21 @@ ApplicationWindow {
     property color themeAccent: "#00f0ff"
     property color themeAccentAlt: "#e6458e"
 
+    // WCAG contrast helper ensuring cards and controls adapt seamlessly in light/dark themes
+    function colorLuminance(col) {
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
+        return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+    }
+
+    readonly property bool isDarkMode: colorLuminance(themeBackground) < 0.5
+    readonly property color themeCardBg: isDarkMode ? themeSurface : "#ffffff"
+    readonly property color themeCardBorder: isDarkMode ? themeBorder : "#cbd5e1"
+    readonly property color themeCardHover: isDarkMode ? themeSurfaceLight : "#f8fafc"
+
     property bool splashEnabled: true
     property string selectedCategory: "FEATURED"
     property string searchQuery: ""
@@ -506,6 +521,31 @@ ApplicationWindow {
         }
     }
 
+    function openGameDetail(gameId) {
+        var g = findGameById(gameId);
+        if (!g && catalogData && catalogData.length > 0) g = catalogData[0];
+        if (g) detailSheet.open(g);
+    }
+
+    function openAboutModal() {
+        aboutModal.visible = true;
+    }
+
+    function openUpdateModal() {
+        updateModal.visible = true;
+    }
+
+    property string cliDetailId: ""
+    onCliDetailIdChanged: if (cliDetailId !== "") openGameDetail(cliDetailId)
+
+    property bool cliShowAbout: false
+    onCliShowAboutChanged: if (cliShowAbout) aboutModal.visible = true
+
+    property bool cliShowUpdates: false
+    onCliShowUpdatesChanged: if (cliShowUpdates) updateModal.visible = true
+
+    property alias featuredScrollY: featuredPageView.scrollY
+
     // --- Background Retro CRT Grid Pattern ---
     Canvas {
         anchors.fill: parent
@@ -554,7 +594,7 @@ ApplicationWindow {
                     Image {
                         id: headerLogoImg
                         anchors.fill: parent
-                        source: "omarchy_arcade_logo.svg"
+                        source: root.isDarkMode ? "omarchy_arcade_logo.svg" : "omarchy_arcade_logo_light.svg"
                         sourceSize.height: 84
                         sourceSize.width: Math.round(84 * (1004 / 233))
                         fillMode: Image.PreserveAspectFit
@@ -578,8 +618,8 @@ ApplicationWindow {
                     Layout.preferredHeight: 36
                     Layout.preferredWidth: viewSwitcherRow.implicitWidth + 8
                     radius: 8
-                    color: themeBackground
-                    border.color: themeBorder
+                    color: root.themeCardBg
+                    border.color: root.themeCardBorder
                     border.width: 1
 
                     Row {
@@ -599,7 +639,7 @@ ApplicationWindow {
                                 width: root.isCompact ? 32 : (viewModeBtnText.implicitWidth + 26)
                                 height: 28
                                 radius: 6
-                                color: root.viewMode === modelData.id ? themeAccent : (viewBtnMouse.containsMouse ? "#232332" : "transparent")
+                                color: root.viewMode === modelData.id ? themeAccent : (viewBtnMouse.containsMouse ? (root.isDarkMode ? "#232332" : "#e2e8f0") : "transparent")
                                 border.color: root.viewMode === modelData.id ? themeAccent : "transparent"
                                 border.width: 1
 
@@ -615,7 +655,7 @@ ApplicationWindow {
                                             anchors.centerIn: parent
                                             text: modelData.icon
                                             font.pixelSize: 12
-                                            color: root.viewMode === modelData.id ? "#09090e" : (viewBtnMouse.containsMouse ? "#FFFFFF" : "#94a3b8")
+                                            color: root.viewMode === modelData.id ? (root.colorLuminance(themeAccent) > 0.5 ? "#09090e" : "#FFFFFF") : (viewBtnMouse.containsMouse ? root.themeText : root.themeTextMuted)
                                         }
                                     }
 
@@ -624,7 +664,7 @@ ApplicationWindow {
                                         text: modelData.label
                                         font.pixelSize: 11
                                         font.bold: root.viewMode === modelData.id
-                                        color: root.viewMode === modelData.id ? "#09090e" : (viewBtnMouse.containsMouse ? "#FFFFFF" : "#94a3b8")
+                                        color: root.viewMode === modelData.id ? (root.colorLuminance(themeAccent) > 0.5 ? "#09090e" : "#FFFFFF") : (viewBtnMouse.containsMouse ? root.themeText : root.themeTextMuted)
                                         visible: !root.isCompact
                                     }
                                 }
@@ -648,8 +688,8 @@ ApplicationWindow {
                     Layout.preferredWidth: root.isCompact ? 160 : 260
                     Layout.preferredHeight: 36
                     radius: 8
-                    color: themeBackground
-                    border.color: searchInput.activeFocus ? themeAccent : themeBorder
+                    color: root.themeCardBg
+                    border.color: searchInput.activeFocus ? themeAccent : root.themeCardBorder
                     border.width: 1.5
 
                     RowLayout {
@@ -674,13 +714,13 @@ ApplicationWindow {
                             id: searchInput
                             Layout.fillWidth: true
                             font.pixelSize: 12
-                            color: "#FFFFFF"
+                            color: root.themeText
                             selectByMouse: true
                             clip: true
 
                             Text {
                                 text: root.isCompact ? "Search..." : "Search games (/ or Ctrl+F)..."
-                                color: "#64748b"
+                                color: root.themeTextMuted
                                 font.pixelSize: 12
                                 visible: !searchInput.text && !searchInput.activeFocus
                             }
@@ -714,7 +754,7 @@ ApplicationWindow {
                             visible: searchInput.text.length > 0
                             text: "✕"
                             font.pixelSize: 11
-                            color: "#94a3b8"
+                            color: root.themeTextMuted
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
@@ -737,8 +777,8 @@ ApplicationWindow {
 
                     background: Rectangle {
                         radius: 8
-                        color: helpBtn.down ? themeSurfaceLight : (helpBtn.hovered ? "#262638" : "transparent")
-                        border.color: themeBorder
+                        color: helpBtn.down ? root.themeSurfaceLight : (helpBtn.hovered ? (root.isDarkMode ? "#262638" : "#f1f5f9") : "transparent")
+                        border.color: root.themeCardBorder
                         border.width: 1
                     }
 
@@ -777,9 +817,9 @@ ApplicationWindow {
 
                     background: Rectangle {
                         radius: 8
-                        color: updateBtn.down ? themeSurfaceLight : (root.availableUpdatesCount > 0 ? Qt.alpha(themeAccent, 0.18) : (updateBtn.hovered ? "#262638" : "transparent"))
-                        border.color: root.availableUpdatesCount > 0 ? themeAccent : themeBorder
-                        border.width: root.availableUpdatesCount > 0 ? 1.5 : 1
+                        color: updateBtn.down ? root.themeSurfaceLight : (root.availableUpdatesCount > 0 ? Qt.alpha(themeAccent, 0.18) : (updateBtn.hovered ? (root.isDarkMode ? "#262638" : "#f1f5f9") : "transparent"))
+                        border.color: root.availableUpdatesCount > 0 ? themeAccent : root.themeCardBorder
+                        border.width: 1
 
                         // Glow indicator dot when updates are pending
                         Rectangle {
@@ -805,16 +845,8 @@ ApplicationWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             Text {
                                 anchors.centerIn: parent
-                                text: "🔄"
+                                text: root.isCheckingUpdates ? "⏳" : (root.availableUpdatesCount > 0 ? "🔔" : "🔄")
                                 font.pixelSize: 13
-                                transformOrigin: Item.Center
-                                RotationAnimation on rotation {
-                                    from: 0
-                                    to: 360
-                                    duration: 800
-                                    loops: Animation.Infinite
-                                    running: root.isCheckingUpdates
-                                }
                             }
                         }
                         Text {
@@ -839,8 +871,8 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.preferredHeight: root.viewMode === "desktop" ? 0 : 46
             visible: root.viewMode !== "desktop"
-            color: "#14141c"
-            border.color: themeBorder
+            color: root.isDarkMode ? "#14141c" : "#ffffff"
+            border.color: root.themeCardBorder
             border.width: root.viewMode === "desktop" ? 0 : 1
             z: 10
 
@@ -868,8 +900,8 @@ ApplicationWindow {
                             height: 30
                             radius: 15
                             width: pillRow.implicitWidth + 24
-                            color: root.selectedCategory === modelData.name ? themeAccent : (pillMouse.containsMouse ? "#262638" : "#1a1a24")
-                            border.color: root.selectedCategory === modelData.name ? themeAccent : (pillMouse.containsMouse ? "#3b3b50" : "#2a2a3a")
+                            color: root.selectedCategory === modelData.name ? themeAccent : (pillMouse.containsMouse ? (root.isDarkMode ? "#262638" : "#e2e8f0") : (root.isDarkMode ? "#1a1a24" : "#f1f5f9"))
+                            border.color: root.selectedCategory === modelData.name ? themeAccent : (pillMouse.containsMouse ? (root.isDarkMode ? "#3b3b50" : "#cbd5e1") : (root.isDarkMode ? "#2a2a3a" : "#e2e8f0"))
                             border.width: 1
 
                             Row {
@@ -895,7 +927,7 @@ ApplicationWindow {
                                     text: modelData.label
                                     font.pixelSize: 12
                                     font.bold: true
-                                    color: root.selectedCategory === modelData.name ? "#0a0a0f" : (pillMouse.containsMouse ? "#FFFFFF" : "#cbd5e1")
+                                    color: root.selectedCategory === modelData.name ? (root.colorLuminance(themeAccent) > 0.5 ? "#0a0a0f" : "#FFFFFF") : (pillMouse.containsMouse ? root.themeText : root.themeTextMuted)
                                 }
                             }
 
@@ -906,6 +938,7 @@ ApplicationWindow {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     root.selectedCategory = modelData.name;
+                                    root.focusedIndex = 0;
                                     root.updateFilter();
                                     root.restoreKeyboardFocus();
                                 }
@@ -934,8 +967,8 @@ ApplicationWindow {
                 visible: categoryFlickable.contentX > 4
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: "#14141c" }
-                    GradientStop { position: 0.7; color: "#14141c" }
+                    GradientStop { position: 0.0; color: root.isDarkMode ? "#14141c" : "#ffffff" }
+                    GradientStop { position: 0.7; color: root.isDarkMode ? "#14141c" : "#ffffff" }
                     GradientStop { position: 1.0; color: "transparent" }
                 }
                 Text {
@@ -944,7 +977,7 @@ ApplicationWindow {
                     text: "‹"
                     font.pixelSize: 20
                     font.bold: true
-                    color: scrollLeftMouse.containsMouse ? themeAccent : "#94a3b8"
+                    color: scrollLeftMouse.containsMouse ? themeAccent : root.themeTextMuted
                 }
                 MouseArea {
                     id: scrollLeftMouse
@@ -965,8 +998,8 @@ ApplicationWindow {
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
                     GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 0.3; color: "#14141c" }
-                    GradientStop { position: 1.0; color: "#14141c" }
+                    GradientStop { position: 0.3; color: root.isDarkMode ? "#14141c" : "#ffffff" }
+                    GradientStop { position: 1.0; color: root.isDarkMode ? "#14141c" : "#ffffff" }
                 }
                 Text {
                     anchors.centerIn: parent
@@ -999,6 +1032,15 @@ ApplicationWindow {
                 anchors.fill: parent
                 visible: root.viewMode !== "desktop" && root.selectedCategory === "FEATURED" && root.searchQuery === ""
                 catalog: root.catalogData
+                isDarkMode: root.isDarkMode
+                themeBackground: root.themeBackground
+                themeSurface: root.themeSurface
+                themeSurfaceLight: root.themeSurfaceLight
+                themeBorder: root.themeBorder
+                themeText: root.themeText
+                themeTextMuted: root.themeTextMuted
+                themeAccent: root.themeAccent
+                themeAccentAlt: root.themeAccentAlt
                 onGameLaunched: function(gameId) {
                     root.launchGame(gameId);
                 }
@@ -1048,6 +1090,15 @@ ApplicationWindow {
                         FloppyCard {
                             gameData: modelData
                             isFocused: (index === root.focusedIndex)
+                            isDarkMode: root.isDarkMode
+                            themeBackground: root.themeBackground
+                            themeSurface: root.themeSurface
+                            themeSurfaceLight: root.themeSurfaceLight
+                            themeBorder: root.themeBorder
+                            themeText: root.themeText
+                            themeTextMuted: root.themeTextMuted
+                            themeAccent: root.themeAccent
+                            themeAccentAlt: root.themeAccentAlt
                             onClicked: {
                                 root.focusedIndex = index;
                                 detailSheet.open(modelData);
@@ -1064,6 +1115,15 @@ ApplicationWindow {
                 visible: (root.selectedCategory !== "FEATURED" || root.searchQuery !== "") && root.viewMode === "carousel"
                 games: root.filteredGames
                 selectedIndex: root.focusedIndex
+                isDarkMode: root.isDarkMode
+                themeBackground: root.themeBackground
+                themeSurface: root.themeSurface
+                themeSurfaceLight: root.themeSurfaceLight
+                themeBorder: root.themeBorder
+                themeText: root.themeText
+                themeTextMuted: root.themeTextMuted
+                themeAccent: root.themeAccent
+                themeAccentAlt: root.themeAccentAlt
                 onGameSelected: function(idx) {
                     root.focusedIndex = idx;
                 }
@@ -1083,6 +1143,15 @@ ApplicationWindow {
                 catalog: root.catalogData
                 games: root.filteredGames
                 selectedIndex: root.focusedIndex
+                isDarkMode: root.isDarkMode
+                themeBackground: root.themeBackground
+                themeSurface: root.themeSurface
+                themeSurfaceLight: root.themeSurfaceLight
+                themeBorder: root.themeBorder
+                themeText: root.themeText
+                themeTextMuted: root.themeTextMuted
+                themeAccent: root.themeAccent
+                themeAccentAlt: root.themeAccentAlt
                 onGameSelected: function(idx) {
                     root.focusedIndex = idx;
                 }
@@ -1101,6 +1170,15 @@ ApplicationWindow {
                 visible: (root.selectedCategory !== "FEATURED" || root.searchQuery !== "") && root.viewMode === "sidebar"
                 games: root.filteredGames
                 selectedIndex: root.focusedIndex
+                isDarkMode: root.isDarkMode
+                themeBackground: root.themeBackground
+                themeSurface: root.themeSurface
+                themeSurfaceLight: root.themeSurfaceLight
+                themeBorder: root.themeBorder
+                themeText: root.themeText
+                themeTextMuted: root.themeTextMuted
+                themeAccent: root.themeAccent
+                themeAccentAlt: root.themeAccentAlt
                 onGameSelected: function(idx) {
                     root.focusedIndex = idx;
                 }
@@ -1151,8 +1229,8 @@ ApplicationWindow {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 30
-            color: "#101017"
-            border.color: themeBorder
+            color: root.isDarkMode ? "#101017" : "#ffffff"
+            border.color: root.themeCardBorder
             border.width: 1
             z: 25
 
@@ -1166,58 +1244,68 @@ ApplicationWindow {
                     spacing: 5
                     Rectangle {
                         width: 28; height: 18; radius: 4
-                        color: "#1c1c28"; border.color: "#333348"; border.width: 1
+                        color: root.isDarkMode ? "#1c1c28" : "#f1f5f9"
+                        border.color: root.isDarkMode ? "#333348" : "#cbd5e1"
+                        border.width: 1
                         Text { anchors.centerIn: parent; text: "1-9"; font.family: "monospace"; font.pixelSize: 10; font.bold: true; color: themeAccent }
                     }
-                    Text { text: "Categories"; font.pixelSize: 11; font.bold: true; color: "#94a3b8" }
+                    Text { text: "Categories"; font.pixelSize: 11; font.bold: true; color: root.themeTextMuted }
                 }
 
-                Text { text: "•"; font.pixelSize: 11; color: "#2d2d3d" }
+                Text { text: "•"; font.pixelSize: 11; color: root.isDarkMode ? "#2d2d3d" : "#cbd5e1" }
 
                 RowLayout {
                     spacing: 5
                     Rectangle {
                         width: 34; height: 18; radius: 4
-                        color: "#1c1c28"; border.color: "#333348"; border.width: 1
+                        color: root.isDarkMode ? "#1c1c28" : "#f1f5f9"
+                        border.color: root.isDarkMode ? "#333348" : "#cbd5e1"
+                        border.width: 1
                         Text { anchors.centerIn: parent; text: "HJKL"; font.family: "monospace"; font.pixelSize: 10; font.bold: true; color: themeAccent }
                     }
-                    Text { text: "Browse"; font.pixelSize: 11; font.bold: true; color: "#94a3b8" }
+                    Text { text: "Browse"; font.pixelSize: 11; font.bold: true; color: root.themeTextMuted }
                 }
 
-                Text { text: "•"; font.pixelSize: 11; color: "#2d2d3d" }
+                Text { text: "•"; font.pixelSize: 11; color: root.isDarkMode ? "#2d2d3d" : "#cbd5e1" }
 
                 RowLayout {
                     spacing: 5
                     Rectangle {
                         width: 44; height: 18; radius: 4
-                        color: "#1c1c28"; border.color: "#333348"; border.width: 1
+                        color: root.isDarkMode ? "#1c1c28" : "#f1f5f9"
+                        border.color: root.isDarkMode ? "#333348" : "#cbd5e1"
+                        border.width: 1
                         Text { anchors.centerIn: parent; text: "Enter"; font.family: "monospace"; font.pixelSize: 10; font.bold: true; color: themeAccent }
                     }
-                    Text { text: "Details"; font.pixelSize: 11; font.bold: true; color: "#94a3b8" }
+                    Text { text: "Details"; font.pixelSize: 11; font.bold: true; color: root.themeTextMuted }
                 }
 
-                Text { text: "•"; font.pixelSize: 11; color: "#2d2d3d" }
+                Text { text: "•"; font.pixelSize: 11; color: root.isDarkMode ? "#2d2d3d" : "#cbd5e1" }
 
                 RowLayout {
                     spacing: 5
                     Rectangle {
                         width: 18; height: 18; radius: 4
-                        color: "#1c1c28"; border.color: "#333348"; border.width: 1
+                        color: root.isDarkMode ? "#1c1c28" : "#f1f5f9"
+                        border.color: root.isDarkMode ? "#333348" : "#cbd5e1"
+                        border.width: 1
                         Text { anchors.centerIn: parent; text: "/"; font.family: "monospace"; font.pixelSize: 10; font.bold: true; color: themeAccent }
                     }
-                    Text { text: "Search"; font.pixelSize: 11; font.bold: true; color: "#94a3b8" }
+                    Text { text: "Search"; font.pixelSize: 11; font.bold: true; color: root.themeTextMuted }
                 }
 
-                Text { text: "•"; font.pixelSize: 11; color: "#2d2d3d" }
+                Text { text: "•"; font.pixelSize: 11; color: root.isDarkMode ? "#2d2d3d" : "#cbd5e1" }
 
                 RowLayout {
                     spacing: 5
                     Rectangle {
                         width: 18; height: 18; radius: 4
-                        color: "#1c1c28"; border.color: "#333348"; border.width: 1
+                        color: root.isDarkMode ? "#1c1c28" : "#f1f5f9"
+                        border.color: root.isDarkMode ? "#333348" : "#cbd5e1"
+                        border.width: 1
                         Text { anchors.centerIn: parent; text: "V"; font.family: "monospace"; font.pixelSize: 10; font.bold: true; color: themeAccent }
                     }
-                    Text { text: "View Mode"; font.pixelSize: 11; font.bold: true; color: "#94a3b8" }
+                    Text { text: "View Mode"; font.pixelSize: 11; font.bold: true; color: root.themeTextMuted }
                 }
 
                 Item { Layout.fillWidth: true }
@@ -1230,7 +1318,7 @@ ApplicationWindow {
                     font.family: "monospace"
                     font.pixelSize: 11
                     font.bold: true
-                    color: "#64748b"
+                    color: root.themeTextMuted
                 }
             }
         }
@@ -1242,6 +1330,15 @@ ApplicationWindow {
     GameDetailSheet {
         id: detailSheet
         objectName: "detailSheet"
+        isDarkMode: root.isDarkMode
+        themeBackground: root.themeBackground
+        themeSurface: root.themeSurface
+        themeSurfaceLight: root.themeSurfaceLight
+        themeBorder: root.themeBorder
+        themeText: root.themeText
+        themeTextMuted: root.themeTextMuted
+        themeAccent: root.themeAccent
+        themeAccentAlt: root.themeAccentAlt
         onPlayRequested: function(gameId) {
             root.launchGame(gameId);
         }
@@ -1253,7 +1350,7 @@ ApplicationWindow {
     Rectangle {
         id: aboutModal
         anchors.fill: parent
-        color: "#e60a0a10"
+        color: root.isDarkMode ? "#e60a0a10" : "#800f172a"
         z: 300
         visible: false
 
@@ -1264,8 +1361,8 @@ ApplicationWindow {
             width: Math.min(parent.width * 0.90, 520)
             height: Math.min(parent.height * 0.85, 460)
             radius: 12
-            color: "#181824"
-            border.color: themeAccent
+            color: root.isDarkMode ? "#181824" : "#ffffff"
+            border.color: root.isDarkMode ? themeAccent : themeBorder
             border.width: 1.5
 
             MouseArea { anchors.fill: parent }
@@ -1280,14 +1377,14 @@ ApplicationWindow {
                     Text { text: "💾"; font.pixelSize: 26 }
                     ColumnLayout {
                         spacing: 2
-                        Text { text: "Omarchy Arcade"; font.pixelSize: 20; font.bold: true; color: "#FFFFFF" }
-                        Text { text: "Version " + (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getLauncherVersion ? arcadeBackend.getLauncherVersion() : "1.1.1") + " • Pure QML & Offline Suite"; font.pixelSize: 11; color: themeAccent }
+                        Text { text: "Omarchy Arcade"; font.pixelSize: 20; font.bold: true; color: root.isDarkMode ? "#FFFFFF" : "#0f172a" }
+                        Text { text: "Version " + (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getLauncherVersion ? arcadeBackend.getLauncherVersion() : "1.2.0") + " • Pure QML & Offline Suite"; font.pixelSize: 11; color: themeAccent }
                     }
                     Item { Layout.fillWidth: true }
                     Text {
                         text: "✕"
                         font.pixelSize: 16
-                        color: "#94a3b8"
+                        color: root.isDarkMode ? "#94a3b8" : "#64748b"
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: aboutModal.visible = false }
                     }
                 }
@@ -1305,7 +1402,7 @@ ApplicationWindow {
                 Text {
                     text: "Built exclusively for the Omarchy Linux desktop environment, featuring zero network telemetry, instant sub-second launch, vector aesthetics, and tiling window manager optimization."
                     font.pixelSize: 12
-                    color: "#cbd5e1"
+                    color: root.isDarkMode ? "#cbd5e1" : "#475569"
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                     lineHeight: 1.3
@@ -1315,8 +1412,8 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     radius: 8
-                    color: "#121218"
-                    border.color: "#242432"
+                    color: root.isDarkMode ? "#121218" : "#f8fafc"
+                    border.color: root.isDarkMode ? "#242432" : "#cbd5e1"
                     border.width: 1
                     Layout.margins: 4
 
@@ -1325,10 +1422,10 @@ ApplicationWindow {
                         anchors.margins: 14
                         spacing: 8
 
-                        Text { text: "AUTHOR & CREDITS"; font.family: "monospace"; font.pixelSize: 10; font.bold: true; color: "#94a3b8" }
-                        Text { text: "• Created by Chris Thompson (@bigcjat)"; font.pixelSize: 12; font.bold: true; color: "#FFFFFF" }
-                        Text { text: "• Designed and developed with assistance from Google Gemini"; font.pixelSize: 12; color: "#94a3b8" }
-                        Text { text: "• Offline Play — Zero DRM, Zero Cloud Sockets"; font.pixelSize: 12; color: "#22c55e" }
+                        Text { text: "AUTHOR & CREDITS"; font.family: "monospace"; font.pixelSize: 10; font.bold: true; color: root.isDarkMode ? "#94a3b8" : "#64748b" }
+                        Text { text: "• Created by Chris Thompson (@bigcjat)"; font.pixelSize: 12; font.bold: true; color: root.isDarkMode ? "#FFFFFF" : "#0f172a" }
+                        Text { text: "• Designed and developed with assistance from Google Gemini"; font.pixelSize: 12; color: root.isDarkMode ? "#94a3b8" : "#475569" }
+                        Text { text: "• Offline Play — Zero DRM, Zero Cloud Sockets"; font.pixelSize: 12; color: root.isDarkMode ? "#22c55e" : "#15803d" }
                     }
                 }
 
@@ -1336,8 +1433,8 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 38
                     radius: 6
-                    color: aboutCloseMouse.pressed ? "#161622" : (aboutCloseMouse.containsMouse ? "#262638" : "#1a1a26")
-                    border.color: aboutCloseMouse.containsMouse ? "#474760" : "#2e2e40"
+                    color: root.isDarkMode ? (aboutCloseMouse.pressed ? "#161622" : (aboutCloseMouse.containsMouse ? "#262638" : "#1a1a26")) : (aboutCloseMouse.pressed ? "#e2e8f0" : (aboutCloseMouse.containsMouse ? "#f1f5f9" : "#ffffff"))
+                    border.color: root.isDarkMode ? (aboutCloseMouse.containsMouse ? "#474760" : "#2e2e40") : "#cbd5e1"
                     border.width: 1
 
                     Text {
@@ -1345,7 +1442,7 @@ ApplicationWindow {
                         text: "Close"
                         font.pixelSize: 12
                         font.bold: true
-                        color: aboutCloseMouse.containsMouse ? "#FFFFFF" : "#cbd5e1"
+                        color: root.isDarkMode ? (aboutCloseMouse.containsMouse ? "#FFFFFF" : "#cbd5e1") : "#0f172a"
                     }
 
                     MouseArea {
@@ -1366,7 +1463,7 @@ ApplicationWindow {
     Rectangle {
         id: updateModal
         anchors.fill: parent
-        color: "#e60a0a10"
+        color: root.isDarkMode ? "#e60a0a10" : "#800f172a"
         z: 310
         visible: false
 
@@ -1377,8 +1474,8 @@ ApplicationWindow {
             width: Math.min(parent.width * 0.92, 640)
             height: Math.min(parent.height * 0.88, 560)
             radius: 12
-            color: "#161622"
-            border.color: root.availableUpdatesCount > 0 ? themeAccent : themeBorder
+            color: root.isDarkMode ? "#161622" : "#ffffff"
+            border.color: root.availableUpdatesCount > 0 ? themeAccent : (root.isDarkMode ? themeBorder : "#cbd5e1")
             border.width: 1.5
 
             MouseArea { anchors.fill: parent }
@@ -1394,11 +1491,11 @@ ApplicationWindow {
                     Text { text: "🔄"; font.pixelSize: 24 }
                     ColumnLayout {
                         spacing: 2
-                        Text { text: "Update Center"; font.pixelSize: 18; font.bold: true; color: "#FFFFFF" }
+                        Text { text: "Update Center"; font.pixelSize: 18; font.bold: true; color: root.isDarkMode ? "#FFFFFF" : "#0f172a" }
                         Text {
                             text: root.availableUpdatesCount > 0 ? (root.availableUpdatesCount + " updates available") : "All software & games are up to date"
                             font.pixelSize: 11
-                            color: root.availableUpdatesCount > 0 ? themeAccent : "#22c55e"
+                            color: root.availableUpdatesCount > 0 ? themeAccent : (root.isDarkMode ? "#22c55e" : "#15803d")
                         }
                     }
                     Item { Layout.fillWidth: true }
@@ -1512,8 +1609,8 @@ ApplicationWindow {
                             Layout.preferredHeight: 52
                             visible: root.isCheckingUpdates
                             radius: 8
-                            color: "#0c1b2b"
-                            border.color: "#00f0ff"
+                            color: root.isDarkMode ? "#0c1b2b" : "#f0f9ff"
+                            border.color: root.isDarkMode ? "#00f0ff" : "#0284c7"
                             border.width: 1
 
                             RowLayout {
@@ -1548,12 +1645,12 @@ ApplicationWindow {
                                         text: "Checking for updates..."
                                         font.pixelSize: 12
                                         font.bold: true
-                                        color: "#38bdf8"
+                                        color: root.isDarkMode ? "#38bdf8" : "#0284c7"
                                     }
                                     Text {
                                         text: "Fetching latest catalog and release notes from GitHub"
                                         font.pixelSize: 10
-                                        color: "#94a3b8"
+                                        color: root.isDarkMode ? "#94a3b8" : "#64748b"
                                     }
                                 }
                             }
@@ -1565,8 +1662,8 @@ ApplicationWindow {
                             Layout.preferredHeight: 120
                             visible: root.availableUpdatesCount === 0 && !root.isUpdatingAll && !root.isCheckingUpdates
                             radius: 8
-                            color: "#111822"
-                            border.color: "#1e293b"
+                            color: root.isDarkMode ? "#111822" : "#f0fdf4"
+                            border.color: root.isDarkMode ? "#1e293b" : "#bbf7d0"
                             border.width: 1
 
                             ColumnLayout {
@@ -1575,21 +1672,21 @@ ApplicationWindow {
                                 Text {
                                     text: "✓"
                                     font.pixelSize: 32
-                                    color: "#22c55e"
+                                    color: root.isDarkMode ? "#22c55e" : "#16a34a"
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                                 Text {
                                     text: "Omarchy Arcade & All Games Are Up to Date!"
                                     font.pixelSize: 13
                                     font.bold: true
-                                    color: "#f8fafc"
+                                    color: root.isDarkMode ? "#f8fafc" : "#15803d"
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                                 Text {
-                                    text: (root.lastCheckedTimeStr !== "" ? ("Last verified: " + root.lastCheckedTimeStr + " • ") : "") + "Installed version: v" + (root.updateReport ? root.updateReport.launcher.current_version : (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getLauncherVersion ? arcadeBackend.getLauncherVersion() : "1.1.1"))
+                                    text: (root.lastCheckedTimeStr !== "" ? ("Last verified: " + root.lastCheckedTimeStr + " • ") : "") + "Installed version: v" + (root.updateReport ? root.updateReport.launcher.current_version : (typeof arcadeBackend !== "undefined" && arcadeBackend && arcadeBackend.getLauncherVersion ? arcadeBackend.getLauncherVersion() : "1.2.0"))
                                     font.family: "monospace"
                                     font.pixelSize: 11
-                                    color: "#94a3b8"
+                                    color: root.isDarkMode ? "#94a3b8" : "#64748b"
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                             }
@@ -1601,7 +1698,7 @@ ApplicationWindow {
                             visible: Boolean(root.updateReport && root.updateReport.launcher && root.updateReport.launcher.has_update)
                             implicitHeight: launcherCardCol.implicitHeight + 24
                             radius: 8
-                            color: "#0f172a"
+                            color: root.isDarkMode ? "#0f172a" : "#f8fafc"
                             border.color: themeAccent
                             border.width: 1.5
 
@@ -1620,7 +1717,7 @@ ApplicationWindow {
                                         text: "OMARCHY ARCADE LAUNCHER"
                                         font.pixelSize: 13
                                         font.bold: true
-                                        color: "#FFFFFF"
+                                        color: root.isDarkMode ? "#FFFFFF" : "#0f172a"
                                     }
                                     Rectangle {
                                         height: 20
@@ -1676,7 +1773,7 @@ ApplicationWindow {
                                     font.family: "monospace"
                                     font.pixelSize: 10
                                     font.bold: true
-                                    color: "#94a3b8"
+                                    color: root.isDarkMode ? "#94a3b8" : "#64748b"
                                 }
 
                                 Repeater {
@@ -1688,7 +1785,7 @@ ApplicationWindow {
                                         Text {
                                             text: modelData
                                             font.pixelSize: 11
-                                            color: "#e2e8f0"
+                                            color: root.isDarkMode ? "#e2e8f0" : "#334155"
                                             wrapMode: Text.WordWrap
                                             Layout.fillWidth: true
                                         }
@@ -1705,8 +1802,8 @@ ApplicationWindow {
                                 Layout.fillWidth: true
                                 implicitHeight: gameCardCol.implicitHeight + 24
                                 radius: 8
-                                color: "#14141e"
-                                border.color: "#2e2e42"
+                                color: root.isDarkMode ? "#14141e" : "#f8fafc"
+                                border.color: root.isDarkMode ? "#2e2e42" : "#cbd5e1"
                                 border.width: 1
 
                                 ColumnLayout {
@@ -1724,14 +1821,14 @@ ApplicationWindow {
                                             text: modelData.title
                                             font.pixelSize: 13
                                             font.bold: true
-                                            color: "#FFFFFF"
+                                            color: root.isDarkMode ? "#FFFFFF" : "#0f172a"
                                         }
                                         Rectangle {
                                             height: 18
                                             radius: 4
                                             Layout.preferredWidth: gVerText.implicitWidth + 10
-                                            color: "#1e1e2d"
-                                            border.color: "#3e3e56"
+                                            color: root.isDarkMode ? "#1e1e2d" : "#e2e8f0"
+                                            border.color: root.isDarkMode ? "#3e3e56" : "#cbd5e1"
                                             border.width: 1
                                             Text {
                                                 id: gVerText
@@ -1740,7 +1837,7 @@ ApplicationWindow {
                                                 font.family: "monospace"
                                                 font.pixelSize: 9
                                                 font.bold: true
-                                                color: "#38bdf8"
+                                                color: root.isDarkMode ? "#38bdf8" : "#0284c7"
                                             }
                                         }
                                         Item { Layout.fillWidth: true }
@@ -1749,8 +1846,8 @@ ApplicationWindow {
                                             Layout.preferredHeight: 28
                                             Layout.preferredWidth: updateSingleGameBtnText.implicitWidth + 16
                                             radius: 5
-                                            color: updateGameMouse.containsMouse ? "#00f0ff" : "transparent"
-                                            border.color: "#00f0ff"
+                                            color: updateGameMouse.containsMouse ? themeAccent : "transparent"
+                                            border.color: themeAccent
                                             border.width: 1
                                             Text {
                                                 id: updateSingleGameBtnText
@@ -1759,7 +1856,7 @@ ApplicationWindow {
                                                 font.family: "monospace"
                                                 font.pixelSize: 10
                                                 font.bold: true
-                                                color: updateGameMouse.containsMouse ? "#09090e" : "#00f0ff"
+                                                color: updateGameMouse.containsMouse ? "#09090e" : themeAccent
                                             }
                                             MouseArea {
                                                 id: updateGameMouse
@@ -1780,7 +1877,7 @@ ApplicationWindow {
                                         font.family: "monospace"
                                         font.pixelSize: 10
                                         font.bold: true
-                                        color: "#94a3b8"
+                                        color: root.isDarkMode ? "#94a3b8" : "#64748b"
                                     }
 
                                     Repeater {
@@ -1788,11 +1885,11 @@ ApplicationWindow {
                                         RowLayout {
                                             Layout.fillWidth: true
                                             spacing: 8
-                                            Text { text: "★"; font.pixelSize: 10; color: "#38bdf8"; Layout.alignment: Qt.AlignTop }
+                                            Text { text: "★"; font.pixelSize: 10; color: themeAccent; Layout.alignment: Qt.AlignTop }
                                             Text {
                                                 text: modelData
                                                 font.pixelSize: 11
-                                                color: "#cbd5e1"
+                                                color: root.isDarkMode ? "#cbd5e1" : "#334155"
                                                 wrapMode: Text.WordWrap
                                                 Layout.fillWidth: true
                                             }
@@ -1815,8 +1912,8 @@ ApplicationWindow {
                         Layout.preferredHeight: 36
                         Layout.preferredWidth: checkAgainRow.implicitWidth + 24
                         radius: 6
-                        color: root.isCheckingUpdates ? "#182234" : (checkAgainMouse.containsMouse ? "#262638" : "#1a1a26")
-                        border.color: root.isCheckingUpdates ? "#00f0ff" : (checkAgainMouse.containsMouse ? "#475569" : "#2e2e40")
+                        color: root.isDarkMode ? (root.isCheckingUpdates ? "#182234" : (checkAgainMouse.containsMouse ? "#262638" : "#1a1a26")) : (checkAgainMouse.containsMouse ? "#e2e8f0" : "#ffffff")
+                        border.color: root.isDarkMode ? (root.isCheckingUpdates ? "#00f0ff" : (checkAgainMouse.containsMouse ? "#475569" : "#2e2e40")) : "#cbd5e1"
                         border.width: 1
 
                         Row {

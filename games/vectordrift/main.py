@@ -127,15 +127,28 @@ def parse_toml_theme(path: Path):
         pass
     return None
 
-def load_all_omarchy_themes():
-    themes = {}
-    themes_dir = Path.home() / ".config" / "omarchy" / "themes"
-    if themes_dir.exists():
-        for theme_file in themes_dir.glob("*/colors.toml"):
-            t = parse_toml_theme(theme_file)
-            if t:
-                themes[theme_file.parent.name.lower()] = t
-    return themes
+DEFAULT_PRESETS = {
+    "dark": {
+        "name": "Catppuccin Mocha",
+        "bg": "#1e1e2e",
+        "fg": "#cdd6f4",
+        "accent": "#89b4fa",
+        "boardBg": "#11111b",
+        "cardBg": "#1e1e2e",
+        "border": "#313244",
+        "subtext": "#a6adc8",
+    },
+    "light": {
+        "name": "Catppuccin Latte",
+        "bg": "#eff1f5",
+        "fg": "#4c4f69",
+        "accent": "#1e66f5",
+        "boardBg": "#11151c",
+        "cardBg": "#ffffff",
+        "border": "#ccd0da",
+        "subtext": "#6c6f85",
+    }
+}
 
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
@@ -153,7 +166,6 @@ def find_omarchy_colors_file():
         if c.is_file():
             return c
     return None
-
 
 def load_system_theme():
     theme_path = find_omarchy_colors_file()
@@ -178,7 +190,6 @@ def main():
             app.setWindowIcon(QIcon(str(cp)))
             break
 
-
     base_dir = Path(__file__).resolve().parent
     sounds_dir = base_dir / "sounds"
     sound_manager = SoundManager(sounds_dir)
@@ -196,8 +207,6 @@ def main():
         sys.exit(-1)
 
     root = engine.rootObjects()[0]
-    all_themes = load_all_omarchy_themes()
-
     requested_theme = None
     requested_screenshot = None
     args = sys.argv[1:]
@@ -212,14 +221,19 @@ def main():
         else:
             i += 1
 
-    if requested_theme and requested_theme in all_themes:
-        root.applyTheme(all_themes[requested_theme], requested_theme)
+    if requested_theme:
+        if requested_theme in DEFAULT_PRESETS:
+            root.applyTheme(DEFAULT_PRESETS[requested_theme], requested_theme.capitalize())
+        elif requested_theme in all_themes:
+            root.applyTheme(all_themes[requested_theme], requested_theme)
     else:
         sys_theme = load_system_theme()
         if sys_theme:
             root.applyTheme(sys_theme, "System")
         elif "catppuccin" in all_themes:
             root.applyTheme(all_themes["catppuccin"], "Catppuccin")
+        else:
+            root.applyTheme(DEFAULT_PRESETS["dark"], "Catppuccin Mocha")
 
     theme_file = find_omarchy_colors_file()
     watcher = QFileSystemWatcher()
@@ -238,6 +252,21 @@ def main():
 
     watcher.fileChanged.connect(on_theme_file_changed)
     watcher.directoryChanged.connect(on_theme_file_changed)
+
+    def on_os_scheme_changed():
+        if requested_theme or find_omarchy_colors_file():
+            return
+        from PySide6.QtGui import Qt
+        scheme = app.styleHints().colorScheme()
+        preset = "dark" if scheme == Qt.ColorScheme.Dark else "light"
+        root.applyTheme(DEFAULT_PRESETS[preset], preset.capitalize())
+
+    app.styleHints().colorSchemeChanged.connect(on_os_scheme_changed)
+
+    try:
+        root.screenshotSaved.connect(lambda p: app.quit())
+    except Exception:
+        pass
 
     if requested_screenshot:
         def do_shot():

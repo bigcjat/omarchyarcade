@@ -22,7 +22,6 @@ template/
 ├── main.py                  # PySide6 host: theme watcher, sound engine, CLI tools
 ├── main.qml                 # QML frontend: 2048 UI layout, HUD, canvas, modals
 ├── GameEngine.js            # Pure JavaScript game loop & physics logic
-├── Themes.js                # All 22 official Omarchy desktop themes
 ├── SplashScreen.qml         # Canonical Omarchy Arcade splash sequence (DO NOT MODIFY)
 ├── omarchy_arcade.svg       # Official retro vector emblem
 ├── omarchy_arcade_text.svg  # Official retro text banner

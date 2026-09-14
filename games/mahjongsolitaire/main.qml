@@ -28,9 +28,18 @@ Window {
     property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#0a0c12" : "#ffffff"
 
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
+
+    readonly property bool isDarkMode: colorLuminance(themeBg) < 0.5
+    property color themeCardHover: isDarkMode ? "#1e263c" : "#f1f5f9"
+
+    signal screenshotSaved(string path)
 
     color: themeBg
 
@@ -52,7 +61,7 @@ Window {
                               "• Seasons & Flowers: Any season matches any season; any flower matches any flower.\n" +
                               "• 5 Depth Levels (L): L0 Blue, L1 Green, L2 Yellow, L3 Purple, L4 Red.\n" +
                               "• Camera Controls: 2-finger drag or A / D / W / S to orbit. V for top-down.\n" +
-                              "• Shortcuts: Hint (H), Undo (U), Restart (R), Sound (M), Fullscreen (⇧F)."
+                              "• Shortcuts: Hint (H), Undo (U), Restart (R), Sound (M), Fullscreen (⇧F), Theme (T)."
 
     // Board & Gameplay State
     property string currentLayout: (typeof initialLayout !== "undefined" && initialLayout) ? initialLayout : "turtle"
@@ -88,12 +97,44 @@ Window {
         themeBg = bg;
         themeFg = fg;
         themeAccent = accent;
-        themeBorder = c8;
-        themeCardBg = c0;
-        themeBoardBg = Qt.darker(bg, 1.15);
-        themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
+
+        var isLight = colorLuminance(bg) > 0.5;
+        if (isLight) {
+            themeCardBg = "#ffffff";
+            themeCardHover = "#f1f5f9";
+            themeBoardBg = "#0c0f18";
+            themeSubtext = "#64748b";
+            themeBorder = "#cbd5e1";
+        } else {
+            themeCardBg = c0;
+            themeCardHover = "#1e263c";
+            themeBoardBg = Qt.darker(bg, 1.15);
+            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
+            themeBorder = c8;
+        }
         themeBtnBg = accent;
         themeBtnFg = colorLuminance(accent) > 0.5 ? "#0a0c12" : "#ffffff";
+    }
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            cardBg: "#ffffff",
+            border: "#cbd5e1",
+            subtext: "#64748b",
+            accent: "#00b4d8"
+        } : {
+            background: "#080a10",
+            foreground: "#e2e8f0",
+            cardBg: "#121726",
+            border: "#1e263c",
+            subtext: "#94a3b8",
+            accent: "#00F0FF"
+        };
+        applyTheme(tData, nextIsLight ? "Omarchy Light" : "Omarchy Dark");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     function playAudio(name) {
@@ -143,6 +184,7 @@ Window {
         mainContainer.grabToImage(function(result) {
             result.saveToFile(filePath);
             console.log("Screenshot saved to " + filePath);
+            root.screenshotSaved(filePath);
             if (shouldQuit) {
                 Qt.quit();
             }
@@ -583,6 +625,9 @@ Window {
             } else if (event.key === Qt.Key_M) {
                 toggleMute();
                 event.accepted = true;
+            } else if (event.key === Qt.Key_T) {
+                cycleTheme();
+                event.accepted = true;
             } else if (event.key === Qt.Key_Question || event.key === Qt.Key_Slash) {
                 root.showHelp = !root.showHelp;
                 event.accepted = true;
@@ -604,6 +649,19 @@ Window {
                 }
                 event.accepted = true;
             }
+        }
+
+        // =====================================================================
+        // HEADER BAR BACKGROUND (Adapts to themeBg flush across top)
+        // =====================================================================
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: (headerItem.visible ? headerItem.y + headerItem.height + (subheaderItem.visible ? subheaderItem.height + 20 : 12) : 0)
+            color: root.themeBg
+            z: 10
         }
 
         // =====================================================================
@@ -636,7 +694,6 @@ Window {
                     font.pixelSize: Math.max(20, Math.min(32, headerItem.width * 0.075))
                     font.bold: true
                     color: root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
                 Text {
                     width: parent.width
@@ -644,7 +701,6 @@ Window {
                     text: "Classic arcade puzzle for Omarchy"
                     font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
                     color: root.themeSubtext
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
 
@@ -656,14 +712,14 @@ Window {
                 spacing: 8
 
                 // TILES LEFT Card
+                // TILES Card
                 Rectangle {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.16))
                     height: Math.max(42, Math.min(52, headerItem.width * 0.10))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -673,14 +729,14 @@ Window {
                             text: "TILES"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: boardTiles.length.toString()
                             font.pixelSize: 16
                             font.bold: true
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                         }
                     }
                 }
@@ -690,10 +746,9 @@ Window {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.16))
                     height: Math.max(42, Math.min(52, headerItem.width * 0.10))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -703,14 +758,14 @@ Window {
                             text: "SCORE"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.score.toString()
                             font.pixelSize: 16
                             font.bold: true
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                         }
                     }
                 }
@@ -720,10 +775,9 @@ Window {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.16))
                     height: Math.max(42, Math.min(52, headerItem.width * 0.10))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -733,14 +787,14 @@ Window {
                             text: "BEST"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.bestScore.toString()
                             font.pixelSize: 16
                             font.bold: true
-                            color: root.bestScore > 0 ? root.themeAccent : root.themeSubtext
+                            color: root.bestScore > 0 ? (root.isDarkMode ? root.themeAccent : "#15803d") : (root.isDarkMode ? root.themeSubtext : "#94a3b8")
                         }
                     }
                 }
@@ -776,10 +830,9 @@ Window {
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
                     radius: 8
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
 
                     Row {
                         id: helpRow
@@ -824,11 +877,9 @@ Window {
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
                     radius: 8
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.isMuted ? root.themeBorder : root.themeAccent
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     Row {
                         id: muteRow
@@ -864,11 +915,9 @@ Window {
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (viewModeRow.implicitWidth + 18)
                     radius: 8
-                    color: root.fullPlayfield ? root.themeCardBg : (viewModeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
+                    color: root.fullPlayfield ? root.themeCardHover : (viewModeMouse.containsMouse ? root.themeCardHover : root.themeCardBg)
                     border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     Row {
                         id: viewModeRow
@@ -908,7 +957,6 @@ Window {
                     width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
                     radius: 8
                     color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 150 } }
 
                     Row {
                         id: restartRow
@@ -1048,8 +1096,8 @@ Window {
         // ---------------------------------------------------------------------
         View3D {
             id: v3d
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 8 : 8
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 8 : 0
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
@@ -1057,7 +1105,7 @@ Window {
 
             environment: SceneEnvironment {
                 backgroundMode: SceneEnvironment.Color
-                clearColor: themeBg
+                clearColor: themeBoardBg
                 antialiasingMode: SceneEnvironment.MSAA
                 antialiasingQuality: SceneEnvironment.High
             }
@@ -1528,7 +1576,7 @@ Window {
                                 text: modelData.name
                                 font.pixelSize: 10
                                 font.bold: true
-                                color: currentLayout === modelData.id ? themeAccent : themeFg
+                                color: currentLayout === modelData.id ? themeAccent : "#f8fafc"
                             }
                             MouseArea {
                                 anchors.fill: parent
@@ -1574,8 +1622,8 @@ Window {
                     Row {
                         anchors.centerIn: parent
                         spacing: 3
-                        Text { text: "↶"; font.pixelSize: 11; font.bold: true; color: themeFg; anchors.verticalCenter: parent.verticalCenter }
-                        Text { text: "Undo"; font.pixelSize: 10; font.bold: true; color: themeFg; anchors.verticalCenter: parent.verticalCenter }
+                        Text { text: "↶"; font.pixelSize: 11; font.bold: true; color: "#f8fafc"; anchors.verticalCenter: parent.verticalCenter }
+                        Text { text: "Undo"; font.pixelSize: 10; font.bold: true; color: "#f8fafc"; anchors.verticalCenter: parent.verticalCenter }
                     }
                     MouseArea {
                         anchors.fill: parent
@@ -1592,7 +1640,7 @@ Window {
                     height: 26
                     radius: 5
                     color: Qt.rgba(255, 255, 255, 0.08)
-                    Text { anchors.centerIn: parent; text: "⟲"; font.pixelSize: 14; font.weight: Font.Bold; color: themeFg }
+                    Text { anchors.centerIn: parent; text: "⟲"; font.pixelSize: 14; font.weight: Font.Bold; color: "#f8fafc" }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: rotateCameraYaw(45) }
                 }
 
@@ -1602,7 +1650,7 @@ Window {
                     height: 26
                     radius: 5
                     color: Qt.rgba(255, 255, 255, 0.08)
-                    Text { anchors.centerIn: parent; text: "⟳"; font.pixelSize: 14; font.weight: Font.Bold; color: themeFg }
+                    Text { anchors.centerIn: parent; text: "⟳"; font.pixelSize: 14; font.weight: Font.Bold; color: "#f8fafc" }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: rotateCameraYaw(-45) }
                 }
 
@@ -1612,7 +1660,7 @@ Window {
                     height: 26
                     radius: 5
                     color: Qt.rgba(255, 255, 255, 0.08)
-                    Text { anchors.centerIn: parent; text: "－"; font.pixelSize: 14; font.weight: Font.Bold; color: themeFg }
+                    Text { anchors.centerIn: parent; text: "－"; font.pixelSize: 14; font.weight: Font.Bold; color: "#f8fafc" }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: zoomCamera(60) }
                 }
 
@@ -1622,7 +1670,7 @@ Window {
                     height: 26
                     radius: 5
                     color: Qt.rgba(255, 255, 255, 0.08)
-                    Text { anchors.centerIn: parent; text: "＋"; font.pixelSize: 14; font.weight: Font.Bold; color: themeFg }
+                    Text { anchors.centerIn: parent; text: "＋"; font.pixelSize: 14; font.weight: Font.Bold; color: "#f8fafc" }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: zoomCamera(-60) }
                 }
 
@@ -1636,7 +1684,7 @@ Window {
                     color: viewMode === "overhead" ? Qt.rgba(0, 240/255, 255/255, 0.22) : Qt.rgba(255, 255, 255, 0.08)
                     border.color: viewMode === "overhead" ? themeAccent : Qt.rgba(255, 255, 255, 0.15)
                     border.width: 1
-                    Text { anchors.centerIn: parent; text: viewMode === "overhead" ? "📐 TOP" : "🌐 3D"; font.pixelSize: 10; font.weight: Font.Bold; color: viewMode === "overhead" ? themeAccent : themeFg }
+                    Text { anchors.centerIn: parent; text: viewMode === "overhead" ? "📐 TOP" : "🌐 3D"; font.pixelSize: 10; font.weight: Font.Bold; color: viewMode === "overhead" ? themeAccent : "#f8fafc" }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: setViewMode(viewMode === "3d" ? "overhead" : "3d") }
                 }
 
@@ -1648,7 +1696,7 @@ Window {
                     color: showLayerDepth ? Qt.rgba(255, 23, 68, 0.22) : Qt.rgba(255, 255, 255, 0.08)
                     border.color: showLayerDepth ? "#FF1744" : Qt.rgba(255, 255, 255, 0.15)
                     border.width: 1
-                    Text { anchors.centerIn: parent; text: "📊 DEPTH"; font.pixelSize: 10; font.weight: Font.Bold; color: showLayerDepth ? "#FF80AB" : themeFg }
+                    Text { anchors.centerIn: parent; text: "📊 DEPTH"; font.pixelSize: 10; font.weight: Font.Bold; color: showLayerDepth ? "#FF80AB" : "#f8fafc" }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: showLayerDepth = !showLayerDepth }
                 }
 
@@ -1658,7 +1706,7 @@ Window {
                     height: 26
                     radius: 5
                     color: Qt.rgba(255, 255, 255, 0.08)
-                    Text { anchors.centerIn: parent; text: "RESET"; font.pixelSize: 10; font.weight: Font.Bold; color: themeFg }
+                    Text { anchors.centerIn: parent; text: "RESET"; font.pixelSize: 10; font.weight: Font.Bold; color: "#f8fafc" }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: resetCamera() }
                 }
             }
@@ -1886,8 +1934,8 @@ Window {
             width: toastText.implicitWidth + 24
             height: 28
             radius: 14
-            color: root.themeCardBg
-            border.color: root.themeBorder
+            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
             border.width: 1
             opacity: 0
             z: 800
@@ -1897,7 +1945,7 @@ Window {
                 anchors.centerIn: parent
                 font.pixelSize: 11
                 font.bold: true
-                color: root.themeFg
+                color: root.isDarkMode ? root.themeFg : "#0f172a"
             }
 
             function show(msg) {

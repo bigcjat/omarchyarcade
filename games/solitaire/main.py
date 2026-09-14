@@ -135,23 +135,31 @@ class SoundManager(QObject):
                 except Exception:
                     pass
 
-def load_all_omarchy_themes():
-    themes_js = Path(__file__).resolve().parent / "Themes.js"
-    if not themes_js.is_file():
-        return {}
-    with open(themes_js, "r", encoding="utf-8") as f:
-        content = f.read()
-    themes = {}
-    blocks = re.findall(r"\{([^{}]+)\}", content)
-    for b in blocks:
-        t = {}
-        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", b):
-            t[k] = v
-        if "id" in t and "name" in t:
-            themes[t["id"]] = t
-    return themes
 
-ALL_THEMES = load_all_omarchy_themes()
+DEFAULT_PRESETS = {
+    "dark": {
+        "id": "catppuccin-mocha",
+        "name": "Catppuccin Mocha",
+        "bg": "#181825",
+        "cardBg": "#1e1e2e",
+        "surface": "#1e1e2e",
+        "border": "#313244",
+        "fg": "#cdd6f4",
+        "subtext": "#a6adc8",
+        "accent": "#00F0FF",
+    },
+    "light": {
+        "id": "catppuccin-latte",
+        "name": "Catppuccin Latte",
+        "bg": "#eff1f5",
+        "cardBg": "#ffffff",
+        "surface": "#ffffff",
+        "border": "#cbd5e1",
+        "fg": "#0f172a",
+        "subtext": "#64748b",
+        "accent": "#0099FF",
+    },
+}
 
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
@@ -228,12 +236,13 @@ def main():
         sys.exit(1)
 
     root = engine.rootObjects()[0]
+    root.screenshotSaved.connect(lambda p: app.quit())
 
     # CLI Overrides & Theme Management
     if args.theme:
         clean_arg = args.theme.lower().replace("_", "-")
-        if clean_arg in ALL_THEMES:
-            t = ALL_THEMES[clean_arg]
+        if clean_arg in DEFAULT_PRESETS:
+            t = DEFAULT_PRESETS[clean_arg]
             root.applyTheme(t, t["name"])
         else:
             custom_path = Path(args.theme).expanduser().resolve()
@@ -241,8 +250,10 @@ def main():
                 data = load_toml_colors(custom_path)
                 if data:
                     root.applyTheme(data, custom_path.parent.name.capitalize())
+            elif any(x in clean_arg for x in ["light", "day", "white", "latte"]):
+                root.applyTheme(DEFAULT_PRESETS["light"], "Light")
             else:
-                root.setProperty("forcedTheme", args.theme)
+                root.applyTheme(DEFAULT_PRESETS["dark"], "Dark")
     else:
         system_colors = find_omarchy_colors_file()
         if system_colors:
@@ -265,8 +276,21 @@ def main():
 
             watcher.fileChanged.connect(on_theme_updated)
             watcher.directoryChanged.connect(on_theme_updated)
+        else:
+            def apply_system_scheme():
+                scheme = app.styleHints().colorScheme()
+                if scheme == Qt.ColorScheme.Light:
+                    target_theme = DEFAULT_PRESETS["light"]
+                    name = "System Light"
+                else:
+                    target_theme = DEFAULT_PRESETS["dark"]
+                    name = "System Dark"
+                root.applyTheme(target_theme, name)
 
-    if args.no_splash:
+            apply_system_scheme()
+            app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
+
+    if args.no_splash or args.screenshot:
         root.setProperty("splashEnabled", False)
 
     if args.deck:
@@ -277,8 +301,9 @@ def main():
 
     if args.screenshot:
         def do_capture():
-            root.captureScreenshot(args.screenshot, True)
-        QTimer.singleShot(600 if not args.no_splash else 200, do_capture)
+            root.captureScreenshot(args.screenshot, False)
+            QTimer.singleShot(500, app.quit)
+        QTimer.singleShot(250, do_capture)
 
     sys.exit(app.exec())
 

@@ -35,6 +35,8 @@ ApplicationWindow {
     property bool _spaceConstrained: root.height < 520 || root.width < 440
     on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
+    property color themeCardHover: isDarkMode ? Qt.lighter(themeCardBg, 1.15) : "#f1f5f9"
 
     function toggleMute() {
         root.isMuted = !root.isMuted;
@@ -74,9 +76,12 @@ ApplicationWindow {
     color: themeBg
     Behavior on color { ColorAnimation { duration: 250 } }
 
-    function colorLuminance(hex) {
-        if (!hex || typeof hex !== "string") return 0.2;
-        var c = Qt.color(hex);
+    function colorLuminance(col) {
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
@@ -99,24 +104,53 @@ ApplicationWindow {
         var lum = colorLuminance(bg);
         if (lum > 0.5) {
             // Light theme (e.g. Snow, Paper, Latte)
-            themeBoardBg = Qt.darker(bg, 1.10);
-            themeCellEmpty = Qt.darker(bg, 1.05);
-            themeCardBg = Qt.darker(bg, 1.08);
-            themeSubtext = Qt.lighter(fg, 2.2);
-            themeModalBg = bg;
+            themeBoardBg = data.boardBg || "#d8dce5";
+            themeCellEmpty = data.cellEmpty || "#e6eaf1";
+            themeCardBg = data.cardBg || "#ffffff";
+            themeBorder = data.border || "#ccd0da";
+            themeSubtext = data.subtext || "#64748b";
+            themeModalBg = "#ffffff";
             themeBtnBg = accent;
-            themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+            themeBtnFg = "#ffffff";
         } else {
             // Dark theme (e.g. Catppuccin, Gruvbox, Tokyo Night, Nord, Evergreen)
-            themeBoardBg = Qt.darker(bg, 1.25);
-            themeCellEmpty = Qt.lighter(bg, 1.15);
-            themeCardBg = c0;
-            themeSubtext = Qt.alpha(fg, 0.7);
+            themeBoardBg = data.boardBg || Qt.darker(bg, 1.25);
+            themeCellEmpty = data.cellEmpty || Qt.lighter(bg, 1.15);
+            themeCardBg = data.cardBg || c0;
+            themeBorder = data.border || c8;
+            themeSubtext = data.subtext || Qt.alpha(fg, 0.7);
             themeModalBg = Qt.lighter(bg, 1.12);
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         }
         isCustomTheme = true;
+    }
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            accent: "#fe640b",
+            color0: "#e6e9ef",
+            cardBg: "#ffffff",
+            boardBg: "#d8dce5",
+            cellEmpty: "#e6eaf1",
+            border: "#ccd0da",
+            subtext: "#64748b"
+        } : {
+            background: "#181825",
+            foreground: "#cdd6f4",
+            accent: "#fab387",
+            color0: "#313244",
+            cardBg: "#1e1e2e",
+            boardBg: "#11111b",
+            cellEmpty: "#181825",
+            border: "#45475a",
+            subtext: "#a6adc8"
+        };
+        applyTheme(tData, nextIsLight ? "Omarchy Light" : "Omarchy Dark");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     function loadOmarchyThemeDirect() {
@@ -320,6 +354,12 @@ ApplicationWindow {
                 return;
             }
 
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_Left || event.key === Qt.Key_A || event.key === Qt.Key_H) {
                 root.doMove(0);
                 event.accepted = true;
@@ -492,8 +532,10 @@ ApplicationWindow {
                         width: Math.max(52, Math.min(78, gameContainer.boardSize * 0.20))
                         height: Math.max(38, Math.min(52, gameContainer.boardSize * 0.13))
                         radius: Math.max(6, width * 0.12)
-                        color: root.themeCardBg
-                        Behavior on color { ColorAnimation { duration: 250 } }
+                        color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                        border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 150 } }
 
                         Column {
                             anchors.centerIn: parent
@@ -502,14 +544,15 @@ ApplicationWindow {
                                 text: "SCORE"
                                 font.pixelSize: Math.max(8, Math.min(10, parent.parent.height * 0.22))
                                 font.bold: true
-                                color: root.themeSubtext
+                                font.letterSpacing: 0.5
+                                color: root.isDarkMode ? root.themeSubtext : "#64748b"
                             }
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: root.score.toString()
                                 font.pixelSize: Math.max(12, Math.min(17, parent.parent.height * 0.38))
                                 font.bold: true
-                                color: root.themeFg
+                                color: root.isDarkMode ? root.themeFg : "#0f172a"
                             }
                         }
 
@@ -546,8 +589,10 @@ ApplicationWindow {
                         width: Math.max(52, Math.min(78, gameContainer.boardSize * 0.20))
                         height: Math.max(38, Math.min(52, gameContainer.boardSize * 0.13))
                         radius: Math.max(6, width * 0.12)
-                        color: root.themeCardBg
-                        Behavior on color { ColorAnimation { duration: 250 } }
+                        color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                        border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 150 } }
 
                         Column {
                             anchors.centerIn: parent
@@ -556,14 +601,15 @@ ApplicationWindow {
                                 text: "BEST"
                                 font.pixelSize: Math.max(8, Math.min(10, parent.parent.height * 0.22))
                                 font.bold: true
-                                color: root.themeSubtext
+                                font.letterSpacing: 0.5
+                                color: root.isDarkMode ? root.themeSubtext : "#64748b"
                             }
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: root.bestScore.toString()
                                 font.pixelSize: Math.max(12, Math.min(17, parent.parent.height * 0.38))
                                 font.bold: true
-                                color: root.themeFg
+                                color: root.bestScore > 0 ? (root.isDarkMode ? root.themeAccent : "#15803d") : (root.isDarkMode ? root.themeSubtext : "#94a3b8")
                             }
                         }
                     }
@@ -784,7 +830,9 @@ ApplicationWindow {
                         height: board.cellSize
                         radius: Math.max(4, board.cellSize * 0.10)
                         color: root.themeCellEmpty
-                        Behavior on color { ColorAnimation { duration: 250 } }
+                        border.color: root.isDarkMode ? Qt.rgba(255, 255, 255, 0.04) : Qt.rgba(100/255, 116/255, 139/255, 0.18)
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 150 } }
                     }
                 }
             }

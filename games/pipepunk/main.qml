@@ -17,6 +17,7 @@ Window {
     property color themeBg: "#12141a"
     property color themeBoardBg: "#0d0f14"
     property color themeCardBg: "#1a1d26"
+    property color themeCardHover: isDarkMode ? Qt.lighter(themeCardBg, 1.2) : "#f1f5f9"
     property color themeBorder: "#2a2e3d"
     property color themeFg: "#e2e8f0"
     property color themeSubtext: "#94a3b8"
@@ -32,10 +33,36 @@ Window {
     property color themeColor5: "#8b5cf6"
     property color themeColor6: "#06b6d4"
 
-    // WCAG contrast helper ensuring buttons are always readable in light/dark themes
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+    }
+
+    readonly property bool isDarkMode: colorLuminance(themeBg) < 0.5
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            cardBg: "#ffffff",
+            border: "#cbd5e1",
+            subtext: "#64748b",
+            accent: "#d97706"
+        } : {
+            background: "#12141a",
+            foreground: "#e2e8f0",
+            cardBg: "#1a1d26",
+            border: "#2a2e3d",
+            subtext: "#94a3b8",
+            accent: "#f59e0b"
+        };
+        applyTheme(tData, nextIsLight ? "Omarchy Light" : "Omarchy Dark");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     color: themeBg
@@ -136,19 +163,20 @@ Window {
         themeBg = bg;
         themeFg = fg;
         themeAccent = accent;
-        themeBorder = c8;
 
-        var lum = colorLuminance(bg);
-        if (lum > 0.5) {
-            themeBoardBg = Qt.darker(bg, 1.06);
-            themeCardBg = Qt.darker(bg, 1.03);
-            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
-            themeBorder = c8 || Qt.darker(bg, 1.15);
+        var isLight = colorLuminance(bg) > 0.5;
+        if (isLight) {
+            themeBoardBg = "#11111b";
+            themeCardBg = "#ffffff";
+            themeCardHover = "#f1f5f9";
+            themeSubtext = "#64748b";
+            themeBorder = "#cbd5e1";
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         } else {
             themeBoardBg = Qt.darker(bg, 1.25);
             themeCardBg = c0;
+            themeCardHover = Qt.lighter(c0, 1.25);
             themeSubtext = "#94a3b8";
             themeBorder = c8;
             themeBtnBg = accent;
@@ -493,6 +521,13 @@ Window {
                 return;
             }
 
+            // Theme Toggle
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
+                event.accepted = true;
+                return;
+            }
+
             // Full Window View Toggle
             if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
                 root.fullPlayfield = !root.fullPlayfield;
@@ -560,11 +595,23 @@ Window {
             }
         }
 
+        // Header background bar
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: root.isTiledDesktopMode ? (floatingTiledHUD.y + floatingTiledHUD.height + 8) : (subheaderItem.y + subheaderItem.height + 12)
+            color: root.themeBg
+            z: 10
+        }
+
         // =====================================================================
         // 2048 DESIGN STANDARD: ROW 1 (Header Item)
         // =====================================================================
         Item {
             id: headerItem
+            z: 20
             visible: !root.isTiledDesktopMode
             anchors.top: parent.top
             anchors.topMargin: visible ? 16 : 0
@@ -589,7 +636,6 @@ Window {
                     font.pixelSize: Math.max(20, Math.min(32, headerItem.width * 0.075))
                     font.bold: true
                     color: root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
                 Text {
                     width: parent.width
@@ -597,7 +643,6 @@ Window {
                     text: "Victorian steampunk municipal waterworks"
                     font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
                     color: root.themeSubtext
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
 
@@ -658,10 +703,9 @@ Window {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.16))
                     height: Math.max(42, Math.min(52, headerItem.width * 0.10))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: (gameState && gameState.traversedCount >= gameState.quota) ? "#10b981" : root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: (gameState && gameState.traversedCount >= gameState.quota) ? "#10b981" : (root.isDarkMode ? root.themeBorder : "#cbd5e1")
                     border.width: (gameState && gameState.traversedCount >= gameState.quota) ? 2 : 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -671,14 +715,14 @@ Window {
                             text: "PIPES"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: gameState ? (gameState.traversedCount + "/" + gameState.quota) : "0/15"
                             font.pixelSize: 16
                             font.bold: true
-                            color: (gameState && gameState.traversedCount >= gameState.quota) ? "#10b981" : root.themeFg
+                            color: (gameState && gameState.traversedCount >= gameState.quota) ? "#10b981" : (root.isDarkMode ? root.themeFg : "#0f172a")
                         }
                     }
                 }
@@ -688,10 +732,9 @@ Window {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.16))
                     height: Math.max(42, Math.min(52, headerItem.width * 0.10))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -701,14 +744,14 @@ Window {
                             text: "SCORE"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.score.toString()
                             font.pixelSize: 16
                             font.bold: true
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                         }
                     }
                 }
@@ -718,10 +761,9 @@ Window {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.16))
                     height: Math.max(42, Math.min(52, headerItem.width * 0.10))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -731,14 +773,14 @@ Window {
                             text: "BEST"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.bestScore.toString()
                             font.pixelSize: 16
                             font.bold: true
-                            color: root.bestScore > 0 ? root.themeAccent : root.themeSubtext
+                            color: root.bestScore > 0 ? (root.isDarkMode ? root.themeAccent : "#15803d") : (root.isDarkMode ? root.themeSubtext : "#94a3b8")
                         }
                     }
                 }
@@ -750,6 +792,7 @@ Window {
         // =====================================================================
         Item {
             id: subheaderItem
+            z: 20
             visible: !root.isTiledDesktopMode
             anchors.top: headerItem.bottom
             anchors.topMargin: visible ? 10 : 0
@@ -773,10 +816,9 @@ Window {
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
                     radius: 8
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
 
                     Row {
                         id: helpRow
@@ -814,7 +856,7 @@ Window {
                     height: 32
                     width: statusRow.implicitWidth + 16
                     radius: 8
-                    color: root.themeBoardBg
+                    color: root.themeCardBg
                     border.color: (gameState && gameState.state === "game_over") ? "#ef4444" :
                                   (gameState && gameState.state === "round_won") ? "#10b981" :
                                   (gameState && gameState.state === "flowing") ? root.themeAccent : root.themeBorder
@@ -863,11 +905,9 @@ Window {
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
                     radius: 8
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.isMuted ? root.themeBorder : root.themeAccent
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     Row {
                         id: muteRow
@@ -903,11 +943,9 @@ Window {
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (viewModeRow.implicitWidth + 18)
                     radius: 8
-                    color: root.fullPlayfield ? root.themeCardBg : (viewModeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
+                    color: viewModeMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     Row {
                         id: viewModeRow
@@ -1086,39 +1124,49 @@ Window {
         // =====================================================================
         Item {
             id: playfieldContainer
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 8 : 12
+            anchors.top: headerBar.bottom
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 14
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
-            x: root.shakeX
-            y: root.shakeY
+            z: 1
 
-            // 1. LEFT COLUMN: MECHANICAL HOPPER DISPENSER
             Rectangle {
-                id: hopperColumn
-                anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.bottom: bottomBar.top
-                anchors.bottomMargin: 10
-                width: 130
-                color: root.themeCardBg
-                radius: 8
-                border.color: root.themeBorder
-                border.width: 1.5
+                anchors.fill: parent
+                color: root.themeBoardBg
+            }
 
-                // Top Hopper Funnel Header
+            Item {
+                id: playfieldInner
+                anchors.fill: parent
+                anchors.topMargin: root.isTiledDesktopMode ? 8 : 12
+                anchors.bottomMargin: 14
+                anchors.leftMargin: 16
+                anchors.rightMargin: 16
+                x: root.shakeX
+                y: root.shakeY
+
+                // 1. LEFT COLUMN: MECHANICAL HOPPER DISPENSER
                 Rectangle {
-                    id: hopperHeader
-                    anchors.top: parent.top
+                    id: hopperColumn
                     anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: 36
-                    color: root.themeBoardBg
+                    anchors.top: parent.top
+                    anchors.bottom: bottomBar.top
+                    anchors.bottomMargin: 10
+                    width: 130
+                    color: root.isDarkMode ? root.themeCardBg : "#181825"
                     radius: 8
+                    border.color: root.isDarkMode ? root.themeBorder : "#313244"
+                    border.width: 1.5
+
+                    // Top Hopper Funnel Header
+                    Rectangle {
+                        id: hopperHeader
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 36
+                        color: root.isDarkMode ? root.themeBoardBg : "#11111b"
+                        radius: 8
 
                     Row {
                         anchors.centerIn: parent
@@ -1150,9 +1198,9 @@ Window {
                         Rectangle {
                             width: 96
                             height: Math.min(80, (hopperColumn.height - 66) / 5 - 8)
-                            color: index === 0 ? Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.12) : root.themeBoardBg
+                            color: index === 0 ? Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.12) : (root.isDarkMode ? root.themeBoardBg : "#11111b")
                             radius: 6
-                            border.color: index === 0 ? root.themeAccent : root.themeBorder
+                            border.color: index === 0 ? root.themeAccent : (root.isDarkMode ? root.themeBorder : "#313244")
                             border.width: index === 0 ? 2 : 1
 
                             // Pipe Sprite Preview
@@ -1775,9 +1823,9 @@ Window {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: 44
-                color: root.themeCardBg
+                color: root.isDarkMode ? root.themeCardBg : "#181825"
                 radius: 8
-                border.color: root.themeBorder
+                border.color: root.isDarkMode ? root.themeBorder : "#313244"
                 border.width: 1
 
                 Row {
@@ -1845,9 +1893,9 @@ Window {
                     anchors.verticalCenter: parent.verticalCenter
                     height: 26
                     width: sectorText.implicitWidth + 18
-                    color: root.themeBoardBg
+                    color: root.isDarkMode ? root.themeBoardBg : "#11111b"
                     radius: 4
-                    border.color: root.themeBorder
+                    border.color: root.isDarkMode ? root.themeBorder : "#313244"
                     border.width: 1
 
                     Text {
@@ -1860,6 +1908,7 @@ Window {
                         font.bold: true
                     }
                 }
+            }
             }
         }
 
@@ -2320,7 +2369,7 @@ Window {
                             width: 160
                             height: 44
                             radius: 8
-                            color: secondaryBtnMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : "#1f2430"
+                            color: secondaryBtnMouse.containsMouse ? (root.isDarkMode ? Qt.lighter(root.themeCardHover, 1.15) : Qt.darker(root.themeCardHover, 1.05)) : root.themeCardHover
                             border.color: root.themeBorder
                             border.width: 1
 
@@ -2371,8 +2420,8 @@ Window {
             width: toastText.implicitWidth + 24
             height: 28
             radius: 14
-            color: root.themeCardBg
-            border.color: root.themeBorder
+            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
             border.width: 1
             opacity: 0
             z: 800
@@ -2382,7 +2431,7 @@ Window {
                 anchors.centerIn: parent
                 font.pixelSize: 11
                 font.bold: true
-                color: root.themeFg
+                color: root.isDarkMode ? root.themeFg : "#0f172a"
             }
 
             function show(msg) {

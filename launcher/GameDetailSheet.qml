@@ -4,6 +4,16 @@ import QtQuick.Layouts
 
 Rectangle {
     id: detailSheet
+    // Theme properties bound from main launcher or arcadeBackend
+    property bool isDarkMode: (typeof arcadeBackend !== "undefined" && arcadeBackend.isDarkMode !== undefined) ? arcadeBackend.isDarkMode : true
+    property color themeBackground: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeBackground) ? arcadeBackend.themeColors.themeBackground : (isDarkMode ? "#111116" : "#eff1f5")
+    property color themeSurface: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeSurface) ? arcadeBackend.themeColors.themeSurface : (isDarkMode ? "#181822" : "#ffffff")
+    property color themeSurfaceLight: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeSurfaceLight) ? arcadeBackend.themeColors.themeSurfaceLight : (isDarkMode ? "#222230" : "#f1f5f9")
+    property color themeBorder: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeBorder) ? arcadeBackend.themeColors.themeBorder : (isDarkMode ? "#2a2a38" : "#cbd5e1")
+    property color themeText: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeText) ? arcadeBackend.themeColors.themeText : (isDarkMode ? "#ffffff" : "#0f172a")
+    property color themeTextMuted: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeTextMuted) ? arcadeBackend.themeColors.themeTextMuted : (isDarkMode ? "#94a3b8" : "#64748b")
+    property color themeAccent: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeAccent) ? arcadeBackend.themeColors.themeAccent : (isDarkMode ? "#00f0ff" : "#1e66f5")
+    property color themeAccentAlt: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeAccentAlt) ? arcadeBackend.themeColors.themeAccentAlt : (isDarkMode ? "#e6458e" : "#d20f39")
     anchors.fill: parent
     color: "#e60a0a10"
     z: 200
@@ -49,6 +59,7 @@ Rectangle {
     }
 
     function open(data) {
+        console.log("[Arcade] detailSheet.open called! Stack:\n" + (new Error()).stack);
         gameData = data;
         isDownloading = false;
         confirmingUninstall = false;
@@ -90,8 +101,8 @@ Rectangle {
         width: Math.min(parent.width - 24, 840)
         height: Math.min(parent.height - 24, 600)
         radius: 12
-        color: "#181822"
-        border.color: gameData ? Qt.alpha(gameData.grid_color, 0.6) : "#334155"
+        color: !isDarkMode ? "#ffffff" : "#181822"
+        border.color: gameData ? Qt.alpha(gameData.grid_color, 0.6) : (!isDarkMode ? "#cbd5e1" : "#334155")
         border.width: 1.5
         clip: true
 
@@ -110,7 +121,9 @@ Rectangle {
             width: 32
             height: 32
             radius: 16
-            color: closeMouse.containsMouse ? "#334155" : "#22222e"
+            color: closeMouse.containsMouse ? (!isDarkMode ? "#e2e8f0" : "#334155") : (!isDarkMode ? "#f1f5f9" : "#22222e")
+            border.color: !isDarkMode ? "#cbd5e1" : "transparent"
+            border.width: 1
             z: 30
 
             Text {
@@ -118,7 +131,7 @@ Rectangle {
                 text: "✕"
                 font.pixelSize: 14
                 font.bold: true
-                color: closeMouse.containsMouse ? "#FFFFFF" : "#94a3b8"
+                color: closeMouse.containsMouse ? (!isDarkMode ? "#0f172a" : "#FFFFFF") : (!isDarkMode ? "#64748b" : "#94a3b8")
             }
 
             MouseArea {
@@ -135,7 +148,7 @@ Rectangle {
             anchors.fill: parent
             radius: 12
             color: "transparent"
-            border.color: gameData ? Qt.alpha(gameData.grid_color, 0.7) : "#334155"
+            border.color: gameData ? Qt.alpha(gameData.grid_color, 0.7) : (!isDarkMode ? "#cbd5e1" : "#334155")
             border.width: 1.5
             z: 100
         }
@@ -151,7 +164,9 @@ Rectangle {
             anchors.rightMargin: 1.5
             height: 56
             radius: 11
-            color: "#13131c"
+            color: !isDarkMode ? "#f8fafc" : "#13131c"
+            border.color: !isDarkMode ? "#e2e8f0" : "transparent"
+            border.width: !isDarkMode ? 1 : 0
             z: 20
 
             // Fill top corners square so only bottom corners are rounded
@@ -160,7 +175,7 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: 14
-                color: "#13131c"
+                color: !isDarkMode ? "#f8fafc" : "#13131c"
             }
 
             // Top divider line
@@ -448,8 +463,8 @@ Rectangle {
                             Rectangle {
                                 anchors.fill: parent
                                 radius: 10
-                                color: "#0c0c14"
-                                border.color: gameData ? Qt.alpha(gameData.grid_color, 0.45) : "#334155"
+                                color: !isDarkMode ? "#f8fafc" : "#0c0c14"
+                                border.color: gameData ? Qt.alpha(gameData.grid_color, 0.45) : (!isDarkMode ? "#cbd5e1" : "#334155")
                                 border.width: 1.5
                                 clip: true
 
@@ -458,7 +473,7 @@ Rectangle {
                                     anchors.fill: parent
                                     radius: 10
                                     color: "transparent"
-                                    border.color: gameData ? Qt.alpha(gameData.grid_color, 0.65) : "#334155"
+                                    border.color: gameData ? Qt.alpha(gameData.grid_color, 0.65) : (!isDarkMode ? "#cbd5e1" : "#334155")
                                     border.width: 1.5
                                     z: 30
                                 }
@@ -474,7 +489,7 @@ Rectangle {
                                     anchors.rightMargin: 1.5
                                     height: 24
                                     radius: 9
-                                    color: "#14141e"
+                                    color: !isDarkMode ? "#f1f5f9" : "#14141e"
                                     z: 5
 
                                     // Square off bottom corners
@@ -483,7 +498,7 @@ Rectangle {
                                         anchors.left: parent.left
                                         anchors.right: parent.right
                                         height: 8
-                                        color: "#14141e"
+                                        color: !isDarkMode ? "#f1f5f9" : "#14141e"
                                     }
 
                                     Row {
@@ -503,7 +518,7 @@ Rectangle {
                                             font.family: "monospace"
                                             font.pixelSize: 9
                                             font.bold: true
-                                            color: isUnreleased ? "#fbbf24" : "#94a3b8"
+                                            color: isUnreleased ? "#fbbf24" : (!isDarkMode ? "#475569" : "#94a3b8")
                                             anchors.verticalCenter: parent.verticalCenter
                                         }
                                     }
@@ -708,7 +723,7 @@ Rectangle {
                                 text: gameData ? gameData.title : ""
                                 font.pixelSize: 26
                                 font.bold: true
-                                color: "#FFFFFF"
+                                color: !isDarkMode ? "#0f172a" : "#FFFFFF"
                             }
 
                             // Tagline
@@ -716,7 +731,7 @@ Rectangle {
                                 text: gameData ? gameData.tagline : ""
                                 font.pixelSize: 13
                                 font.italic: true
-                                color: "#94a3b8"
+                                color: !isDarkMode ? "#475569" : "#94a3b8"
                                 Layout.fillWidth: true
                                 wrapMode: Text.WordWrap
                             }
@@ -726,7 +741,7 @@ Rectangle {
                                 text: gameData ? gameData.description : ""
                                 font.pixelSize: 12
                                 lineHeight: 1.35
-                                color: "#cbd5e1"
+                                color: !isDarkMode ? "#334155" : "#cbd5e1"
                                 Layout.fillWidth: true
                                 wrapMode: Text.WordWrap
                             }
@@ -737,8 +752,8 @@ Rectangle {
                                 visible: detailSheet.hasUpdate && Boolean(gameData && gameData.changelog && gameData.changelog.length > 0)
                                 implicitHeight: changelogCol.implicitHeight + 24
                                 radius: 8
-                                color: "#0c1824"
-                                border.color: "#00f0ff"
+                                color: !isDarkMode ? "#f0f9ff" : "#0c1824"
+                                border.color: !isDarkMode ? "#38bdf8" : "#00f0ff"
                                 border.width: 1.5
 
                                 ColumnLayout {
@@ -762,11 +777,11 @@ Rectangle {
                                             }
                                         }
                                         Text {
-                                            text: "WHAT'S NEW IN v" + (gameData ? gameData.version : "")
+                                            text: "WHAT'S NEW IN V" + (gameData ? gameData.version : "")
                                             font.family: "monospace"
                                             font.pixelSize: 11
                                             font.bold: true
-                                            color: "#00f0ff"
+                                            color: !isDarkMode ? "#0284c7" : "#00f0ff"
                                             font.letterSpacing: 1
                                             Layout.alignment: Qt.AlignVCenter
                                         }
@@ -801,8 +816,8 @@ Rectangle {
                                 Layout.fillWidth: true
                                 implicitHeight: instructionsCol.implicitHeight + 28
                                 radius: 8
-                                color: "#121218"
-                                border.color: "#242432"
+                                color: !isDarkMode ? "#f8fafc" : "#121218"
+                                border.color: !isDarkMode ? "#cbd5e1" : "#242432"
                                 border.width: 1
 
                                 ColumnLayout {
@@ -818,7 +833,7 @@ Rectangle {
                                         font.family: "monospace"
                                         font.pixelSize: 10
                                         font.bold: true
-                                        color: "#94a3b8"
+                                        color: !isDarkMode ? "#64748b" : "#94a3b8"
                                         font.letterSpacing: 1
                                     }
 
@@ -837,7 +852,7 @@ Rectangle {
                                                 text: modelData
                                                 font.pixelSize: 12
                                                 lineHeight: 1.25
-                                                color: "#e2e8f0"
+                                                color: !isDarkMode ? "#0f172a" : "#e2e8f0"
                                                 Layout.fillWidth: true
                                                 wrapMode: Text.WordWrap
                                             }
@@ -851,17 +866,17 @@ Rectangle {
                                         font.family: "monospace"
                                         font.pixelSize: 10
                                         font.bold: true
-                                        color: "#94a3b8"
+                                        color: !isDarkMode ? "#64748b" : "#94a3b8"
                                         font.letterSpacing: 1
                                     }
 
                                     Text {
-                                        text: gameData && gameData.controls ? (gameData.controls.keyboard || gameData.controls.mouse || "") : ""
-                                        font.pixelSize: 11
-                                        lineHeight: 1.25
-                                        color: "#cbd5e1"
-                                        Layout.fillWidth: true
+                                        text: gameData ? (typeof gameData.controls === "string" ? gameData.controls : (gameData.controls.keyboard || gameData.controls.mouse || "Standard Keyboard / Mouse Controls")) : "Standard Keyboard / Mouse Controls"
+                                        font.pixelSize: 12
+                                        font.bold: true
+                                        color: !isDarkMode ? "#0f172a" : "#FFFFFF"
                                         wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
                                     }
                                 }
                             }

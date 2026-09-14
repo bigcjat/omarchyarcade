@@ -19,6 +19,7 @@ Rectangle {
         if (splashTimer.running) splashTimer.stop();
         if (startupAnim.running) startupAnim.stop();
         splashScreen.opacity = 0;
+        splashScreen.visible = false;
         if (typeof root !== "undefined" && root && root.splashEnabled !== undefined) {
             root.splashEnabled = false;
         }

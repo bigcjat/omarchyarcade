@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Omarchy Arcade: CyberCross (Frogger)
+Omarchy Arcade: CyberCross (CyberHop / Frogger)
 - Pure QML / JavaScript retro road and river crossing arcade classic
 - Live hot-reloading from ~/.config/omarchy/current/theme/colors.toml
 - Zero-overhead low latency audio playback
@@ -11,14 +11,13 @@ import sys
 import os
 import tomllib
 from pathlib import Path
-from PySide6.QtCore import QObject, Slot, QUrl, QFileSystemWatcher, QTimer
+from PySide6.QtCore import QObject, Slot, QUrl, QFileSystemWatcher, QTimer, QSettings
 from PySide6.QtGui import QIcon, QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
 import ctypes
 import shutil
 import subprocess
-from PySide6.QtCore import QObject, Slot, QUrl, QFileSystemWatcher, QTimer, QSettings
 
 class SettingsManager(QObject):
     def __init__(self, parent=None):
@@ -94,48 +93,50 @@ class SoundManager(QObject):
                 except Exception:
                     pass
 
+DEFAULT_PRESETS = {
+    "dark": {
+        "name": "Omarchy Dark",
+        "bg": "#181825",
+        "fg": "#cdd6f4",
+        "accent": "#a6e3a1",
+        "boardBg": "#1e1e2e",
+        "card_bg": "#313244",
+        "card_hover": "#45475a",
+        "border": "#45475a",
+        "subtext": "#a6adc8"
+    },
+    "light": {
+        "name": "Omarchy Light",
+        "bg": "#eff1f5",
+        "fg": "#4c4f69",
+        "accent": "#40a02b",
+        "boardBg": "#e2e8f0",
+        "card_bg": "#ffffff",
+        "card_hover": "#f1f5f9",
+        "border": "#ccd0da",
+        "subtext": "#5c5f77"
+    }
+}
+
 def parse_toml_theme(path: Path):
     try:
         with open(path, "rb") as f:
             data = tomllib.load(f)
-        colors = {}
-        if "colors" in data:
-            c = data["colors"]
-            colors["bg"] = c.get("background") or c.get("bg") or "#1e1e2e"
-            colors["fg"] = c.get("foreground") or c.get("fg") or "#cdd6f4"
-            colors["accent"] = c.get("accent") or c.get("primary") or "#89b4fa"
-            colors["boardBg"] = c.get("selection_background") or c.get("surface") or "#181825"
-            colors["cardBg"] = c.get("card") or c.get("surface0") or "#313244"
-            colors["border"] = c.get("border") or "#45475a"
-            colors["subtext"] = c.get("subtext") or c.get("subtext0") or "#a6adc8"
-            colors["name"] = data.get("theme", {}).get("name", path.stem.capitalize())
-            return colors
-        for section in ["theme", "palette", "base"]:
-            if section in data and isinstance(data[section], dict):
-                c = data[section]
-                if "background" in c or "bg" in c:
-                    colors["bg"] = c.get("background") or c.get("bg") or "#1e1e2e"
-                    colors["fg"] = c.get("foreground") or c.get("fg") or "#cdd6f4"
-                    colors["accent"] = c.get("accent") or c.get("primary") or "#89b4fa"
-                    colors["boardBg"] = c.get("surface") or "#181825"
-                    colors["cardBg"] = c.get("card") or "#313244"
-                    colors["border"] = c.get("border") or "#45475a"
-                    colors["subtext"] = c.get("subtext") or "#a6adc8"
-                    colors["name"] = path.stem.capitalize()
-                    return colors
+        colors = data.get("colors") if isinstance(data.get("colors"), dict) else data
+        bg = colors.get("base") or colors.get("background") or "#181825"
+        fg = colors.get("text") or colors.get("foreground") or "#cdd6f4"
+        return {
+            "bg": bg,
+            "fg": fg,
+            "accent": colors.get("green", colors.get("accent", "#a6e3a1")),
+            "boardBg": "#1e1e2e",
+            "card_bg": colors.get("surface0", "#313244"),
+            "card_hover": colors.get("surface1", "#45475a"),
+            "border": colors.get("surface1", "#45475a"),
+            "subtext": colors.get("subtext0", "#a6adc8")
+        }
     except Exception:
-        pass
-    return None
-
-def load_all_omarchy_themes():
-    themes = {}
-    themes_dir = Path.home() / ".config" / "omarchy" / "themes"
-    if themes_dir.exists():
-        for theme_file in themes_dir.glob("*/colors.toml"):
-            t = parse_toml_theme(theme_file)
-            if t:
-                themes[theme_file.parent.name.lower()] = t
-    return themes
+        return {}
 
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
@@ -154,19 +155,12 @@ def find_omarchy_colors_file():
             return c
     return None
 
-
-def load_system_theme():
-    theme_path = find_omarchy_colors_file()
-    if theme_path and theme_path.exists():
-        return parse_toml_theme(theme_path)
-    return None
-
 def main():
     os.environ["QT_QUICK_CONTROLS_STYLE"] = "Basic"
     app = QGuiApplication(sys.argv)
     app.setApplicationName("CyberCross")
     app.setOrganizationName("Omarchy")
-    # Set application icon to game floppy disk
+
     script_dir = Path(__file__).resolve().parent
     disk_candidates = [
         script_dir / "assets" / "disk_icon.png",
@@ -177,7 +171,6 @@ def main():
         if cp.exists():
             app.setWindowIcon(QIcon(str(cp)))
             break
-
 
     base_dir = Path(__file__).resolve().parent
     sounds_dir = base_dir / "sounds"
@@ -196,7 +189,6 @@ def main():
         sys.exit(-1)
 
     root = engine.rootObjects()[0]
-    all_themes = load_all_omarchy_themes()
 
     requested_theme = None
     requested_screenshot = None
@@ -212,14 +204,32 @@ def main():
         else:
             i += 1
 
-    if requested_theme and requested_theme in all_themes:
-        root.applyTheme(all_themes[requested_theme], requested_theme)
-    else:
-        sys_theme = load_system_theme()
-        if sys_theme:
-            root.applyTheme(sys_theme, "System")
-        elif "catppuccin" in all_themes:
-            root.applyTheme(all_themes["catppuccin"], "Catppuccin")
+    def apply_current_theme():
+        if requested_theme:
+            if requested_theme in DEFAULT_PRESETS:
+                root.applyTheme(DEFAULT_PRESETS[requested_theme], requested_theme.capitalize())
+                print(f"Applied preset theme: {DEFAULT_PRESETS[requested_theme]['name']}")
+                return
+        colors_file = find_omarchy_colors_file()
+        if colors_file and colors_file.is_file():
+            data = parse_toml_theme(colors_file)
+            if data:
+                root.applyTheme(data, "System")
+                return
+        hints = QGuiApplication.styleHints()
+        if hints and hasattr(hints, "colorScheme"):
+            scheme = hints.colorScheme()
+            is_dark = (scheme == 2)
+            preset_key = "dark" if is_dark else "light"
+            root.applyTheme(DEFAULT_PRESETS[preset_key], DEFAULT_PRESETS[preset_key]["name"])
+        else:
+            root.applyTheme(DEFAULT_PRESETS["dark"], "Omarchy Dark")
+
+    apply_current_theme()
+
+    hints = QGuiApplication.styleHints()
+    if hints and hasattr(hints, "colorSchemeChanged"):
+        hints.colorSchemeChanged.connect(lambda s: apply_current_theme())
 
     theme_file = find_omarchy_colors_file()
     watcher = QFileSystemWatcher()
@@ -229,21 +239,18 @@ def main():
         watcher.addPath(str(theme_file))
 
     def on_theme_file_changed(path):
-        QTimer.singleShot(150, update_theme)
-
-    def update_theme():
-        if requested_theme: return
-        t = load_system_theme()
-        if t: root.applyTheme(t, "System")
+        QTimer.singleShot(150, apply_current_theme)
 
     watcher.fileChanged.connect(on_theme_file_changed)
     watcher.directoryChanged.connect(on_theme_file_changed)
 
     if requested_screenshot:
-        def do_shot():
-            root.splashEnabled = False
-            root.captureScreenshot(requested_screenshot, True)
-        QTimer.singleShot(1250, do_shot)
+        out_path = Path(requested_screenshot).resolve()
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        root.screenshotSaved.connect(lambda p: app.quit())
+        def capture():
+            root.captureScreenshot(str(out_path))
+        QTimer.singleShot(150, capture)
 
     sys.exit(app.exec())
 

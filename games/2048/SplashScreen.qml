@@ -18,6 +18,7 @@ Rectangle {
     function dismiss() {
         if (splashTimer.running) splashTimer.stop();
         if (startupAnim.running) startupAnim.stop();
+        splashScreen.visible = false;
         splashScreen.opacity = 0;
         if (typeof root !== "undefined" && root && root.splashEnabled !== undefined) {
             root.splashEnabled = false;

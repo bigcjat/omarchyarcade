@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
-import "Themes.js" as OmarchyThemes
 import "GameEngine.js" as Engine
 
 Window {
@@ -13,6 +12,8 @@ Window {
     minimumHeight: 460
     title: "VoidInvaders"
 
+    signal screenshotSaved(string path)
+
     property var themePalette: ({})
     property bool isCustomTheme: false
     property string currentThemeName: "Catppuccin"
@@ -20,13 +21,16 @@ Window {
     property color themeBg: "#181825"
     property color themeFg: "#cdd6f4"
     property color themeAccent: "#89b4fa"
-    property color themeBoardBg: "#1e1e2e"
-    property color themeCellGrid: "#313244"
+    property color themeBoardBg: "#0b0f19"
+    property color themeCellGrid: "#1f293d"
     property color themeCardBg: "#1e1e2e"
     property color themeSubtext: "#a6adc8"
     property color themeBorder: "#45475a"
     property color themeModalBg: "#1e1e2e"
-    property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
+    property color themeBtnFg: "#0B0E14"
+
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
+    property color themeCardHover: isDarkMode ? Qt.lighter(themeCardBg, 1.15) : "#f1f5f9"
 
     // Alien Colors
     property color squidColor: "#cba6f7"
@@ -51,7 +55,6 @@ Window {
     property int lives: 3
 
     color: themeBg
-    Behavior on color { ColorAnimation { duration: 250 } }
 
     Component.onCompleted: {
         loadHighScore();
@@ -59,9 +62,12 @@ Window {
         mainContainer.forceActiveFocus();
     }
 
-    function colorLuminance(hex) {
-        if (!hex || typeof hex !== "string") return 0.2;
-        var c = Qt.color(hex);
+    function colorLuminance(col) {
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
@@ -75,7 +81,6 @@ Window {
         themeBg = bg;
         themeFg = data.foreground || themeFg;
         themeAccent = data.accent || data.color4 || "#89b4fa";
-        themeBorder = data.color8 || data.color0 || "#45475a";
 
         squidColor = data.color5 || "#cba6f7";
         crabColor = data.color4 || "#89b4fa";
@@ -85,34 +90,52 @@ Window {
 
         var lum = colorLuminance(bg);
         if (lum > 0.5) {
-            themeBoardBg = Qt.darker(bg, 1.08);
-            themeCellGrid = Qt.darker(bg, 1.15);
-            themeCardBg = Qt.darker(bg, 1.05);
-            themeSubtext = Qt.darker(themeFg, 1.4);
-            themeModalBg = bg;
+            themeBoardBg = "#0b0f19";
+            themeCellGrid = "#1f293d";
+            themeCardBg = data.cardBg || data.card_bg || data.card || data.surface || "#ffffff";
+            themeBorder = data.border || Qt.rgba(0, 0, 0, 0.12);
+            themeSubtext = data.subtext || "#6c6f85";
+            themeModalBg = "#ffffff";
+            themeBtnFg = "#ffffff";
         } else {
-            themeBoardBg = Qt.lighter(bg, 1.18);
-            themeCellGrid = Qt.lighter(bg, 1.28);
-            themeCardBg = Qt.lighter(bg, 1.25);
-            themeSubtext = data.color7 || Qt.darker(themeFg, 1.3);
-            themeModalBg = Qt.lighter(bg, 1.12);
+            themeBoardBg = "#0b0f19";
+            themeCellGrid = "#1f293d";
+            themeCardBg = data.cardBg || data.card_bg || data.card || data.surface || "#1e1e2e";
+            themeBorder = data.border || "#313244";
+            themeSubtext = data.subtext || "#a6adc8";
+            themeModalBg = "#1e1e2e";
+            themeBtnFg = "#0B0E14";
         }
         gameCanvas.requestPaint();
     }
 
     function cycleTheme() {
-        var themes = OmarchyThemes.themes;
-        if (!themes || themes.length === 0) return;
-        var currentId = themePalette.id || "";
-        var nextIdx = 0;
-        for (var i = 0; i < themes.length; i++) {
-            if (themes[i].id === currentId) {
-                nextIdx = (i + 1) % themes.length;
-                break;
-            }
-        }
-        applyTheme(themes[nextIdx], themes[nextIdx].name);
-        soundToast.show("🎨 " + themes[nextIdx].name);
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            accent: "#1e66f5",
+            cardBg: "#ffffff",
+            border: "#ccd0da",
+            subtext: "#6c6f85",
+            color1: "#d20f39",
+            color2: "#40a02b",
+            color4: "#1e66f5",
+            color5: "#8839ef"
+        } : {
+            background: "#1e1e2e",
+            foreground: "#cdd6f4",
+            accent: "#89b4fa",
+            cardBg: "#181825",
+            border: "#45475a",
+            subtext: "#a6adc8",
+            color1: "#f38ba8",
+            color2: "#a6e3a1",
+            color4: "#89b4fa",
+            color5: "#cba6f7"
+        };
+        applyTheme(tData, nextIsLight ? "Light Mode" : "Dark Mode");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     function toggleMute() {
@@ -219,6 +242,7 @@ Window {
         root.contentItem.grabToImage(function(result) {
             result.saveToFile(filePath);
             console.log("Screenshot saved successfully to " + filePath);
+            root.screenshotSaved(filePath);
             if (shouldQuit) {
                 Qt.quit();
             }
@@ -339,6 +363,12 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_T) {
+                cycleTheme();
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
                 root.fullPlayfield = !root.fullPlayfield;
                 soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
@@ -419,7 +449,6 @@ Window {
                     font.pixelSize: Math.max(22, Math.min(36, headerItem.width * 0.07))
                     font.bold: true
                     color: root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
                 Text {
                     width: parent.width
@@ -427,7 +456,6 @@ Window {
                     text: "Wave " + root.wave + " • Lives: " + root.lives + (root.gameState === "gameover" ? " • Game Over" : (root.gameState === "paused" ? " • Paused" : ""))
                     font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
                     color: root.themeSubtext
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
 
@@ -443,10 +471,9 @@ Window {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.16))
                     height: Math.max(42, Math.min(52, headerItem.width * 0.10))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -454,16 +481,17 @@ Window {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "SCORE"
-                            font.pixelSize: 8
+                            font.pixelSize: 9
                             font.bold: true
-                            color: root.themeSubtext
+                            font.letterSpacing: 0.5
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.score.toString()
-                            font.pixelSize: 16
+                            font.pixelSize: 18
                             font.bold: true
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                         }
                     }
                 }
@@ -473,10 +501,9 @@ Window {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.16))
                     height: Math.max(42, Math.min(52, headerItem.width * 0.10))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -484,23 +511,24 @@ Window {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "BEST"
-                            font.pixelSize: 8
+                            font.pixelSize: 9
                             font.bold: true
-                            color: root.themeSubtext
+                            font.letterSpacing: 0.5
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.highScore.toString()
-                            font.pixelSize: 16
+                            font.pixelSize: 18
                             font.bold: true
-                            color: root.highScore > 0 ? root.themeAccent : root.themeSubtext
+                            color: root.highScore > 0 ? (root.isDarkMode ? root.themeAccent : "#15803d") : (root.isDarkMode ? root.themeSubtext : "#94a3b8")
                         }
                     }
                 }
             }
         }
 
-        // 2048 DESIGN STANDARD: ROW 2 (Subheader Action Bar)
+        // Subheader Action Bar
         Item {
             id: subheaderItem
             visible: !root.isTiledDesktopMode
@@ -511,137 +539,86 @@ Window {
             anchors.leftMargin: 16
             anchors.rightMargin: 16
             height: root.isTiledDesktopMode ? 0 : 34
-            readonly property bool isCrowded: subheaderItem.width < 450
 
-            // Help button
-            Rectangle {
-                id: helpBtn
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                height: 32
-                width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
-                radius: 8
-                color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
-                border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
+            Row {
+                anchors.fill: parent
+                spacing: 8
 
-                Row {
-                    id: helpRow
-                    anchors.centerIn: parent
-                    spacing: 6
-                    Rectangle {
-                        width: 16
-                        height: 16
-                        radius: 8
-                        color: root.themeAccent
-                        anchors.verticalCenter: parent.verticalCenter
-                        Text {
-                            anchors.centerIn: parent
-                            text: "?"
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.themeBtnFg
-                        }
-                    }
-                    Text {
-                        text: "How to Play"
-                        font.pixelSize: 11
-                        font.bold: true
-                        color: root.themeFg
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: !subheaderItem.isCrowded
-                    }
-                }
-
-                MouseArea {
-                    id: helpMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.showHelp = !root.showHelp
-                }
-            }
-
-            // Mute button in Center
-            Rectangle {
-                id: muteBtn
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
-                height: 32
-                width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
-                radius: 8
-                color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                border.color: root.isMuted ? root.themeBorder : root.themeAccent
-                border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
-                Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                Row {
-                    id: muteRow
-                    anchors.centerIn: parent
-                    spacing: 4
-                    Text {
-                        text: root.isMuted ? "🔇" : "🔊"
-                        font.pixelSize: 12
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: root.isMuted ? "Muted" : "Sound"
-                        font.pixelSize: 11
-                        font.bold: true
-                        color: root.isMuted ? root.themeSubtext : root.themeFg
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: !subheaderItem.isCrowded
-                    }
-                }
-
-                MouseArea {
-                    id: muteMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.toggleMute()
-                }
-            }
-
-            // Primary Action Button (Restart)
-                            // View Mode Pill (Windowed vs Full Field)
+                // Help button
                 Rectangle {
-                    id: viewModeBtn
-                    height: 32
-                    width: subheaderItem.isCrowded ? 32 : (viewModeRow.implicitWidth + 18)
+                    width: (parent.width - 24) / 4
+                    height: parent.height
                     radius: 8
-                    color: root.fullPlayfield ? root.themeCardBg : (viewModeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
-                    border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
+                    color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: root.themeBorder
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     Row {
-                        id: viewModeRow
                         anchors.centerIn: parent
-                        spacing: 4
-                        Text {
-                            text: root.fullPlayfield ? "🔲" : "⛶"
-                            font.pixelSize: 13
+                        spacing: 6
+                        Rectangle {
+                            width: 16; height: 16; radius: 8; color: root.themeAccent
                             anchors.verticalCenter: parent.verticalCenter
+                            Text { anchors.centerIn: parent; text: "?"; font.pixelSize: 11; font.bold: true; color: root.themeBtnFg }
                         }
                         Text {
-                            text: root.fullPlayfield ? "Standard (⇧F)" : "Full (⇧F)"
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.fullPlayfield ? root.themeAccent : root.themeFg
+                            text: "Help"
+                            font.pixelSize: 11; font.bold: true; color: root.themeFg
                             anchors.verticalCenter: parent.verticalCenter
-                            visible: !subheaderItem.isCrowded
                         }
                     }
-
                     MouseArea {
-                        id: viewModeMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
+                        id: helpMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showHelp = !root.showHelp
+                    }
+                }
+
+                // Mute button
+                Rectangle {
+                    width: (parent.width - 24) / 4
+                    height: parent.height
+                    radius: 8
+                    color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                        Text {
+                            text: root.isMuted ? "Muted" : "Sound"
+                            font.pixelSize: 11; font.bold: true; color: root.isMuted ? root.themeSubtext : root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+                    MouseArea {
+                        id: muteMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
+                }
+
+                // View Mode
+                Rectangle {
+                    width: (parent.width - 24) / 4
+                    height: parent.height
+                    radius: 8
+                    color: viewModeMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Text { text: root.fullPlayfield ? "🔲" : "⛶"; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                        Text {
+                            text: root.fullPlayfield ? "Standard" : "Full"
+                            font.pixelSize: 11; font.bold: true; color: root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+                    MouseArea {
+                        id: viewModeMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             root.fullPlayfield = !root.fullPlayfield;
                             soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
@@ -649,44 +626,29 @@ Window {
                     }
                 }
 
+                // Restart
                 Rectangle {
-                id: restartBtn
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                height: 32
-                width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
-                radius: 8
-                color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-                Behavior on color { ColorAnimation { duration: 150 } }
+                    width: (parent.width - 24) / 4
+                    height: parent.height
+                    radius: 8
+                    color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
 
-                Row {
-                    id: restartRow
-                    anchors.centerIn: parent
-                    spacing: 4
-                    Text {
-                        text: "🔄"
-                        font.pixelSize: 12
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: subheaderItem.isCrowded
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Text { text: "🔄"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
+                        Text {
+                            text: "Restart"
+                            font.pixelSize: 11; font.bold: true; color: root.themeBtnFg
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
-                    Text {
-                        text: "Restart (R)"
-                        font.pixelSize: 11
-                        font.bold: true
-                        color: root.themeBtnFg
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: !subheaderItem.isCrowded
-                    }
-                }
-
-                MouseArea {
-                    id: restartMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        root.resetGame();
-                        soundToast.show("Restarted");
+                    MouseArea {
+                        id: restartMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.resetGame();
+                            soundToast.show("Restarted");
+                        }
                     }
                 }
             }
@@ -694,114 +656,110 @@ Window {
 
         // COURT PLAYING AREA
         Item {
-                    // =====================================================================
-        // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
-        // =====================================================================
-        Rectangle {
-            id: floatingTiledHUD
-            visible: root.isTiledDesktopMode
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.topMargin: 8
-            anchors.leftMargin: 12
-            anchors.rightMargin: 12
-            height: 38
-            radius: 8
-            z: 90
-            color: root.themeCardBg
-            border.color: root.themeBorder
-            border.width: 1
-
-            Row {
-                anchors.left: parent.left
-                anchors.leftMargin: 10
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
-
-                Text {
-                    text: "👾 VoidInvaders"
-                    font.pixelSize: 11
-                    font.bold: true
-                    color: root.themeAccent
-                }
-
-                Text {
-                    text: "• " + ("SCORE: " + root.score)
-                    font.pixelSize: 11
-                    font.bold: true
-                    color: root.themeFg
-                }
-                Text {
-                    text: "(" + ("BEST: " + root.highScore) + ")"
-                    font.pixelSize: 10
-                    color: root.themeSubtext
-                }
-            }
-
-            Row {
-                anchors.right: parent.right
-                anchors.rightMargin: 10
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
-
-                // Full Window Toggle
-                Rectangle {
-                    width: 26; height: 26; radius: 5
-                    color: "transparent"; border.color: root.themeBorder; border.width: 1
-                    Text { text: "🔲"; font.pixelSize: 10; anchors.centerIn: parent }
-                    MouseArea {
-                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.fullPlayfield = false;
-                            soundToast.show("🔲 Standard Window");
-                        }
-                    }
-                }
-
-                // Help
-                Rectangle {
-                    width: 26; height: 26; radius: 5
-                    color: "transparent"; border.color: root.themeBorder; border.width: 1
-                    Text { text: "?"; font.pixelSize: 11; font.bold: true; color: root.themeAccent; anchors.centerIn: parent }
-                    MouseArea {
-                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                        onClicked: root.showHelp = !root.showHelp
-                    }
-                }
-
-                // Mute
-                Rectangle {
-                    width: 26; height: 26; radius: 5
-                    color: "transparent"; border.color: root.themeBorder; border.width: 1
-                    Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11; anchors.centerIn: parent }
-                    MouseArea {
-                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleMute()
-                    }
-                }
-                // Restart
-                Rectangle {
-                    width: 26; height: 26; radius: 5
-                    color: "transparent"; border.color: root.themeBorder; border.width: 1
-                    Text { text: "🔄"; font.pixelSize: 10; anchors.centerIn: parent }
-                    MouseArea {
-                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                        onClicked: root.resetGame()
-                    }
-                }
-            }
-        }
-
-        id: courtArea
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 6 : 12
+            id: courtArea
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 10
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 16
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
+
+            // Floating Tiled HUD
+            Rectangle {
+                id: floatingTiledHUD
+                visible: root.isTiledDesktopMode
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.topMargin: 4
+                height: 38
+                radius: 8
+                z: 90
+                color: root.themeCardBg
+                border.color: root.themeBorder
+                border.width: 1
+
+                Row {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 10
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 8
+
+                    Text {
+                        text: "👾 VoidInvaders"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.themeAccent
+                    }
+
+                    Text {
+                        text: "• " + ("SCORE: " + root.score)
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.themeFg
+                    }
+                    Text {
+                        text: "(" + ("BEST: " + root.highScore) + ")"
+                        font.pixelSize: 10
+                        color: root.themeSubtext
+                    }
+                }
+
+                Row {
+                    anchors.right: parent.right
+                    anchors.rightMargin: 10
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 6
+
+                    // Full Window Toggle
+                    Rectangle {
+                        width: 26; height: 26; radius: 5
+                        color: root.themeCardBg; border.color: root.themeBorder; border.width: 1
+                        Text { text: "🔲"; font.pixelSize: 10; anchors.centerIn: parent }
+                        MouseArea {
+                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.fullPlayfield = false;
+                                soundToast.show("🔲 Standard Window");
+                            }
+                        }
+                    }
+
+                    // Help
+                    Rectangle {
+                        width: 26; height: 26; radius: 5
+                        color: root.themeCardBg; border.color: root.themeBorder; border.width: 1
+                        Text { text: "?"; font.pixelSize: 11; font.bold: true; color: root.themeAccent; anchors.centerIn: parent }
+                        MouseArea {
+                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                            onClicked: root.showHelp = !root.showHelp
+                        }
+                    }
+
+                    // Mute
+                    Rectangle {
+                        width: 26; height: 26; radius: 5
+                        color: root.themeCardBg; border.color: root.themeBorder; border.width: 1
+                        Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11; anchors.centerIn: parent }
+                        MouseArea {
+                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                            onClicked: root.toggleMute()
+                        }
+                    }
+                    // Restart
+                    Rectangle {
+                        width: 26; height: 26; radius: 5
+                        color: root.themeCardBg; border.color: root.themeBorder; border.width: 1
+                        Text { text: "🔄"; font.pixelSize: 10; anchors.centerIn: parent }
+                        MouseArea {
+                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                            onClicked: root.resetGame()
+                        }
+                    }
+                }
+            }
 
             property real courtScale: Math.min(width / Engine.COURT_W, height / Engine.COURT_H)
             property real drawW: Engine.COURT_W * courtScale
@@ -912,7 +870,7 @@ Window {
 
                     // Game Over / Paused overlay
                     if (Engine.gameState === "paused") {
-                        ctx.fillStyle = root.themeFg;
+                        ctx.fillStyle = "#ffffff";
                         ctx.font = "bold 22px sans-serif";
                         ctx.textAlign = "center";
                         ctx.fillText("PAUSED", Engine.COURT_W / 2, Engine.COURT_H / 2);
@@ -979,7 +937,7 @@ Window {
                         font.family: root.monoFontFamily
                         font.pixelSize: 14
                         font.bold: true
-                        color: root.themeFg
+                        color: "#ffffff"
                     }
 
                     Rectangle {
@@ -995,7 +953,7 @@ Window {
                             font.family: root.monoFontFamily
                             font.pixelSize: 13
                             font.bold: true
-                            color: root.themeBg
+                            color: root.themeBtnFg
                         }
 
                         MouseArea {
@@ -1013,7 +971,7 @@ Window {
                         text: "Press A, R, Space, or Return"
                         font.family: root.monoFontFamily
                         font.pixelSize: 11
-                        color: root.themeSubtext
+                        color: "#94a3b8"
                     }
                 }
             }

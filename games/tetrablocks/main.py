@@ -17,7 +17,7 @@ import ctypes
 from pathlib import Path
 from PySide6.QtGui import QIcon, QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
-from PySide6.QtCore import QFileSystemWatcher, QTimer, QObject, Slot, QSettings
+from PySide6.QtCore import Qt, QFileSystemWatcher, QTimer, QObject, Slot, QSettings
 
 class SettingsManager(QObject):
     def __init__(self, parent=None):
@@ -122,24 +122,6 @@ class SoundManager(QObject):
     def playGameOver(self):
         self.playSound("game_over")
 
-def load_all_omarchy_themes():
-    themes_js = Path(__file__).resolve().parent / "Themes.js"
-    if not themes_js.is_file():
-        return {}
-    with open(themes_js, "r", encoding="utf-8") as f:
-        content = f.read()
-    themes = {}
-    blocks = re.findall(r"\{([^{}]+)\}", content)
-    for b in blocks:
-        t = {}
-        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", b):
-            t[k] = v
-        if "id" in t and "name" in t:
-            themes[t["id"]] = t
-    return themes
-
-ALL_THEMES = load_all_omarchy_themes()
-
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
     if env_path and Path(env_path).is_file():
@@ -213,13 +195,30 @@ def main():
 
     root_obj = engine.rootObjects()[0]
 
+    DEFAULT_PRESETS = {
+        "dark": dict(ALL_THEMES.get("catppuccin_mocha", {
+            "name": "Catppuccin Mocha", "background": "#1e1e2e", "foreground": "#cdd6f4",
+            "accent": "#89b4fa", "card": "#181825", "surface": "#313244", "border": "#45475a",
+            "subtext": "#a6adc8", "color0": "#45475a", "color1": "#f38ba8", "color2": "#a6e3a1",
+            "color3": "#f9e2af", "color4": "#89b4fa", "color5": "#f5c2e7", "color6": "#94e2d5",
+            "color7": "#bac2de", "color8": "#585b70"
+        }), boardBg="#11111b", cellEmpty="#181825"),
+        "light": dict(ALL_THEMES.get("catppuccin_latte", {
+            "name": "Catppuccin Latte", "background": "#eff1f5", "foreground": "#4c4f69",
+            "accent": "#1e66f5", "card": "#ffffff", "surface": "#e6e9ef", "border": "#bcc0cc",
+            "subtext": "#6c6f85", "color0": "#bcc0cc", "color1": "#d20f39", "color2": "#40a02b",
+            "color3": "#df8e1d", "color4": "#1e66f5", "color5": "#8839ef", "color6": "#179299",
+            "color7": "#5c5f77", "color8": "#acb0be"
+        }), boardBg="#d8dce5", cellEmpty="#e6eaf1")
+    }
+
     # Theme selection CLI logic
     if "--theme" in sys.argv:
         idx = sys.argv.index("--theme")
         if idx + 1 < len(sys.argv):
             theme_key = sys.argv[idx + 1].lower()
-            if theme_key in ALL_THEMES:
-                root_obj.applyTheme(ALL_THEMES[theme_key], ALL_THEMES[theme_key]["name"])
+            if theme_key in DEFAULT_PRESETS:
+                root_obj.applyTheme(DEFAULT_PRESETS[theme_key], DEFAULT_PRESETS[theme_key]["name"])
             else:
                 print(f"Warning: Theme '{theme_key}' not found.", file=sys.stderr)
 
@@ -245,16 +244,36 @@ def main():
 
             watcher.fileChanged.connect(on_theme_updated)
             watcher.directoryChanged.connect(on_theme_updated)
+        else:
+            is_dark = (app.styleHints().colorScheme() == Qt.ColorScheme.Dark) if hasattr(Qt, "ColorScheme") else True
+            initial_preset = DEFAULT_PRESETS["dark"] if is_dark else DEFAULT_PRESETS["light"]
+            root_obj.applyTheme(initial_preset, initial_preset["name"])
+
+        def on_scheme_changed():
+            scheme = app.styleHints().colorScheme()
+            is_dark_mode = (scheme == Qt.ColorScheme.Dark) if hasattr(Qt, "ColorScheme") else True
+            target_preset = DEFAULT_PRESETS["dark"] if is_dark_mode else DEFAULT_PRESETS["light"]
+            root_obj.applyTheme(target_preset, target_preset["name"])
+
+        if hasattr(app.styleHints(), "colorSchemeChanged"):
+            app.styleHints().colorSchemeChanged.connect(on_scheme_changed)
 
     if "--no-splash" in sys.argv:
         root_obj.setProperty("splashEnabled", False)
 
+    if hasattr(root_obj, "screenshotSaved"):
+        root_obj.screenshotSaved.connect(lambda p: app.quit())
+
     if "--screenshot" in sys.argv:
         root_obj.setProperty("splashEnabled", False)
+        idx = sys.argv.index("--screenshot")
+        screenshot_target = Path(__file__).resolve().parent / "screenshot.png"
+        if idx + 1 < len(sys.argv) and not sys.argv[idx + 1].startswith("--"):
+            screenshot_target = Path(sys.argv[idx + 1]).resolve()
+
         def capture():
             def do_save():
-                out_path = Path(__file__).resolve().parent / "screenshot.png"
-                root_obj.captureScreenshot(str(out_path), True)
+                root_obj.captureScreenshot(str(screenshot_target), True)
             QTimer.singleShot(250, do_save)
         QTimer.singleShot(150, capture)
 

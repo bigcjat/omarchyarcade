@@ -83,7 +83,6 @@ games/checkers/
 ├── ai_engine.py         # Pure Python Checkers engine with Alpha-Beta search
 ├── CheckersEngine.js    # Bundled move validation and jump rules for QML
 ├── SplashScreen.qml     # Canonical arcade startup animation
-├── Themes.js            # Palette definitions for all 22 Omarchy desktop themes
 ├── assets/              # Dual-contour vector SVGs
 │   ├── man_cyan.svg / man_coral.svg
 │   └── king_cyan.svg / king_coral.svg

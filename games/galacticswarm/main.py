@@ -10,13 +10,43 @@ Omarchy Arcade: Galactic Swarm (Galaga Clone)
 import sys
 import os
 import tomllib
-from pathlib import Path
-from PySide6.QtCore import QObject, Slot, QUrl, QFileSystemWatcher, QTimer, QSettings
-from PySide6.QtGui import QGuiApplication, QIcon
-from PySide6.QtQml import QQmlApplicationEngine
 import ctypes
 import shutil
 import subprocess
+from pathlib import Path
+from PySide6.QtCore import QObject, Slot, QUrl, QFileSystemWatcher, QTimer, QSettings, Qt
+from PySide6.QtGui import QGuiApplication, QIcon
+from PySide6.QtQml import QQmlApplicationEngine
+
+# =============================================================================
+# THEME PRESETS
+# =============================================================================
+DEFAULT_PRESETS = {
+    "dark": {
+        "id": "catppuccin",
+        "name": "Catppuccin Mocha",
+        "bg": "#181825",
+        "boardBg": "#0c0c14",
+        "cardBg": "#1e1e2e",
+        "surface": "#1e1e2e",
+        "border": "#313244",
+        "fg": "#cdd6f4",
+        "subtext": "#a6adc8",
+        "accent": "#89b4fa",
+    },
+    "light": {
+        "id": "catppuccin-latte",
+        "name": "Catppuccin Latte",
+        "bg": "#eff1f5",
+        "boardBg": "#0c0c14",
+        "cardBg": "#ffffff",
+        "surface": "#ffffff",
+        "border": "#ccd0da",
+        "fg": "#4c4f69",
+        "subtext": "#6c6f85",
+        "accent": "#1e66f5",
+    },
+}
 
 class SettingsManager(QObject):
     def __init__(self, parent=None):
@@ -65,15 +95,16 @@ class SoundManager(QObject):
                 self.AudioServicesPlaySystemSound.argtypes = [ctypes.c_uint32]
                 self.AudioServicesPlaySystemSound.restype = None
 
-                for wav in self.sounds_dir.glob("*.wav"):
-                    s_name = wav.stem
-                    cf_path = self.CFStringCreateWithCString(None, str(wav.resolve()).encode("utf-8"), 0x08000100)
-                    cf_url = self.CFURLCreateWithFileSystemPath(None, cf_path, 0, False)
-                    sound_id = ctypes.c_uint32()
-                    if self.AudioServicesCreateSystemSoundID(cf_url, ctypes.byref(sound_id)) == 0:
-                        self.sounds[s_name] = sound_id.value
-                    self.CFRelease(cf_path)
-                    self.CFRelease(cf_url)
+                if self.sounds_dir.is_dir():
+                    for wav in self.sounds_dir.glob("*.wav"):
+                        s_name = wav.stem
+                        cf_path = self.CFStringCreateWithCString(None, str(wav.resolve()).encode("utf-8"), 0x08000100)
+                        cf_url = self.CFURLCreateWithFileSystemPath(None, cf_path, 0, False)
+                        sound_id = ctypes.c_uint32()
+                        if self.AudioServicesCreateSystemSoundID(cf_url, ctypes.byref(sound_id)) == 0:
+                            self.sounds[s_name] = sound_id.value
+                        self.CFRelease(cf_path)
+                        self.CFRelease(cf_url)
             except Exception:
                 self.is_mac = False
 
@@ -98,13 +129,13 @@ def parse_toml_theme(path: Path):
             data = tomllib.load(f)
         colors = data.get("colors") if isinstance(data.get("colors"), dict) else data
         return {
-            "bg": colors.get("base", "#181825"),
-            "fg": colors.get("text", "#cdd6f4"),
-            "accent": colors.get("sapphire", colors.get("blue", "#89b4fa")),
-            "boardBg": colors.get("mantle", "#1e1e2e"),
-            "cardBg": colors.get("surface0", "#313244"),
-            "border": colors.get("surface1", "#45475a"),
-            "subtext": colors.get("subtext0", "#a6adc8")
+            "bg": colors.get("base", colors.get("background", "#181825")),
+            "fg": colors.get("text", colors.get("foreground", "#cdd6f4")),
+            "accent": colors.get("sapphire", colors.get("blue", colors.get("accent", "#89b4fa"))),
+            "boardBg": "#0c0c14",
+            "cardBg": colors.get("surface0", colors.get("surface", "#1e1e2e")),
+            "border": colors.get("surface1", colors.get("border", "#313244")),
+            "subtext": colors.get("subtext0", colors.get("subtext", "#a6adc8"))
         }
     except Exception:
         return {}
@@ -126,26 +157,17 @@ def find_omarchy_colors_file():
             return c
     return None
 
-
 def main():
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+    os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
+
     app = QGuiApplication(sys.argv)
     app.setApplicationName("GalacticSwarm")
     app.setOrganizationName("OmarchyArcade")
-    # Set application icon to game floppy disk
-    script_dir = Path(__file__).resolve().parent
-    disk_candidates = [
-        script_dir / "assets" / "disk_icon.png",
-        script_dir.parent.parent / "assets" / "covers" / "galacticswarm_disk.png",
-        Path.home() / ".local" / "share" / "omarchy-arcade" / "assets" / "covers" / "galacticswarm_disk.png",
-    ]
-    for cp in disk_candidates:
-        if cp.exists():
-            app.setWindowIcon(QIcon(str(cp)))
-            break
-
 
     base_dir = Path(__file__).resolve().parent
     engine = QQmlApplicationEngine()
+    engine.quit.connect(app.quit)
 
     settings_manager = SettingsManager()
     engine.rootContext().setContextProperty("settingsManager", settings_manager)
@@ -162,41 +184,75 @@ def main():
 
     root = engine.rootObjects()[0]
 
-    theme_path = find_omarchy_colors_file()
-    theme_name_path = Path.home() / ".config/omarchy/current/theme.name"
+    # Theme Resolution
+    theme_arg = None
+    if "--theme" in sys.argv:
+        idx = sys.argv.index("--theme")
+        if idx + 1 < len(sys.argv):
+            theme_arg = sys.argv[idx + 1]
 
-    def update_theme():
-        if theme_path and theme_path.exists():
+    if theme_arg:
+        clean = theme_arg.lower().replace("_", "-")
+        if clean in DEFAULT_PRESETS:
+            t = DEFAULT_PRESETS[clean]
+            root.applyTheme(t, t["name"])
+        elif any(term in clean for term in ["light", "white", "day", "snow", "dawn", "latte"]):
+            t = DEFAULT_PRESETS["light"]
+            root.applyTheme(t, t["name"])
+        else:
+            custom_path = Path(theme_arg).expanduser().resolve()
+            if custom_path.is_file():
+                data = parse_toml_theme(custom_path)
+                if data:
+                    root.applyTheme(data, custom_path.parent.name.capitalize())
+            else:
+                t = DEFAULT_PRESETS["dark"]
+                root.applyTheme(t, t["name"])
+    else:
+        theme_path = find_omarchy_colors_file()
+        if theme_path and theme_path.is_file():
             theme_data = parse_toml_theme(theme_path)
-            t_name = "Custom"
-            if theme_name_path.exists():
-                try:
-                    t_name = theme_name_path.read_text().strip()
-                except Exception:
-                    pass
+            t_name = theme_path.parent.name.capitalize()
             root.applyTheme(theme_data, t_name)
 
-    if theme_path and theme_path.exists():
-        update_theme()
-        watcher = QFileSystemWatcher([str(theme_path.parent)], app)
-        watcher.directoryChanged.connect(lambda: QTimer.singleShot(100, update_theme))
-        watcher.fileChanged.connect(lambda: QTimer.singleShot(100, update_theme))
+            watcher = QFileSystemWatcher(app)
+            watcher.addPath(str(theme_path))
+            if theme_path.parent.exists():
+                watcher.addPath(str(theme_path.parent))
 
-    args = sys.argv[1:]
-    requested_screenshot = None
-    i = 0
-    while i < len(args):
-        if args[i] == "--screenshot" and i + 1 < len(args):
-            requested_screenshot = args[i + 1]
-            i += 2
+            def on_theme_updated(path):
+                colors_path = find_omarchy_colors_file()
+                if colors_path and colors_path.is_file():
+                    updated = parse_toml_theme(colors_path)
+                    if updated:
+                        root.applyTheme(updated, colors_path.parent.name.capitalize())
+
+            watcher.fileChanged.connect(on_theme_updated)
+            watcher.directoryChanged.connect(on_theme_updated)
         else:
-            i += 1
+            def apply_system_scheme():
+                scheme = app.styleHints().colorScheme()
+                preset_key = "light" if scheme == Qt.ColorScheme.Light else "dark"
+                t = DEFAULT_PRESETS[preset_key]
+                root.applyTheme(t, t["name"])
 
-    if requested_screenshot:
-        def do_shot():
-            root.splashEnabled = False
-            root.captureScreenshot(requested_screenshot, True)
-        QTimer.singleShot(1250, do_shot)
+            apply_system_scheme()
+            app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
+
+    if "--no-splash" in sys.argv:
+        root.setProperty("splashEnabled", False)
+
+    # Screenshot automation
+    if "--screenshot" in sys.argv:
+        root.setProperty("splashEnabled", False)
+        out_idx = sys.argv.index("--screenshot") + 1
+        out_file = sys.argv[out_idx] if out_idx < len(sys.argv) and not sys.argv[out_idx].startswith("--") else "screenshot.png"
+        out_path = Path(out_file).resolve()
+
+        if hasattr(root, "screenshotSaved"):
+            root.screenshotSaved.connect(lambda p: app.quit())
+        QTimer.singleShot(250, lambda: root.captureScreenshot(str(out_path), False))
+        QTimer.singleShot(2000, app.quit)
 
     sys.exit(app.exec())
 

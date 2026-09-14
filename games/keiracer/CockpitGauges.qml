@@ -5,8 +5,8 @@ Rectangle {
     id: cockpit
     height: 70
     width: Math.min(parent.width - 20, 420)
-    color: themeCardBg
-    border.color: isShiftAlert ? themePink : themeBorder
+    color: "#0f172a"
+    border.color: isShiftAlert ? themePink : "#334155"
     border.width: isShiftAlert ? 2 : 1
     radius: 12
     clip: true
@@ -206,7 +206,7 @@ Rectangle {
                 font.family: cockpit.monoFontFamily
                 font.pixelSize: 13
                 font.weight: Font.Black
-                color: cockpit.themeFg
+                color: "#f8fafc"
             }
         }
 
@@ -225,7 +225,7 @@ Rectangle {
                 font.family: cockpit.monoFontFamily
                 font.pixelSize: 7
                 font.weight: Font.Bold
-                color: cockpit.themeSubtext
+                color: "#94a3b8"
             }
 
             Text {
@@ -254,7 +254,7 @@ Rectangle {
                 font.family: cockpit.monoFontFamily
                 font.pixelSize: 7
                 font.weight: Font.Bold
-                color: cockpit.isShiftAlert ? "#ef4444" : cockpit.themeSubtext
+                color: cockpit.isShiftAlert ? "#ef4444" : "#94a3b8"
             }
 
             Text {
@@ -265,7 +265,7 @@ Rectangle {
                 font.family: cockpit.monoFontFamily
                 font.pixelSize: 11
                 font.weight: Font.Black
-                color: cockpit.isShiftAlert ? "#ef4444" : cockpit.themeFg
+                color: cockpit.isShiftAlert ? "#ef4444" : "#f8fafc"
             }
 
             // Shift Light Beacon (Flashing dot above tach)
@@ -304,7 +304,7 @@ Rectangle {
                 font.family: cockpit.monoFontFamily
                 font.pixelSize: 7
                 font.weight: Font.Bold
-                color: cockpit.isTimeAlert ? "#ef4444" : cockpit.themeSubtext
+                color: cockpit.isTimeAlert ? "#ef4444" : "#94a3b8"
             }
 
             Text {
@@ -315,7 +315,7 @@ Rectangle {
                 font.family: cockpit.monoFontFamily
                 font.pixelSize: 12
                 font.weight: Font.Black
-                color: cockpit.isTimeAlert ? "#ef4444" : cockpit.themeFg
+                color: cockpit.isTimeAlert ? "#ef4444" : "#f8fafc"
             }
         }
     }

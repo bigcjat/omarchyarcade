@@ -15,9 +15,48 @@ import subprocess
 import tomllib
 import ctypes
 from pathlib import Path
-from PySide6.QtGui import QIcon, QGuiApplication
+from PySide6.QtGui import QIcon, QGuiApplication, Qt
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QFileSystemWatcher, QTimer, QObject, Slot, QSettings
+
+DEFAULT_PRESETS = {
+    "dark": {
+        "name": "Catppuccin Mocha",
+        "background": "#1e1e2e",
+        "foreground": "#cdd6f4",
+        "cardBg": "#181825",
+        "accent": "#89b4fa",
+        "border": "#313244",
+        "subtext": "#a6adc8",
+        "color0": "#181825",
+        "color1": "#f38ba8",
+        "color2": "#a6e3a1",
+        "color3": "#f9e2af",
+        "color4": "#89b4fa",
+        "color5": "#cba6f7",
+        "color6": "#89dceb",
+        "color7": "#a6adc8",
+        "color8": "#313244",
+    },
+    "light": {
+        "name": "Catppuccin Latte",
+        "background": "#eff1f5",
+        "foreground": "#4c4f69",
+        "cardBg": "#ffffff",
+        "accent": "#1e66f5",
+        "border": "#ccd0da",
+        "subtext": "#6c6f85",
+        "color0": "#eff1f5",
+        "color1": "#d20f39",
+        "color2": "#40a02b",
+        "color3": "#df8e1d",
+        "color4": "#1e66f5",
+        "color5": "#8839ef",
+        "color6": "#04a5e5",
+        "color7": "#6c6f85",
+        "color8": "#ccd0da",
+    }
+}
 
 class SettingsManager(QObject):
     def __init__(self, parent=None):
@@ -107,22 +146,6 @@ class SoundManager(QObject):
             except Exception:
                 pass
 
-def load_all_omarchy_themes():
-    themes_js = Path(__file__).resolve().parent / "Themes.js"
-    if not themes_js.is_file():
-        return {}
-    with open(themes_js, "r", encoding="utf-8") as f:
-        content = f.read()
-    themes = {}
-    blocks = re.findall(r"\{([^{}]+)\}", content)
-    for b in blocks:
-        t = {}
-        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", b):
-            t[k] = v
-        if "id" in t:
-            themes[t["id"]] = t
-    return themes
-
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
     if env_path and Path(env_path).is_file():
@@ -139,7 +162,6 @@ def find_omarchy_colors_file():
         if c.is_file():
             return c
     return None
-
 
 def load_system_theme():
     theme_path = find_omarchy_colors_file()
@@ -165,13 +187,13 @@ def load_system_theme():
             "color5": colors.get("color5", "#cba6f7"),
             "color6": colors.get("color6", "#89dceb"),
             "color7": colors.get("color7", "#a6adc8"),
+            "color8": colors.get("color8", colors.get("color0", "#313244")),
         }
     except Exception:
         return None
 
 def main():
     app = QGuiApplication(sys.argv)
-    # Set application icon to game floppy disk
     script_dir = Path(__file__).resolve().parent
     disk_candidates = [
         script_dir / "assets" / "disk_icon.png",
@@ -199,15 +221,13 @@ def main():
         sys.exit(-1)
 
     root = engine.rootObjects()[0]
-    all_themes = load_all_omarchy_themes()
-
     requested_theme = None
     requested_screenshot = None
     args = sys.argv[1:]
     i = 0
     while i < len(args):
         if args[i] == "--theme" and i + 1 < len(args):
-            requested_theme = args[i + 1]
+            requested_theme = args[i + 1].lower()
             i += 2
         elif args[i] == "--screenshot" and i + 1 < len(args):
             requested_screenshot = args[i + 1]
@@ -215,14 +235,19 @@ def main():
         else:
             i += 1
 
-    if requested_theme and requested_theme in all_themes:
-        root.applyTheme(all_themes[requested_theme], requested_theme)
+    if requested_theme:
+        if requested_theme in DEFAULT_PRESETS:
+            root.applyTheme(DEFAULT_PRESETS[requested_theme], requested_theme.capitalize())
+        elif requested_theme in all_themes:
+            root.applyTheme(all_themes[requested_theme], requested_theme)
     else:
         sys_theme = load_system_theme()
         if sys_theme:
             root.applyTheme(sys_theme, "System")
         elif "catppuccin" in all_themes:
             root.applyTheme(all_themes["catppuccin"], "Catppuccin")
+        else:
+            root.applyTheme(DEFAULT_PRESETS["dark"], "Catppuccin Mocha")
 
     theme_file = find_omarchy_colors_file()
     watcher = QFileSystemWatcher()
@@ -241,6 +266,20 @@ def main():
 
     watcher.fileChanged.connect(on_theme_file_changed)
     watcher.directoryChanged.connect(on_theme_file_changed)
+
+    def on_os_scheme_changed():
+        if requested_theme or find_omarchy_colors_file():
+            return
+        scheme = app.styleHints().colorScheme()
+        preset = "dark" if scheme == Qt.ColorScheme.Dark else "light"
+        root.applyTheme(DEFAULT_PRESETS[preset], preset.capitalize())
+
+    app.styleHints().colorSchemeChanged.connect(on_os_scheme_changed)
+
+    try:
+        root.screenshotSaved.connect(lambda p: app.quit())
+    except Exception:
+        pass
 
     if requested_screenshot:
         def do_shot():

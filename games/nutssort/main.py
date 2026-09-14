@@ -8,7 +8,7 @@ Features:
 - Native OS theme synchronization (macOS/system Dark vs Light mode via QStyleHints)
 - CoreAudio low-latency sound synthesis on macOS + PipeWire/PulseAudio on Linux
 - QSettings persistent level progression and move records
-- Canonical arcade splashscreen and responsive 2048 layout standard
+- Canonical arcade splashscreen and responsive layout standard
 - CLI tools: --theme, --list-themes, --no-splash, --screenshot, --screenshot-help, --level <N>
 """
 
@@ -23,6 +23,36 @@ from pathlib import Path
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QFileSystemWatcher, QTimer, QObject, Slot, QSettings, Qt
+
+# =============================================================================
+# THEME PRESETS
+# =============================================================================
+DEFAULT_PRESETS = {
+    "dark": {
+        "id": "catppuccin",
+        "name": "Catppuccin Mocha",
+        "bg": "#181825",
+        "boardBg": "#11111b",
+        "cardBg": "#1e1e2e",
+        "surface": "#1e1e2e",
+        "border": "#313244",
+        "fg": "#cdd6f4",
+        "subtext": "#a6adc8",
+        "accent": "#F59E0B",
+    },
+    "light": {
+        "id": "catppuccin-latte",
+        "name": "Catppuccin Latte",
+        "bg": "#f8fafc",
+        "boardBg": "#f1f5f9",
+        "cardBg": "#ffffff",
+        "surface": "#ffffff",
+        "border": "#cbd5e1",
+        "fg": "#0f172a",
+        "subtext": "#64748b",
+        "accent": "#d97706",
+    },
+}
 
 # =============================================================================
 # PERSISTENT SETTINGS MANAGER
@@ -152,25 +182,6 @@ class SoundManager(QObject):
 # =============================================================================
 # THEME UTILITIES
 # =============================================================================
-def load_all_omarchy_themes():
-    """Parses Themes.js for all predefined Omarchy color schemes."""
-    themes_js = Path(__file__).resolve().parent / "Themes.js"
-    if not themes_js.is_file():
-        return {}
-    with open(themes_js, "r", encoding="utf-8") as f:
-        content = f.read()
-    themes = {}
-    blocks = re.findall(r"\{([^{}]+)\}", content)
-    for b in blocks:
-        t = {}
-        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", b):
-            t[k] = v
-        if "id" in t and "name" in t:
-            themes[t["id"]] = t
-    return themes
-
-ALL_THEMES = load_all_omarchy_themes()
-
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
     if env_path and Path(env_path).is_file():
@@ -208,19 +219,6 @@ def main():
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
     os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
 
-    if "--list-themes" in sys.argv:
-        print(f"Nuts Sort • Available Themes ({len(ALL_THEMES)} total):\n")
-        print("  Light Themes:")
-        for tid, t in ALL_THEMES.items():
-            if any(term in tid for term in ["light", "snow", "dawn", "white", "latte", "paper"]):
-                print(f"    --theme {tid:<20} -> {t['name']}")
-        print("\n  Dark Themes:")
-        for tid, t in ALL_THEMES.items():
-            if not any(term in tid for term in ["light", "snow", "dawn", "white", "latte", "paper"]):
-                print(f"    --theme {tid:<20} -> {t['name']}")
-        print("\nUsage: python main.py --theme <theme_id>")
-        sys.exit(0)
-
     app = QGuiApplication(sys.argv)
     app.setApplicationName("Nuts Sort")
     app.setOrganizationName("Omarchy")
@@ -252,10 +250,10 @@ def main():
     # 1. Explicit Theme CLI Override
     if theme_arg:
         clean_arg = theme_arg.lower().replace("_", "-")
-        if clean_arg in ALL_THEMES:
-            t = ALL_THEMES[clean_arg]
+        if clean_arg in DEFAULT_PRESETS:
+            t = DEFAULT_PRESETS[clean_arg]
             root_obj.applyTheme(t, t["name"])
-            print(f"Applied theme: {t['name']}")
+            print(f"Applied preset theme: {t['name']}")
         else:
             custom_path = Path(theme_arg).expanduser().resolve()
             if custom_path.is_file():
@@ -264,7 +262,13 @@ def main():
                     root_obj.applyTheme(data, custom_path.parent.name.capitalize())
                     print(f"Applied theme from file: {custom_path}")
             else:
-                print(f"Warning: Theme '{theme_arg}' not found. Run with --list-themes.", file=sys.stderr)
+                # Fallback to light or dark preset if matches term
+                if "light" in clean_arg:
+                    t = DEFAULT_PRESETS["light"]
+                    root_obj.applyTheme(t, t["name"])
+                else:
+                    t = DEFAULT_PRESETS["dark"]
+                    root_obj.applyTheme(t, t["name"])
 
     # 2. Omarchy Desktop System Theme Detection & Hot-Reloading
     else:
@@ -298,15 +302,12 @@ def main():
             def apply_system_scheme():
                 scheme = app.styleHints().colorScheme()
                 if scheme == Qt.ColorScheme.Light:
-                    target_theme = ALL_THEMES.get("catppuccin-latte") or ALL_THEMES.get("github-light")
-                    name = "System Light"
+                    target_theme = DEFAULT_PRESETS["light"]
                 else:
-                    target_theme = ALL_THEMES.get("catppuccin") or ALL_THEMES.get("tokyonight")
-                    name = "System Dark"
+                    target_theme = DEFAULT_PRESETS["dark"]
 
-                if target_theme:
-                    root_obj.applyTheme(target_theme, name)
-                    print(f"Detected OS appearance: {name} ({target_theme.get('name')})")
+                root_obj.applyTheme(target_theme, target_theme["name"])
+                print(f"Detected OS appearance: {target_theme['name']}")
 
             apply_system_scheme()
             app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
@@ -327,29 +328,11 @@ def main():
     # Screenshot / automation helpers
     if "--screenshot" in sys.argv:
         root_obj.setProperty("splashEnabled", False)
-        def capture():
-            out_idx = sys.argv.index("--screenshot") + 1
-            out_file = sys.argv[out_idx] if out_idx < len(sys.argv) and not sys.argv[out_idx].startswith("--") else "screenshot.png"
-            out_path = Path(out_file).resolve()
-            root_obj.captureScreenshot(str(out_path), False)
-            QTimer.singleShot(400, app.quit)
-        QTimer.singleShot(350, capture)
-
-    if "--screenshot-help" in sys.argv:
-        root_obj.setProperty("splashEnabled", False)
-        def capture_help():
-            root_obj.setProperty("showHelp", True)
-            out_path = Path(__file__).resolve().parent / "screenshot_help.png"
-            root_obj.captureScreenshot(str(out_path), False)
-            QTimer.singleShot(400, app.quit)
-        QTimer.singleShot(350, capture_help)
-
-    if "--screenshot-splash" in sys.argv:
-        def capture_splash():
-            out_path = Path(__file__).resolve().parent / "screenshot_splash.png"
-            root_obj.captureScreenshot(str(out_path), False)
-            QTimer.singleShot(400, app.quit)
-        QTimer.singleShot(600, capture_splash)
+        out_idx = sys.argv.index("--screenshot") + 1
+        out_file = sys.argv[out_idx] if out_idx < len(sys.argv) and not sys.argv[out_idx].startswith("--") else "screenshot.png"
+        out_path = Path(out_file).resolve()
+        root_obj.screenshotSaved.connect(lambda p: app.quit())
+        QTimer.singleShot(250, lambda: root_obj.captureScreenshot(str(out_path), False))
 
     print("Nuts Sort running. Press ? or Esc for help, R to restart, U to undo.")
     sys.exit(app.exec())

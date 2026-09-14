@@ -36,6 +36,73 @@ function loadLevels(data) {
     }
 }
 
+var gridMatrix = [];      // 2D matrix of crossword cells for active puzzle
+
+function buildGridMatrix() {
+    if (!currentLevel || !currentLevel.words) {
+        gridMatrix = [];
+        return;
+    }
+    var rows = currentLevel.grid_rows || 1;
+    var cols = currentLevel.grid_cols || 1;
+
+    for (var i = 0; i < currentLevel.words.length; i++) {
+        var w = currentLevel.words[i];
+        var endR = (w.dir === "down") ? (w.row + w.word.length) : (w.row + 1);
+        var endC = (w.dir === "across") ? (w.col + w.word.length) : (w.col + 1);
+        if (endR > rows) rows = endR;
+        if (endC > cols) cols = endC;
+    }
+
+    var mat = [];
+    for (var r = 0; r < rows; r++) {
+        var rowArr = [];
+        for (var c = 0; c < cols; c++) {
+            rowArr.push({
+                active: false,
+                char: "",
+                found: false,
+                wordRefs: []
+            });
+        }
+        mat.push(rowArr);
+    }
+
+    for (var wi = 0; wi < currentLevel.words.length; wi++) {
+        var item = currentLevel.words[wi];
+        var wr = item.row;
+        var wc = item.col;
+        for (var k = 0; k < item.word.length; k++) {
+            var cr = (item.dir === "down") ? (wr + k) : wr;
+            var cc = (item.dir === "across") ? (wc + k) : wc;
+            if (cr < rows && cc < cols) {
+                mat[cr][cc].active = true;
+                mat[cr][cc].char = item.word[k];
+                if (mat[cr][cc].wordRefs.indexOf(item.word) === -1) {
+                    mat[cr][cc].wordRefs.push(item.word);
+                }
+            }
+        }
+    }
+
+    for (var r2 = 0; r2 < rows; r2++) {
+        for (var c2 = 0; c2 < cols; c2++) {
+            if (mat[r2][c2].active) {
+                var cellFound = false;
+                for (var f = 0; f < mat[r2][c2].wordRefs.length; f++) {
+                    if (foundWords.indexOf(mat[r2][c2].wordRefs[f]) !== -1) {
+                        cellFound = true;
+                        break;
+                    }
+                }
+                mat[r2][c2].found = cellFound;
+            }
+        }
+    }
+
+    gridMatrix = mat;
+}
+
 function loadSingleLevel(lvlData) {
     if (!lvlData) return;
     currentLevel = lvlData;
@@ -47,6 +114,7 @@ function loadSingleLevel(lvlData) {
     levelCompleteTimer = 0;
     feedbackMessage = "";
     circleLetters = currentLevel.circle_letters.slice();
+    buildGridMatrix();
 }
 
 /**
@@ -81,6 +149,7 @@ function startLevel(idx) {
 
     // Copy circle letters
     circleLetters = currentLevel.circle_letters.slice();
+    buildGridMatrix();
 }
 
 /**
@@ -200,6 +269,7 @@ function submitWord(callbacks) {
         } else {
             // New word found!
             foundWords.push(word);
+            buildGridMatrix();
             var pts = word.length * 10;
             score += pts;
             if (score > highScore) highScore = score;

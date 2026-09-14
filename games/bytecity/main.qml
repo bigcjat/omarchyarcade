@@ -26,8 +26,36 @@ Window {
     property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
 
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+    }
+
+    readonly property bool isDarkMode: colorLuminance(themeBg) < 0.5
+    property color themeCardHover: isDarkMode ? "#313244" : "#f1f5f9"
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            cardBg: "#ffffff",
+            border: "#cbd5e1",
+            subtext: "#64748b",
+            accent: "#1e66f5"
+        } : {
+            background: "#181825",
+            foreground: "#cdd6f4",
+            cardBg: "#1e1e2e",
+            border: "#313244",
+            subtext: "#a6adc8",
+            accent: "#89b4fa"
+        };
+        applyTheme(tData, nextIsLight ? "Omarchy Light" : "Omarchy Dark");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     color: themeBg
@@ -91,14 +119,16 @@ Window {
         var lum = colorLuminance(bg);
         if (lum > 0.5) {
             themeBoardBg = Qt.darker(bg, 1.06);
-            themeCardBg = Qt.darker(bg, 1.03);
-            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
-            themeBorder = c8 || Qt.darker(bg, 1.15);
+            themeCardBg = data.card_bg || data.cardBg || "#ffffff";
+            themeCardHover = "#f1f5f9";
+            themeSubtext = "#64748b";
+            themeBorder = "#cbd5e1";
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         } else {
             themeBoardBg = Qt.darker(bg, 1.25);
             themeCardBg = c0;
+            themeCardHover = "#313244";
             themeSubtext = "#a6adc8";
             themeBorder = c8;
             themeBtnBg = accent;
@@ -112,6 +142,20 @@ Window {
             cityEngine.set_sound_muted(isMuted);
         }
         soundToast.show(isMuted ? "🔇 Audio Muted" : "🔊 Audio Enabled");
+    }
+
+    signal screenshotSaved(string filePath)
+
+    function captureScreenshot(filePath, shouldQuit) {
+        var targetItem = (splashScreen && splashScreen.visible && splashScreen.opacity > 0) ? splashScreen : mainContainer;
+        targetItem.grabToImage(function(result) {
+            result.saveToFile(filePath);
+            console.log("Screenshot saved successfully to " + filePath);
+            root.screenshotSaved(filePath);
+            if (shouldQuit) {
+                Qt.quit();
+            }
+        });
     }
 
     // =========================================================================
@@ -236,6 +280,12 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
                 root.fullPlayfield = !root.fullPlayfield;
                 soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
@@ -344,8 +394,8 @@ Window {
                     width: Math.max(88, fundsText.implicitWidth + 20)
                     height: 44
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -356,7 +406,7 @@ Window {
                             text: "FUNDS"
                             font.pixelSize: 9
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             id: fundsText
@@ -365,7 +415,7 @@ Window {
                             font.pixelSize: 14
                             font.bold: true
                             font.family: root.monoFontFamily
-                            color: (cityEngine && cityEngine.funds < 500) ? "#ef4444" : "#10b981"
+                            color: (cityEngine && cityEngine.funds < 500) ? (root.isDarkMode ? "#ef4444" : "#dc2626") : (root.isDarkMode ? "#10b981" : "#15803d")
                         }
                     }
                 }
@@ -375,8 +425,8 @@ Window {
                     width: Math.max(84, popText.implicitWidth + 20)
                     height: 44
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -387,7 +437,7 @@ Window {
                             text: "POPULATION"
                             font.pixelSize: 9
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             id: popText
@@ -396,7 +446,7 @@ Window {
                             font.pixelSize: 14
                             font.bold: true
                             font.family: root.monoFontFamily
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                         }
                     }
                 }
@@ -406,8 +456,8 @@ Window {
                     width: Math.max(84, dateText.implicitWidth + 20)
                     height: 44
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -418,7 +468,7 @@ Window {
                             text: "DATE"
                             font.pixelSize: 9
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             id: dateText
@@ -427,7 +477,7 @@ Window {
                             font.pixelSize: 13
                             font.bold: true
                             font.family: root.monoFontFamily
-                            color: root.themeAccent
+                            color: root.isDarkMode ? root.themeAccent : "#0284c7"
                         }
                     }
                 }
@@ -438,8 +488,8 @@ Window {
                     width: 76
                     height: 44
                     radius: 8
-                    color: rciMouseArea.containsMouse ? Qt.lighter(root.themeCardBg, 1.1) : root.themeCardBg
-                    border.color: rciMouseArea.containsMouse ? root.themeAccent : root.themeBorder
+                    color: rciMouseArea.containsMouse ? (root.isDarkMode ? Qt.lighter(root.themeCardBg, 1.1) : root.themeCardHover) : (root.isDarkMode ? root.themeCardBg : "#ffffff")
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -883,7 +933,7 @@ Window {
         }
 
         id: playArea
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
             anchors.topMargin: root.isTiledDesktopMode ? 6 : 8
             anchors.bottom: statusBar.top
             anchors.bottomMargin: 8
@@ -3405,8 +3455,8 @@ Window {
             height: 32
             width: toastLabel.implicitWidth + 28
             radius: 8
-            color: root.themeCardBg
-            border.color: root.themeAccent
+            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+            border.color: root.isDarkMode ? root.themeAccent : "#cbd5e1"
             border.width: 1
             opacity: 0
             z: 80
@@ -3418,7 +3468,7 @@ Window {
                 anchors.centerIn: parent
                 font.pixelSize: 11
                 font.bold: true
-                color: root.themeFg
+                color: root.isDarkMode ? root.themeFg : "#0f172a"
             }
 
             Timer {

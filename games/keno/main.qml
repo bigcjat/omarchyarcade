@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Window
 import "KenoEngine.js" as Engine
-import "Themes.js" as Themes
 
 Window {
     id: root
@@ -196,14 +195,50 @@ Window {
     property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
 
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
-    color: themeBg
+    readonly property bool isDarkMode: colorLuminance(osThemeBg) < 0.5
+
+    // Desktop OS theme properties (synchronized with colors.toml / styleHints)
+    property color osThemeBg: "#181825"
+    property color osThemeFg: "#cdd6f4"
+    property color osThemeAccent: "#89b4fa"
+    property color osThemeCardBg: "#1e1e2e"
+    property color osThemeBoardBg: "#11111b"
+    property color osThemeBorder: "#313244"
+    property color osThemeSubtext: "#a6adc8"
 
     function applyTheme(data, name) {
-        // Theme synchronization hook
+        if (!data || typeof data !== "object") return;
+        var bg = data.background || data.bg || "#181825";
+        var fg = data.foreground || data.fg || "#cdd6f4";
+        var accent = data.accent || "#89b4fa";
+        var c0 = data.color0 || "#313244";
+        var c8 = data.color8 || data.color0 || "#45475a";
+
+        osThemeBg = bg;
+        osThemeFg = fg;
+        osThemeAccent = accent;
+        osThemeBorder = c8;
+
+        var lum = colorLuminance(bg);
+        if (lum > 0.5) {
+            osThemeBoardBg = data.boardBg || "#f1f5f9";
+            osThemeCardBg = data.cardBg || "#ffffff";
+            osThemeSubtext = data.subtext || "#64748b";
+            osThemeBorder = data.border || "#cbd5e1";
+        } else {
+            osThemeBoardBg = Qt.darker(bg, 1.25);
+            osThemeCardBg = c0;
+            osThemeSubtext = "#a6adc8";
+            osThemeBorder = c8;
+        }
     }
     property int credits: 1000
     property int displayedCredits: 1000
@@ -733,145 +768,22 @@ Window {
             }
         }
 
-        // DUAL THEMED CABINET PILLARS (Iconic Physical VLT Casino Architecture)
-        // Left Column: Themed Side Pillar
+        // =====================================================================
+        // TOP OS-THEMED HEADER BAR (Adapts strictly to user desktop OS theme)
+        // =====================================================================
         Rectangle {
-            id: leftNeonPillar
+            id: headerBar
+            anchors.top: parent.top
             anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            width: 26
-            z: 10
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: root.themeNeonLeft }
-                GradientStop { position: 0.5; color: root.activeVariant === "cleopatra" ? "#fbbf24" : "#ffffff" }
-                GradientStop { position: 1.0; color: root.themeNeonRight }
-            }
-            border.color: root.activeVariant === "cleopatra" ? "#d97706" : root.themeBorder
-            border.width: 1
-
-            // Pillar interior shading
-            Rectangle {
-                anchors.fill: parent
-                anchors.margins: 2
-                color: root.activeVariant === "cleopatra" ? "#1a1208" :
-                       root.activeVariant === "caveman" ? "#131b08" :
-                       root.activeVariant === "extradraw" ? "#22050b" :
-                       root.activeVariant === "goldmine" ? "#1e1304" :
-                       root.activeVariant === "triplepower" ? "#061826" :
-                       root.activeVariant === "power" ? "#140624" :
-                       root.activeVariant === "super" ? "#1e0f03" : "#070c1e"
-                opacity: 0.88
-            }
-
-            // Themed Vertical Motifs
-            Column {
-                anchors.centerIn: parent
-                spacing: Math.max(8, (parent.height - 480) / 10)
-                Repeater {
-                    model: root.activeVariant === "cleopatra" ? ["𓋹", "𓁹", "𓆣", "𓉐", "𓊹", "𓃭", "𓅓", "𓆣", "𓋹"] :
-                           root.activeVariant === "caveman" ? ["🦕", "🌋", "🦴", "🥚", "🦕", "🌋", "🦴", "🥚", "🦕"] :
-                           root.activeVariant === "extradraw" ? ["🚨", "⚠️", "⚡", "🚨", "⚠️", "⚡", "🚨", "⚠️", "🚨"] :
-                           root.activeVariant === "goldmine" ? ["⛏️", "💰", "🧨", "🪙", "⛏️", "💰", "🧨", "🪙", "⛏️"] :
-                           root.activeVariant === "triplepower" ? ["⚛", "⚡", "💠", "⚛", "⚡", "💠", "⚛", "⚡", "⚛"] :
-                           root.activeVariant === "power" ? ["⚡", "◈", "⚡", "◈", "⚡", "◈", "⚡", "◈", "⚡"] :
-                           root.activeVariant === "super" ? ["👑", "⚜", "★", "⚜", "👑", "⚜", "★", "⚜", "👑"] :
-                           ["✦", "◆", "✦", "◆", "✦", "◆", "✦", "◆", "✦"]
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: modelData
-                        font.pixelSize: root.activeVariant === "cleopatra" ? 14 : 11
-                        color: root.activeVariant === "cleopatra" ? "#fbbf24" :
-                               root.activeVariant === "caveman" ? "#bef264" :
-                               root.activeVariant === "extradraw" ? "#f87171" :
-                               root.activeVariant === "goldmine" ? "#fde047" :
-                               root.activeVariant === "triplepower" ? "#67e8f9" :
-                               root.activeVariant === "power" ? "#e879f9" :
-                               root.activeVariant === "super" ? "#fde047" : "#38bdf8"
-                        style: Text.Outline
-                        styleColor: "#000000"
-                        opacity: 0.95
-                    }
-                }
-            }
-
-            // Center neon gas core / golden obelisk line
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.top; anchors.bottom: parent.bottom
-                width: 2
-                color: root.activeVariant === "cleopatra" ? "#fef08a" : "#ffffff"
-                opacity: 0.5
-            }
-        }
-
-        // Right Column
-        Rectangle {
-            id: rightNeonPillar
             anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            width: 26
-            z: 10
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: root.themeNeonRight }
-                GradientStop { position: 0.5; color: root.activeVariant === "cleopatra" ? "#fbbf24" : "#ffffff" }
-                GradientStop { position: 1.0; color: root.themeNeonLeft }
-            }
-            border.color: root.activeVariant === "cleopatra" ? "#d97706" : root.themeBorder
+            height: root.isTiledDesktopMode ? 0 : (root.isCompactHeader ? (compactHeaderBar.y + compactHeaderBar.height + 6) : (subheaderItem.y + subheaderItem.height + 10))
+            visible: !root.isTiledDesktopMode
+            color: root.osThemeBg
+            border.color: root.osThemeBorder
             border.width: 1
-
-            Rectangle {
-                anchors.fill: parent
-                anchors.margins: 2
-                color: root.activeVariant === "cleopatra" ? "#1a1208" :
-                       root.activeVariant === "caveman" ? "#131b08" :
-                       root.activeVariant === "extradraw" ? "#22050b" :
-                       root.activeVariant === "goldmine" ? "#1e1304" :
-                       root.activeVariant === "triplepower" ? "#061826" :
-                       root.activeVariant === "power" ? "#140624" :
-                       root.activeVariant === "super" ? "#1e0f03" : "#070c1e"
-                opacity: 0.88
-            }
-
-            Column {
-                anchors.centerIn: parent
-                spacing: Math.max(8, (parent.height - 480) / 10)
-                Repeater {
-                    model: root.activeVariant === "cleopatra" ? ["𓋹", "𓁹", "𓆣", "𓉐", "𓊹", "𓃭", "𓅓", "𓆣", "𓋹"] :
-                           root.activeVariant === "caveman" ? ["🦕", "🌋", "🦴", "🥚", "🦕", "🌋", "🦴", "🥚", "🦕"] :
-                           root.activeVariant === "extradraw" ? ["🚨", "⚠️", "⚡", "🚨", "⚠️", "⚡", "🚨", "⚠️", "🚨"] :
-                           root.activeVariant === "goldmine" ? ["⛏️", "💰", "🧨", "🪙", "⛏️", "💰", "🧨", "🪙", "⛏️"] :
-                           root.activeVariant === "triplepower" ? ["⚛", "⚡", "💠", "⚛", "⚡", "💠", "⚛", "⚡", "⚛"] :
-                           root.activeVariant === "power" ? ["⚡", "◈", "⚡", "◈", "⚡", "◈", "⚡", "◈", "⚡"] :
-                           root.activeVariant === "super" ? ["👑", "⚜", "★", "⚜", "👑", "⚜", "★", "⚜", "👑"] :
-                           ["✦", "◆", "✦", "◆", "✦", "◆", "✦", "◆", "✦"]
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: modelData
-                        font.pixelSize: root.activeVariant === "cleopatra" ? 14 : 11
-                        color: root.activeVariant === "cleopatra" ? "#fbbf24" :
-                               root.activeVariant === "caveman" ? "#bef264" :
-                               root.activeVariant === "extradraw" ? "#f87171" :
-                               root.activeVariant === "goldmine" ? "#fde047" :
-                               root.activeVariant === "triplepower" ? "#67e8f9" :
-                               root.activeVariant === "power" ? "#e879f9" :
-                               root.activeVariant === "super" ? "#fde047" : "#38bdf8"
-                        style: Text.Outline
-                        styleColor: "#000000"
-                        opacity: 0.95
-                    }
-                }
-            }
-
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.top; anchors.bottom: parent.bottom
-                width: 2
-                color: root.activeVariant === "cleopatra" ? "#fef08a" : "#ffffff"
-                opacity: 0.5
-            }
+            z: 11
         }
+
 
         Keys.onPressed: function(event) {
             if (root.showHelp) {
@@ -1051,11 +963,12 @@ Window {
             visible: !root.isTiledDesktopMode
             anchors.top: parent.top
             anchors.topMargin: visible ? 12 : 0
-            anchors.left: leftNeonPillar.right
-            anchors.right: rightNeonPillar.left
+            anchors.left: parent.left
+            anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
             height: visible ? 52 : 0
+            z: 12
 
             // Title & Subtitle block
             Column {
@@ -1077,20 +990,15 @@ Window {
                         font.pixelSize: Math.max(20, Math.min(28, headerItem.width * 0.072))
                         font.bold: true
                         font.family: root.monoFontFamily
-                        color: root.activeVariant === "cleopatra" ? "#fbbf24" : root.themeAccent
-                        style: Text.Raised
-                        styleColor: "#000000"
+                        color: root.osThemeFg
                     }
                     Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         height: 22
                         width: badgeText.implicitWidth + 16
                         radius: 6
-                        gradient: Gradient {
-                            GradientStop { position: 0.0; color: root.activeVariant === "cleopatra" ? "#78350f" : Qt.rgba(Qt.color(root.themeAccent).r, Qt.color(root.themeAccent).g, Qt.color(root.themeAccent).b, 0.35) }
-                            GradientStop { position: 1.0; color: root.activeVariant === "cleopatra" ? "#451a03" : Qt.rgba(Qt.color(root.themeAccent).r, Qt.color(root.themeAccent).g, Qt.color(root.themeAccent).b, 0.15) }
-                        }
-                        border.color: root.activeVariant === "cleopatra" ? "#fbbf24" : root.themeAccent
+                        color: root.osThemeCardBg
+                        border.color: root.osThemeAccent
                         border.width: 1
                         Text {
                             id: badgeText
@@ -1105,7 +1013,7 @@ Window {
                             font.pixelSize: 9
                             font.bold: true
                             font.family: root.monoFontFamily
-                            color: root.activeVariant === "cleopatra" ? "#fde68a" : root.themeAccent
+                            color: root.osThemeAccent
                         }
                     }
                 }
@@ -1116,7 +1024,7 @@ Window {
                     text: root.themeGameSubtitle
                     font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
                     font.family: root.monoFontFamily
-                    color: root.themeSubtext
+                    color: root.osThemeSubtext
                 }
             }
 
@@ -1132,8 +1040,8 @@ Window {
                     width: Math.max(76, Math.min(96, headerItem.width * 0.16))
                     height: 44
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.osThemeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.osThemeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -1145,7 +1053,7 @@ Window {
                             font.pixelSize: 8
                             font.bold: true
                             font.family: root.monoFontFamily
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.osThemeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -1153,7 +1061,7 @@ Window {
                             font.pixelSize: 16
                             font.bold: true
                             font.family: root.monoFontFamily
-                            color: root.credits <= 10 ? "#ef4444" : root.themeFg
+                            color: root.credits <= 10 ? "#ef4444" : (root.isDarkMode ? root.osThemeFg : "#0f172a")
                         }
                     }
                 }
@@ -1163,8 +1071,8 @@ Window {
                     width: Math.max(60, Math.min(74, headerItem.width * 0.12))
                     height: 44
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.osThemeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.osThemeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -1176,7 +1084,7 @@ Window {
                             font.pixelSize: 8
                             font.bold: true
                             font.family: root.monoFontFamily
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.osThemeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -1184,7 +1092,7 @@ Window {
                             font.pixelSize: 16
                             font.bold: true
                             font.family: root.monoFontFamily
-                            color: root.themeAccent
+                            color: root.isDarkMode ? root.osThemeAccent : "#2563eb"
                         }
                     }
                 }
@@ -1194,8 +1102,8 @@ Window {
                     width: Math.max(76, Math.min(96, headerItem.width * 0.16))
                     height: 44
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.osThemeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.osThemeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -1207,7 +1115,7 @@ Window {
                             font.pixelSize: 8
                             font.bold: true
                             font.family: root.monoFontFamily
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.osThemeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -1215,7 +1123,7 @@ Window {
                             font.pixelSize: 16
                             font.bold: true
                             font.family: root.monoFontFamily
-                            color: root.bestWin > 0 ? root.themeHit : root.themeSubtext
+                            color: root.bestWin > 0 ? (root.isDarkMode ? root.osThemeAccent : "#15803d") : (root.isDarkMode ? root.osThemeSubtext : "#94a3b8")
                         }
                     }
                 }
@@ -1230,11 +1138,12 @@ Window {
             visible: !root.isCompactHeader
             anchors.top: headerItem.bottom
             anchors.topMargin: visible ? (root.isVerticalLayout ? 4 : 8) : 0
-            anchors.left: leftNeonPillar.right
-            anchors.right: rightNeonPillar.left
+            anchors.left: parent.left
+            anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
             height: visible ? 34 : 0
+            z: 12
 
             readonly property bool isCrowded: subheaderItem.width < 760 || root.isVerticalLayout
 
@@ -1245,11 +1154,8 @@ Window {
                 height: 30
                 width: subheaderItem.isCrowded ? 32 : (menuBtnRow.implicitWidth + 20)
                 radius: 8
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: "#2563eb" }
-                    GradientStop { position: 1.0; color: "#1d4ed8" }
-                }
-                border.color: "#93c5fd"
+                color: root.osThemeCardBg
+                border.color: root.osThemeBorder
                 border.width: 1
 
                 Row {
@@ -1260,14 +1166,14 @@ Window {
                         text: "◀"
                         font.pixelSize: 11
                         font.bold: true
-                        color: "#ffffff"
+                        color: root.osThemeAccent
                     }
                     Text {
                         text: "Game Menu [ESC]"
                         font.pixelSize: 11
                         font.bold: true
                         font.family: root.monoFontFamily
-                        color: "#ffffff"
+                        color: root.osThemeFg
                         visible: !subheaderItem.isCrowded
                     }
                 }
@@ -1290,16 +1196,16 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : (helpRow.implicitWidth + 18)
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.osThemeCardBg
+                    border.color: root.osThemeBorder
                     border.width: 1
 
                     Row {
                         id: helpRow
                         anchors.centerIn: parent
                         spacing: 5
-                        Text { text: "?"; font.pixelSize: 13; font.bold: true; color: root.themeAccent; anchors.verticalCenter: parent.verticalCenter }
-                        Text { text: "How to Play"; font.pixelSize: 11; font.bold: true; font.family: root.monoFontFamily; color: root.themeFg; anchors.verticalCenter: parent.verticalCenter; visible: !subheaderItem.isCrowded }
+                        Text { text: "?"; font.pixelSize: 13; font.bold: true; color: root.osThemeAccent; anchors.verticalCenter: parent.verticalCenter }
+                        Text { text: "How to Play"; font.pixelSize: 11; font.bold: true; font.family: root.monoFontFamily; color: root.osThemeFg; anchors.verticalCenter: parent.verticalCenter; visible: !subheaderItem.isCrowded }
                     }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -1312,8 +1218,8 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : (muteRow.implicitWidth + 18)
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.isMuted ? root.themeBorder : root.themeAccent
+                    color: root.osThemeCardBg
+                    border.color: root.isMuted ? root.osThemeBorder : root.osThemeAccent
                     border.width: 1
 
                     Row {
@@ -1321,7 +1227,7 @@ Window {
                         anchors.centerIn: parent
                         spacing: 4
                         Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
-                        Text { text: root.isMuted ? "Muted" : "Sound"; font.pixelSize: 11; font.bold: true; font.family: root.monoFontFamily; color: root.isMuted ? root.themeSubtext : root.themeFg; anchors.verticalCenter: parent.verticalCenter; visible: !subheaderItem.isCrowded }
+                        Text { text: root.isMuted ? "Muted" : "Sound"; font.pixelSize: 11; font.bold: true; font.family: root.monoFontFamily; color: root.isMuted ? root.osThemeSubtext : root.osThemeFg; anchors.verticalCenter: parent.verticalCenter; visible: !subheaderItem.isCrowded }
                     }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -1334,8 +1240,8 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : (variantSwitchRow.implicitWidth + 18)
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.osThemeCardBg
+                    border.color: root.osThemeBorder
                     border.width: 1
 
                     Row {
@@ -1352,7 +1258,7 @@ Window {
                                    root.activeVariant === "extradraw" ? "Extra Draw +3" :
                                    root.activeVariant === "goldmine" ? "Gold Mine" : "Triple Power 9X") + " [T]"
                             font.pixelSize: 11; font.bold: true; font.family: root.monoFontFamily
-                            color: root.themeAccent
+                            color: root.osThemeAccent
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !subheaderItem.isCrowded
                         }
@@ -1368,8 +1274,8 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : (speedRow.implicitWidth + 16)
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.osThemeCardBg
+                    border.color: root.osThemeBorder
                     border.width: 1
 
                     Row {
@@ -1377,7 +1283,7 @@ Window {
                         anchors.centerIn: parent
                         spacing: 4
                         Text { text: root.isFastSpeed ? "⚡" : "🐢"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
-                        Text { text: root.isFastSpeed ? "Fast" : "Normal"; font.pixelSize: 11; font.bold: true; font.family: root.monoFontFamily; color: root.isFastSpeed ? root.themeHit : root.themeSubtext; anchors.verticalCenter: parent.verticalCenter; visible: !subheaderItem.isCrowded }
+                        Text { text: root.isFastSpeed ? "Fast" : "Normal"; font.pixelSize: 11; font.bold: true; font.family: root.monoFontFamily; color: root.isFastSpeed ? root.osThemeAccent : root.osThemeSubtext; anchors.verticalCenter: parent.verticalCenter; visible: !subheaderItem.isCrowded }
                     }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -1393,14 +1299,15 @@ Window {
                     height: 30
                     width: 30
                     radius: 8
-                    color: root.fullPlayfield ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.fullPlayfield ? root.themeAccent : root.themeBorder
+                    color: root.osThemeCardBg
+                    border.color: root.fullPlayfield ? root.osThemeAccent : root.osThemeBorder
                     border.width: 1
 
                     Text {
                         anchors.centerIn: parent
                         text: root.fullPlayfield ? "🔲" : "⛶"
                         font.pixelSize: 13
+                        color: root.osThemeFg
                     }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -1421,8 +1328,8 @@ Window {
             visible: root.isCompactHeader
             anchors.top: parent.top
             anchors.topMargin: visible ? 4 : 0
-            anchors.left: leftNeonPillar.right
-            anchors.right: rightNeonPillar.left
+            anchors.left: parent.left
+            anchors.right: parent.right
             anchors.leftMargin: 12
             anchors.rightMargin: 12
             height: visible ? 36 : 0
@@ -1597,10 +1504,10 @@ Window {
             anchors.topMargin: root.isCompactHeader ? 4 : (root.isVerticalLayout ? 4 : 6)
             anchors.bottom: bottomControlBar.top
             anchors.bottomMargin: 8
-            anchors.left: leftNeonPillar.right
-            anchors.right: rightNeonPillar.left
-            anchors.leftMargin: 12
-            anchors.rightMargin: 12
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 0
+            anchors.rightMargin: 0
             radius: 8
             color: root.themeBoardBg
             border.color: root.themeBorder
@@ -3050,10 +2957,10 @@ Window {
             id: bottomControlBar
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 8
-            anchors.left: leftNeonPillar.right
-            anchors.right: rightNeonPillar.left
-            anchors.leftMargin: 12
-            anchors.rightMargin: 12
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 0
+            anchors.rightMargin: 0
             height: root.isCompactHeader ? 46 : 56
             radius: 8
             gradient: Gradient {
@@ -3514,10 +3421,10 @@ Window {
             anchors.topMargin: root.isCompactHeader ? 4 : 6
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 8
-            anchors.left: leftNeonPillar.right
-            anchors.right: rightNeonPillar.left
-            anchors.leftMargin: 12
-            anchors.rightMargin: 12
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 0
+            anchors.rightMargin: 0
             radius: 8
             border.color: root.themeBorder
             border.width: 2

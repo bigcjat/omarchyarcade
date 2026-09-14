@@ -2,7 +2,7 @@
 """
 Omarchy Arcade: DinoRunner (Chromium T-Rex Runner)
 - Pure QML / JavaScript authentic Chromium T-Rex endless runner
-- Live hot-reloading from ~/.config/omarchy/current/theme/colors.toml
+- Live hot-reloading from ~/.local/state/omarchy/current/theme/colors.toml and QStyleHints
 - Zero-overhead low latency audio playback via AudioToolbox (macOS) / PipeWire / ALSA (Linux)
 - Persistent High Score storage via QSettings
 - Fully responsive to tiling window managers
@@ -101,57 +101,63 @@ class SoundManager(QObject):
                 except Exception:
                     pass
 
+DEFAULT_PRESETS = {
+    "dark": {
+        "name": "Omarchy Dark",
+        "bg": "#181825",
+        "fg": "#cdd6f4",
+        "accent": "#89b4fa",
+        "boardBg": "#1e1e2e",
+        "card_bg": "#313244",
+        "card_hover": "#45475a",
+        "border": "#45475a",
+        "subtext": "#a6adc8",
+        "red": "#f38ba8",
+        "peach": "#fab387",
+        "yellow": "#f9e2af",
+        "sprite_fg": "#cdd6f4"
+    },
+    "light": {
+        "name": "Omarchy Light",
+        "bg": "#eff1f5",
+        "fg": "#4c4f69",
+        "accent": "#1e66f5",
+        "boardBg": "#1e1e2e",
+        "card_bg": "#ffffff",
+        "card_hover": "#f1f5f9",
+        "border": "#ccd0da",
+        "subtext": "#5c5f77",
+        "red": "#d20f39",
+        "peach": "#fe640b",
+        "yellow": "#df8e1d",
+        "sprite_fg": "#cdd6f4"
+    }
+}
+
 def parse_toml_theme(path: Path):
     try:
         with open(path, "rb") as f:
             data = tomllib.load(f)
-        colors = {}
-        if "colors" in data:
-            c = data["colors"]
-            colors["bg"] = c.get("background") or c.get("bg") or "#1e1e2e"
-            colors["fg"] = c.get("foreground") or c.get("fg") or "#cdd6f4"
-            colors["accent"] = c.get("accent") or c.get("primary") or "#89b4fa"
-            colors["boardBg"] = c.get("selection_background") or c.get("surface") or "#181825"
-            colors["cardBg"] = c.get("card") or c.get("surface0") or "#313244"
-            colors["border"] = c.get("border") or "#45475a"
-            colors["subtext"] = c.get("subtext") or c.get("subtext0") or "#a6adc8"
-            colors["name"] = data.get("theme", {}).get("name", path.stem.capitalize())
-            return colors
-        for section in ["theme", "palette", "base"]:
-            if section in data and isinstance(data[section], dict):
-                c = data[section]
-                if "background" in c or "bg" in c:
-                    colors["bg"] = c.get("background") or c.get("bg") or "#1e1e2e"
-                    colors["fg"] = c.get("foreground") or c.get("fg") or "#cdd6f4"
-                    colors["accent"] = c.get("accent") or c.get("primary") or "#89b4fa"
-                    colors["boardBg"] = c.get("surface") or "#181825"
-                    colors["cardBg"] = c.get("card") or "#313244"
-                    colors["border"] = c.get("border") or "#45475a"
-                    colors["subtext"] = c.get("subtext") or "#a6adc8"
-                    colors["name"] = path.stem.capitalize()
-                    return colors
+        colors = data.get("colors") if isinstance(data.get("colors"), dict) else data
+        bg = colors.get("base") or colors.get("background") or "#181825"
+        fg = colors.get("text") or colors.get("foreground") or "#cdd6f4"
+        return {
+            "name": data.get("theme", {}).get("name", path.stem.capitalize()),
+            "bg": bg,
+            "fg": fg,
+            "accent": colors.get("accent") or colors.get("blue") or "#89b4fa",
+            "boardBg": "#1e1e2e",
+            "card_bg": colors.get("surface0", "#313244"),
+            "card_hover": colors.get("surface1", "#45475a"),
+            "border": colors.get("surface1", "#45475a"),
+            "subtext": colors.get("subtext0", "#a6adc8"),
+            "red": colors.get("red", "#f38ba8"),
+            "peach": colors.get("peach", "#fab387"),
+            "yellow": colors.get("yellow", "#f9e2af"),
+            "sprite_fg": "#cdd6f4"
+        }
     except Exception:
-        pass
-    return None
-
-def load_all_omarchy_themes():
-    themes = {}
-    themes_dir = Path.home() / ".config" / "omarchy" / "themes"
-    if themes_dir.exists():
-        for theme_file in themes_dir.glob("*/colors.toml"):
-            t = parse_toml_theme(theme_file)
-            if t:
-                themes[theme_file.parent.name.lower()] = t
-    return themes
-
-def hex_to_rgb(h, default=(200, 200, 200)):
-    try:
-        h = str(h).lstrip('#')
-        if len(h) == 6:
-            return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
-    except Exception:
-        pass
-    return default
+        return None
 
 def generate_themed_sprites(theme_colors, assets_dir: Path):
     try:
@@ -165,14 +171,21 @@ def generate_themed_sprites(theme_colors, assets_dir: Path):
 
         w, h = qimg.width(), qimg.height()
 
-        accent = QColor(theme_colors.get("accent") or "#89b4fa")
-        fg = QColor(theme_colors.get("fg") or "#cdd6f4")
-        border = QColor(theme_colors.get("border") or "#45475a")
-        subtext = QColor(theme_colors.get("subtext") or "#6c7086")
-        red = QColor(theme_colors.get("red") or "#f38ba8")
-        peach = QColor(theme_colors.get("peach") or "#fab387")
-        yellow = QColor(theme_colors.get("yellow") or "#f9e2af")
-        white = QColor("#ffffff")
+        # Day colors (for light background): high contrast & crisp!
+        d_trex = QColor("#1e66f5")     # Crisp royal blue T-Rex
+        d_horizon = QColor("#8c90a4")  # Defined slate ground line
+        d_cloud = QColor("#9ca3af")    # Soft cloud
+        d_cactus = QColor("#d20f39")   # Deep red cactus
+        d_ptero = QColor("#e64553")    # Deep coral pterodactyl
+
+        # Night colors (for dark background): bright neon / retro arcade!
+        n_trex = QColor("#89b4fa")     # Bright pastel blue T-Rex
+        n_horizon = QColor("#45475a")  # Muted night ground line
+        n_cloud = QColor("#585b70")    # Night cloud
+        n_cactus = QColor("#f38ba8")   # Neon pink/red cactus
+        n_ptero = QColor("#fab387")    # Bright peach pterodactyl
+        n_moon = QColor("#f9e2af")     # Golden moon
+        n_star = QColor("#ffffff")     # Bright white star
 
         out_day = QImage(qimg.size(), QImage.Format.Format_ARGB32)
         out_day.fill(0)
@@ -187,21 +200,21 @@ def generate_themed_sprites(theme_colors, assets_dir: Path):
                 factor = pix.red() / 255.0
 
                 if y >= 100:
-                    d_col, n_col = border, accent
+                    d_col, n_col = d_horizon, n_horizon
                 elif 160 <= x <= 258:
-                    d_col, n_col = subtext, border
+                    d_col, n_col = d_cloud, n_cloud
                 elif 259 <= x <= 444:
-                    d_col, n_col = peach, yellow
+                    d_col, n_col = d_ptero, n_ptero
                 elif 445 <= x <= 952:
-                    d_col, n_col = red, red
+                    d_col, n_col = d_cactus, n_cactus
                 elif 953 <= x <= 1270:
-                    d_col, n_col = yellow, yellow
+                    d_col, n_col = d_ptero, n_moon
                 elif 1271 <= x <= 1335:
-                    d_col, n_col = fg, white
+                    d_col, n_col = d_cloud, n_star
                 elif 1336 <= x <= 2110:
-                    d_col, n_col = accent, fg
+                    d_col, n_col = d_trex, n_trex
                 else:
-                    d_col, n_col = accent, fg
+                    d_col, n_col = d_trex, n_trex
 
                 out_day.setPixelColor(x, y, QColor(int(d_col.red() * factor), int(d_col.green() * factor), int(d_col.blue() * factor), pix.alpha()))
                 out_night.setPixelColor(x, y, QColor(int(n_col.red() * factor), int(n_col.green() * factor), int(n_col.blue() * factor), pix.alpha()))
@@ -228,7 +241,6 @@ def find_omarchy_colors_file():
             return c
     return None
 
-
 def load_system_theme():
     theme_path = find_omarchy_colors_file()
     if theme_path and theme_path.exists():
@@ -240,7 +252,7 @@ def main():
     app = QGuiApplication(sys.argv)
     app.setApplicationName("DinoRunner")
     app.setOrganizationName("Omarchy")
-    # Set application icon to game floppy disk
+
     script_dir = Path(__file__).resolve().parent
     disk_candidates = [
         script_dir / "assets" / "disk_icon.png",
@@ -252,8 +264,7 @@ def main():
             app.setWindowIcon(QIcon(str(cp)))
             break
 
-
-    base_dir = Path(__file__).resolve().parent
+    base_dir = script_dir
     sounds_dir = base_dir / "sounds"
     sound_manager = SoundManager(sounds_dir)
     settings_manager = SettingsManager()
@@ -270,7 +281,6 @@ def main():
         sys.exit(-1)
 
     root = engine.rootObjects()[0]
-    all_themes = load_all_omarchy_themes()
 
     requested_theme = None
     requested_screenshot = None
@@ -300,29 +310,27 @@ def main():
         root.setHeight(requested_height)
 
     assets_dir = base_dir / "assets"
-    active_theme = None
-    if requested_theme and requested_theme in all_themes:
-        active_theme = all_themes[requested_theme]
-        generate_themed_sprites(active_theme, assets_dir)
-        root.applyTheme(active_theme, requested_theme)
+
+    def apply_theme_data(theme_data, name=""):
+        generate_themed_sprites(theme_data, assets_dir)
+        root.applyTheme(theme_data, name)
+
+    if requested_theme in DEFAULT_PRESETS:
+        apply_theme_data(DEFAULT_PRESETS[requested_theme], DEFAULT_PRESETS[requested_theme]["name"])
+        print(f"Applied preset theme: {DEFAULT_PRESETS[requested_theme]['name']}")
     else:
         sys_theme = load_system_theme()
         if sys_theme:
-            active_theme = sys_theme
-            generate_themed_sprites(sys_theme, assets_dir)
-            root.applyTheme(sys_theme, "System")
-        elif "catppuccin" in all_themes:
-            active_theme = all_themes["catppuccin"]
-            generate_themed_sprites(active_theme, assets_dir)
-            root.applyTheme(active_theme, "Catppuccin")
+            apply_theme_data(sys_theme, sys_theme.get("name", "System"))
         else:
-            default_catppuccin = {
-                "bg": "#1e1e2e", "fg": "#cdd6f4", "accent": "#89b4fa",
-                "boardBg": "#181825", "cardBg": "#313244", "border": "#45475a",
-                "subtext": "#a6adc8", "red": "#f38ba8", "peach": "#fab387", "yellow": "#f9e2af"
-            }
-            generate_themed_sprites(default_catppuccin, assets_dir)
-            root.applyTheme(default_catppuccin, "Catppuccin")
+            is_dark = True
+            try:
+                from PySide6.QtGui import Qt
+                is_dark = app.styleHints().colorScheme() == Qt.ColorScheme.Dark
+            except Exception:
+                pass
+            preset_key = "dark" if is_dark else "light"
+            apply_theme_data(DEFAULT_PRESETS[preset_key], DEFAULT_PRESETS[preset_key]["name"])
 
     theme_file = find_omarchy_colors_file()
     watcher = QFileSystemWatcher()
@@ -331,32 +339,39 @@ def main():
     if theme_file and theme_file.exists():
         watcher.addPath(str(theme_file))
 
-    def on_theme_file_changed(path):
-        QTimer.singleShot(150, update_theme)
-
     def update_theme():
-        if requested_theme: return
+        if requested_theme:
+            return
         t = load_system_theme()
         if t:
-            generate_themed_sprites(t, assets_dir)
-            root.applyTheme(t, "System")
+            apply_theme_data(t, t.get("name", "System"))
+        else:
+            try:
+                from PySide6.QtGui import Qt
+                is_dark = app.styleHints().colorScheme() == Qt.ColorScheme.Dark
+                preset_key = "dark" if is_dark else "light"
+                apply_theme_data(DEFAULT_PRESETS[preset_key], DEFAULT_PRESETS[preset_key]["name"])
+            except Exception:
+                pass
 
-    watcher.fileChanged.connect(on_theme_file_changed)
-    watcher.directoryChanged.connect(on_theme_file_changed)
+    watcher.fileChanged.connect(lambda path: QTimer.singleShot(150, update_theme))
+    watcher.directoryChanged.connect(lambda path: QTimer.singleShot(150, update_theme))
+    app.styleHints().colorSchemeChanged.connect(lambda scheme: update_theme())
 
     requested_test_features = "--test-features" in args
 
     if requested_screenshot:
+        root.screenshotSaved.connect(lambda p: app.quit())
         def start_and_shot():
             root.splashEnabled = False
             root.startNewGame()
             if requested_test_features:
                 root.toggleNightMode()
                 root.spawnPterodactyl()
-                QTimer.singleShot(450, lambda: root.captureScreenshot(requested_screenshot, True))
+                QTimer.singleShot(500, lambda: root.captureScreenshot(requested_screenshot))
             else:
-                QTimer.singleShot(700, lambda: root.captureScreenshot(requested_screenshot, True))
-        QTimer.singleShot(400, start_and_shot)
+                QTimer.singleShot(500, lambda: root.captureScreenshot(requested_screenshot))
+        QTimer.singleShot(300, start_and_shot)
 
     sys.exit(app.exec())
 

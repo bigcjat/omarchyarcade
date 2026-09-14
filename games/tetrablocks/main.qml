@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Window
 import "GameEngine.js" as Engine
-import "Themes.js" as OmarchyThemes
 
 Window {
     id: root
@@ -14,14 +13,14 @@ Window {
 
     // Dynamic Omarchy Theme Properties (Defaults to Catppuccin Mocha)
     property color themeBg: "#181825"
-    property color themeBoardBg: "#1e1e2e"
-    property color themeCellEmpty: "#252538"
-    property color themeCardBg: "#313244"
+    property color themeBoardBg: "#11111b"
+    property color themeCellEmpty: "#181825"
+    property color themeCardBg: "#1e1e2e"
     property color themeFg: "#cdd6f4"
     property color themeSubtext: "#a6adc8"
     property color themeAccent: "#fab387"
     property color themeBtnBg: "#89b4fa"
-    property color themeBtnFg: "#11111b"
+    property color themeBtnFg: "#0B0E14"
     property color themeBorder: "#45475a"
     property color themeModalBg: "#1e1e2e"
     property var themePalette: ({})
@@ -35,12 +34,17 @@ Window {
     on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    color: themeBg
-    Behavior on color { ColorAnimation { duration: 250 } }
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
+    property color themeCardHover: isDarkMode ? Qt.lighter(themeCardBg, 1.15) : "#f1f5f9"
 
-    function colorLuminance(hex) {
-        if (!hex || typeof hex !== "string") return 0.2;
-        var c = Qt.color(hex);
+    color: themeBg
+
+    function colorLuminance(col) {
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
@@ -55,28 +59,67 @@ Window {
         themeFg = data.foreground || themeFg;
         themeAccent = data.accent || themeAccent;
         themeBtnBg = data.accent || themeBtnBg;
-        themeBtnFg = data.background || "#11111b";
-        themeBorder = data.color8 || data.color0 || themeBorder;
 
         var lum = colorLuminance(bg);
         if (lum > 0.5) {
-            themeBoardBg = Qt.darker(bg, 1.08);
-            themeCellEmpty = Qt.darker(bg, 1.15);
-            themeCardBg = Qt.darker(bg, 1.05);
-            themeSubtext = Qt.darker(themeFg, 1.4);
-            themeModalBg = bg;
+            themeBoardBg = data.boardBg || "#d8dce5";
+            themeCellEmpty = data.cellEmpty || "#e6eaf1";
+            themeCardBg = data.cardBg || data.card_bg || data.card || data.surface || "#ffffff";
+            themeBorder = data.border || "#ccd0da";
+            themeSubtext = data.subtext || "#6c6f85";
+            themeBtnFg = "#ffffff";
+            themeModalBg = "#ffffff";
         } else {
-            themeBoardBg = Qt.lighter(bg, 1.18);
-            themeCellEmpty = Qt.lighter(bg, 1.32);
-            themeCardBg = Qt.lighter(bg, 1.25);
-            themeSubtext = data.color7 || Qt.darker(themeFg, 1.3);
+            themeBoardBg = data.boardBg || "#11111b";
+            themeCellEmpty = data.cellEmpty || "#181825";
+            themeCardBg = data.cardBg || data.card_bg || data.card || data.surface || "#1e1e2e";
+            themeBorder = data.border || "#313244";
+            themeSubtext = data.subtext || "#a6adc8";
+            themeBtnFg = "#0B0E14";
             themeModalBg = Qt.lighter(bg, 1.12);
         }
+    }
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            accent: "#1e66f5",
+            cardBg: "#ffffff",
+            boardBg: "#d8dce5",
+            cellEmpty: "#e6eaf1",
+            border: "#ccd0da",
+            subtext: "#6c6f85"
+        } : {
+            background: "#181825",
+            foreground: "#cdd6f4",
+            accent: "#fab387",
+            cardBg: "#1e1e2e",
+            boardBg: "#11111b",
+            cellEmpty: "#181825",
+            border: "#313244",
+            subtext: "#a6adc8"
+        };
+        applyTheme(tData, nextIsLight ? "Light Mode" : "Dark Mode");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     // Piece colors derived from Omarchy theme palette
     function getPieceColor(colorId) {
         var p = themePalette;
+        if (!root.isDarkMode) {
+            switch(colorId) {
+                case 1: return p.color6 || p.color14 || "#0284c7"; // I: Cyan / Sky
+                case 2: return p.color3 || p.color11 || "#d97706"; // O: Yellow / Amber
+                case 3: return p.color5 || p.color13 || "#7c3aed"; // T: Purple / Violet
+                case 4: return p.color2 || p.color10 || "#16a34a"; // S: Green / Emerald
+                case 5: return p.color1 || p.color9  || "#dc2626"; // Z: Red / Crimson
+                case 6: return p.color4 || p.color12 || "#2563eb"; // J: Blue
+                case 7: return p.color9 || p.accent  || "#ea580c"; // L: Orange
+                default: return "#475569";
+            }
+        }
         switch(colorId) {
             case 1: return p.color6 || p.color14 || "#89dceb"; // I: Cyan / Sky
             case 2: return p.color3 || p.color11 || "#f9e2af"; // O: Yellow
@@ -326,6 +369,12 @@ Window {
         }
     }
 
+    Rectangle {
+        anchors.fill: parent
+        color: root.themeBg
+        z: -1
+    }
+
     // Keyboard & Input Controls
     Item {
         id: gameArea
@@ -357,6 +406,10 @@ Window {
                 return;
             } else if (event.key === Qt.Key_M) {
                 root.toggleMute();
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_T) {
+                root.cycleTheme();
                 event.accepted = true;
                 return;
             }
@@ -450,8 +503,8 @@ Window {
         // Header (Score & Title)
         Item {
             id: headerRow
-            width: Math.min(parent.width, arena.arenaTotalWidth)
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.left: parent.left
+            anchors.right: parent.right
             height: Math.max(36, Math.min(52, container.height * 0.08))
             anchors.top: parent.top
 
@@ -483,8 +536,8 @@ Window {
                     width: Math.max(54, Math.min(84, container.width * 0.17))
                     height: headerRow.height * 0.88
                     radius: 6
-                    color: root.themeBoardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -493,14 +546,15 @@ Window {
                             text: "SCORE"
                             font.pixelSize: 9
                             font.bold: true
-                            color: root.themeSubtext
+                            font.letterSpacing: 0.5
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
                         Text {
                             text: root.score.toString()
-                            font.pixelSize: Math.round(Math.max(11, Math.min(15, parent.parent.height * 0.45)))
+                            font.pixelSize: Math.round(Math.max(12, Math.min(17, parent.parent.height * 0.48)))
                             font.bold: true
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
                     }
@@ -510,8 +564,8 @@ Window {
                     width: Math.max(54, Math.min(84, container.width * 0.17))
                     height: headerRow.height * 0.88
                     radius: 6
-                    color: root.themeBoardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -520,14 +574,15 @@ Window {
                             text: "BEST"
                             font.pixelSize: 9
                             font.bold: true
-                            color: root.themeSubtext
+                            font.letterSpacing: 0.5
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
                         Text {
                             text: root.bestScore.toString()
-                            font.pixelSize: Math.round(Math.max(11, Math.min(15, parent.parent.height * 0.45)))
+                            font.pixelSize: Math.round(Math.max(12, Math.min(17, parent.parent.height * 0.48)))
                             font.bold: true
-                            color: root.themeAccent
+                            color: root.bestScore > 0 ? (root.isDarkMode ? root.themeAccent : "#15803d") : (root.isDarkMode ? root.themeSubtext : "#94a3b8")
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
                     }
@@ -538,12 +593,11 @@ Window {
         // Subheader Controls Row (Help, Pause, Mute, New Game)
         Item {
             id: subheaderRow
-            width: Math.min(parent.width, arena.arenaTotalWidth)
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.left: parent.left
+            anchors.right: parent.right
             height: 32
             anchors.top: headerRow.bottom
             anchors.topMargin: 8
-            readonly property bool isCrowded: subheaderRow.width < 450
 
             Row {
                 anchors.fill: parent
@@ -552,25 +606,23 @@ Window {
                 // Help Button
                 Rectangle {
                     id: helpBtn
-                    width: (parent.width - 12) / 4
+                    width: (parent.width - 18) / 4
                     height: parent.height
                     radius: 6
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
 
                     Row {
                         anchors.centerIn: parent
                         spacing: 4
-                        Text { text: "❓"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
+                        Text { text: "?"; font.pixelSize: 13; font.bold: true; color: root.themeAccent; anchors.verticalCenter: parent.verticalCenter }
                         Text {
                             text: "How to Play"
                             font.pixelSize: 11
                             font.bold: true
                             color: root.themeFg
                             anchors.verticalCenter: parent.verticalCenter
-                            visible: !subheaderRow.isCrowded
                         }
                     }
 
@@ -586,14 +638,12 @@ Window {
                 // Sound / Mute Button
                 Rectangle {
                     id: muteBtn
-                    width: (parent.width - 12) / 4
+                    width: (parent.width - 18) / 4
                     height: parent.height
                     radius: 6
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.isMuted ? root.themeBorder : root.themeAccent
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     Row {
                         anchors.centerIn: parent
@@ -605,7 +655,6 @@ Window {
                             font.bold: true
                             color: root.isMuted ? root.themeSubtext : root.themeFg
                             anchors.verticalCenter: parent.verticalCenter
-                            visible: !subheaderRow.isCrowded
                         }
                     }
 
@@ -618,22 +667,21 @@ Window {
                     }
                 }
 
-                // New Game Button
-                                // View Mode Pill (Windowed vs Full Field)
+                // View Mode Pill (Windowed vs Full Field)
                 Rectangle {
                     id: viewModeBtn
-                    width: (parent.width - 12) / 4
+                    width: (parent.width - 18) / 4
                     height: parent.height
                     radius: 6
-                    color: root.fullPlayfield ? root.themeCardBg : (viewModeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
-                    border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
+                    color: viewModeMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: root.fullPlayfield ? root.themeAccent : root.themeBorder
                     border.width: 1
 
                     Row {
                         anchors.centerIn: parent
-                        spacing: 3
-                        Text { text: root.fullPlayfield ? "🔲" : "⛶"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
-                        Text { text: "Full (⇧F)"; font.pixelSize: 10; font.bold: true; color: root.themeFg; visible: !subheaderRow.isCrowded; anchors.verticalCenter: parent.verticalCenter }
+                        spacing: 4
+                        Text { text: root.fullPlayfield ? "🔲" : "⛶"; font.pixelSize: 11; color: root.themeFg; anchors.verticalCenter: parent.verticalCenter }
+                        Text { text: "Full (⇧F)"; font.pixelSize: 11; font.bold: true; color: root.themeFg; anchors.verticalCenter: parent.verticalCenter }
                     }
 
                     MouseArea {
@@ -650,28 +698,20 @@ Window {
 
                 Rectangle {
                     id: restartBtn
-                    width: (parent.width - 12) / 4
+                    width: (parent.width - 18) / 4
                     height: parent.height
                     radius: 6
-                    color: restartMouse.containsMouse ? Qt.lighter(root.themeBtnBg, 1.15) : root.themeBtnBg
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
 
                     Row {
                         anchors.centerIn: parent
                         spacing: 4
-                        Text {
-                            text: "🔄"
-                            font.pixelSize: 12
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: subheaderRow.isCrowded
-                        }
                         Text {
                             text: "New Game (R)"
                             font.pixelSize: 11
                             font.bold: true
                             color: root.themeBtnFg
                             anchors.verticalCenter: parent.verticalCenter
-                            visible: !subheaderRow.isCrowded
                         }
                     }
 
@@ -822,7 +862,7 @@ Window {
                         width: parent.width
                         height: Math.round(width * 1.05)
                         radius: 8
-                        color: root.themeBoardBg
+                        color: root.themeCardBg
                         border.color: root.themeBorder
                         border.width: 1
 
@@ -850,7 +890,7 @@ Window {
                         width: parent.width
                         height: Math.max(38, Math.round(width * 0.52))
                         radius: 8
-                        color: root.themeBoardBg
+                        color: root.themeCardBg
                         border.color: root.themeBorder
                         border.width: 1
 
@@ -878,7 +918,7 @@ Window {
                         width: parent.width
                         height: Math.max(38, Math.round(width * 0.52))
                         radius: 8
-                        color: root.themeBoardBg
+                        color: root.themeCardBg
                         border.color: root.themeBorder
                         border.width: 1
 
@@ -952,8 +992,8 @@ Window {
                                     }
                                 }
 
-                                border.width: model.isGhost ? 1 : (model.isClearing ? 1.5 : 0)
-                                border.color: model.isClearing ? root.themeAccent : (model.isGhost ? Qt.alpha(root.getPieceColor(Engine.currentPiece ? Engine.currentPiece.colorId : 1), 0.55) : "transparent")
+                                border.width: model.isGhost ? 1 : (model.isClearing ? 1.5 : (root.isDarkMode ? 0 : 0.5))
+                                border.color: model.isClearing ? root.themeAccent : (model.isGhost ? Qt.alpha(root.getPieceColor(Engine.currentPiece ? Engine.currentPiece.colorId : 1), 0.55) : (root.isDarkMode ? "transparent" : "rgba(100, 116, 139, 0.16)"))
 
                                 Behavior on color { ColorAnimation { duration: 40 } }
                             }
@@ -1024,7 +1064,7 @@ Window {
                     Rectangle {
                         anchors.fill: parent
                         radius: parent.radius
-                        color: Qt.alpha(root.themeBoardBg, 0.88)
+                        color: Qt.alpha("#0c0f17", 0.90)
                         visible: root.isOver || root.isPaused
                         z: 10
 
@@ -1053,7 +1093,7 @@ Window {
                             Text {
                                 text: root.isOver ? "Score: " + root.score : "Press P, Esc or click to Resume"
                                 font.pixelSize: 13
-                                color: root.themeFg
+                                color: "#ffffff"
                                 anchors.horizontalCenter: parent.horizontalCenter
                             }
 
@@ -1071,7 +1111,7 @@ Window {
                                     font.family: root.monoFontFamily
                                     font.bold: true
                                     font.pixelSize: 13
-                                    color: root.themeBg
+                                    color: root.themeBtnFg
                                 }
 
                                 MouseArea {
@@ -1085,7 +1125,7 @@ Window {
                                 text: "Or press R / Space / Enter"
                                 font.family: root.monoFontFamily
                                 font.pixelSize: 11
-                                color: root.themeSubtext
+                                color: "#94a3b8"
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 visible: root.isOver
                             }
@@ -1094,7 +1134,7 @@ Window {
                                 width: 110
                                 height: 32
                                 radius: 6
-                                color: root.themeBtnBg
+                                color: root.themeAccent
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 visible: root.isPaused && !root.isOver
 
@@ -1129,7 +1169,7 @@ Window {
                         width: parent.width
                         height: Math.min(boardCard.height, nextCol.implicitHeight + 16)
                         radius: 8
-                        color: root.themeBoardBg
+                        color: root.themeCardBg
                         border.color: root.themeBorder
                         border.width: 1
                         clip: true
@@ -1409,9 +1449,9 @@ Window {
                         Rectangle {
                             width: 86; height: 22; radius: 4
                             color: root.themeCardBg
-                            Text { anchors.centerIn: parent; text: "P • Esc • M • R"; font.family: root.monoFontFamily; font.pixelSize: 9; font.bold: true; color: root.themeFg }
+                            Text { anchors.centerIn: parent; text: "P • Esc • M • T • R"; font.family: root.monoFontFamily; font.pixelSize: 8; font.bold: true; color: root.themeFg }
                         }
-                        Text { anchors.verticalCenter: parent.verticalCenter; text: "Pause • Mute • Restart"; font.pixelSize: 11; color: root.themeSubtext }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: "Pause • Mute • Theme • Restart"; font.pixelSize: 11; color: root.themeSubtext }
                     }
                 }
 

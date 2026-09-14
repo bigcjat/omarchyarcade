@@ -141,6 +141,33 @@ class SoundManager(QObject):
 # =============================================================================
 # THEME RESOLUTION
 # =============================================================================
+DEFAULT_PRESETS = {
+    "dark": {
+        "id": "catppuccin",
+        "name": "Catppuccin Mocha",
+        "bg": "#181825",
+        "boardBg": "#11111b",
+        "cardBg": "#1e1e2e",
+        "surface": "#1e1e2e",
+        "border": "#313244",
+        "fg": "#cdd6f4",
+        "subtext": "#a6adc8",
+        "accent": "#f59e0b",
+    },
+    "light": {
+        "id": "catppuccin-latte",
+        "name": "Catppuccin Latte",
+        "bg": "#eff1f5",
+        "boardBg": "#11111b",
+        "cardBg": "#ffffff",
+        "surface": "#ffffff",
+        "border": "#ccd0da",
+        "fg": "#4c4f69",
+        "subtext": "#6c6f85",
+        "accent": "#d97706",
+    },
+}
+
 ALL_THEMES = {
     "catppuccin": {
         "id": "catppuccin", "name": "Catppuccin Mocha",
@@ -202,12 +229,23 @@ def load_toml_colors(file_path):
 def main():
     parser = argparse.ArgumentParser(description="Pipe Punk • Omarchy Arcade")
     parser.add_argument("--theme", type=str, help="Force a specific theme")
+    parser.add_argument("--list-themes", action="store_true", help="List available themes")
     parser.add_argument("--screenshot", type=str, help="Capture screenshot to path and exit")
     parser.add_argument("--screenshot-help", type=str, help="Capture help modal screenshot and exit")
     parser.add_argument("--no-splash", action="store_true", help="Skip the startup splash")
     parser.add_argument("--width", type=int, default=0, help="Initial window width")
     parser.add_argument("--height", type=int, default=0, help="Initial window height")
     args = parser.parse_args()
+
+    if args.list_themes:
+        print(f"Pipe Punk • Available Themes:\n")
+        print("  Presets:")
+        for k, v in DEFAULT_PRESETS.items():
+            print(f"    --theme {k:<15} -> {v['name']}")
+        print("\n  Predefined Themes:")
+        for k, v in ALL_THEMES.items():
+            print(f"    --theme {k:<15} -> {v['name']}")
+        sys.exit(0)
 
     app = QGuiApplication(sys.argv)
     app.setApplicationName("Pipe Punk")
@@ -227,39 +265,6 @@ def main():
     engine.rootContext().setContextProperty("noSplash", args.no_splash)
     engine.rootContext().setContextProperty("gameDirectory", str(game_dir))
 
-    # Resolve initial theme
-    active_theme = None
-    colors_file = None
-
-    if args.theme:
-        tid = args.theme.lower()
-        if tid in ALL_THEMES:
-            active_theme = ALL_THEMES[tid]
-    
-    if not active_theme:
-        colors_file = find_omarchy_colors_file()
-        if colors_file:
-            toml_colors = load_toml_colors(colors_file)
-            if toml_colors:
-                active_theme = {
-                    "id": "system",
-                    "name": "System Theme",
-                    "background": toml_colors.get("background", "#12141a"),
-                    "foreground": toml_colors.get("foreground", "#e2e8f0"),
-                    "accent": toml_colors.get("accent", "#f59e0b"),
-                    "color0": toml_colors.get("color0", "#1a1d26"),
-                    "color1": toml_colors.get("color1", "#ef4444"),
-                    "color2": toml_colors.get("color2", "#10b981"),
-                    "color3": toml_colors.get("color3", "#f59e0b"),
-                    "color4": toml_colors.get("color4", "#3b82f6"),
-                    "color5": toml_colors.get("color5", "#8b5cf6"),
-                    "color6": toml_colors.get("color6", "#06b6d4"),
-                    "color7": toml_colors.get("color7", "#f1f5f9"),
-                }
-
-    if not active_theme:
-        active_theme = ALL_THEMES["gruvbox"]
-
     qml_file = game_dir / "main.qml"
     engine.load(QUrl.fromLocalFile(str(qml_file)))
 
@@ -274,46 +279,73 @@ def main():
     if args.height:
         root_window.setHeight(args.height)
 
-    def apply_theme(theme_dict):
-        try:
-            if hasattr(root_window, "themeBg"):
-                root_window.setProperty("themeBg", theme_dict.get("background", "#12141a"))
-                root_window.setProperty("themeFg", theme_dict.get("foreground", "#e2e8f0"))
-                root_window.setProperty("themeAccent", theme_dict.get("accent", "#f59e0b"))
-                root_window.setProperty("themeColor0", theme_dict.get("color0", "#1a1d26"))
-                root_window.setProperty("themeColor1", theme_dict.get("color1", "#ef4444"))
-                root_window.setProperty("themeColor2", theme_dict.get("color2", "#10b981"))
-                root_window.setProperty("themeColor3", theme_dict.get("color3", "#f59e0b"))
-                root_window.setProperty("themeColor4", theme_dict.get("color4", "#3b82f6"))
-                root_window.setProperty("themeColor5", theme_dict.get("color5", "#8b5cf6"))
-                root_window.setProperty("themeColor6", theme_dict.get("color6", "#06b6d4"))
-        except Exception as e:
-            print("Error applying theme:", e)
+    # CLI Theme Argument Parsing
+    if args.theme:
+        clean_arg = args.theme.lower().replace("_", "-")
+        if clean_arg in DEFAULT_PRESETS:
+            t = DEFAULT_PRESETS[clean_arg]
+            root_window.applyTheme(t, t["name"])
+            print(f"Applied preset theme: {t['name']}")
+        elif clean_arg in ALL_THEMES:
+            t = ALL_THEMES[clean_arg]
+            root_window.applyTheme(t, t["name"])
+            print(f"Applied theme: {t['name']}")
+        else:
+            custom_path = Path(args.theme).expanduser().resolve()
+            if custom_path.is_file():
+                data = load_toml_colors(custom_path)
+                if data:
+                    root_window.applyTheme(data, custom_path.parent.name.capitalize())
+                    print(f"Applied theme from file: {custom_path}")
+            else:
+                print(f"Warning: Theme '{args.theme}' not found. Falling back to default preset.", file=sys.stderr)
+                if any(x in clean_arg for x in ["light", "day", "white"]):
+                    t = DEFAULT_PRESETS["light"]
+                    root_window.applyTheme(t, t["name"])
+                else:
+                    t = DEFAULT_PRESETS["dark"]
+                    root_window.applyTheme(t, t["name"])
 
-    apply_theme(active_theme)
+    # 2. Omarchy Desktop System Theme Detection & Hot-Reloading
+    else:
+        colors_file = find_omarchy_colors_file()
+        if colors_file:
+            toml_colors = load_toml_colors(colors_file)
+            if toml_colors:
+                theme_name = colors_file.parent.name.capitalize()
+                root_window.applyTheme(toml_colors, theme_name)
+                print(f"Detected Omarchy theme: {theme_name} ({colors_file})")
 
-    # Hot reload theme watcher
-    if colors_file and not args.theme:
-        watcher = QFileSystemWatcher([str(colors_file)])
-        def on_file_changed(path):
-            new_colors = load_toml_colors(path)
-            if new_colors:
-                t = {
-                    "id": "system",
-                    "name": "System Theme",
-                    "background": new_colors.get("background", "#12141a"),
-                    "foreground": new_colors.get("foreground", "#e2e8f0"),
-                    "accent": new_colors.get("accent", "#f59e0b"),
-                    "color0": new_colors.get("color0", "#1a1d26"),
-                    "color1": new_colors.get("color1", "#ef4444"),
-                    "color2": new_colors.get("color2", "#10b981"),
-                    "color3": new_colors.get("color3", "#f59e0b"),
-                    "color4": new_colors.get("color4", "#3b82f6"),
-                    "color5": new_colors.get("color5", "#8b5cf6"),
-                    "color6": new_colors.get("color6", "#06b6d4"),
-                }
-                apply_theme(t)
-        watcher.fileChanged.connect(on_file_changed)
+            watcher = QFileSystemWatcher(app)
+            watcher.addPath(str(colors_file))
+            if colors_file.parent.exists():
+                watcher.addPath(str(colors_file.parent))
+
+            def on_theme_updated(path):
+                c_path = find_omarchy_colors_file()
+                if c_path and c_path.is_file():
+                    updated = load_toml_colors(c_path)
+                    if updated:
+                        root_window.applyTheme(updated, c_path.parent.name.capitalize())
+                        print(f"Omarchy theme reloaded: {c_path.parent.name}")
+
+            watcher.fileChanged.connect(on_theme_updated)
+            watcher.directoryChanged.connect(on_theme_updated)
+
+        # 3. macOS / System Dark & Light Mode Synchronization
+        else:
+            def apply_system_scheme():
+                scheme = app.styleHints().colorScheme()
+                if scheme == Qt.ColorScheme.Light:
+                    target_theme = DEFAULT_PRESETS["light"]
+                else:
+                    target_theme = DEFAULT_PRESETS["dark"]
+
+                root_window.applyTheme(target_theme, target_theme["name"])
+                print(f"Detected OS appearance: {target_theme['name']}")
+
+            apply_system_scheme()
+            app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
 
     if args.no_splash:
         root_window.setProperty("splashEnabled", False)
@@ -321,20 +353,17 @@ def main():
     # Screenshot handling
     if args.screenshot or args.screenshot_help:
         root_window.setProperty("splashEnabled", False)
-        def capture_screenshot():
-            include_help = bool(args.screenshot_help)
-            if include_help:
-                root_window.setProperty("showHelp", True)
-            else:
-                root_window.setupDemoBoard()
-            app.processEvents()
+        out_file = args.screenshot_help if args.screenshot_help else args.screenshot
+        target_path = Path(out_file).resolve()
+        target_path.parent.mkdir(parents=True, exist_ok=True)
 
-            target_path = Path(args.screenshot_help if args.screenshot_help else args.screenshot).resolve()
-            target_path.parent.mkdir(parents=True, exist_ok=True)
-            root_window.captureScreenshot(str(target_path), False)
-            QTimer.singleShot(400, app.quit)
+        if args.screenshot_help:
+            root_window.setProperty("showHelp", True)
+        else:
+            root_window.setupDemoBoard()
 
-        QTimer.singleShot(500, capture_screenshot)
+        root_window.screenshotSaved.connect(lambda p: app.quit())
+        QTimer.singleShot(250, lambda: root_window.captureScreenshot(str(target_path), False))
 
     sys.exit(app.exec())
 

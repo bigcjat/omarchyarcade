@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Window
 import "SolitaireEngine.js" as Engine
-import "Themes.js" as Themes
 
 Window {
     id: root
@@ -25,6 +24,8 @@ Window {
     property color themeSecondary: "#FACC15"     // Gold
     property color themeBtnBg: themeAccent
     property color themeBtnFg: "#0B0E14"
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
+    property color themeCardHover: isDarkMode ? Qt.lighter(themeCardBg, 1.15) : "#f1f5f9"
 
     property string forcedTheme: ""
     property string deckStyle: "synthwave"       // "synthwave", "crimson", "sapphire", "obsidian"
@@ -74,22 +75,31 @@ Window {
         themeBg = bg;
         themeFg = fg;
         themeAccent = accent;
-        themeBorder = c8;
 
         var lum = colorLuminance(bg);
         if (lum > 0.5) {
             themeFelt = "#1B4332";
-            themeCardBg = Qt.darker(bg, 1.05);
-            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
+            themeCardBg = data.cardBg || data.card_bg || data.card || data.surface || "#ffffff";
+            themeBorder = data.border || "#cbd5e1";
+            themeSubtext = data.subtext || "#64748b";
+            themeFg = data.fg || data.foreground || "#0f172a";
+            themeBtnFg = "#ffffff";
         } else {
             themeFelt = "#0D231A";
-            themeCardBg = c0;
-            themeSubtext = "#7B8EA8";
+            themeCardBg = data.cardBg || data.card_bg || data.card || data.surface || c0;
+            themeBorder = data.border || c8;
+            themeFg = fg;
+            themeSubtext = data.subtext || "#a6adc8";
+            themeBtnFg = "#0B0E14";
         }
     }
 
     function colorLuminance(clr) {
-        var c = Qt.color(clr);
+        if (!clr) return 0.2;
+        var c = (typeof clr === "string") ? Qt.color(clr) : clr;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(clr); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
@@ -744,7 +754,10 @@ Window {
 
         Rectangle {
             id: feltBg
-            anchors.fill: parent
+            anchors.top: root.isTiledDesktopMode ? parent.top : headerItem.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
             color: root.themeFelt
 
             Image {
@@ -768,12 +781,12 @@ Window {
 
             Rectangle {
                 anchors.fill: parent
-                color: root.themeCardBg
+                color: root.themeBg
                 border.color: root.themeBorder
                 border.width: 1
             }
 
-            // Left: Title + Draw Mode Badge
+            // Left: Title
             Row {
                 id: titleRow
                 anchors.left: parent.left
@@ -788,25 +801,6 @@ Window {
                     font.family: root.monoFontFamily
                     color: root.themeAccent
                     anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Rectangle {
-                    width: drawBadgeText.implicitWidth + 12
-                    height: 22
-                    radius: 11
-                    color: Qt.rgba(0, 0.94, 1, 0.15)
-                    border.color: root.themeAccent
-                    border.width: 1
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Text {
-                        id: drawBadgeText
-                        anchors.centerIn: parent
-                        text: "DRAW " + root.drawCount
-                        font.pixelSize: 9
-                        font.bold: true
-                        color: root.themeAccent
-                    }
                 }
             }
 
@@ -824,14 +818,14 @@ Window {
                     width: 64
                     height: 36
                     radius: 6
-                    color: Qt.darker(root.themeCardBg, 1.3)
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
                         anchors.centerIn: parent
-                        Text { text: "SCORE"; font.pixelSize: 7; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { text: root.score.toString(); font.pixelSize: 12; font.bold: true; color: root.themeAccent; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: "SCORE"; font.pixelSize: 7; font.bold: true; color: root.isDarkMode ? root.themeSubtext : "#64748b"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: root.score.toString(); font.pixelSize: 12; font.bold: true; color: root.isDarkMode ? root.themeAccent : (root.score > 0 ? "#15803d" : "#0f172a"); anchors.horizontalCenter: parent.horizontalCenter }
                     }
                 }
 
@@ -840,14 +834,14 @@ Window {
                     width: 58
                     height: 36
                     radius: 6
-                    color: Qt.darker(root.themeCardBg, 1.3)
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
                         anchors.centerIn: parent
-                        Text { text: "MOVES"; font.pixelSize: 7; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { text: root.moves.toString(); font.pixelSize: 12; font.bold: true; color: root.themeFg; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: "MOVES"; font.pixelSize: 7; font.bold: true; color: root.isDarkMode ? root.themeSubtext : "#64748b"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: root.moves.toString(); font.pixelSize: 12; font.bold: true; color: root.isDarkMode ? root.themeFg : "#0f172a"; anchors.horizontalCenter: parent.horizontalCenter }
                     }
                 }
 
@@ -856,14 +850,14 @@ Window {
                     width: 64
                     height: 36
                     radius: 6
-                    color: Qt.darker(root.themeCardBg, 1.3)
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
                         anchors.centerIn: parent
-                        Text { text: "TIME"; font.pixelSize: 7; color: root.themeSubtext; anchors.horizontalCenter: parent.horizontalCenter }
-                        Text { text: root.formatTimer(root.elapsedTime); font.pixelSize: 11; font.bold: true; color: root.themeFg; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: "TIME"; font.pixelSize: 7; font.bold: true; color: root.isDarkMode ? root.themeSubtext : "#64748b"; anchors.horizontalCenter: parent.horizontalCenter }
+                        Text { text: root.formatTimer(root.elapsedTime); font.pixelSize: 11; font.bold: true; color: root.isDarkMode ? root.themeFg : "#0f172a"; anchors.horizontalCenter: parent.horizontalCenter }
                     }
                 }
             }
@@ -882,7 +876,7 @@ Window {
                     width: parent.isCrowded ? 32 : 68
                     height: 32
                     radius: 6
-                    color: drawMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.25) : root.themeCardBg
+                    color: drawMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
 
@@ -908,7 +902,7 @@ Window {
                     width: parent.isCrowded ? 32 : 56
                     height: 32
                     radius: 6
-                    color: deckMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.25) : root.themeCardBg
+                    color: deckMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
 
@@ -934,7 +928,7 @@ Window {
                     width: parent.isCrowded ? 32 : 56
                     height: 32
                     radius: 6
-                    color: hintMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.25) : root.themeCardBg
+                    color: hintMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
 
@@ -960,7 +954,7 @@ Window {
                     width: parent.isCrowded ? 32 : 60
                     height: 32
                     radius: 6
-                    color: undoMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.25) : root.themeCardBg
+                    color: undoMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
 
@@ -986,7 +980,7 @@ Window {
                     width: 32
                     height: 32
                     radius: 6
-                    color: soundMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.25) : root.themeCardBg
+                    color: soundMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
 
@@ -1034,7 +1028,7 @@ Window {
                     width: 32
                     height: 32
                     radius: 6
-                    color: helpBtnMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.25) : root.themeCardBg
+                    color: helpBtnMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
 

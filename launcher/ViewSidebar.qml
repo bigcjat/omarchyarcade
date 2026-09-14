@@ -4,6 +4,16 @@ import QtQuick.Layouts
 
 Item {
     id: sidebarView
+    // Theme properties bound from main launcher or arcadeBackend
+    property bool isDarkMode: (typeof arcadeBackend !== "undefined" && arcadeBackend.isDarkMode !== undefined) ? arcadeBackend.isDarkMode : true
+    property color themeBackground: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeBackground) ? arcadeBackend.themeColors.themeBackground : (isDarkMode ? "#111116" : "#eff1f5")
+    property color themeSurface: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeSurface) ? arcadeBackend.themeColors.themeSurface : (isDarkMode ? "#181822" : "#ffffff")
+    property color themeSurfaceLight: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeSurfaceLight) ? arcadeBackend.themeColors.themeSurfaceLight : (isDarkMode ? "#222230" : "#f1f5f9")
+    property color themeBorder: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeBorder) ? arcadeBackend.themeColors.themeBorder : (isDarkMode ? "#2a2a38" : "#cbd5e1")
+    property color themeText: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeText) ? arcadeBackend.themeColors.themeText : (isDarkMode ? "#ffffff" : "#0f172a")
+    property color themeTextMuted: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeTextMuted) ? arcadeBackend.themeColors.themeTextMuted : (isDarkMode ? "#94a3b8" : "#64748b")
+    property color themeAccent: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeAccent) ? arcadeBackend.themeColors.themeAccent : (isDarkMode ? "#00f0ff" : "#1e66f5")
+    property color themeAccentAlt: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeAccentAlt) ? arcadeBackend.themeColors.themeAccentAlt : (isDarkMode ? "#e6458e" : "#d20f39")
     anchors.fill: parent
 
     property var games: []
@@ -50,8 +60,8 @@ Item {
             Layout.minimumWidth: 170
             Layout.maximumWidth: 300
             Layout.fillHeight: true
-            color: "#111118"
-            border.color: "#1e1e2c"
+            color: isDarkMode ? "#111118" : "#f8fafc"
+            border.color: root.themeCardBorder
             border.width: 1
             z: 10
 
@@ -63,8 +73,8 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 38
-                    color: "#14141e"
-                    border.color: "#1f1f2e"
+                    color: isDarkMode ? "#14141e" : "#ffffff"
+                    border.color: root.themeCardBorder
                     border.width: 1
 
                     RowLayout {
@@ -77,7 +87,7 @@ Item {
                             font.family: "monospace"
                             font.pixelSize: sidebarView.isNarrow ? 10 : 11
                             font.bold: true
-                            color: "#94a3b8"
+                            color: themeTextMuted
                         }
 
                         Item { Layout.fillWidth: true }
@@ -85,7 +95,7 @@ Item {
                         Rectangle {
                             height: 18
                             radius: 9
-                            color: "#1e2232"
+                            color: isDarkMode ? "#1e2232" : "#e2e8f0"
                             width: countLabel.implicitWidth + 10
 
                             Text {
@@ -115,7 +125,7 @@ Item {
                         id: rowItem
                         width: sidebarList.width
                         height: sidebarView.isNarrow ? 48 : 52
-                        color: isSelected ? "#1c1f2e" : (rowMouse.containsMouse ? "#151722" : "transparent")
+                        color: isSelected ? (isDarkMode ? "#1c1f2e" : "#e2e8f0") : (rowMouse.containsMouse ? (isDarkMode ? "#151722" : "#f1f5f9") : "transparent")
 
                         readonly property bool isSelected: index === sidebarView.selectedIndex
                         readonly property bool installed: modelData ? (typeof root !== "undefined" && root.isInstalled ? root.isInstalled(modelData.id) : true) : true
@@ -142,8 +152,8 @@ Item {
                                 width: sidebarView.isNarrow ? 28 : 32
                                 height: sidebarView.isNarrow ? 28 : 32
                                 radius: 4
-                                color: modelData && modelData.floppy_color ? modelData.floppy_color : "#20202a"
-                                border.color: "#0a0a0f"
+                                color: modelData && modelData.floppy_color ? modelData.floppy_color : (isDarkMode ? "#20202a" : "#cbd5e1")
+                                border.color: isDarkMode ? "#0a0a0f" : "#94a3b8"
                                 border.width: 1
 
                                 Image {
@@ -170,7 +180,7 @@ Item {
                                     text: modelData ? modelData.title : ""
                                     font.pixelSize: sidebarView.isNarrow ? 11 : 12
                                     font.bold: rowItem.isSelected
-                                    color: rowItem.isSelected ? "#FFFFFF" : (rowMouse.containsMouse ? "#e2e8f0" : "#94a3b8")
+                                    color: rowItem.isSelected ? (isDarkMode ? "#FFFFFF" : "#0f172a") : (rowMouse.containsMouse ? themeText : themeTextMuted)
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
                                 }
@@ -178,7 +188,7 @@ Item {
                                 Text {
                                     text: modelData ? (modelData.category + (modelData.size ? " • " + modelData.size : "")) : ""
                                     font.pixelSize: sidebarView.isNarrow ? 9 : 10
-                                    color: rowItem.isSelected ? themeAccent : "#64748b"
+                                    color: rowItem.isSelected ? themeAccent : themeTextMuted
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
                                 }
@@ -274,7 +284,7 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: "#0c0d14"
+            color: isDarkMode ? "#0c0d14" : themeBackground
             clip: true
 
             // Empty state if no game is selected, but games exist in list
@@ -292,7 +302,7 @@ Item {
                     text: "Select a game from the library list"
                     font.pixelSize: 16
                     font.bold: true
-                    color: "#94a3b8"
+                    color: isDarkMode ? "#94a3b8" : "#64748b"
                     Layout.alignment: Qt.AlignHCenter
                 }
             }
@@ -358,9 +368,9 @@ Item {
                                 anchors.fill: parent
                                 gradient: Gradient {
                                     orientation: Gradient.Vertical
-                                    GradientStop { position: 0.0; color: "#20000000" }
-                                    GradientStop { position: 0.45; color: "#850c0d14" }
-                                    GradientStop { position: 1.0; color: "#0c0d14" }
+                                    GradientStop { position: 0.0; color: isDarkMode ? "#20000000" : "transparent" }
+                                    GradientStop { position: 0.45; color: isDarkMode ? "#850c0d14" : "#bfeff1f5" }
+                                    GradientStop { position: 1.0; color: isDarkMode ? "#0c0d14" : themeBackground }
                                 }
                             }
                         }
@@ -389,15 +399,15 @@ Item {
                                         text: activeGame ? activeGame.category : ""
                                         font.pixelSize: 9
                                         font.bold: true
-                                        color: "#09090e"
+                                        color: (activeGame && activeGame.grid_color) ? (root.colorLuminance(activeGame.grid_color) > 0.5 ? "#09090e" : "#ffffff") : (root.colorLuminance(themeAccent) > 0.5 ? "#09090e" : "#ffffff")
                                     }
                                 }
 
                                 Rectangle {
                                     height: 20
                                     radius: 4
-                                    color: "#181d2a"
-                                    border.color: "#2c364e"
+                                    color: isDarkMode ? "#181d2a" : "#f1f5f9"
+                                    border.color: isDarkMode ? "#2c364e" : "#cbd5e1"
                                     border.width: 1
                                     width: yrText.implicitWidth + 12
 
@@ -408,15 +418,15 @@ Item {
                                         font.family: "monospace"
                                         font.pixelSize: 9
                                         font.bold: true
-                                        color: "#94a3b8"
+                                        color: themeTextMuted
                                     }
                                 }
 
                                 Rectangle {
                                     height: 20
                                     radius: 4
-                                    color: "#161926"
-                                    border.color: "#3b4261"
+                                    color: isDarkMode ? "#161926" : "#f1f5f9"
+                                    border.color: isDarkMode ? "#3b4261" : "#cbd5e1"
                                     border.width: 1
                                     width: verText.implicitWidth + 12
                                     visible: Boolean(activeGame && activeGame.version)
@@ -428,15 +438,15 @@ Item {
                                         font.family: "monospace"
                                         font.pixelSize: 9
                                         font.bold: true
-                                        color: "#93c5fd"
+                                        color: themeAccent
                                     }
                                 }
 
                                 Rectangle {
                                     height: 20
                                     radius: 4
-                                    color: "#181d2a"
-                                    border.color: "#2c364e"
+                                    color: isDarkMode ? "#181d2a" : "#f1f5f9"
+                                    border.color: isDarkMode ? "#2c364e" : "#cbd5e1"
                                     border.width: 1
                                     width: szText.implicitWidth + 12
 
@@ -447,7 +457,7 @@ Item {
                                         font.family: "monospace"
                                         font.pixelSize: 9
                                         font.bold: true
-                                        color: "#94a3b8"
+                                        color: themeTextMuted
                                     }
                                 }
                             }
@@ -458,7 +468,7 @@ Item {
                                 text: activeGame ? activeGame.title : ""
                                 font.pixelSize: sidebarView.isNarrow ? 26 : 34
                                 font.bold: true
-                                color: "#FFFFFF"
+                                color: isDarkMode ? "#FFFFFF" : "#0f172a"
                                 elide: Text.ElideRight
                             }
 
@@ -468,7 +478,7 @@ Item {
                                 text: activeGame ? activeGame.tagline : ""
                                 font.pixelSize: sidebarView.isNarrow ? 13 : 15
                                 font.italic: true
-                                color: "#94a3b8"
+                                color: isDarkMode ? "#94a3b8" : "#475569"
                                 elide: Text.ElideRight
                             }
 
@@ -637,8 +647,8 @@ Item {
                             width: parent.width
                             implicitHeight: synCol.implicitHeight + 28
                             radius: 10
-                            color: "#12141e"
-                            border.color: "#1e2232"
+                            color: root.themeCardBg
+                            border.color: root.themeCardBorder
                             border.width: 1
 
                             Column {
@@ -660,7 +670,7 @@ Item {
                                     text: activeGame ? activeGame.description : ""
                                     font.pixelSize: 12
                                     lineHeight: 1.4
-                                    color: "#cbd5e1"
+                                    color: isDarkMode ? "#cbd5e1" : "#334155"
                                     wrapMode: Text.WordWrap
                                 }
                             }
@@ -671,8 +681,8 @@ Item {
                             width: parent.width
                             implicitHeight: ctrlCol.implicitHeight + 24
                             radius: 10
-                            color: "#12141e"
-                            border.color: "#1e2232"
+                            color: root.themeCardBg
+                            border.color: root.themeCardBorder
                             border.width: 1
 
                             Column {
@@ -708,7 +718,7 @@ Item {
                                     text: activeGame && activeGame.controls ? (typeof activeGame.controls === "string" ? activeGame.controls : (activeGame.controls.keyboard || activeGame.controls.mouse || "Keyboard & Mouse")) : "Keyboard & Mouse"
                                     font.pixelSize: 11
                                     font.bold: true
-                                    color: "#f1f5f9"
+                                    color: themeText
                                     wrapMode: Text.WordWrap
                                     lineHeight: 1.3
                                 }
@@ -720,8 +730,8 @@ Item {
                             width: parent.width
                             implicitHeight: statsFlow.implicitHeight + 24
                             radius: 10
-                            color: "#12141e"
-                            border.color: "#1e2232"
+                            color: root.themeCardBg
+                            border.color: root.themeCardBorder
                             border.width: 1
 
                             Flow {
@@ -732,20 +742,20 @@ Item {
 
                                 Column {
                                     spacing: 2
-                                    Text { text: "PLATFORM"; font.pixelSize: 9; font.bold: true; color: "#64748b" }
-                                    Text { text: "Omarchy Linux Native"; font.pixelSize: 11; font.bold: true; color: "#e2e8f0" }
+                                    Text { text: "PLATFORM"; font.pixelSize: 9; font.bold: true; color: themeTextMuted }
+                                    Text { text: "Omarchy Linux Native"; font.pixelSize: 11; font.bold: true; color: themeText }
                                 }
 
                                 Column {
                                     spacing: 2
-                                    Text { text: "AUDIO ENGINE"; font.pixelSize: 9; font.bold: true; color: "#64748b" }
-                                    Text { text: "PySide6 / QAudio (Offline)"; font.pixelSize: 11; font.bold: true; color: "#e2e8f0" }
+                                    Text { text: "AUDIO ENGINE"; font.pixelSize: 9; font.bold: true; color: themeTextMuted }
+                                    Text { text: "PySide6 / QAudio (Offline)"; font.pixelSize: 11; font.bold: true; color: themeText }
                                 }
 
                                 Column {
                                     spacing: 2
-                                    Text { text: "TELEMETRY"; font.pixelSize: 9; font.bold: true; color: "#64748b" }
-                                    Text { text: "Zero Tracking / Local Only"; font.pixelSize: 11; font.bold: true; color: "#22c55e" }
+                                    Text { text: "TELEMETRY"; font.pixelSize: 9; font.bold: true; color: themeTextMuted }
+                                    Text { text: "Zero Tracking / Local Only"; font.pixelSize: 11; font.bold: true; color: "#16a34a" }
                                 }
                             }
                         }

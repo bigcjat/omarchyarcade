@@ -17,6 +17,7 @@ Window {
     property color themeBg: "#0B0E14"
     property color themeBoardBg: "#10141D"
     property color themeCardBg: "#171D2A"
+    property color themeCardHover: "#232D42"
     property color themeBorder: "#232D42"
     property color themeFg: "#DCE6F5"
     property color themeSubtext: "#7B8EA8"
@@ -24,18 +25,51 @@ Window {
     property color themeSecondary: "#FF4D6D"    // Neon Coral
     property color themeBtnBg: themeAccent
     property color themeBtnFg: "#0B0E14"
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
 
     // Checkers Vector Palette
     readonly property color cyanPiece: "#00F0FF"
     readonly property color coralPiece: "#FF4D6D"
-    readonly property color tileDark: "#151B27"
-    readonly property color tileLight: "#20283A"
-    readonly property color tileLastMove: "#1A3548"
-    readonly property color tileSelected: "#183F57"
+    readonly property color tileDark: isDarkMode ? "#151B27" : "#1e293b"
+    readonly property color tileLight: isDarkMode ? "#20283A" : "#334155"
+    readonly property color tileLastMove: isDarkMode ? "#1A3548" : "#28536b"
+    readonly property color tileSelected: isDarkMode ? "#183F57" : "#1e5b7a"
 
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+    }
+
+    function cycleTheme() {
+        var nextIsLight = root.isDarkMode;
+        if (nextIsLight) {
+            applyTheme({
+                background: "#f8fafc",
+                foreground: "#0f172a",
+                accent: "#0284c7",
+                card_bg: "#ffffff",
+                card_hover: "#f1f5f9",
+                boardBg: "#0f172a",
+                border: "#cbd5e1",
+                subtext: "#64748b"
+            }, "Light");
+        } else {
+            applyTheme({
+                background: "#0B0E14",
+                foreground: "#DCE6F5",
+                accent: "#00F0FF",
+                card_bg: "#171D2A",
+                card_hover: "#232D42",
+                boardBg: "#10141D",
+                border: "#232D42",
+                subtext: "#7B8EA8"
+            }, "Dark");
+        }
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     color: themeBg
@@ -125,19 +159,24 @@ Window {
         themeBg = bg;
         themeFg = fg;
         themeAccent = accent;
-        themeBorder = c8;
+        themeBorder = data.border || c8;
 
         var lum = colorLuminance(bg);
-        if (lum > 0.5) {
-            themeBoardBg = Qt.darker(bg, 1.06);
-            themeCardBg = Qt.darker(bg, 1.03);
-            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
+        isDarkMode = lum <= 0.5;
+        if (!isDarkMode) {
+            themeBoardBg = data.board_bg || data.boardBg || "#0f172a";
+            themeCardBg = data.card_bg || data.cardBg || "#ffffff";
+            themeCardHover = data.card_hover || "#f1f5f9";
+            themeSubtext = data.subtext || "#64748b";
+            themeBorder = data.border || "#cbd5e1";
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#0B0E14" : "#ffffff";
         } else {
-            themeBoardBg = Qt.darker(bg, 1.25);
-            themeCardBg = c0;
-            themeSubtext = "#7B8EA8";
+            themeBoardBg = data.board_bg || data.boardBg || "#10141D";
+            themeCardBg = data.card_bg || data.cardBg || c0;
+            themeCardHover = data.card_hover || "#232D42";
+            themeSubtext = data.subtext || "#7B8EA8";
+            themeBorder = data.border || c8;
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#0B0E14" : "#ffffff";
         }
@@ -436,6 +475,12 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_R) {
                 root.restartGame();
                 event.accepted = true;
@@ -475,6 +520,22 @@ Window {
         }
 
         // =====================================================================
+        // TOP OS-THEMED HEADER BAR (Adapts strictly to user desktop OS theme)
+        // =====================================================================
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: root.isTiledDesktopMode ? 0 : (subheaderItem.y + subheaderItem.height + 10)
+            visible: !root.isTiledDesktopMode
+            color: root.themeBg
+            border.color: root.themeBorder
+            border.width: 1
+            z: 0
+        }
+
+        // =====================================================================
         // ROW 1: HEADER ITEM
         // =====================================================================
         Item {
@@ -496,36 +557,12 @@ Window {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 2
 
-                Row {
-                    spacing: 8
-                    Text {
-                        text: "CHECKERS"
-                        font.pixelSize: Math.max(18, Math.min(24, headerItem.width * 0.06))
-                        font.bold: true
-                        color: root.themeAccent
-                        font.family: root.monoFontFamily
-                    }
-
-                    // Turn Badge Indicator
-                    Rectangle {
-                        height: 20
-                        width: turnText.implicitWidth + 14
-                        radius: 10
-                        color: (root.currentTurn === "w") ? Qt.rgba(0, 0.94, 1, 0.15) : Qt.rgba(1, 0.3, 0.43, 0.15)
-                        border.color: (root.currentTurn === "w") ? root.cyanPiece : root.coralPiece
-                        border.width: 1
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        Text {
-                            id: turnText
-                            anchors.centerIn: parent
-                            text: (root.isAiThinking) ? "THINKING..." : (root.currentTurn === root.playerColor ? "YOUR TURN" : "AI TURN")
-                            font.pixelSize: 9
-                            font.bold: true
-                            color: (root.currentTurn === "w") ? root.cyanPiece : root.coralPiece
-                            font.family: root.monoFontFamily
-                        }
-                    }
+                Text {
+                    text: "CHECKERS"
+                    font.pixelSize: Math.max(18, Math.min(24, headerItem.width * 0.06))
+                    font.bold: true
+                    color: root.themeAccent
+                    font.family: root.monoFontFamily
                 }
 
                 Text {
@@ -550,8 +587,8 @@ Window {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.16))
                     height: 42
                     radius: 8
-                    color: diffMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.themeBorder
+                    color: diffMouse.containsMouse ? (root.isDarkMode ? root.themeCardHover : "#f1f5f9") : (root.isDarkMode ? root.themeCardBg : "#ffffff")
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -562,7 +599,7 @@ Window {
                             text: "AI LEVEL"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -587,8 +624,8 @@ Window {
                     width: Math.max(54, Math.min(74, headerItem.width * 0.14))
                     height: 42
                     radius: 8
-                    color: root.themeBoardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -599,14 +636,14 @@ Window {
                             text: "DIFF"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: (root.materialDiff === 0) ? "EVEN" : ((root.materialDiff > 0 ? "+" : "") + root.materialDiff)
                             font.pixelSize: 12
                             font.bold: true
-                            color: (root.materialDiff > 0) ? root.cyanPiece : ((root.materialDiff < 0) ? root.coralPiece : root.themeFg)
+                            color: (root.materialDiff > 0) ? (root.isDarkMode ? root.cyanPiece : "#0284c7") : ((root.materialDiff < 0) ? (root.isDarkMode ? root.coralPiece : "#dc2626") : (root.isDarkMode ? root.themeFg : "#0f172a"))
                         }
                     }
                 }
@@ -639,15 +676,15 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : 80
                     radius: 6
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.themeBorder
+                    color: helpMouse.containsMouse ? (root.isDarkMode ? root.themeCardHover : "#f1f5f9") : (root.isDarkMode ? root.themeCardBg : "#ffffff")
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Row {
                         anchors.centerIn: parent
                         spacing: 4
                         Text { text: "?"; font.pixelSize: 12; font.bold: true; color: root.themeAccent }
-                        Text { text: "Help"; font.pixelSize: 11; font.bold: true; color: root.themeFg; visible: !subheaderItem.isCrowded }
+                        Text { text: "Help"; font.pixelSize: 11; font.bold: true; color: root.isDarkMode ? root.themeFg : "#0f172a"; visible: !subheaderItem.isCrowded }
                     }
 
                     MouseArea {
@@ -664,15 +701,15 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : 84
                     radius: 6
-                    color: flipMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.themeBorder
+                    color: flipMouse.containsMouse ? (root.isDarkMode ? root.themeCardHover : "#f1f5f9") : (root.isDarkMode ? root.themeCardBg : "#ffffff")
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Row {
                         anchors.centerIn: parent
                         spacing: 4
                         Text { text: "🔄"; font.pixelSize: 11 }
-                        Text { text: "Flip (F)"; font.pixelSize: 11; font.bold: true; color: root.themeFg; visible: !subheaderItem.isCrowded }
+                        Text { text: "Flip (F)"; font.pixelSize: 11; font.bold: true; color: root.isDarkMode ? root.themeFg : "#0f172a"; visible: !subheaderItem.isCrowded }
                     }
 
                     MouseArea {
@@ -689,15 +726,15 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : 84
                     radius: 6
-                    color: undoMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.themeBorder
+                    color: undoMouse.containsMouse ? (root.isDarkMode ? root.themeCardHover : "#f1f5f9") : (root.isDarkMode ? root.themeCardBg : "#ffffff")
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Row {
                         anchors.centerIn: parent
                         spacing: 4
                         Text { text: "↩️"; font.pixelSize: 11 }
-                        Text { text: "Undo (U)"; font.pixelSize: 11; font.bold: true; color: root.themeFg; visible: !subheaderItem.isCrowded }
+                        Text { text: "Undo (U)"; font.pixelSize: 11; font.bold: true; color: root.isDarkMode ? root.themeFg : "#0f172a"; visible: !subheaderItem.isCrowded }
                     }
 
                     MouseArea {
@@ -720,15 +757,15 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : 70
                     radius: 6
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.isMuted ? root.themeBorder : root.themeAccent
+                    color: muteMouse.containsMouse ? (root.isDarkMode ? root.themeCardHover : "#f1f5f9") : (root.isDarkMode ? root.themeCardBg : "#ffffff")
+                    border.color: root.isMuted ? (root.isDarkMode ? root.themeBorder : "#cbd5e1") : root.themeAccent
                     border.width: 1
 
                     Row {
                         anchors.centerIn: parent
                         spacing: 4
                         Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 12 }
-                        Text { text: root.isMuted ? "Muted" : "Sound"; font.pixelSize: 11; font.bold: true; color: root.themeFg; visible: !subheaderItem.isCrowded }
+                        Text { text: root.isMuted ? "Muted" : "Sound"; font.pixelSize: 11; font.bold: true; color: root.isMuted ? (root.isDarkMode ? root.themeSubtext : "#64748b") : (root.isDarkMode ? root.themeFg : "#0f172a"); visible: !subheaderItem.isCrowded }
                     }
 
                     MouseArea {
@@ -766,10 +803,6 @@ Window {
         }
 
         // =====================================================================
-        // CAPTURED PIECES TRAY: OPPONENT (TOP TRAY)
-        // =====================================================================
-        Item {
-                    // =====================================================================
         // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
         // =====================================================================
         Rectangle {
@@ -868,8 +901,9 @@ Window {
             }
         }
 
-        id: topTray
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
+        Item {
+            id: topTray
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
             anchors.topMargin: root.isTiledDesktopMode ? 6 : 8
             anchors.left: boardWrapper.left
             anchors.right: boardWrapper.right
@@ -884,7 +918,7 @@ Window {
                     text: "AI (" + (root.playerColor === "w" ? "CORAL" : "CYAN") + "):"
                     font.pixelSize: 9
                     font.bold: true
-                    color: root.themeSubtext
+                    color: root.isDarkMode ? root.themeSubtext : "#475569"
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
@@ -924,7 +958,7 @@ Window {
                 anchors.centerIn: parent
                 color: root.themeBoardBg
                 radius: 8
-                border.color: root.themeBorder
+                border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                 border.width: 2
                 clip: true
 
@@ -1156,7 +1190,7 @@ Window {
                     text: "YOU (" + (root.playerColor === "w" ? "CYAN" : "CORAL") + "):"
                     font.pixelSize: 9
                     font.bold: true
-                    color: root.themeSubtext
+                    color: root.isDarkMode ? root.themeSubtext : "#475569"
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
@@ -1192,8 +1226,8 @@ Window {
                 width: Math.min(parent.width * 0.88, 380)
                 height: helpCol.height + 40
                 anchors.centerIn: parent
-                color: root.themeCardBg
-                border.color: root.themeBorder
+                color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                 border.width: 1
                 radius: 12
 
@@ -1214,7 +1248,7 @@ Window {
                     Text {
                         text: root.helpText
                         font.pixelSize: 12
-                        color: root.themeFg
+                        color: root.isDarkMode ? root.themeFg : "#0f172a"
                         lineHeight: 1.4
                         width: parent.width
                         wrapMode: Text.WordWrap
@@ -1330,8 +1364,8 @@ Window {
             width: toastText.implicitWidth + 24
             height: 28
             radius: 14
-            color: root.themeCardBg
-            border.color: root.themeBorder
+            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
             border.width: 1
             opacity: 0
             z: 800
@@ -1341,7 +1375,7 @@ Window {
                 anchors.centerIn: parent
                 font.pixelSize: 11
                 font.bold: true
-                color: root.themeFg
+                color: root.isDarkMode ? root.themeFg : "#0f172a"
             }
 
             function show(msg) {

@@ -27,7 +27,12 @@ screenshots/
 
 # Packaging builds & binaries
 build/
+dist/
+*.tar.gz
 *.dmg
 *.AppImage
 *.iconset
+
+# Internal standards & reviews
+OMARCHY_STANDARDS_REVIEW.md
 

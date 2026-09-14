@@ -23,10 +23,16 @@ Window {
     property color themeAccent: "#00E5FF"
     property color themeBtnBg: themeAccent
     property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
+    property color themeCardHover: isDarkMode ? Qt.lighter(themeCardBg, 1.15) : "#f1f5f9"
 
     // WCAG contrast helper ensuring buttons are always readable in light/dark themes
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
@@ -184,21 +190,20 @@ Window {
         themeBg = bg;
         themeFg = fg;
         themeAccent = accent;
-        themeBorder = c8;
 
         var lum = colorLuminance(bg);
         if (lum > 0.5) {
-            themeBoardBg = Qt.darker(bg, 1.25);
-            themeCardBg = Qt.darker(bg, 1.03);
-            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
-            themeBorder = c8 || Qt.darker(bg, 1.15);
+            themeBoardBg = data.boardBg || "#05070B";
+            themeCardBg = data.cardBg || data.card_bg || data.card || data.surface || "#ffffff";
+            themeBorder = data.border || "#cbd5e1";
+            themeSubtext = data.subtext || "#64748b";
             themeBtnBg = accent;
-            themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+            themeBtnFg = "#ffffff";
         } else {
-            themeBoardBg = Qt.darker(bg, 1.45);
-            themeCardBg = c0;
-            themeSubtext = "#a6adc8";
-            themeBorder = c8;
+            themeBoardBg = data.boardBg || "#05070B";
+            themeCardBg = data.cardBg || data.card_bg || data.card || data.surface || c0;
+            themeBorder = data.border || c8;
+            themeSubtext = data.subtext || "#a6adc8";
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         }
@@ -351,7 +356,6 @@ Window {
         anchors.fill: parent
         color: root.themeBg
         focus: true
-        Behavior on color { ColorAnimation { duration: 150 } }
 
         Keys.onPressed: function(event) {
             if (splashEnabled && splashScreen.visible && splashScreen.opacity > 0) {
@@ -483,343 +487,339 @@ Window {
         }
 
         // =====================================================================
-        // 2048 DESIGN STANDARD: ROW 1 (Header Item)
+        // HEADER BAR (ROW 1 & 2)
         // =====================================================================
-        Item {
-            id: headerItem
-            visible: !root.isTiledDesktopMode
+        Rectangle {
+            id: headerBar
+            z: 20
             anchors.top: parent.top
-            anchors.topMargin: visible ? 16 : 0
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
-            height: visible ? Math.max(titleCol.height, scoreRow.height) : 0
-
-            Column {
-                id: titleCol
-                anchors.left: parent.left
-                anchors.right: scoreRow.left
-                anchors.rightMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 2
-
-                Text {
-                    width: parent.width
-                    elide: Text.ElideRight
-                    text: "Starframe"
-                    font.pixelSize: Math.max(20, Math.min(30, headerItem.width * 0.07))
-                    font.bold: true
-                    color: root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 250 } }
-                }
-                Text {
-                    width: parent.width
-                    elide: Text.ElideRight
-                    text: (root.gameState === "ship_select" ? "TACTICAL HANGAR • CHOOSE FIGHTER" : root.levelName) + " • Bombs: " + root.superBombs + " • Shields: " + Math.max(0, Math.round((root.shields / root.maxShields) * 100)) + "%"
-                    font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
-                    color: root.themeSubtext
-                    Behavior on color { ColorAnimation { duration: 250 } }
-                }
-            }
-
-            // Stat Cards on the right
-            Row {
-                id: scoreRow
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
-
-                // SCORE Card
-                Rectangle {
-                    width: Math.max(64, Math.min(84, headerItem.width * 0.16))
-                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
-                    radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 2
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "SCORE"
-                            font.pixelSize: 9
-                            font.bold: true
-                            color: root.themeSubtext
-                        }
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: root.score.toString()
-                            font.pixelSize: Math.max(12, Math.min(18, parent.width * 0.28))
-                            font.bold: true
-                            font.family: root.monoFontFamily
-                            color: root.themeFg
-                        }
-                    }
-                }
-
-                // BEST Card
-                Rectangle {
-                    width: Math.max(64, Math.min(84, headerItem.width * 0.16))
-                    height: Math.max(42, Math.min(52, headerItem.width * 0.10))
-                    radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 2
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "BEST"
-                            font.pixelSize: 9
-                            font.bold: true
-                            color: root.themeSubtext
-                        }
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: root.bestScore.toString()
-                            font.pixelSize: Math.max(12, Math.min(18, parent.width * 0.28))
-                            font.bold: true
-                            font.family: root.monoFontFamily
-                            color: root.themeFg
-                        }
-                    }
-                }
-            }
-        }
-
-        // =====================================================================
-        // 2048 DESIGN STANDARD: ROW 2 (Action Bar / Subheader)
-        // =====================================================================
-        Item {
-            id: subheaderItem
+            height: root.isTiledDesktopMode ? 0 : (headerItem.height + subheaderItem.height + 28)
             visible: !root.isTiledDesktopMode
-            anchors.top: headerItem.bottom
-            anchors.topMargin: visible ? 12 : 0
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
-            height: visible ? 32 : 0
+            color: root.themeBg
 
-            property bool isCrowded: width < 480
-
-            // Left cluster ("How to Play" + "Full Field" Toggle)
-            Row {
+            Item {
+                id: headerItem
+                anchors.top: parent.top
+                anchors.topMargin: 12
                 anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
+                anchors.right: parent.right
+                anchors.leftMargin: 16
+                anchors.rightMargin: 16
+                height: Math.max(titleCol.height, scoreRow.height)
 
-                Rectangle {
-                    id: helpBtn
-                    height: 32
-                    width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
-                    radius: 8
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                Column {
+                    id: titleCol
+                    anchors.left: parent.left
+                    anchors.right: scoreRow.left
+                    anchors.rightMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 2
 
-                    Row {
-                        id: helpRow
-                        anchors.centerIn: parent
-                        spacing: 5
-                        Text {
-                            text: "?"
-                            font.pixelSize: 13
-                            font.bold: true
-                            color: root.themeAccent
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: "How to Play"
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.themeFg
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: !subheaderItem.isCrowded
-                        }
+                    Text {
+                        width: parent.width
+                        elide: Text.ElideRight
+                        text: "Starframe"
+                        font.pixelSize: Math.max(20, Math.min(30, headerItem.width * 0.07))
+                        font.bold: true
+                        color: root.themeAccent
                     }
-
-                    MouseArea {
-                        id: helpMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleHelp()
+                    Text {
+                        width: parent.width
+                        elide: Text.ElideRight
+                        text: (root.gameState === "ship_select" ? "TACTICAL HANGAR • CHOOSE FIGHTER" : root.levelName) + " • Bombs: " + root.superBombs + " • Shields: " + Math.max(0, Math.round((root.shields / root.maxShields) * 100)) + "%"
+                        font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
+                        color: root.themeSubtext
                     }
                 }
 
-                // Full Playfield View Toggle Button
-                Rectangle {
-                    id: viewModeBtn
-                    height: 32
-                    width: subheaderItem.isCrowded ? 32 : (viewModeRow.implicitWidth + 18)
-                    radius: 8
-                    color: viewModeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                // Stat Cards on the right
+                Row {
+                    id: scoreRow
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 8
 
-                    Row {
-                        id: viewModeRow
-                        anchors.centerIn: parent
-                        spacing: 5
-                        Text {
-                            text: root.fullPlayfield ? "🔲" : "⛶"
-                            font.pixelSize: 12
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: root.fullPlayfield ? "Windowed (⇧F)" : "Full Field (⇧F)"
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.themeFg
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: !subheaderItem.isCrowded
+                    // SCORE Card
+                    Rectangle {
+                        width: Math.max(64, Math.min(84, headerItem.width * 0.16))
+                        height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                        radius: 8
+                        color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                        border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                        border.width: 1
+
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: 2
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: "SCORE"
+                                font.pixelSize: 9
+                                font.bold: true
+                                color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                            }
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: root.score.toString()
+                                font.pixelSize: Math.max(12, Math.min(18, parent.width * 0.28))
+                                font.bold: true
+                                font.family: root.monoFontFamily
+                                color: root.isDarkMode ? root.themeFg : "#0f172a"
+                            }
                         }
                     }
 
-                    MouseArea {
-                        id: viewModeMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.fullPlayfield = !root.fullPlayfield;
-                            soundToast.show(root.fullPlayfield ? "⛶ Full Window Playfield" : "🔲 Standard Windowed View");
+                    // BEST Card
+                    Rectangle {
+                        width: Math.max(64, Math.min(84, headerItem.width * 0.16))
+                        height: Math.max(42, Math.min(52, headerItem.width * 0.10))
+                        radius: 8
+                        color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                        border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                        border.width: 1
+
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: 2
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: "BEST"
+                                font.pixelSize: 9
+                                font.bold: true
+                                color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                            }
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: root.bestScore.toString()
+                                font.pixelSize: Math.max(12, Math.min(18, parent.width * 0.28))
+                                font.bold: true
+                                font.family: root.monoFontFamily
+                                color: root.isDarkMode ? root.themeAccent : "#15803d"
+                            }
                         }
                     }
                 }
             }
 
-            // Right cluster (Actions: Mute, Restart)
-            Row {
+            // ROW 2: Subheader Action Bar
+            Item {
+                id: subheaderItem
+                anchors.top: headerItem.bottom
+                anchors.topMargin: 8
+                anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: subheaderItem.isCrowded ? 6 : 8
+                anchors.leftMargin: 16
+                anchors.rightMargin: 16
+                height: 32
 
-                // Pause Button
-                Rectangle {
-                    id: pauseBtn
-                    height: 32
-                    width: subheaderItem.isCrowded ? 32 : (pauseRow.implicitWidth + 18)
-                    radius: 8
-                    color: pauseMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.isPaused ? root.themeAccent : root.themeBorder
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
+                property bool isCrowded: width < 480
 
-                    Row {
-                        id: pauseRow
-                        anchors.centerIn: parent
-                        spacing: 4
-                        Text {
-                            text: root.isPaused ? "▶️" : "⏸️"
-                            font.pixelSize: 13
-                            anchors.verticalCenter: parent.verticalCenter
+                // Left cluster ("How to Play" + "Full Field" Toggle)
+                Row {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 8
+
+                    Rectangle {
+                        id: helpBtn
+                        height: 32
+                        width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
+                        radius: 8
+                        color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                        border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
+                        border.width: 1
+
+                        Row {
+                            id: helpRow
+                            anchors.centerIn: parent
+                            spacing: 5
+                            Text {
+                                text: "?"
+                                font.pixelSize: 13
+                                font.bold: true
+                                color: root.themeAccent
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: "How to Play"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: root.themeFg
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: !subheaderItem.isCrowded
+                            }
                         }
-                        Text {
-                            text: root.isPaused ? "Resume (P)" : "Pause (P)"
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.isPaused ? root.themeAccent : root.themeFg
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: !subheaderItem.isCrowded
+
+                        MouseArea {
+                            id: helpMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.toggleHelp()
                         }
                     }
 
-                    MouseArea {
-                        id: pauseMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.togglePause()
+                    // Full Playfield View Toggle Button
+                    Rectangle {
+                        id: viewModeBtn
+                        height: 32
+                        width: subheaderItem.isCrowded ? 32 : (viewModeRow.implicitWidth + 18)
+                        radius: 8
+                        color: viewModeMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                        border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
+                        border.width: 1
+
+                        Row {
+                            id: viewModeRow
+                            anchors.centerIn: parent
+                            spacing: 5
+                            Text {
+                                text: root.fullPlayfield ? "🔲" : "⛶"
+                                font.pixelSize: 12
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: root.fullPlayfield ? "Windowed (⇧F)" : "Full Field (⇧F)"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: root.themeFg
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: !subheaderItem.isCrowded
+                            }
+                        }
+
+                        MouseArea {
+                            id: viewModeMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.fullPlayfield = !root.fullPlayfield;
+                                soundToast.show(root.fullPlayfield ? "⛶ Full Window Playfield" : "🔲 Standard Windowed View");
+                            }
+                        }
                     }
                 }
 
-                // Mute Button
-                Rectangle {
-                    id: muteBtn
-                    height: 32
-                    width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
-                    radius: 8
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.isMuted ? root.themeBorder : root.themeAccent
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
+                // Right cluster (Actions: Mute, Restart)
+                Row {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: subheaderItem.isCrowded ? 6 : 8
 
-                    Row {
-                        id: muteRow
-                        anchors.centerIn: parent
-                        spacing: 4
-                        Text {
-                            text: root.isMuted ? "🔇" : "🔊"
-                            font.pixelSize: 13
-                            anchors.verticalCenter: parent.verticalCenter
+                    // Pause Button
+                    Rectangle {
+                        id: pauseBtn
+                        height: 32
+                        width: subheaderItem.isCrowded ? 32 : (pauseRow.implicitWidth + 18)
+                        radius: 8
+                        color: pauseMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                        border.color: root.isPaused ? root.themeAccent : root.themeBorder
+                        border.width: 1
+
+                        Row {
+                            id: pauseRow
+                            anchors.centerIn: parent
+                            spacing: 4
+                            Text {
+                                text: root.isPaused ? "▶️" : "⏸️"
+                                font.pixelSize: 13
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: root.isPaused ? "Resume (P)" : "Pause (P)"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: root.isPaused ? root.themeAccent : root.themeFg
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: !subheaderItem.isCrowded
+                            }
                         }
-                        Text {
-                            text: root.isMuted ? "Muted" : "Sound"
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.isMuted ? root.themeSubtext : root.themeFg
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: !subheaderItem.isCrowded
-                        }
-                    }
 
-                    MouseArea {
-                        id: muteMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleMute()
-                    }
-                }
-
-                // Primary Action Button (New Game)
-                Rectangle {
-                    id: restartBtn
-                    height: 32
-                    width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
-                    radius: 8
-                    color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 150 } }
-
-                    Row {
-                        id: restartRow
-                        anchors.centerIn: parent
-                        spacing: 4
-                        Text {
-                            text: "🔄"
-                            font.pixelSize: 13
-                            visible: subheaderItem.isCrowded
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: "New Game (R)"
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.themeBtnFg
-                            visible: !subheaderItem.isCrowded
-                            anchors.verticalCenter: parent.verticalCenter
+                        MouseArea {
+                            id: pauseMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.togglePause()
                         }
                     }
 
-                    MouseArea {
-                        id: restartMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.startNewGameFlow()
+                    // Mute Button
+                    Rectangle {
+                        id: muteBtn
+                        height: 32
+                        width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
+                        radius: 8
+                        color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                        border.color: root.isMuted ? root.themeBorder : root.themeAccent
+                        border.width: 1
+
+                        Row {
+                            id: muteRow
+                            anchors.centerIn: parent
+                            spacing: 4
+                            Text {
+                                text: root.isMuted ? "🔇" : "🔊"
+                                font.pixelSize: 13
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: root.isMuted ? "Muted" : "Sound"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: root.isMuted ? root.themeSubtext : root.themeFg
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: !subheaderItem.isCrowded
+                            }
+                        }
+
+                        MouseArea {
+                            id: muteMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.toggleMute()
+                        }
+                    }
+
+                    // Primary Action Button (New Game)
+                    Rectangle {
+                        id: restartBtn
+                        height: 32
+                        width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
+                        radius: 8
+                        color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+
+                        Row {
+                            id: restartRow
+                            anchors.centerIn: parent
+                            spacing: 4
+                            Text {
+                                text: "🔄"
+                                font.pixelSize: 13
+                                visible: subheaderItem.isCrowded
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: "New Game (R)"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: root.themeBtnFg
+                                visible: !subheaderItem.isCrowded
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+
+                        MouseArea {
+                            id: restartMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.startNewGameFlow()
+                        }
                     }
                 }
             }
@@ -1077,22 +1077,22 @@ Window {
         // =====================================================================
         Item {
             id: playArea
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 6 : 12
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 0
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: root.isTiledDesktopMode ? 0 : 16
+            anchors.bottomMargin: 0
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: root.isTiledDesktopMode ? 0 : 16
-            anchors.rightMargin: root.isTiledDesktopMode ? 0 : 16
+            anchors.leftMargin: 0
+            anchors.rightMargin: 0
 
             Rectangle {
                 id: boardContainer
                 anchors.fill: parent
                 color: root.themeBoardBg
-                border.color: root.isTiledDesktopMode ? "transparent" : root.themeBorder
-                border.width: root.isTiledDesktopMode ? 0 : 1
-                radius: root.isTiledDesktopMode ? 0 : 12
+                border.color: root.themeBorder
+                border.width: 1
+                radius: 0
                 clip: true
 
                 // Vector Wireframe 60 FPS Canvas (Cooperative scene graph rendering)
@@ -1478,14 +1478,14 @@ Window {
                         text: "SELECT COMBAT CRAFT"
                         font.pixelSize: Math.max(16, Math.min(22, parent.parent.width * 0.048))
                         font.bold: true
-                        color: root.themeFg
+                        color: "#ffffff"
                     }
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "Choose 1 of 3 specialized fighters • Press [1], [2], [3] or [← / →]"
                         font.pixelSize: 11
-                        color: root.themeSubtext
+                        color: "#cbd5e1"
                     }
                 }
 
@@ -1549,13 +1549,10 @@ Window {
                                 radius: 10
                                 property bool isSelected: root.selectedShip === modelData.shipId
 
-                                color: isSelected ? Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.12) : (cardMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.08) : root.themeCardBg)
-                                border.color: isSelected ? root.themeAccent : (cardMouse.containsMouse ? Qt.lighter(root.themeBorder, 1.2) : root.themeBorder)
+                                color: isSelected ? Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.18) : (cardMouse.containsMouse ? "#1e2638" : "#121722")
+                                border.color: isSelected ? root.themeAccent : (cardMouse.containsMouse ? "#3b4861" : "#222c3d")
                                 border.width: isSelected ? 2 : 1
                                 clip: true
-
-                                Behavior on color { ColorAnimation { duration: 150 } }
-                                Behavior on border.color { ColorAnimation { duration: 150 } }
 
                                 MouseArea {
                                     id: cardMouse
@@ -1579,7 +1576,7 @@ Window {
                                         height: 16
                                         width: badgeText.implicitWidth + 10
                                         radius: 4
-                                        color: cardRoot.isSelected ? root.themeAccent : root.themeBorder
+                                        color: cardRoot.isSelected ? root.themeAccent : "#222c3d"
                                         Text {
                                             id: badgeText
                                             anchors.centerIn: parent
@@ -1587,7 +1584,7 @@ Window {
                                             font.pixelSize: 8
                                             font.bold: true
                                             font.family: root.monoFontFamily
-                                            color: cardRoot.isSelected ? root.themeBtnFg : root.themeSubtext
+                                            color: cardRoot.isSelected ? root.themeBtnFg : "#94a3b8"
                                         }
                                     }
 
@@ -1618,7 +1615,7 @@ Window {
                                             var ctx = getContext("2d");
                                             ctx.clearRect(0, 0, width, height);
                                             var isSel = root.selectedShip === modelData.shipId;
-                                            var shipCol = isSel ? root.themeAccent.toString() : root.themeSubtext.toString();
+                                            var shipCol = isSel ? root.themeAccent.toString() : "#94a3b8";
                                             Engine.drawShipPreview(ctx, modelData.shipId, width / 2, height / 2 + 4, 1.25, shipSelectOverlay.previewYaw, shipCol);
                                         }
                                     }
@@ -1629,7 +1626,7 @@ Window {
                                         text: modelData.name
                                         font.pixelSize: 12
                                         font.bold: true
-                                        color: cardRoot.isSelected ? root.themeAccent : root.themeFg
+                                        color: cardRoot.isSelected ? root.themeAccent : "#ffffff"
                                     }
 
                                     // Role
@@ -1639,7 +1636,7 @@ Window {
                                         font.pixelSize: 8
                                         font.bold: true
                                         font.family: root.monoFontFamily
-                                        color: root.themeSubtext
+                                        color: "#94a3b8"
                                     }
 
                                     // Stat Bars (Speed, Armor, Firepower)
@@ -1650,7 +1647,7 @@ Window {
                                         // Speed
                                         Row {
                                             width: parent.width
-                                            Text { text: "SPD"; font.pixelSize: 8; font.bold: true; font.family: root.monoFontFamily; color: root.themeSubtext; width: 26 }
+                                            Text { text: "SPD"; font.pixelSize: 8; font.bold: true; font.family: root.monoFontFamily; color: "#94a3b8"; width: 26 }
                                             Rectangle {
                                                 height: 4; radius: 2; color: "#222733"; anchors.verticalCenter: parent.verticalCenter; width: parent.width - 26
                                                 Rectangle { height: parent.height; radius: 2; width: parent.width * modelData.speedPct; color: cardRoot.isSelected ? root.themeAccent : "#5588aa" }
@@ -1660,7 +1657,7 @@ Window {
                                         // Armor
                                         Row {
                                             width: parent.width
-                                            Text { text: "ARM"; font.pixelSize: 8; font.bold: true; font.family: root.monoFontFamily; color: root.themeSubtext; width: 26 }
+                                            Text { text: "ARM"; font.pixelSize: 8; font.bold: true; font.family: root.monoFontFamily; color: "#94a3b8"; width: 26 }
                                             Rectangle {
                                                 height: 4; radius: 2; color: "#222733"; anchors.verticalCenter: parent.verticalCenter; width: parent.width - 26
                                                 Rectangle { height: parent.height; radius: 2; width: parent.width * modelData.armorPct; color: cardRoot.isSelected ? "#00FF66" : "#449966" }
@@ -1670,7 +1667,7 @@ Window {
                                         // Firepower
                                         Row {
                                             width: parent.width
-                                            Text { text: "POW"; font.pixelSize: 8; font.bold: true; font.family: root.monoFontFamily; color: root.themeSubtext; width: 26 }
+                                            Text { text: "POW"; font.pixelSize: 8; font.bold: true; font.family: root.monoFontFamily; color: "#94a3b8"; width: 26 }
                                             Rectangle {
                                                 height: 4; radius: 2; color: "#222733"; anchors.verticalCenter: parent.verticalCenter; width: parent.width - 26
                                                 Rectangle { height: parent.height; radius: 2; width: parent.width * modelData.firepowerPct; color: cardRoot.isSelected ? "#FF5533" : "#aa6644" }
@@ -1683,7 +1680,7 @@ Window {
                                         width: parent.width
                                         text: modelData.desc
                                         font.pixelSize: 8
-                                        color: root.themeSubtext
+                                        color: "#cbd5e1"
                                         wrapMode: Text.Wrap
                                         horizontalAlignment: Text.AlignHCenter
                                         maximumLineCount: 2
@@ -1699,7 +1696,7 @@ Window {
                                         width: statusText.implicitWidth + 12
                                         radius: 4
                                         color: cardRoot.isSelected ? Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.25) : "transparent"
-                                        border.color: cardRoot.isSelected ? root.themeAccent : root.themeBorder
+                                        border.color: cardRoot.isSelected ? root.themeAccent : "#222c3d"
                                         border.width: 1
 
                                         Text {
@@ -1709,7 +1706,7 @@ Window {
                                             font.pixelSize: 8
                                             font.bold: true
                                             font.family: root.monoFontFamily
-                                            color: cardRoot.isSelected ? root.themeAccent : root.themeSubtext
+                                            color: cardRoot.isSelected ? root.themeAccent : "#94a3b8"
                                         }
                                     }
                                 }
@@ -1730,7 +1727,6 @@ Window {
                         height: 38
                         radius: 8
                         color: deployMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-                        Behavior on color { ColorAnimation { duration: 150 } }
 
                         Row {
                             anchors.centerIn: parent
@@ -1963,8 +1959,8 @@ Window {
                         width: 125
                         height: 40
                         radius: 8
-                        color: helpPauseMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                        border.color: root.themeBorder
+                        color: helpPauseMouse.containsMouse ? "#2a364f" : "#1a2233"
+                        border.color: "#3b4861"
                         border.width: 1
 
                         Row {
@@ -1973,7 +1969,7 @@ Window {
                             Text { text: "?"; font.bold: true; font.pixelSize: 12; color: root.themeAccent; anchors.verticalCenter: parent.verticalCenter }
                             Text {
                                 text: "HOW TO PLAY"
-                                color: root.themeFg
+                                color: "#ffffff"
                                 font.bold: true
                                 font.pixelSize: 11
                                 anchors.verticalCenter: parent.verticalCenter
@@ -1994,8 +1990,8 @@ Window {
                         width: 130
                         height: 40
                         radius: 8
-                        color: restartPauseMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                        border.color: root.themeBorder
+                        color: restartPauseMouse.containsMouse ? "#2a364f" : "#1a2233"
+                        border.color: "#3b4861"
                         border.width: 1
 
                         Row {
@@ -2004,7 +2000,7 @@ Window {
                             Text { text: "🔄"; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
                             Text {
                                 text: "NEW GAME (R)"
-                                color: root.themeFg
+                                color: "#ffffff"
                                 font.bold: true
                                 font.pixelSize: 11
                                 anchors.verticalCenter: parent.verticalCenter
@@ -2023,7 +2019,7 @@ Window {
 
                 Text {
                     text: "Press P or Esc to resume"
-                    color: root.themeSubtext
+                    color: "#94a3b8"
                     font.pixelSize: 11
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -2064,7 +2060,7 @@ Window {
 
                 Text {
                     text: "Final Score: " + root.score
-                    color: root.themeFg
+                    color: "#ffffff"
                     font.pixelSize: 18
                     font.bold: true
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -2072,7 +2068,7 @@ Window {
 
                 Text {
                     text: "Best: " + root.bestScore
-                    color: root.themeSubtext
+                    color: "#94a3b8"
                     font.pixelSize: 14
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -2109,7 +2105,7 @@ Window {
 
                 Text {
                     text: "Click anywhere or press R / Space to choose fighter"
-                    color: root.themeSubtext
+                    color: "#94a3b8"
                     font.pixelSize: 11
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -2196,13 +2192,13 @@ Window {
         Rectangle {
             id: soundToast
             anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: subheaderItem.bottom
+            anchors.top: headerBar.bottom
             anchors.topMargin: 16
             width: toastText.implicitWidth + 24
             height: 28
             radius: 14
-            color: root.themeCardBg
-            border.color: root.themeBorder
+            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
             border.width: 1
             opacity: 0
             z: 800
@@ -2212,7 +2208,7 @@ Window {
                 anchors.centerIn: parent
                 font.pixelSize: 11
                 font.bold: true
-                color: root.themeFg
+                color: root.isDarkMode ? root.themeFg : "#0f172a"
             }
 
             function show(msg) {

@@ -49,9 +49,15 @@ Window {
     }
 
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
+
+    readonly property bool isDarkMode: colorLuminance(themeBg) < 0.5
 
     color: themeBg
 
@@ -112,10 +118,10 @@ Window {
 
         var lum = colorLuminance(bg);
         if (lum > 0.5) {
-            themeBoardBg = Qt.darker(bg, 1.08);
-            themeCardBg = Qt.darker(bg, 1.04);
-            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
-            themeBorder = c8 || Qt.darker(bg, 1.15);
+            themeBoardBg = data.boardBg || "#f1f5f9";
+            themeCardBg = data.cardBg || "#ffffff";
+            themeSubtext = data.subtext || "#64748b";
+            themeBorder = data.border || "#cbd5e1";
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         } else {
@@ -575,8 +581,8 @@ Window {
                     width: Math.max(68, Math.min(84, headerItem.width * 0.17))
                     height: Math.max(44, Math.min(52, headerItem.width * 0.11))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: (root.currentTurn === 1 && root.phase !== "gameover") ? root.themeAccent : root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: (root.currentTurn === 1 && root.phase !== "gameover") ? root.themeAccent : (root.isDarkMode ? root.themeBorder : "#cbd5e1")
                     border.width: (root.currentTurn === 1 && root.phase !== "gameover") ? 2 : 1
 
                     Column {
@@ -596,7 +602,7 @@ Window {
                                 text: "DARK"
                                 font.pixelSize: 8
                                 font.bold: true
-                                color: root.themeSubtext
+                                color: root.isDarkMode ? root.themeSubtext : "#64748b"
                             }
                         }
                         Text {
@@ -604,7 +610,7 @@ Window {
                             text: root.offDark + "/15"
                             font.pixelSize: 15
                             font.bold: true
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                         }
                     }
                 }
@@ -614,8 +620,8 @@ Window {
                     width: Math.max(68, Math.min(84, headerItem.width * 0.17))
                     height: Math.max(44, Math.min(52, headerItem.width * 0.11))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: (root.currentTurn === 2 && root.phase !== "gameover") ? root.themeAccent : root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: (root.currentTurn === 2 && root.phase !== "gameover") ? root.themeAccent : (root.isDarkMode ? root.themeBorder : "#cbd5e1")
                     border.width: (root.currentTurn === 2 && root.phase !== "gameover") ? 2 : 1
 
                     Column {
@@ -635,7 +641,7 @@ Window {
                                 text: "LIGHT"
                                 font.pixelSize: 8
                                 font.bold: true
-                                color: root.themeSubtext
+                                color: root.isDarkMode ? root.themeSubtext : "#64748b"
                             }
                         }
                         Text {
@@ -643,7 +649,7 @@ Window {
                             text: root.offLight + "/15"
                             font.pixelSize: 15
                             font.bold: true
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                         }
                     }
                 }
@@ -1440,8 +1446,8 @@ Window {
             Rectangle {
                 anchors.fill: parent
                 radius: 10
-                color: root.themeCardBg
-                border.color: root.themeBorder
+                color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                 border.width: 1
 
                 Row {
@@ -1946,8 +1952,8 @@ Window {
             width: toastText.implicitWidth + 24
             height: 28
             radius: 14
-            color: root.themeCardBg
-            border.color: root.themeBorder
+            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
             border.width: 1
             opacity: 0
             z: 800
@@ -1957,7 +1963,7 @@ Window {
                 anchors.centerIn: parent
                 font.pixelSize: 11
                 font.bold: true
-                color: root.themeFg
+                color: root.isDarkMode ? root.themeFg : "#0f172a"
             }
 
             function show(msg) {

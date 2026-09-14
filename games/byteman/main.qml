@@ -35,27 +35,69 @@ Window {
     property int lives: 3
     property int level: 1
     property string gameState: "ready"
+    readonly property bool isDarkMode: colorLuminance(themeBg) < 0.5
 
     color: themeBg
 
-    Behavior on themeBg { ColorAnimation { duration: 250 } }
-    Behavior on themeBoardBg { ColorAnimation { duration: 250 } }
-    Behavior on themeCardBg { ColorAnimation { duration: 250 } }
-    Behavior on themeFg { ColorAnimation { duration: 250 } }
-    Behavior on themeSubtext { ColorAnimation { duration: 250 } }
-    Behavior on themeAccent { ColorAnimation { duration: 250 } }
-    Behavior on themeBorder { ColorAnimation { duration: 250 } }
+    function colorLuminance(col) {
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
+        return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+    }
 
     function applyTheme(data, name) {
         if (!data || typeof data !== "object") return;
-        if (data.bg) themeBg = data.bg;
-        if (data.fg) themeFg = data.fg;
-        if (data.boardBg) themeBoardBg = data.boardBg;
-        if (data.cardBg) themeCardBg = data.cardBg;
-        if (data.border) themeBorder = data.border;
-        if (data.subtext) themeSubtext = data.subtext;
+        var bg = data.background || data.bg || "#181825";
+        var fg = data.foreground || data.fg || "#cdd6f4";
+        var accent = data.accent || "#f9e2af";
+        var c0 = data.color0 || data.cardBg || "#1e1e2e";
+        var c8 = data.color8 || data.border || "#313244";
+
+        themeBg = bg;
+        themeFg = fg;
+        themeAccent = accent;
+        themeBorder = c8;
+
+        var lum = colorLuminance(bg);
+        if (lum > 0.5) {
+            themeBoardBg = data.boardBg || Qt.darker(bg, 1.08);
+            themeCardBg = data.cardBg || "#ffffff";
+            themeSubtext = data.subtext || "#64748b";
+            themeBorder = data.border || "#cbd5e1";
+            themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+        } else {
+            themeBoardBg = data.boardBg || Qt.darker(bg, 1.25);
+            themeCardBg = data.cardBg || c0;
+            themeSubtext = data.subtext || "#a6adc8";
+            themeBorder = c8;
+            themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+        }
         if (name) currentThemeName = name;
         gameCanvas.requestPaint();
+    }
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            cardBg: "#ffffff",
+            border: "#cbd5e1",
+            subtext: "#64748b",
+            accent: "#fe640b"
+        } : {
+            background: "#181825",
+            foreground: "#cdd6f4",
+            cardBg: "#1e1e2e",
+            border: "#313244",
+            subtext: "#a6adc8",
+            accent: "#f9e2af"
+        };
+        applyTheme(tData, nextIsLight ? "Omarchy Light" : "Omarchy Dark");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     function playSound(name) {
@@ -113,7 +155,7 @@ Window {
     Rectangle {
         id: mainContainer
         anchors.fill: parent
-        color: root.themeBg
+        color: "#030308"
 
                 // =====================================================================
         // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
@@ -214,302 +256,319 @@ Window {
             }
         }
 
-        Column {
-            id: mainLayout
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : parent.top
-            anchors.topMargin: root.isTiledDesktopMode ? 8 : 14
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 14
+        // =====================================================================
+        // TOP OS-THEMED HEADER BAR (Adapts to desktop OS theme)
+        // =====================================================================
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 14
-            anchors.rightMargin: 14
-            spacing: 10
-
-        // 1. HEADER (Title + Stat Badges)
-        Item {
-            id: headerItem
+            height: root.isTiledDesktopMode ? 0 : (headerCol.height + 20)
             visible: !root.isTiledDesktopMode
-            width: parent.width
-            height: root.isTiledDesktopMode ? 0 : 52
+            color: root.themeBg
+            border.color: root.themeBorder
+            border.width: 1
+            z: 10
 
-            Text {
-                id: gameTitle
+            Column {
+                id: headerCol
+                anchors.top: parent.top
+                anchors.topMargin: 10
                 anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                text: "ByteMan"
-                font.family: root.monoFontFamily
-                font.pixelSize: 32
-                font.bold: true
-                color: root.themeAccent
-            }
-
-            Row {
                 anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: 16
+                anchors.rightMargin: 16
                 spacing: 8
 
-                // SCORE BADGE
-                Rectangle {
-                    width: 82
-                    height: 48
-                    radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
+                // 1. HEADER (Title + Stat Badges)
+                Item {
+                    id: headerItem
+                    visible: !root.isTiledDesktopMode
+                    width: parent.width
+                    height: root.isTiledDesktopMode ? 0 : 52
 
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 2
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "SCORE"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 10
-                            font.bold: true
-                            color: root.themeSubtext
-                        }
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: root.score.toString()
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 15
-                            font.bold: true
-                            color: root.themeFg
-                        }
+                    Text {
+                        id: gameTitle
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "ByteMan"
+                        font.family: root.monoFontFamily
+                        font.pixelSize: 32
+                        font.bold: true
+                        color: root.themeAccent
                     }
-                }
 
-                // BEST BADGE
-                Rectangle {
-                    width: 82
-                    height: 48
-                    radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
+                    Row {
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
 
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 2
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "BEST"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 10
-                            font.bold: true
-                            color: root.themeSubtext
+                        // SCORE BADGE
+                        Rectangle {
+                            width: 82
+                            height: 48
+                            radius: 8
+                            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                            border.width: 1
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "SCORE"
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                                }
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: root.score.toString()
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 15
+                                    font.bold: true
+                                    color: root.isDarkMode ? root.themeFg : "#0f172a"
+                                }
+                            }
                         }
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: root.highScore.toString()
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 15
-                            font.bold: true
-                            color: root.themeFg
-                        }
-                    }
-                }
-            }
-        }
 
-        // 2. SUBHEADER (Controls & Actions)
-        Item {
-            id: subheaderItem
-            width: parent.width
-            height: 34
+                        // BEST BADGE
+                        Rectangle {
+                            width: 82
+                            height: 48
+                            radius: 8
+                            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                            border.width: 1
 
-            Row {
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
-
-                // Lives Display
-                Row {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 4
-                    Repeater {
-                        model: Math.max(0, root.lives - 1)
-                        Canvas {
-                            width: 16
-                            height: 16
-                            onPaint: {
-                                var ctx = getContext("2d");
-                                ctx.clearRect(0, 0, width, height);
-                                ctx.fillStyle = root.themeAccent;
-                                ctx.beginPath();
-                                ctx.arc(8, 8, 7, 0.25 * Math.PI, 1.75 * Math.PI, false);
-                                ctx.lineTo(8, 8);
-                                ctx.fill();
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "BEST"
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                                }
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: root.highScore.toString()
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 15
+                                    font.bold: true
+                                    color: root.highScore > 0 ? (root.isDarkMode ? root.themeAccent : "#15803d") : (root.isDarkMode ? root.themeSubtext : "#94a3b8")
+                                }
                             }
                         }
                     }
                 }
 
-                // Fruit Badge
-                Rectangle {
-                    width: 36
-                    height: 28
-                    radius: 6
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: {
-                            var fruits = ["🍒", "🍓", "🍑", "🍎", "🍈", "🛸", "🔔", "🔑"];
-                            var idx = 0;
-                            if (root.level === 1) idx = 0;
-                            else if (root.level === 2) idx = 1;
-                            else if (root.level <= 4) idx = 2;
-                            else if (root.level <= 6) idx = 3;
-                            else if (root.level <= 8) idx = 4;
-                            else if (root.level <= 10) idx = 5;
-                            else if (root.level <= 12) idx = 6;
-                            else idx = 7;
-                            return fruits[idx];
-                        }
-                        font.pixelSize: 14
-                    }
-                }
-            }
-
-            readonly property bool isCrowded: subheaderItem.width < 500
-
-            Row {
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: subheaderItem.isCrowded ? 6 : 8
-
-                // Help Button
-                Rectangle {
-                    width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
-                    height: 32
-                    radius: 8
-                    color: helpMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.2) : root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
+                // 2. SUBHEADER (Controls & Actions)
+                Item {
+                    id: subheaderItem
+                    width: parent.width
+                    height: 34
 
                     Row {
-                        id: helpRow
-                        anchors.centerIn: parent
-                        spacing: 4
-                        Text {
-                            text: "?"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 13
-                            font.bold: true
-                            color: root.themeFg
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 6
+
+                        // Lives Display
+                        Row {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 4
+                            Repeater {
+                                model: Math.max(0, root.lives - 1)
+                                Canvas {
+                                    width: 16
+                                    height: 16
+                                    onPaint: {
+                                        var ctx = getContext("2d");
+                                        ctx.clearRect(0, 0, width, height);
+                                        ctx.fillStyle = root.themeAccent;
+                                        ctx.beginPath();
+                                        ctx.arc(8, 8, 7, 0.25 * Math.PI, 1.75 * Math.PI, false);
+                                        ctx.lineTo(8, 8);
+                                        ctx.fill();
+                                    }
+                                }
+                            }
                         }
-                        Text {
-                            text: "How to Play"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 12
-                            font.bold: true
-                            color: root.themeFg
-                            visible: !subheaderItem.isCrowded
+
+                        // Fruit Badge
+                        Rectangle {
+                            width: 36
+                            height: 28
+                            radius: 6
+                            color: root.themeCardBg
+                            border.color: root.themeBorder
+                            border.width: 1
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: {
+                                    var fruits = ["🍒", "🍓", "🍑", "🍎", "🍈", "🛸", "🔔", "🔑"];
+                                    var idx = 0;
+                                    if (root.level === 1) idx = 0;
+                                    else if (root.level === 2) idx = 1;
+                                    else if (root.level <= 4) idx = 2;
+                                    else if (root.level <= 6) idx = 3;
+                                    else if (root.level <= 8) idx = 4;
+                                    else if (root.level <= 10) idx = 5;
+                                    else if (root.level <= 12) idx = 6;
+                                    else idx = 7;
+                                    return fruits[idx];
+                                }
+                                font.pixelSize: 14
+                            }
                         }
                     }
 
-                    MouseArea {
-                        id: helpMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.showHelp = !root.showHelp;
-                            root.playSound("click");
-                        }
-                    }
-                }
-
-                // Mute Toggle
-                Rectangle {
-                    width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
-                    height: 32
-                    radius: 8
-                    color: muteMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.2) : root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
+                    readonly property bool isCrowded: subheaderItem.width < 500
 
                     Row {
-                        id: muteRow
-                        anchors.centerIn: parent
-                        spacing: 4
-                        Text {
-                            text: root.isMuted ? "🔇" : "🔊"
-                            font.pixelSize: 13
-                        }
-                        Text {
-                            text: root.isMuted ? "Muted" : "Sound"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 12
-                            font.bold: true
-                            color: root.themeFg
-                            visible: !subheaderItem.isCrowded
-                        }
-                    }
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: subheaderItem.isCrowded ? 6 : 8
 
-                    MouseArea {
-                        id: muteMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleMute()
-                    }
-                }
+                        // Help Button
+                        Rectangle {
+                            width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
+                            height: 32
+                            radius: 8
+                            color: helpMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.2) : root.themeCardBg
+                            border.color: root.themeBorder
+                            border.width: 1
 
-                // Restart Button
-                Rectangle {
-                    width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
-                    height: 32
-                    radius: 8
-                    color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+                            Row {
+                                id: helpRow
+                                anchors.centerIn: parent
+                                spacing: 4
+                                Text {
+                                    text: "?"
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                    color: root.themeFg
+                                }
+                                Text {
+                                    text: "How to Play"
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    color: root.themeFg
+                                    visible: !subheaderItem.isCrowded
+                                }
+                            }
 
-                    Row {
-                        id: restartRow
-                        anchors.centerIn: parent
-                        spacing: 4
-                        Text {
-                            text: "🔄"
-                            font.pixelSize: 13
-                            visible: subheaderItem.isCrowded
+                            MouseArea {
+                                id: helpMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.showHelp = !root.showHelp;
+                                    root.playSound("click");
+                                }
+                            }
                         }
-                        Text {
-                            text: "Restart (R)"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 12
-                            font.bold: true
-                            color: root.themeBtnFg
-                            visible: !subheaderItem.isCrowded
-                        }
-                    }
 
-                    MouseArea {
-                        id: restartMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.startNewGame();
-                            root.playSound("click");
+                        // Mute Toggle
+                        Rectangle {
+                            width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
+                            height: 32
+                            radius: 8
+                            color: muteMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.2) : root.themeCardBg
+                            border.color: root.themeBorder
+                            border.width: 1
+
+                            Row {
+                                id: muteRow
+                                anchors.centerIn: parent
+                                spacing: 4
+                                Text {
+                                    text: root.isMuted ? "🔇" : "🔊"
+                                    font.pixelSize: 13
+                                }
+                                Text {
+                                    text: root.isMuted ? "Muted" : "Sound"
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    color: root.themeFg
+                                    visible: !subheaderItem.isCrowded
+                                }
+                            }
+
+                            MouseArea {
+                                id: muteMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.toggleMute()
+                            }
+                        }
+
+                        // Restart Button
+                        Rectangle {
+                            width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
+                            height: 32
+                            radius: 8
+                            color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+
+                            Row {
+                                id: restartRow
+                                anchors.centerIn: parent
+                                spacing: 4
+                                Text {
+                                    text: "🔄"
+                                    font.pixelSize: 13
+                                    visible: subheaderItem.isCrowded
+                                }
+                                Text {
+                                    text: "Restart (R)"
+                                    font.family: root.monoFontFamily
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    color: root.themeBtnFg
+                                    visible: !subheaderItem.isCrowded
+                                }
+                            }
+
+                            MouseArea {
+                                id: restartMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.startNewGame();
+                                    root.playSound("click");
+                                }
+                            }
                         }
                     }
                 }
             }
         }
 
-        // 3. BOARD CONTAINER
+        // =====================================================================
+        // 3. ARCADE CABINET / PLAYFIELD (Flush edge-to-edge, authentic arcade black)
+        // =====================================================================
         Rectangle {
             id: boardContainer
-            width: parent.width
-            height: parent.height - (root.isTiledDesktopMode ? 46 : (headerItem.height + subheaderItem.height + 20))
-            radius: 12
-            color: root.themeBoardBg
-            border.color: root.themeBorder
-            border.width: 1
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 0
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            color: "#030308"
             clip: true
 
             Canvas {
@@ -529,11 +588,7 @@ Window {
                     var tw = tileW;
                     var th = tileH;
 
-                    // 1. Draw Maze Walls
-                    ctx.lineWidth = Math.max(1.8, tw * 0.18);
-                    ctx.strokeStyle = Qt.rgba(root.themeBorder.r, root.themeBorder.g, root.themeBorder.b, 0.95);
-                    ctx.fillStyle = Qt.rgba(root.themeBorder.r, root.themeBorder.g, root.themeBorder.b, 0.25);
-
+                    // 1. Draw Maze Walls (Authentic dark arcade interior + vibrant electric neon blue borders)
                     for (var r = 0; r < Engine.ROWS; r++) {
                         for (var c = 0; c < Engine.COLS; c++) {
                             var cell = Engine.maze[r] ? Engine.maze[r][c] : ' ';
@@ -541,12 +596,13 @@ Window {
                             var py = r * th;
 
                             if (cell === 'W') {
-                                ctx.fillStyle = Qt.rgba(root.themeCardBg.r, root.themeCardBg.g, root.themeCardBg.b, 0.85);
+                                // Deep midnight arcade wall interior
+                                ctx.fillStyle = "#070a1e";
                                 ctx.fillRect(px, py, tw, th);
 
-                                // Clean boundary strokes facing paths
-                                ctx.strokeStyle = root.themeBorder;
-                                ctx.lineWidth = 1.6;
+                                // Iconic electric Pac-Man blue boundaries
+                                ctx.strokeStyle = "#2563eb";
+                                ctx.lineWidth = Math.max(1.8, tw * 0.14);
                                 if (r === 0 || (Engine.maze[r-1] && Engine.maze[r-1][c] !== 'W')) {
                                     ctx.beginPath(); ctx.moveTo(px, py + 0.5); ctx.lineTo(px + tw, py + 0.5); ctx.stroke();
                                 }
@@ -561,22 +617,22 @@ Window {
                                 }
                             } else if (cell === 'G') {
                                 // Ghost Door
-                                ctx.strokeStyle = "#FF88AA";
-                                ctx.lineWidth = 2.0;
+                                ctx.strokeStyle = "#ff77aa";
+                                ctx.lineWidth = 2.4;
                                 ctx.beginPath();
                                 ctx.moveTo(px, py + th * 0.5);
                                 ctx.lineTo(px + tw, py + th * 0.5);
                                 ctx.stroke();
                             } else if (cell === '.') {
-                                // Pellet
-                                ctx.fillStyle = root.themeAccent;
+                                // Pellet (Authentic warm arcade pellet)
+                                ctx.fillStyle = "#ffb852";
                                 ctx.beginPath();
                                 ctx.arc(px + tw * 0.5, py + th * 0.5, tw * 0.15, 0, Math.PI * 2);
                                 ctx.fill();
                             } else if (cell === '*') {
-                                // Energizer
+                                // Energizer (Pulsing warm white/gold)
                                 var pulse = 0.5 + 0.5 * Math.sin(Engine.globalTimer * 0.18);
-                                ctx.fillStyle = root.themeAccent;
+                                ctx.fillStyle = (pulse > 0.4) ? "#ffffff" : "#ffb852";
                                 ctx.beginPath();
                                 ctx.arc(px + tw * 0.5, py + th * 0.5, tw * (0.32 + 0.08 * pulse), 0, Math.PI * 2);
                                 ctx.fill();
@@ -584,7 +640,7 @@ Window {
                         }
                     }
 
-                    // 2. Draw ByteMan
+                    // 2. Draw ByteMan (Classic arcade Pac-Man yellow)
                     if (Engine.player) {
                         var bx = (Engine.player.x + 0.5) * tw;
                         var by = (Engine.player.y + 0.5) * th;
@@ -598,7 +654,7 @@ Window {
 
                         var mouth = Engine.player.chomp * Math.PI;
 
-                        ctx.fillStyle = root.themeAccent;
+                        ctx.fillStyle = "#ffcc00";
                         ctx.beginPath();
                         ctx.arc(bx, by, brad, baseAngle + mouth, baseAngle + 2 * Math.PI - mouth, false);
                         ctx.lineTo(bx, by);
@@ -758,7 +814,6 @@ Window {
                 }
             }
         }
-    }
 }
 
     // Main 60 FPS Game Loop
@@ -809,6 +864,12 @@ Window {
             }
             if (event.key === Qt.Key_M) {
                 root.toggleMute();
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
                 event.accepted = true;
                 return;
             }
@@ -933,8 +994,8 @@ Window {
         width: toastLabel.implicitWidth + 24
         height: 30
         radius: 15
-        color: Qt.rgba(0, 0, 0, 0.78)
-        border.color: root.themeAccent
+        color: root.isDarkMode ? Qt.rgba(0, 0, 0, 0.78) : "#f1f5f9"
+        border.color: root.isDarkMode ? root.themeAccent : "#cbd5e1"
         border.width: 1
         opacity: 0
         z: 80
@@ -947,7 +1008,7 @@ Window {
             font.family: root.monoFontFamily
             font.pixelSize: 11
             font.bold: true
-            color: root.themeAccent
+            color: root.isDarkMode ? root.themeAccent : "#0f172a"
         }
 
         Timer {

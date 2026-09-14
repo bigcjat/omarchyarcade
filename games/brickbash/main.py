@@ -107,21 +107,32 @@ class SoundManager(QObject):
             except Exception:
                 pass
 
-def load_all_omarchy_themes():
-    themes_js = Path(__file__).resolve().parent / "Themes.js"
-    if not themes_js.is_file():
-        return {}
-    with open(themes_js, "r", encoding="utf-8") as f:
-        content = f.read()
-    themes = {}
-    blocks = re.findall(r"\{([^{}]+)\}", content)
-    for b in blocks:
-        t = {}
-        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", b):
-            t[k] = v
-        if "id" in t:
-            themes[t["id"]] = t
-    return themes
+DEFAULT_PRESETS = {
+    "dark": {
+        "name": "Omarchy Dark",
+        "background": "#1e1e2e",
+        "foreground": "#cdd6f4",
+        "accent": "#89b4fa",
+        "color0": "#181825",
+        "color8": "#313244",
+        "cardBg": "#181825",
+        "boardBg": "#11111b",
+        "border": "#313244",
+        "subtext": "#a6adc8",
+    },
+    "light": {
+        "name": "Omarchy Light",
+        "background": "#eff1f5",
+        "foreground": "#4c4f69",
+        "accent": "#1e66f5",
+        "color0": "#e6e9ef",
+        "color8": "#bcc0cc",
+        "cardBg": "#ffffff",
+        "boardBg": "#e6e9ef",
+        "border": "#ccd0da",
+        "subtext": "#5c5f77",
+    },
+}
 
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
@@ -140,37 +151,36 @@ def find_omarchy_colors_file():
             return c
     return None
 
-
-def load_system_theme():
-    theme_path = find_omarchy_colors_file()
-    if not theme_path or not theme_path.is_file():
-        return None
+def load_toml_colors(file_path):
     try:
-        with open(theme_path, "rb") as f:
+        with open(file_path, "rb") as f:
             data = tomllib.load(f)
-        colors = data.get("colors") if isinstance(data.get("colors"), dict) else data
-        accent = colors.get("accent", colors.get("color4", "#89b4fa"))
-        bg = colors.get("background", "#181825")
-        fg = colors.get("foreground", "#cdd6f4")
-        return {
-            "name": "System Theme",
-            "background": bg,
-            "foreground": fg,
-            "accent": accent,
-            "color0": colors.get("color0", "#181825"),
-            "color1": colors.get("color1", "#f38ba8"),
-            "color2": colors.get("color2", "#a6e3a1"),
-            "color3": colors.get("color3", "#f9e2af"),
-            "color4": colors.get("color4", "#89b4fa"),
-            "color5": colors.get("color5", "#cba6f7"),
-            "color6": colors.get("color6", "#89dceb"),
-            "color7": colors.get("color7", "#a6adc8"),
-        }
-    except Exception:
+        if isinstance(data, dict) and "colors" in data and isinstance(data["colors"], dict):
+            merged = dict(data)
+            merged.update(data["colors"])
+            return merged
+        return data
+    except Exception as e:
+        print(f"Warning: Failed to load {file_path}: {e}", file=sys.stderr)
         return None
 
 def main():
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+    os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
+
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print("BrickBash \u2022 Retro Brick Breaker")
+        print("Controls: Left/Right or Mouse to move paddle, Space to launch.")
+        sys.exit(0)
+
+    if "--list-themes" in sys.argv:
+        print("Arcade Game Template \u2022 Preset Themes:\n  --theme light\n  --theme dark\n  --theme <path_to_colors.toml>")
+        sys.exit(0)
+
     app = QGuiApplication(sys.argv)
+    app.setApplicationName("BrickBash")
+    app.setOrganizationName("Arcade")
+
     # Set application icon to game floppy disk
     script_dir = Path(__file__).resolve().parent
     disk_candidates = [
@@ -199,54 +209,81 @@ def main():
         sys.exit(-1)
 
     root = engine.rootObjects()[0]
-    all_themes = load_all_omarchy_themes()
 
-    requested_theme = None
-    requested_screenshot = None
-    args = sys.argv[1:]
-    i = 0
-    while i < len(args):
-        if args[i] == "--theme" and i + 1 < len(args):
-            requested_theme = args[i + 1]
-            i += 2
-        elif args[i] == "--screenshot" and i + 1 < len(args):
-            requested_screenshot = args[i + 1]
-            i += 2
+    # CLI Theme Argument Parsing
+    theme_arg = None
+    if "--theme" in sys.argv:
+        idx = sys.argv.index("--theme")
+        if idx + 1 < len(sys.argv):
+            theme_arg = sys.argv[idx + 1]
+
+    if theme_arg:
+        clean_arg = theme_arg.lower().strip()
+        if clean_arg in DEFAULT_PRESETS:
+            t = DEFAULT_PRESETS[clean_arg]
+            root.applyTheme(t, t["name"])
+            print(f"Applied preset theme: {t['name']}")
         else:
-            i += 1
-
-    if requested_theme and requested_theme in all_themes:
-        root.applyTheme(all_themes[requested_theme], requested_theme)
+            custom_path = Path(theme_arg).expanduser().resolve()
+            if custom_path.is_file():
+                data = load_toml_colors(custom_path)
+                if data:
+                    root.applyTheme(data, custom_path.parent.name.capitalize())
+                    print(f"Applied theme from file: {custom_path}")
+            else:
+                print(f"Warning: Theme '{theme_arg}' not found.", file=sys.stderr)
     else:
-        sys_theme = load_system_theme()
-        if sys_theme:
-            root.applyTheme(sys_theme, "System")
-        elif "catppuccin" in all_themes:
-            root.applyTheme(all_themes["catppuccin"], "Catppuccin")
+        system_colors = find_omarchy_colors_file()
+        if system_colors:
+            data = load_toml_colors(system_colors)
+            if data:
+                theme_name = system_colors.parent.name.capitalize()
+                root.applyTheme(data, theme_name)
 
-    theme_file = find_omarchy_colors_file()
-    watcher = QFileSystemWatcher()
-    if theme_file and theme_file.parent.exists():
-        watcher.addPath(str(theme_file.parent))
-    if theme_file and theme_file.exists():
-        watcher.addPath(str(theme_file))
+            watcher = QFileSystemWatcher(app)
+            watcher.addPath(str(system_colors))
+            if system_colors.parent.exists():
+                watcher.addPath(str(system_colors.parent))
 
-    def on_theme_file_changed(path):
-        QTimer.singleShot(150, update_theme)
+            def on_theme_updated(path):
+                colors_path = find_omarchy_colors_file()
+                if colors_path and colors_path.is_file():
+                    updated = load_toml_colors(colors_path)
+                    if updated:
+                        root.applyTheme(updated, colors_path.parent.name.capitalize())
 
-    def update_theme():
-        if requested_theme: return
-        t = load_system_theme()
-        if t: root.applyTheme(t, "System")
+            watcher.fileChanged.connect(on_theme_updated)
+            watcher.directoryChanged.connect(on_theme_updated)
+        else:
+            def apply_system_scheme():
+                scheme = app.styleHints().colorScheme()
+                target_theme = DEFAULT_PRESETS["light"] if scheme == Qt.ColorScheme.Light else DEFAULT_PRESETS["dark"]
+                root.applyTheme(target_theme, target_theme["name"])
+            apply_system_scheme()
+            app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
 
-    watcher.fileChanged.connect(on_theme_file_changed)
-    watcher.directoryChanged.connect(on_theme_file_changed)
+    if "--no-splash" in sys.argv:
+        root.setProperty("splashEnabled", False)
 
-    if requested_screenshot:
-        def do_shot():
-            root.splashEnabled = False
-            root.captureScreenshot(requested_screenshot, True)
-        QTimer.singleShot(1250, do_shot)
+    # Screenshot / automation helpers
+    if "--screenshot" in sys.argv:
+        root.setProperty("splashEnabled", False)
+        def capture():
+            out_idx = sys.argv.index("--screenshot") + 1
+            out_file = sys.argv[out_idx] if out_idx < len(sys.argv) and not sys.argv[out_idx].startswith("--") else "screenshot.png"
+            out_path = Path(out_file).resolve()
+            root.captureScreenshot(str(out_path), False)
+            QTimer.singleShot(400, app.quit)
+        QTimer.singleShot(350, capture)
+
+    if "--screenshot-help" in sys.argv:
+        root.setProperty("splashEnabled", False)
+        def capture_help():
+            root.setProperty("showHelp", True)
+            out_path = Path(__file__).resolve().parent / "screenshot_help.png"
+            root.captureScreenshot(str(out_path), False)
+            QTimer.singleShot(400, app.quit)
+        QTimer.singleShot(350, capture_help)
 
     sys.exit(app.exec())
 

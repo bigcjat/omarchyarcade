@@ -27,6 +27,11 @@
   <content_rating type="oars-1.1" />
   
   <releases>
+    <release version="1.2.0" date="2026-09-14">
+      <description>
+        <p>Comprehensive Light and Dark Mode multi-view overhaul, high-contrast dynamic SVG branding, universal QML theme state injection, and audited contrast standards across all 42 titles.</p>
+      </description>
+    </release>
     <release version="1.1.1" date="2026-09-12">
       <description>
         <p>Refined game detail layout, bundled poker felt wallpapers, Linux FreeType font glyph fixes, and in-app update center.</p>

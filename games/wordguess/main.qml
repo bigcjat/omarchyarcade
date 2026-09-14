@@ -29,22 +29,19 @@ Window {
     property bool showHelp: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
-    function colorLuminance(hex) {
-        if (!hex || typeof hex !== "string") return 0.2;
-        var c = Qt.color(hex);
+    function colorLuminance(col) {
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
-    property string helpText: "• Guess the secret 5-letter word in 6 tries\n• Type letters and press Enter\n• Green: letter is in the correct spot\n• Yellow: letter is in the word but wrong spot\n• Gray: letter is not in the word\n• Full/Compact View: Shift+F
-• Mute: M | Restart: Ctrl+R | Help: ?"
+    property string helpText: "• Guess the secret 5-letter word in 6 tries\n• Type letters and press Enter\n• Green: letter is in the correct spot\n• Yellow: letter is in the word but wrong spot\n• Gray: letter is not in the word\n• Full/Compact View: Shift+F\n• Theme: Ctrl+T | Mute: M | Restart: Ctrl+R | Help: ?"
 
-    Behavior on themeBg { ColorAnimation { duration: 250 } }
-    Behavior on themeBoardBg { ColorAnimation { duration: 250 } }
-    Behavior on themeCardBg { ColorAnimation { duration: 250 } }
-    Behavior on themeFg { ColorAnimation { duration: 250 } }
-    Behavior on themeSubtext { ColorAnimation { duration: 250 } }
-    Behavior on themeAccent { ColorAnimation { duration: 250 } }
-    Behavior on themeBorder { ColorAnimation { duration: 250 } }
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
+    property color themeCardHover: isDarkMode ? Qt.lighter(themeCardBg, 1.15) : "#f1f5f9"
 
     color: themeBg
 
@@ -56,13 +53,38 @@ Window {
 
     function applyTheme(data, name) {
         if (!data || typeof data !== "object") return;
-        if (data.bg) themeBg = data.bg;
-        if (data.fg) themeFg = data.fg;
-        if (data.accent) themeAccent = data.accent;
-        if (data.boardBg) themeBoardBg = data.boardBg;
-        if (data.cardBg) themeCardBg = data.cardBg;
-        if (data.border) themeBorder = data.border;
-        if (data.subtext) themeSubtext = data.subtext;
+        var dark = (data.bg) ? (colorLuminance(data.bg) < 0.5) : true;
+        themeBg = data.bg || (dark ? "#181825" : "#eff1f5");
+        themeFg = data.fg || (dark ? "#cdd6f4" : "#0f172a");
+        themeAccent = data.accent || (dark ? "#a6e3a1" : "#40a02b");
+        themeBoardBg = data.boardBg || (dark ? "#1e1e2e" : "#ffffff");
+        themeCardBg = data.cardBg || (dark ? "#313244" : "#ffffff");
+        themeBorder = data.border || (dark ? "#45475a" : "#cbd5e1");
+        themeSubtext = data.subtext || (dark ? "#a6adc8" : "#64748b");
+        themeBtnFg = (colorLuminance(themeAccent) > 0.5) ? "#11111b" : "#ffffff";
+    }
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            bg: "#eff1f5",
+            fg: "#0f172a",
+            accent: "#40a02b",
+            boardBg: "#ffffff",
+            cardBg: "#ffffff",
+            border: "#cbd5e1",
+            subtext: "#64748b"
+        } : {
+            bg: "#181825",
+            fg: "#cdd6f4",
+            accent: "#a6e3a1",
+            boardBg: "#1e1e2e",
+            cardBg: "#313244",
+            border: "#45475a",
+            subtext: "#a6adc8"
+        };
+        applyTheme(tData, nextIsLight ? "Omarchy Light" : "Omarchy Dark");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     function playSound(name) {
@@ -189,6 +211,12 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_T && (event.modifiers & Qt.ControlModifier)) {
+                root.cycleTheme();
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_Slash || event.key === Qt.Key_Question) {
                 showHelp = !showHelp;
                 event.accepted = true;
@@ -239,7 +267,6 @@ Window {
                     font.pixelSize: Math.max(22, Math.min(36, headerItem.width * 0.07))
                     font.bold: true
                     color: root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
                 Text {
                     width: parent.width
@@ -247,7 +274,6 @@ Window {
                     text: (root.gameState === "won" ? "Splendid! Word: " + root.targetWord : (root.gameState === "lost" ? "Game Over • Word: " + root.targetWord : "Guess " + (root.currentRow + 1) + " of 6 • " + (6 - root.currentRow) + " tries remaining"))
                     font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
                     color: root.themeSubtext
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
 
@@ -263,10 +289,9 @@ Window {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.16))
                     height: Math.max(42, Math.min(52, headerItem.width * 0.10))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -276,14 +301,14 @@ Window {
                             text: "WINS"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.wins.toString()
                             font.pixelSize: 16
                             font.bold: true
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                         }
                     }
                 }
@@ -293,10 +318,9 @@ Window {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.16))
                     height: Math.max(42, Math.min(52, headerItem.width * 0.10))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -306,14 +330,14 @@ Window {
                             text: "STREAK"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "★ " + root.streak
                             font.pixelSize: 16
                             font.bold: true
-                            color: root.streak > 0 ? root.themeAccent : root.themeSubtext
+                            color: root.streak > 0 ? (root.isDarkMode ? root.themeAccent : "#15803d") : (root.isDarkMode ? root.themeSubtext : "#64748b")
                         }
                     }
                 }
@@ -341,10 +365,9 @@ Window {
                 height: 32
                 width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
                 radius: 8
-                color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                 border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
                 border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
 
                 Row {
                     id: helpRow
@@ -391,11 +414,9 @@ Window {
                 height: 32
                 width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
                 radius: 8
-                color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                 border.color: root.isMuted ? root.themeBorder : root.themeAccent
                 border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
-                Behavior on border.color { ColorAnimation { duration: 150 } }
 
                 Row {
                     id: muteRow
@@ -425,51 +446,51 @@ Window {
                 }
             }
 
-            // Primary Action Button (New Word)
-                            // View Mode Pill (Windowed vs Full Field)
-                Rectangle {
-                    id: viewModeBtn
-                    height: 32
-                    width: subheaderItem.isCrowded ? 32 : (viewModeRow.implicitWidth + 18)
-                    radius: 8
-                    color: root.fullPlayfield ? root.themeCardBg : (viewModeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
-                    border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
+            // View Mode Pill (Windowed vs Full Field)
+            Rectangle {
+                id: viewModeBtn
+                anchors.right: restartBtn.left
+                anchors.rightMargin: 8
+                anchors.verticalCenter: parent.verticalCenter
+                height: 32
+                width: subheaderItem.isCrowded ? 32 : (viewModeRow.implicitWidth + 18)
+                radius: 8
+                color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeCardHover : root.themeCardBg)
+                border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
+                border.width: 1
 
-                    Row {
-                        id: viewModeRow
-                        anchors.centerIn: parent
-                        spacing: 4
-                        Text {
-                            text: root.fullPlayfield ? "🔲" : "⛶"
-                            font.pixelSize: 13
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: root.fullPlayfield ? "Standard (⇧F)" : "Full (⇧F)"
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.fullPlayfield ? root.themeAccent : root.themeFg
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: !subheaderItem.isCrowded
-                        }
+                Row {
+                    id: viewModeRow
+                    anchors.centerIn: parent
+                    spacing: 4
+                    Text {
+                        text: root.fullPlayfield ? "🔲" : "⛶"
+                        font.pixelSize: 13
+                        anchors.verticalCenter: parent.verticalCenter
                     }
-
-                    MouseArea {
-                        id: viewModeMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.fullPlayfield = !root.fullPlayfield;
-                            soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
-                        }
+                    Text {
+                        text: root.fullPlayfield ? "Standard (⇧F)" : "Full (⇧F)"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.fullPlayfield ? root.themeBtnFg : root.themeFg
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: !subheaderItem.isCrowded
                     }
                 }
 
-                Rectangle {
+                MouseArea {
+                    id: viewModeMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        root.fullPlayfield = !root.fullPlayfield;
+                        soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
+                    }
+                }
+            }
+
+            Rectangle {
                 id: restartBtn
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
@@ -477,7 +498,6 @@ Window {
                 width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
                 radius: 8
                 color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-                Behavior on color { ColorAnimation { duration: 150 } }
 
                 Row {
                     id: restartRow
@@ -915,7 +935,7 @@ Window {
 
                     Text {
                         text: root.gameState === "won" ? ("Solved in " + (root.currentRow + 1) + " guesses!") : ("The word was: " + root.targetWord)
-                        color: root.themeFg
+                        color: "#f8fafc"
                         font.pixelSize: 17
                         font.family: root.monoFontFamily
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -931,7 +951,7 @@ Window {
                         Text {
                             anchors.centerIn: parent
                             text: "PLAY AGAIN"
-                            color: root.themeBg
+                            color: root.themeBtnFg
                             font.bold: true
                             font.pixelSize: 13
                             font.family: root.monoFontFamily
@@ -948,7 +968,7 @@ Window {
 
                     Text {
                         text: "Or press R / Space / Enter"
-                        color: root.themeSubtext
+                        color: "#94a3b8"
                         font.pixelSize: 11
                         font.family: root.monoFontFamily
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -967,8 +987,8 @@ Window {
         width: toastText.implicitWidth + 24
         height: 32
         radius: 16
-        color: root.themeCardBg
-        border.color: root.themeBorder
+        color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+        border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
         border.width: 1
         opacity: 0
         z: 200
@@ -980,7 +1000,8 @@ Window {
             anchors.centerIn: parent
             font.family: root.monoFontFamily
             font.pixelSize: 11
-            color: root.themeFg
+            font.bold: true
+            color: root.isDarkMode ? root.themeFg : "#0f172a"
         }
 
         Timer {

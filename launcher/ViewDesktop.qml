@@ -5,6 +5,16 @@ import QtQuick.Shapes
 
 Item {
     id: desktopView
+    // Theme properties bound from main launcher or arcadeBackend
+    property bool isDarkMode: (typeof arcadeBackend !== "undefined" && arcadeBackend.isDarkMode !== undefined) ? arcadeBackend.isDarkMode : true
+    property color themeBackground: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeBackground) ? arcadeBackend.themeColors.themeBackground : (isDarkMode ? "#111116" : "#eff1f5")
+    property color themeSurface: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeSurface) ? arcadeBackend.themeColors.themeSurface : (isDarkMode ? "#181822" : "#ffffff")
+    property color themeSurfaceLight: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeSurfaceLight) ? arcadeBackend.themeColors.themeSurfaceLight : (isDarkMode ? "#222230" : "#f1f5f9")
+    property color themeBorder: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeBorder) ? arcadeBackend.themeColors.themeBorder : (isDarkMode ? "#2a2a38" : "#cbd5e1")
+    property color themeText: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeText) ? arcadeBackend.themeColors.themeText : (isDarkMode ? "#ffffff" : "#0f172a")
+    property color themeTextMuted: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeTextMuted) ? arcadeBackend.themeColors.themeTextMuted : (isDarkMode ? "#94a3b8" : "#64748b")
+    property color themeAccent: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeAccent) ? arcadeBackend.themeColors.themeAccent : (isDarkMode ? "#00f0ff" : "#1e66f5")
+    property color themeAccentAlt: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeAccentAlt) ? arcadeBackend.themeColors.themeAccentAlt : (isDarkMode ? "#e6458e" : "#d20f39")
     anchors.fill: parent
 
     property var catalog: []
@@ -691,8 +701,8 @@ Item {
                 width: Math.min(parent.width - 48, 780)
                 height: Math.min(parent.height - 40, 480)
                 radius: 8
-                color: "#121420"
-                border.color: desktopView.openFolder ? desktopView.openFolder.color : "#3b82f6"
+                color: !isDarkMode ? "#ffffff" : "#121420"
+                border.color: desktopView.openFolder ? desktopView.openFolder.color : (!isDarkMode ? "#cbd5e1" : "#3b82f6")
                 border.width: 1.5
                 clip: true
                 z: 20
@@ -703,7 +713,7 @@ Item {
                     anchors.margins: -4
                     radius: 12
                     color: "#000000"
-                    opacity: 0.5
+                    opacity: !isDarkMode ? 0.15 : 0.5
                     z: -1
                 }
 
@@ -715,8 +725,8 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 36
-                        color: "#1a1d2e"
-                        border.color: Qt.alpha("#ffffff", 0.1)
+                        color: !isDarkMode ? "#f1f5f9" : "#1a1d2e"
+                        border.color: !isDarkMode ? "#e2e8f0" : Qt.alpha("#ffffff", 0.1)
                         border.width: 1
 
                         RowLayout {
@@ -742,7 +752,7 @@ Item {
                                 font.family: "monospace"
                                 font.pixelSize: 12
                                 font.bold: true
-                                color: "#ffffff"
+                                color: !isDarkMode ? "#0f172a" : "#ffffff"
                                 Layout.alignment: Qt.AlignVCenter
                             }
 
@@ -750,14 +760,14 @@ Item {
                                 height: 18
                                 radius: 4
                                 Layout.preferredWidth: windowCountText.implicitWidth + 10
-                                color: "#252b40"
+                                color: !isDarkMode ? "#e2e8f0" : "#252b40"
                                 Text {
                                     id: windowCountText
                                     anchors.centerIn: parent
                                     text: desktopView.folderGames.length + " games"
                                     font.family: "monospace"
                                     font.pixelSize: 10
-                                    color: "#94a3b8"
+                                    color: !isDarkMode ? "#64748b" : "#94a3b8"
                                 }
                             }
 
@@ -939,8 +949,8 @@ Item {
                 width: 320
                 height: desktopView.activeWallpaper === "poker" ? 440 : 240
                 radius: 8
-                color: "#161928"
-                border.color: "#3b82f6"
+                color: !isDarkMode ? "#ffffff" : "#161928"
+                border.color: !isDarkMode ? "#cbd5e1" : "#3b82f6"
                 border.width: 1.5
                 z: 30
 
@@ -971,14 +981,14 @@ Item {
                             font.family: "monospace"
                             font.pixelSize: 11
                             font.bold: true
-                            color: "#ffffff"
+                            color: !isDarkMode ? "#0f172a" : "#ffffff"
                             Layout.alignment: Qt.AlignVCenter
                         }
                         Item { Layout.fillWidth: true }
                         Text {
                             text: "✕"
                             font.pixelSize: 12
-                            color: "#94a3b8"
+                            color: !isDarkMode ? "#64748b" : "#94a3b8"
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
@@ -987,7 +997,7 @@ Item {
                         }
                     }
 
-                    Rectangle { Layout.fillWidth: true; height: 1; color: "#252b40" }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: !isDarkMode ? "#e2e8f0" : "#252b40" }
 
                     GridLayout {
                         Layout.fillWidth: true
@@ -1009,8 +1019,8 @@ Item {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 34
                                 radius: 6
-                                color: wpMouse.containsMouse ? "#242a42" : "#1a1f30"
-                                border.color: desktopView.activeWallpaper === modelData.id ? "#00f0ff" : "#2f3854"
+                                color: !isDarkMode ? (wpMouse.containsMouse ? "#f1f5f9" : "#ffffff") : (wpMouse.containsMouse ? "#242a42" : "#1a1f30")
+                                border.color: desktopView.activeWallpaper === modelData.id ? themeAccent : (!isDarkMode ? "#cbd5e1" : "#2f3854")
                                 border.width: desktopView.activeWallpaper === modelData.id ? 2 : 1
 
                                 RowLayout {
@@ -1023,7 +1033,7 @@ Item {
                                         height: 20
                                         radius: 4
                                         color: modelData.previewCol
-                                        border.color: "#ffffff"
+                                        border.color: !isDarkMode ? "#cbd5e1" : "#4b5563"
                                         border.width: 1
                                     }
 
@@ -1031,9 +1041,9 @@ Item {
                                         text: modelData.label
                                         font.pixelSize: 10
                                         font.bold: desktopView.activeWallpaper === modelData.id
-                                        color: desktopView.activeWallpaper === modelData.id ? "#00f0ff" : "#cbd5e1"
-                                        Layout.fillWidth: true
+                                        color: desktopView.activeWallpaper === modelData.id ? themeAccent : (!isDarkMode ? "#0f172a" : "#cbd5e1")
                                         elide: Text.ElideRight
+                                        Layout.fillWidth: true
                                     }
                                 }
 
@@ -1307,8 +1317,8 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 44
-            color: "#0f121d"
-            border.color: "#202538"
+            color: !isDarkMode ? "#ffffff" : "#0f121d"
+            border.color: !isDarkMode ? "#cbd5e1" : "#202538"
             border.width: 1
 
             RowLayout {
@@ -1322,7 +1332,7 @@ Item {
                     width: 28
                     height: 28
                     radius: 4
-                    color: "#1a1f2e"
+                    color: !isDarkMode ? "#f1f5f9" : "#1a1f2e"
                     clip: true
                     visible: desktopView.selectedItem !== null
 
@@ -1383,7 +1393,7 @@ Item {
                     font.family: "monospace"
                     font.pixelSize: 11
                     font.bold: true
-                    color: "#cbd5e1"
+                    color: !isDarkMode ? "#334155" : "#cbd5e1"
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
@@ -1400,8 +1410,8 @@ Item {
                         height: 28
                         width: 104
                         radius: 4
-                        color: "#1c2235"
-                        border.color: "#353f5c"
+                        color: !isDarkMode ? "#f1f5f9" : "#1c2235"
+                        border.color: !isDarkMode ? "#cbd5e1" : "#353f5c"
                         border.width: 1
 
                         Row {
@@ -1421,7 +1431,7 @@ Item {
                                 text: "Open Folder"
                                 font.pixelSize: 10
                                 font.bold: true
-                                color: "#00f0ff"
+                                color: !isDarkMode ? themeAccent : "#00f0ff"
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                         }
@@ -1444,8 +1454,8 @@ Item {
                         height: 28
                         width: 74
                         radius: 4
-                        color: "#1c2235"
-                        border.color: "#353f5c"
+                        color: !isDarkMode ? "#f1f5f9" : "#1c2235"
+                        border.color: !isDarkMode ? "#cbd5e1" : "#353f5c"
                         border.width: 1
 
                         Text {
@@ -1453,7 +1463,7 @@ Item {
                             text: "Details [Space]"
                             font.pixelSize: 10
                             font.bold: true
-                            color: "#94a3b8"
+                            color: !isDarkMode ? "#475569" : "#94a3b8"
                         }
 
                         MouseArea {
@@ -1477,8 +1487,8 @@ Item {
                         height: 28
                         width: Math.max(90, taskbarBtnRow.implicitWidth + 20)
                         radius: 4
-                        color: hasUpdate ? "#0284c7" : (installed ? "#00f0ff" : "#059669")
-                        border.color: hasUpdate ? "#38bdf8" : (installed ? "#67e8f9" : "#34d399")
+                        color: hasUpdate ? "#0284c7" : (installed ? themeAccent : "#059669")
+                        border.color: hasUpdate ? "#38bdf8" : (installed ? Qt.lighter(themeAccent, 1.3) : "#34d399")
                         border.width: 1
 
                         Row {
@@ -1527,8 +1537,8 @@ Item {
                     height: 28
                     width: wpBtnText.implicitWidth + 16
                     radius: 4
-                    color: desktopView.showWallpaperPicker ? "#2a3450" : (wpMouseBtn.containsMouse ? "#1c2235" : "#141824")
-                    border.color: desktopView.showWallpaperPicker ? "#00f0ff" : "#2f3854"
+                    color: !isDarkMode ? (desktopView.showWallpaperPicker ? "#dbeafe" : (wpMouseBtn.containsMouse ? "#e2e8f0" : "#f1f5f9")) : (desktopView.showWallpaperPicker ? "#2a3450" : (wpMouseBtn.containsMouse ? "#1c2235" : "#141824"))
+                    border.color: !isDarkMode ? (desktopView.showWallpaperPicker ? themeAccent : "#cbd5e1") : (desktopView.showWallpaperPicker ? "#00f0ff" : "#2f3854")
                     border.width: 1
 
                     Row {
@@ -1549,7 +1559,7 @@ Item {
                             text: "Wallpaper"
                             font.pixelSize: 10
                             font.bold: true
-                            color: desktopView.showWallpaperPicker ? "#00f0ff" : "#cbd5e1"
+                            color: desktopView.showWallpaperPicker ? themeAccent : (!isDarkMode ? "#334155" : "#cbd5e1")
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }

@@ -37,9 +37,15 @@ Window {
     readonly property color cyberObsidian: "#050811"
 
     function colorLuminance(c) {
-        var col = Qt.color(c);
+        if (!c) return 0.2;
+        var col = (typeof c === "string") ? Qt.color(c) : c;
+        if (!col || col.r === undefined) {
+            try { col = Qt.color(c); } catch (e) { return 0.2; }
+        }
         return 0.299 * col.r + 0.587 * col.g + 0.114 * col.b;
     }
+
+    readonly property bool isDarkMode: colorLuminance(themeBg) < 0.5
 
     // =========================================================================
     // AUDIO & APPLICATION PROPERTIES
@@ -161,17 +167,19 @@ Window {
 
         var lum = colorLuminance(bg);
         if (lum > 0.5) {
-            themeBoardBg = Qt.darker(bg, 1.06);
-            themeCardBg = Qt.darker(bg, 1.03);
-            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
-            themeBorder = c8 || Qt.darker(bg, 1.15);
+            themeBoardBg = data.boardBg || "#f1f5f9";
+            themeCardBg = data.cardBg || "#ffffff";
+            themeSubtext = data.subtext || "#64748b";
+            themeBorder = data.border || "#cbd5e1";
+            themeFg = data.foreground || data.fg || "#0f172a";
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         } else {
-            themeBoardBg = Qt.darker(bg, 1.25);
-            themeCardBg = c0;
-            themeSubtext = "#a6adc8";
-            themeBorder = c8;
+            themeBoardBg = data.boardBg || Qt.darker(bg, 1.25);
+            themeCardBg = data.cardBg || c0;
+            themeSubtext = data.subtext || "#a6adc8";
+            themeBorder = data.border || c8;
+            themeFg = fg;
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         }
@@ -899,8 +907,24 @@ Window {
     Rectangle {
         id: mainContainer
         anchors.fill: parent
-        color: root.themeBg
+        color: isCyberMode ? root.cyberObsidian : "#000088"
         focus: true
+
+        // =====================================================================
+        // TOP OS-THEMED HEADER BAR (Adapts strictly to user desktop OS theme)
+        // =====================================================================
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: root.isTiledDesktopMode ? 0 : (subheaderItem.y + subheaderItem.height + 10)
+            visible: !root.isTiledDesktopMode
+            color: root.themeBg
+            border.color: root.themeBorder
+            border.width: 1
+            z: 0
+        }
 
         Keys.onPressed: function(event) {
             if (splashEnabled && splashScreen.visible && splashScreen.opacity > 0) {
@@ -1091,9 +1115,10 @@ Window {
             anchors.topMargin: root.isTiledDesktopMode ? 0 : 12
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 14
-            anchors.rightMargin: 14
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
             height: root.isTiledDesktopMode ? 0 : (Math.max(titleCol.height, statRow.height))
+            z: 1
 
             Column {
                 id: titleCol
@@ -1109,7 +1134,7 @@ Window {
                     text: root.title
                     font.pixelSize: Math.max(18, Math.min(28, headerItem.width * 0.068))
                     font.bold: true
-                    color: isCyberMode ? root.neonCyan : "#FEF08A"
+                    color: root.themeAccent
                 }
                 Text {
                     width: parent.width
@@ -1133,8 +1158,8 @@ Window {
                     width: Math.max(62, Math.min(78, headerItem.width * 0.17))
                     height: Math.max(38, Math.min(46, headerItem.width * 0.11))
                     radius: 6
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -1145,7 +1170,7 @@ Window {
                             text: "CREDITS"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -1153,7 +1178,7 @@ Window {
                             font.family: root.monoFontFamily
                             font.pixelSize: 13
                             font.bold: true
-                            color: isCyberMode ? root.neonCyan : "#FEF08A"
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                         }
                     }
                 }
@@ -1163,8 +1188,8 @@ Window {
                     width: Math.max(62, Math.min(78, headerItem.width * 0.17))
                     height: Math.max(38, Math.min(46, headerItem.width * 0.11))
                     radius: 6
-                    color: root.themeCardBg
-                    border.color: root.isWinningRound ? (isCyberMode ? root.neonMagenta : "#FACC15") : root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isWinningRound ? (root.isDarkMode ? root.themeAccent : "#16a34a") : (root.isDarkMode ? root.themeBorder : "#cbd5e1")
                     border.width: root.isWinningRound ? 1.5 : 1
 
                     Column {
@@ -1175,7 +1200,7 @@ Window {
                             text: root.isWinningRound ? "PAID" : "BET"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.isWinningRound ? (isCyberMode ? "#FFB6D9" : "#FDE047") : root.themeSubtext
+                            color: root.isWinningRound ? (root.isDarkMode ? root.themeAccent : "#15803d") : (root.isDarkMode ? root.themeSubtext : "#64748b")
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -1183,7 +1208,7 @@ Window {
                             font.family: root.monoFontFamily
                             font.pixelSize: 13
                             font.bold: true
-                            color: root.isWinningRound ? (isCyberMode ? root.neonMagenta : "#FEF08A") : (isCyberMode ? root.neonCyan : root.themeAccent)
+                            color: root.isWinningRound ? (root.isDarkMode ? root.themeAccent : "#15803d") : (root.isDarkMode ? root.themeFg : "#0f172a")
                         }
                     }
                 }
@@ -1200,9 +1225,10 @@ Window {
             anchors.topMargin: root.isTiledDesktopMode ? 0 : 8
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 14
-            anchors.rightMargin: 14
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
             height: root.isTiledDesktopMode ? 0 : 30
+            z: 1
 
             readonly property bool isCrowded: subheaderItem.width < 440
 
@@ -1217,8 +1243,8 @@ Window {
                     height: 28
                     width: subheaderItem.isCrowded ? 28 : (gameBtnRow.implicitWidth + 14)
                     radius: 6
-                    color: gameMenuMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: gameMenuMouse.containsMouse ? (isCyberMode ? root.neonCyan : "#38BDF8") : root.themeBorder
+                    color: gameMenuMouse.containsMouse ? root.themeBoardBg : root.themeCardBg
+                    border.color: gameMenuMouse.containsMouse ? root.themeAccent : root.themeBorder
                     border.width: 1
 
                     Row {
@@ -1257,8 +1283,8 @@ Window {
                     height: 28
                     width: subheaderItem.isCrowded ? 28 : (helpRow.implicitWidth + 14)
                     radius: 6
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: helpMouse.containsMouse ? (isCyberMode ? root.neonCyan : "#38BDF8") : root.themeBorder
+                    color: helpMouse.containsMouse ? root.themeBoardBg : root.themeCardBg
+                    border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
                     border.width: 1
 
                     Row {
@@ -1269,7 +1295,7 @@ Window {
                             text: "?"
                             font.pixelSize: 11
                             font.bold: true
-                            color: isCyberMode ? root.neonCyan : "#38BDF8"
+                            color: root.themeAccent
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
@@ -1305,8 +1331,8 @@ Window {
                     height: 28
                     width: subheaderItem.isCrowded ? 28 : (switcherRow.implicitWidth + 14)
                     radius: 6
-                    color: isCyberMode ? "#1E1B4B" : "#0C4A6E"
-                    border.color: isCyberMode ? root.neonPurple : "#38BDF8"
+                    color: switcherMouse.containsMouse ? root.themeBoardBg : root.themeCardBg
+                    border.color: switcherMouse.containsMouse ? root.themeAccent : root.themeBorder
                     border.width: 1
 
                     Row {
@@ -1322,12 +1348,13 @@ Window {
                             text: isCyberMode ? "Classic [V]" : "Cyber [V]"
                             font.pixelSize: 10
                             font.bold: true
-                            color: isCyberMode ? "#C084FC" : "#38BDF8"
+                            color: root.themeAccent
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !subheaderItem.isCrowded
                         }
                     }
                     MouseArea {
+                        id: switcherMouse
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
@@ -1344,8 +1371,8 @@ Window {
                     height: 28
                     width: subheaderItem.isCrowded ? 28 : (coinRow.implicitWidth + 14)
                     radius: 6
-                    color: coinMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: coinMouse.containsMouse ? (isCyberMode ? root.neonCyan : "#38BDF8") : root.themeBorder
+                    color: coinMouse.containsMouse ? root.themeBoardBg : root.themeCardBg
+                    border.color: coinMouse.containsMouse ? root.themeAccent : root.themeBorder
                     border.width: 1
 
                     Row {
@@ -1384,8 +1411,8 @@ Window {
                     height: 28
                     width: 28
                     radius: 6
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.isMuted ? root.themeBorder : (isCyberMode ? root.neonCyan : "#38BDF8")
+                    color: muteMouse.containsMouse ? root.themeBoardBg : root.themeCardBg
+                    border.color: muteMouse.containsMouse ? root.themeAccent : root.themeBorder
                     border.width: 1
 
                     Text {
@@ -1498,7 +1525,7 @@ Window {
         }
 
         id: playArea
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
             anchors.topMargin: root.isTiledDesktopMode ? 6 : 8
             anchors.bottom: buttonDeckItem.top
             anchors.bottomMargin: 8
@@ -2862,8 +2889,8 @@ Window {
             width: toastText.implicitWidth + 36
             height: 38
             radius: 19
-            color: root.themeCardBg
-            border.color: root.themeAccent
+            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+            border.color: root.isDarkMode ? root.themeAccent : "#cbd5e1"
             border.width: 1.5
             opacity: 0
             visible: opacity > 0
@@ -2878,7 +2905,7 @@ Window {
                 text: ""
                 font.pixelSize: 13
                 font.bold: true
-                color: root.themeFg
+                color: root.isDarkMode ? root.themeFg : "#0f172a"
             }
 
             Timer {

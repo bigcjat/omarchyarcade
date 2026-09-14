@@ -14,9 +14,11 @@ Window {
     // =========================================================================
     // OMARCHY THEME TOKENS (Auto-synchronized from colors.toml)
     // =========================================================================
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
     property color themeBg: "#181825"
     property color themeBoardBg: "#11111b"
     property color themeCardBg: "#1e1e2e"
+    property color themeCardHover: isDarkMode ? Qt.lighter(themeCardBg, 1.2) : "#f1f5f9"
     property color themeBorder: "#313244"
     property color themeFg: "#cdd6f4"
     property color themeSubtext: "#a6adc8"
@@ -25,16 +27,46 @@ Window {
     property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
 
     // Reversi specific colors
-    readonly property color feltBg: Qt.darker(themeBoardBg, 1.12)
-    readonly property color feltGrid: Qt.rgba(themeBorder.r, themeBorder.g, themeBorder.b, 0.4)
-    readonly property color darkDiscColor: "#181822"
-    readonly property color darkDiscBorder: "#36384a"
-    readonly property color lightDiscColor: "#e6e9f2"
-    readonly property color lightDiscBorder: "#ffffff"
+    readonly property color feltBg: isDarkMode ? "#143826" : "#166534"
+    readonly property color feltGrid: isDarkMode ? "#1f4d36" : "#15803d"
+    readonly property color darkDiscColor: "#0f172a"
+    readonly property color darkDiscBorder: isDarkMode ? "#475569" : "#334155"
+    readonly property color lightDiscColor: "#f8fafc"
+    readonly property color lightDiscBorder: isDarkMode ? "#cbd5e1" : "#e2e8f0"
 
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+    }
+
+    function cycleTheme() {
+        var nextIsLight = root.isDarkMode;
+        if (nextIsLight) {
+            applyTheme({
+                background: "#f8fafc",
+                board_bg: "#f1f5f9",
+                card_bg: "#ffffff",
+                border: "#cbd5e1",
+                foreground: "#0f172a",
+                subtext: "#64748b",
+                accent: "#2563eb"
+            }, "Light");
+        } else {
+            applyTheme({
+                background: "#181825",
+                board_bg: "#11111b",
+                card_bg: "#313244",
+                border: "#45475a",
+                foreground: "#cdd6f4",
+                subtext: "#a6adc8",
+                accent: "#89b4fa"
+            }, "Dark");
+        }
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     color: themeBg
@@ -90,29 +122,30 @@ Window {
         themeBg = bg;
         themeFg = fg;
         themeAccent = accent;
-        themeBorder = c8;
 
         var lum = colorLuminance(bg);
-        if (lum > 0.5) {
-            themeBoardBg = Qt.darker(bg, 1.08);
-            themeCardBg = Qt.darker(bg, 1.04);
-            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
-            themeBorder = c8 || Qt.darker(bg, 1.15);
+        isDarkMode = lum <= 0.5;
+        if (!isDarkMode) {
+            themeBoardBg = data.board_bg || data.boardBg || "#f1f5f9";
+            themeCardBg = data.card_bg || data.cardBg || "#ffffff";
+            themeCardHover = "#f1f5f9";
+            themeSubtext = data.subtext || "#64748b";
+            themeBorder = data.border || "#cbd5e1";
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         } else {
-            themeBoardBg = Qt.darker(bg, 1.25);
-            themeCardBg = c0;
-            themeSubtext = "#a6adc8";
-            themeBorder = c8;
+            themeBoardBg = data.board_bg || data.boardBg || Qt.darker(bg, 1.25);
+            themeCardBg = data.card_bg || data.cardBg || c0;
+            themeCardHover = Qt.lighter(c0, 1.25);
+            themeSubtext = data.subtext || "#a6adc8";
+            themeBorder = data.border || c8;
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         }
 
-        if (data.boardBg) themeBoardBg = data.boardBg;
-        if (data.cardBg) themeCardBg = data.cardBg;
-        if (data.border) themeBorder = data.border;
-        if (data.subtext) themeSubtext = data.subtext;
+        if (!isDarkMode && colorLuminance(themeBoardBg) < 0.5) {
+            themeBoardBg = "#f1f5f9";
+        }
     }
 
     function playSound(name) {
@@ -358,6 +391,12 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
                 root.fullPlayfield = !root.fullPlayfield;
                 soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
@@ -427,8 +466,23 @@ Window {
         // =====================================================================
         // 2048 DESIGN STANDARD: ROW 1 (Header Item)
         // =====================================================================
+        // Header background bar
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: root.isTiledDesktopMode ? (floatingTiledHUD.y + floatingTiledHUD.height + 8) : (subheaderItem.y + subheaderItem.height + 12)
+            color: root.themeBg
+            z: 10
+        }
+
+        // =====================================================================
+        // 2048 DESIGN STANDARD: ROW 1 (Header Item)
+        // =====================================================================
         Item {
             id: headerItem
+            z: 20
             visible: !root.isTiledDesktopMode
             anchors.top: parent.top
             anchors.topMargin: root.isTiledDesktopMode ? 0 : 14
@@ -453,7 +507,6 @@ Window {
                     font.pixelSize: Math.max(22, Math.min(32, headerItem.width * 0.08))
                     font.bold: true
                     color: root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
                 Text {
                     width: parent.width
@@ -462,7 +515,6 @@ Window {
                     font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.028))
                     font.bold: true
                     color: root.themeSubtext
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
 
@@ -478,10 +530,9 @@ Window {
                     width: Math.max(68, Math.min(84, headerItem.width * 0.17))
                     height: Math.max(44, Math.min(52, headerItem.width * 0.11))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: (root.currentTurn === 1 && root.gameState === "playing") ? root.themeAccent : root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: (root.currentTurn === 1 && root.gameState === "playing") ? root.themeAccent : (root.isDarkMode ? root.themeBorder : "#cbd5e1")
                     border.width: (root.currentTurn === 1 && root.gameState === "playing") ? 2 : 1
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     Row {
                         anchors.centerIn: parent
@@ -502,13 +553,13 @@ Window {
                                 text: "DARK"
                                 font.pixelSize: 8
                                 font.bold: true
-                                color: root.themeSubtext
+                                color: root.isDarkMode ? root.themeSubtext : "#64748b"
                             }
                             Text {
                                 text: root.darkScore.toString()
                                 font.pixelSize: 16
                                 font.bold: true
-                                color: root.themeFg
+                                color: root.isDarkMode ? root.themeFg : "#0f172a"
                             }
                         }
                     }
@@ -519,10 +570,9 @@ Window {
                     width: Math.max(68, Math.min(84, headerItem.width * 0.17))
                     height: Math.max(44, Math.min(52, headerItem.width * 0.11))
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: (root.currentTurn === 2 && root.gameState === "playing") ? root.themeAccent : root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: (root.currentTurn === 2 && root.gameState === "playing") ? root.themeAccent : (root.isDarkMode ? root.themeBorder : "#cbd5e1")
                     border.width: (root.currentTurn === 2 && root.gameState === "playing") ? 2 : 1
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     Row {
                         anchors.centerIn: parent
@@ -543,13 +593,13 @@ Window {
                                 text: "LIGHT"
                                 font.pixelSize: 8
                                 font.bold: true
-                                color: root.themeSubtext
+                                color: root.isDarkMode ? root.themeSubtext : "#64748b"
                             }
                             Text {
                                 text: root.lightScore.toString()
                                 font.pixelSize: 16
                                 font.bold: true
-                                color: root.themeFg
+                                color: root.isDarkMode ? root.themeFg : "#0f172a"
                             }
                         }
                     }
@@ -562,6 +612,7 @@ Window {
         // =====================================================================
         Item {
             id: subheaderItem
+            z: 20
             visible: !root.isTiledDesktopMode
             anchors.top: headerItem.bottom
             anchors.topMargin: root.isTiledDesktopMode ? 0 : 10
@@ -584,8 +635,8 @@ Window {
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
                     radius: 8
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
+                    color: helpMouse.containsMouse ? (root.isDarkMode ? root.themeCardHover : "#f1f5f9") : (root.isDarkMode ? root.themeCardBg : "#ffffff")
+                    border.color: helpMouse.containsMouse ? root.themeAccent : (root.isDarkMode ? root.themeBorder : "#cbd5e1")
                     border.width: 1
 
                     Row {
@@ -603,7 +654,7 @@ Window {
                             text: "How to Play"
                             font.pixelSize: 11
                             font.bold: true
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !subheaderItem.isCrowded
                         }
@@ -631,8 +682,8 @@ Window {
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
                     radius: 8
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.isMuted ? root.themeBorder : root.themeAccent
+                    color: muteMouse.containsMouse ? (root.isDarkMode ? root.themeCardHover : "#f1f5f9") : (root.isDarkMode ? root.themeCardBg : "#ffffff")
+                    border.color: root.isMuted ? (root.isDarkMode ? root.themeBorder : "#cbd5e1") : root.themeAccent
                     border.width: 1
 
                     Row {
@@ -648,7 +699,7 @@ Window {
                             text: root.isMuted ? "Muted" : "Sound"
                             font.pixelSize: 11
                             font.bold: true
-                            color: root.isMuted ? root.themeSubtext : root.themeFg
+                            color: root.isMuted ? (root.isDarkMode ? root.themeSubtext : "#64748b") : (root.isDarkMode ? root.themeFg : "#0f172a")
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !subheaderItem.isCrowded
                         }
@@ -669,8 +720,8 @@ Window {
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (modeRow.implicitWidth + 16)
                     radius: 8
-                    color: modeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.themeBorder
+                    color: modeMouse.containsMouse ? (root.isDarkMode ? root.themeCardHover : "#f1f5f9") : (root.isDarkMode ? root.themeCardBg : "#ffffff")
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Row {
@@ -686,7 +737,7 @@ Window {
                             text: root.gameMode === "pve" ? "vs AI" : "2-Player"
                             font.pixelSize: 11
                             font.bold: true
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !subheaderItem.isCrowded
                         }
@@ -741,10 +792,6 @@ Window {
         }
 
         // =====================================================================
-        // TIER 3: PLAYFIELD BOARD CONTAINER
-        // =====================================================================
-        Item {
-                    // =====================================================================
         // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
         // =====================================================================
         Rectangle {
@@ -758,7 +805,7 @@ Window {
             anchors.rightMargin: 12
             height: 38
             radius: 8
-            z: 90
+            z: 20
             color: root.themeCardBg
             border.color: root.themeBorder
             border.width: 1
@@ -777,13 +824,13 @@ Window {
                 }
 
                 Text {
-                    text: "• " + (root.blackDiscs + " - " + root.whiteDiscs)
+                    text: "• " + (root.darkScore + " - " + root.lightScore)
                     font.pixelSize: 11
                     font.bold: true
                     color: root.themeFg
                 }
                 Text {
-                    text: "(" + ("TURN: " + root.turnColor) + ")"
+                    text: "(" + ("TURN: " + (root.currentTurn === 1 ? "Dark" : "Light")) + ")"
                     font.pixelSize: 10
                     color: root.themeSubtext
                 }
@@ -843,23 +890,30 @@ Window {
             }
         }
 
-        id: playArea
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 6 : 10
-            anchors.bottom: bottomBar.top
-            anchors.bottomMargin: 10
+        // =====================================================================
+        // TIER 3: PLAYFIELD BOARD CONTAINER
+        // =====================================================================
+        Item {
+            id: playArea
+            anchors.top: headerBar.bottom
+            anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
+            z: 1
+
+            Rectangle {
+                anchors.fill: parent
+                color: root.themeBoardBg
+            }
 
             Rectangle {
                 id: boardContainer
-                width: Math.min(parent.width, parent.height)
+                width: Math.min(parent.width - 24, parent.height - (root.isTiledDesktopMode ? 24 : 64))
                 height: width
                 anchors.centerIn: parent
+                anchors.verticalCenterOffset: root.isTiledDesktopMode ? 0 : -22
                 color: root.feltBg
-                border.color: root.themeBorder
+                border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                 border.width: 1
                 radius: 12
                 clip: true
@@ -878,8 +932,8 @@ Window {
                         text: modelData
                         font.pixelSize: 8
                         font.bold: true
-                        color: root.themeSubtext
-                        opacity: 0.65
+                        color: "#ffffff"
+                        opacity: 0.75
                     }
                 }
 
@@ -892,8 +946,8 @@ Window {
                         text: modelData
                         font.pixelSize: 8
                         font.bold: true
-                        color: root.themeSubtext
-                        opacity: 0.65
+                        color: "#ffffff"
+                        opacity: 0.75
                     }
                 }
 
@@ -1025,10 +1079,14 @@ Window {
                                         xScale: 1
                                     }
 
-                                    property int discPiece: cellItem.piece
-                                    onDiscPieceChanged: {
-                                        if (root.gameState === "playing" && cellItem.piece !== 0) {
-                                            flipAnim.restart();
+                                    property int prevPiece: cellItem.piece
+                                    Connections {
+                                        target: cellItem
+                                        function onPieceChanged() {
+                                            if (disc.prevPiece !== 0 && cellItem.piece !== 0 && disc.prevPiece !== cellItem.piece) {
+                                                flipAnim.restart();
+                                            }
+                                            disc.prevPiece = cellItem.piece;
                                         }
                                     }
 
@@ -1070,139 +1128,143 @@ Window {
                     }
                 }
             }
-        }
 
-        // =====================================================================
-        // TIER 4: BOTTOM ACTION BAR (Undo, Difficulty, Turn Status)
-        // =====================================================================
-        Item {
-            id: bottomBar
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 12
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.min(parent.width - 32, 420)
-            height: 38
+            // =====================================================================
+            // TIER 4: BOTTOM ACTION BAR (Undo, Difficulty, Turn Status)
+            // =====================================================================
+            Item {
+                id: bottomBar
+                z: 10
+                visible: !root.isTiledDesktopMode
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 12
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: Math.min(parent.width - 32, 420)
+                height: 38
 
-            Rectangle {
-                anchors.fill: parent
-                radius: 10
-                color: root.themeCardBg
-                border.color: root.themeBorder
-                border.width: 1
-
-                Row {
+                Rectangle {
                     anchors.fill: parent
-                    anchors.margins: 3
+                    radius: 10
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                    border.width: 1
 
-                    // 1. Undo Button (30% width)
-                    Rectangle {
-                        width: parent.width * 0.30
-                        height: parent.height
-                        radius: 8
-                        color: undoMouse.containsMouse ? Qt.darker(root.themeCardBg, 1.15) : "transparent"
+                    Row {
+                        anchors.fill: parent
+                        anchors.margins: 3
 
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 4
-                            Text {
-                                text: "↶"
-                                font.pixelSize: 13
-                                color: root.themeAccent
-                                anchors.verticalCenter: parent.verticalCenter
+                        // 1. Undo Button (30% width)
+                        Rectangle {
+                            width: parent.width * 0.30
+                            height: parent.height
+                            radius: 8
+                            color: undoMouse.containsMouse ? (root.isDarkMode ? root.themeCardHover : "#f1f5f9") : "transparent"
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 4
+                                Text {
+                                    text: "↶"
+                                    font.pixelSize: 13
+                                    color: root.themeAccent
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    text: "Undo (U)"
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    color: root.isDarkMode ? root.themeFg : "#0f172a"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
                             }
-                            Text {
-                                text: "Undo (U)"
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: root.themeFg
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                        }
 
-                        MouseArea {
-                            id: undoMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.handleUndo()
-                        }
-                    }
-
-                    // Vertical divider
-                    Rectangle {
-                        width: 1
-                        height: parent.height - 10
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: root.themeBorder
-                    }
-
-                    // 2. AI Difficulty Button (38% width)
-                    Rectangle {
-                        width: parent.width * 0.38
-                        height: parent.height
-                        radius: 8
-                        color: diffMouse.containsMouse ? Qt.darker(root.themeCardBg, 1.15) : "transparent"
-
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 5
-                            Text {
-                                text: "🧠"
-                                font.pixelSize: 12
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                            Text {
-                                text: root.aiDifficulty.toUpperCase() + " (D)"
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: root.themeAccent
-                                anchors.verticalCenter: parent.verticalCenter
+                            MouseArea {
+                                id: undoMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.handleUndo()
                             }
                         }
 
-                        MouseArea {
-                            id: diffMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.toggleDifficulty()
+                        // Vertical divider
+                        Rectangle {
+                            width: 1
+                            height: parent.height - 10
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                         }
-                    }
 
-                    // Vertical divider
-                    Rectangle {
-                        width: 1
-                        height: parent.height - 10
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: root.themeBorder
-                    }
+                        // 2. AI Difficulty Button (38% width)
+                        Rectangle {
+                            width: parent.width * 0.38
+                            height: parent.height
+                            radius: 8
+                            color: diffMouse.containsMouse ? (root.isDarkMode ? root.themeCardHover : "#f1f5f9") : "transparent"
 
-                    // 3. Status Summary Pill (remaining width)
-                    Item {
-                        width: parent.width - (parent.width * 0.30) - (parent.width * 0.38) - 2
-                        height: parent.height
-
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 5
-                            Rectangle {
-                                width: 8
-                                height: 8
-                                radius: 4
-                                color: root.currentTurn === 1 ? root.darkDiscBorder : root.lightDiscColor
-                                anchors.verticalCenter: parent.verticalCenter
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 5
+                                Text {
+                                    text: "🧠"
+                                    font.pixelSize: 12
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    text: root.aiDifficulty.toUpperCase() + " (D)"
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    color: root.themeAccent
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
                             }
-                            Text {
-                                text: root.currentTurn === 1 ? "Dark" : "Light"
-                                font.pixelSize: 10
-                                font.bold: true
-                                color: root.themeSubtext
-                                anchors.verticalCenter: parent.verticalCenter
+
+                            MouseArea {
+                                id: diffMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.toggleDifficulty()
+                            }
+                        }
+
+                        // Vertical divider
+                        Rectangle {
+                            width: 1
+                            height: parent.height - 10
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                        }
+
+                        // 3. Status Summary Pill (remaining width)
+                        Item {
+                            width: parent.width - (parent.width * 0.30) - (parent.width * 0.38) - 2
+                            height: parent.height
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 5
+                                Rectangle {
+                                    width: 8
+                                    height: 8
+                                    radius: 4
+                                    color: root.currentTurn === 1 ? root.darkDiscBorder : root.lightDiscColor
+                                    border.color: root.isDarkMode ? "#00000000" : "#94a3b8"
+                                    border.width: 1
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    text: root.currentTurn === 1 ? "Dark" : "Light"
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
                             }
                         }
                     }
                 }
-            }
+        }
         }
 
         // =====================================================================
@@ -1419,8 +1481,8 @@ Window {
             width: toastText.implicitWidth + 24
             height: 28
             radius: 14
-            color: root.themeCardBg
-            border.color: root.themeBorder
+            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
             border.width: 1
             opacity: 0
             z: 800
@@ -1430,7 +1492,7 @@ Window {
                 anchors.centerIn: parent
                 font.pixelSize: 11
                 font.bold: true
-                color: root.themeFg
+                color: root.isDarkMode ? root.themeFg : "#0f172a"
             }
 
             function show(msg) {

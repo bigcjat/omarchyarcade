@@ -1,20 +1,11 @@
 #!/usr/bin/env python3
 """
-Omarchy Arcade • Master Game Template Launcher
+Omarchy Arcade • Fold
 Cross-platform PySide6 host supporting Omarchy Linux, macOS, and standard Linux/Windows desktops.
-
-Features:
-- Native Omarchy Desktop theme hot-reloading (~/.config/omarchy/current/theme/colors.toml)
-- Native OS theme synchronization (detects macOS/system Dark vs Light mode via QStyleHints)
-- CoreAudio low-latency sound synthesis on macOS (0ms delay) + PipeWire/PulseAudio on Linux
-- QSettings persistent score/save state management
-- Canonical splashscreen and responsive 2048 layout integration
-- CLI tools: --theme, --list-themes, --no-splash, --screenshot, --screenshot-help
 """
 
 import os
 import sys
-import re
 import shutil
 import subprocess
 import tomllib
@@ -23,6 +14,36 @@ from pathlib import Path
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QFileSystemWatcher, QTimer, QObject, Slot, QSettings, Qt
+
+# =============================================================================
+# THEME PRESETS
+# =============================================================================
+DEFAULT_PRESETS = {
+    "dark": {
+        "id": "catppuccin",
+        "name": "Catppuccin Mocha",
+        "background": "#181825",
+        "board_bg": "#11111b",
+        "surface": "#1e1e2e",
+        "card_bg": "#1e1e2e",
+        "border": "#313244",
+        "foreground": "#cdd6f4",
+        "subtext": "#a6adc8",
+        "accent": "#f28482",
+    },
+    "light": {
+        "id": "catppuccin-latte",
+        "name": "Catppuccin Latte",
+        "background": "#f8fafc",
+        "board_bg": "#f1f5f9",
+        "surface": "#ffffff",
+        "card_bg": "#ffffff",
+        "border": "#cbd5e1",
+        "foreground": "#0f172a",
+        "subtext": "#64748b",
+        "accent": "#d20f39",
+    },
+}
 
 # =============================================================================
 # PERSISTENT SETTINGS MANAGER
@@ -92,7 +113,7 @@ class SoundManager(QObject):
         self.sounds_dir = Path(sounds_dir)
         self.sounds = {}
         self.is_mac = sys.platform == "darwin"
-        
+
         if self.is_mac:
             try:
                 cf = ctypes.cdll.LoadLibrary("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")
@@ -152,25 +173,6 @@ class SoundManager(QObject):
 # =============================================================================
 # THEME UTILITIES
 # =============================================================================
-def load_all_omarchy_themes():
-    """Parses Themes.js for all predefined Omarchy color schemes."""
-    themes_js = Path(__file__).resolve().parent / "Themes.js"
-    if not themes_js.is_file():
-        return {}
-    with open(themes_js, "r", encoding="utf-8") as f:
-        content = f.read()
-    themes = {}
-    blocks = re.findall(r"\{([^{}]+)\}", content)
-    for b in blocks:
-        t = {}
-        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", b):
-            t[k] = v
-        if "id" in t and "name" in t:
-            themes[t["id"]] = t
-    return themes
-
-ALL_THEMES = load_all_omarchy_themes()
-
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
     if env_path and Path(env_path).is_file():
@@ -208,21 +210,8 @@ def main():
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
     os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
 
-    if "--list-themes" in sys.argv:
-        print(f"Arcade Game Template • Available Themes ({len(ALL_THEMES)} total):\n")
-        print("  Light Themes:")
-        for tid, t in ALL_THEMES.items():
-            if any(term in tid for term in ["light", "snow", "dawn", "white", "latte", "paper"]):
-                print(f"    --theme {tid:<20} -> {t['name']}")
-        print("\n  Dark Themes:")
-        for tid, t in ALL_THEMES.items():
-            if not any(term in tid for term in ["light", "snow", "dawn", "white", "latte", "paper"]):
-                print(f"    --theme {tid:<20} -> {t['name']}")
-        print("\nUsage: python main.py --theme <theme_id>")
-        sys.exit(0)
-
     app = QGuiApplication(sys.argv)
-    app.setApplicationName("Arcade Game Template")
+    app.setApplicationName("Fold")
     app.setOrganizationName("Arcade")
 
     engine = QQmlApplicationEngine()
@@ -231,7 +220,7 @@ def main():
     sound_mgr = SoundManager(Path(__file__).resolve().parent / "sounds")
     engine.rootContext().setContextProperty("soundManager", sound_mgr)
 
-    settings_mgr = SettingsManager("GameTemplate")
+    settings_mgr = SettingsManager("Fold")
     engine.rootContext().setContextProperty("settingsManager", settings_mgr)
 
     qml_file = Path(__file__).resolve().parent / "main.qml"
@@ -243,41 +232,37 @@ def main():
 
     root_obj = engine.rootObjects()[0]
 
-    # CLI Theme Argument Parsing
+    # Theme Resolution
     theme_arg = None
     if "--theme" in sys.argv:
         idx = sys.argv.index("--theme")
         if idx + 1 < len(sys.argv):
             theme_arg = sys.argv[idx + 1]
 
-    # 1. Explicit Theme CLI Override
     if theme_arg:
-        clean_arg = theme_arg.lower().replace("_", "-")
-        if clean_arg in ALL_THEMES:
-            t = ALL_THEMES[clean_arg]
+        clean = theme_arg.lower().replace("_", "-")
+        if clean in DEFAULT_PRESETS:
+            t = DEFAULT_PRESETS[clean]
             root_obj.applyTheme(t, t["name"])
-            print(f"Applied theme: {t['name']}")
+        elif any(term in clean for term in ["light", "white", "day", "snow", "dawn"]):
+            t = DEFAULT_PRESETS["light"]
+            root_obj.applyTheme(t, t["name"])
         else:
             custom_path = Path(theme_arg).expanduser().resolve()
             if custom_path.is_file():
                 data = load_toml_colors(custom_path)
                 if data:
                     root_obj.applyTheme(data, custom_path.parent.name.capitalize())
-                    print(f"Applied theme from file: {custom_path}")
             else:
-                print(f"Warning: Theme '{theme_arg}' not found. Run with --list-themes.", file=sys.stderr)
-
-    # 2. Omarchy Desktop System Theme Detection & Hot-Reloading
+                t = DEFAULT_PRESETS["dark"]
+                root_obj.applyTheme(t, t["name"])
     else:
         system_colors = find_omarchy_colors_file()
         if system_colors:
             data = load_toml_colors(system_colors)
             if data:
-                theme_name = system_colors.parent.name.capitalize()
-                root_obj.applyTheme(data, theme_name)
-                print(f"Detected Omarchy theme: {theme_name} ({system_colors})")
+                root_obj.applyTheme(data, system_colors.parent.name.capitalize())
 
-            # Watch for real-time desktop theme switches
             watcher = QFileSystemWatcher(app)
             watcher.addPath(str(system_colors))
             if system_colors.parent.exists():
@@ -289,28 +274,17 @@ def main():
                     updated = load_toml_colors(colors_path)
                     if updated:
                         root_obj.applyTheme(updated, colors_path.parent.name.capitalize())
-                        print(f"Omarchy theme reloaded: {colors_path.parent.name}")
 
             watcher.fileChanged.connect(on_theme_updated)
             watcher.directoryChanged.connect(on_theme_updated)
-
-        # 3. macOS / System Dark & Light Mode Synchronization
         else:
             def apply_system_scheme():
                 scheme = app.styleHints().colorScheme()
-                if scheme == Qt.ColorScheme.Light:
-                    target_theme = ALL_THEMES.get("catppuccin-latte") or ALL_THEMES.get("github-light")
-                    name = "System Light"
-                else:
-                    target_theme = ALL_THEMES.get("catppuccin") or ALL_THEMES.get("tokyonight")
-                    name = "System Dark"
-
-                if target_theme:
-                    root_obj.applyTheme(target_theme, name)
-                    print(f"Detected OS appearance: {name} ({target_theme.get('name')})")
+                preset_key = "light" if scheme == Qt.ColorScheme.Light else "dark"
+                t = DEFAULT_PRESETS[preset_key]
+                root_obj.applyTheme(t, t["name"])
 
             apply_system_scheme()
-            # React live when user flips OS Dark / Light appearance in macOS or Linux
             app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
 
     if "--level" in sys.argv:
@@ -339,32 +313,17 @@ def main():
         except (ValueError, IndexError):
             pass
 
-    # Screenshot / automation helpers
+    # Screenshot automation
     if "--screenshot" in sys.argv:
         root_obj.setProperty("splashEnabled", False)
-        def capture():
-            out_idx = sys.argv.index("--screenshot") + 1
-            out_file = sys.argv[out_idx] if out_idx < len(sys.argv) and not sys.argv[out_idx].startswith("--") else "screenshot.png"
-            out_path = Path(out_file).resolve()
-            root_obj.captureScreenshot(str(out_path), True)
-            QTimer.singleShot(800, app.quit)
-        QTimer.singleShot(350, capture)
+        out_idx = sys.argv.index("--screenshot") + 1
+        out_file = sys.argv[out_idx] if out_idx < len(sys.argv) and not sys.argv[out_idx].startswith("--") else "screenshot.png"
+        out_path = Path(out_file).resolve()
 
-    if "--screenshot-help" in sys.argv:
-        root_obj.setProperty("splashEnabled", False)
-        def capture_help():
-            root_obj.setProperty("showHelp", True)
-            out_path = Path(__file__).resolve().parent / "screenshot_help.png"
-            root_obj.captureScreenshot(str(out_path), False)
-            QTimer.singleShot(400, app.quit)
-        QTimer.singleShot(350, capture_help)
-
-    if "--screenshot-splash" in sys.argv:
-        def capture_splash():
-            out_path = Path(__file__).resolve().parent / "screenshot_splash.png"
-            root_obj.captureScreenshot(str(out_path), False)
-            QTimer.singleShot(400, app.quit)
-        QTimer.singleShot(600, capture_splash)
+        if hasattr(root_obj, "screenshotSaved"):
+            root_obj.screenshotSaved.connect(lambda p: app.quit())
+        QTimer.singleShot(250, lambda: root_obj.captureScreenshot(str(out_path), False))
+        QTimer.singleShot(2000, app.quit)
 
     print("Fold running. Press Esc or ? for help, 1-4 for colors, U to undo, R to restart.")
     sys.exit(app.exec())

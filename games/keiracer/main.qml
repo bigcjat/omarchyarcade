@@ -17,12 +17,14 @@ Window {
     property color themeBg: "#0f172a"
     property color themeBoardBg: "#020617"
     property color themeCardBg: "#1e293b"
+    property color themeCardHover: isDarkMode ? "#334155" : "#f1f5f9"
     property color themeBorder: "#334155"
     property color themeFg: "#f8fafc"
     property color themeSubtext: "#94a3b8"
     property color themeAccent: "#00f0ff"
     property color themeBtnFg: "#0f172a"
     property color themePink: "#ff007f"
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
 
     property string currentThemeName: "Catppuccin"
     property bool splashEnabled: true
@@ -80,13 +82,14 @@ Window {
 
     color: themeBg
 
-    Behavior on themeBg { ColorAnimation { duration: 250 } }
-    Behavior on themeBoardBg { ColorAnimation { duration: 250 } }
-    Behavior on themeCardBg { ColorAnimation { duration: 250 } }
-    Behavior on themeFg { ColorAnimation { duration: 250 } }
-    Behavior on themeSubtext { ColorAnimation { duration: 250 } }
-    Behavior on themeAccent { ColorAnimation { duration: 250 } }
-    Behavior on themeBorder { ColorAnimation { duration: 250 } }
+    function colorLuminance(col) {
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
+        return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+    }
 
     Component.onCompleted: {
         if (typeof settingsManager !== "undefined" && settingsManager) {
@@ -96,15 +99,56 @@ Window {
 
     function applyTheme(data, name) {
         if (!data || typeof data !== "object") return;
-        if (data.bg) themeBg = data.bg;
-        if (data.fg) themeFg = data.fg;
-        if (data.boardBg) themeBoardBg = data.boardBg;
-        if (data.cardBg) themeCardBg = data.cardBg;
-        if (data.border) themeBorder = data.border;
-        if (data.subtext) themeSubtext = data.subtext;
-        if (data.accent) themeAccent = data.accent;
+        var isLight = false;
+        if (data.bg) {
+            isLight = colorLuminance(data.bg) >= 0.5;
+        }
+        if (isLight) {
+            themeBg = data.bg || "#eff1f5";
+            themeFg = data.fg || "#4c4f69";
+            themeCardBg = data.cardBg || "#ffffff";
+            themeCardHover = "#f1f5f9";
+            themeBoardBg = "#020617"; // playfield board remains dark arcade!
+            themeBorder = data.border || "#cbd5e1";
+            themeSubtext = data.subtext || "#64748b";
+            themeAccent = data.accent || "#0284c7";
+            themePink = data.pink || "#d20f39";
+            themeBtnFg = "#ffffff";
+        } else {
+            themeBg = data.bg || "#0f172a";
+            themeFg = data.fg || "#f8fafc";
+            themeCardBg = data.cardBg || "#1e293b";
+            themeCardHover = "#334155";
+            themeBoardBg = data.boardBg || "#020617";
+            themeBorder = data.border || "#334155";
+            themeSubtext = data.subtext || "#94a3b8";
+            themeAccent = data.accent || "#00f0ff";
+            themePink = data.pink || "#ff007f";
+            themeBtnFg = "#0f172a";
+        }
         if (name) currentThemeName = name;
         gameCanvas.requestPaint();
+    }
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            bg: "#eff1f5",
+            fg: "#4c4f69",
+            cardBg: "#ffffff",
+            border: "#cbd5e1",
+            subtext: "#64748b",
+            accent: "#0284c7"
+        } : {
+            bg: "#0f172a",
+            fg: "#f8fafc",
+            cardBg: "#1e293b",
+            border: "#334155",
+            subtext: "#94a3b8",
+            accent: "#00f0ff"
+        };
+        applyTheme(tData, nextIsLight ? "Omarchy Light" : "Omarchy Dark");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     function playSound(name) {
@@ -189,318 +233,6 @@ Window {
         focus: true
 
         // =====================================================================
-        // 2048 DESIGN STANDARD: ROW 1 (Header Item)
-        // =====================================================================
-        Item {
-            id: headerItem
-            visible: !root.isTiledDesktopMode
-            anchors.top: parent.top
-            anchors.topMargin: root.isTiledDesktopMode ? 0 : 14
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.leftMargin: 14
-            anchors.rightMargin: 14
-            height: root.isTiledDesktopMode ? 0 : (Math.max(titleCol.height, scoreRow.height))
-
-            Column {
-                id: titleCol
-                anchors.left: parent.left
-                anchors.right: scoreRow.left
-                anchors.rightMargin: 10
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 2
-
-                Text {
-                    width: parent.width
-                    elide: Text.ElideRight
-                    text: "KeiRacer"
-                    font.family: root.monoFontFamily
-                    font.pixelSize: Math.max(20, Math.min(30, headerItem.width * 0.07))
-                    font.bold: true
-                    color: root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 250 } }
-                }
-                Text {
-                    width: parent.width
-                    elide: Text.ElideRight
-                    text: "Slow Car Racing League"
-                    font.family: root.monoFontFamily
-                    font.pixelSize: Math.max(10, Math.min(12, headerItem.width * 0.024))
-                    color: root.themeSubtext
-                    Behavior on color { ColorAnimation { duration: 250 } }
-                }
-            }
-
-            // Stat Cards on the right
-            Row {
-                id: scoreRow
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
-
-                // SCORE Card
-                Rectangle {
-                    width: Math.max(54, Math.min(76, headerItem.width * 0.14))
-                    height: Math.max(38, Math.min(46, headerItem.width * 0.09))
-                    radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 2
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "SCORE"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 8
-                            font.bold: true
-                            color: root.themeSubtext
-                        }
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: root.currentScore.toString()
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 14
-                            font.bold: true
-                            color: root.themeFg
-                        }
-                    }
-                }
-
-                // BEST Card
-                Rectangle {
-                    width: Math.max(54, Math.min(76, headerItem.width * 0.14))
-                    height: Math.max(38, Math.min(46, headerItem.width * 0.09))
-                    radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 2
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "BEST"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 8
-                            font.bold: true
-                            color: root.themeSubtext
-                        }
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: Math.max(root.highScore, root.currentScore).toString()
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 14
-                            font.bold: true
-                            color: root.highScore > 0 ? root.themeAccent : root.themeSubtext
-                        }
-                    }
-                }
-            }
-        }
-
-        // =====================================================================
-        // 2048 DESIGN STANDARD: ROW 2 (Subheader Action Bar)
-        // =====================================================================
-        Item {
-            id: subheaderItem
-            visible: !root.isTiledDesktopMode
-            anchors.top: headerItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 0 : 8
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.leftMargin: 14
-            anchors.rightMargin: 14
-            height: root.isTiledDesktopMode ? 0 : 32
-
-            readonly property bool isCrowded: subheaderItem.width < 450
-
-            // Left cluster: Garage & Help
-            Row {
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: subheaderItem.isCrowded ? 6 : 8
-
-                // Garage Button
-                Rectangle {
-                    id: garageBtn
-                    height: 30
-                    width: subheaderItem.isCrowded ? 32 : (garageRow.implicitWidth + 18)
-                    radius: 7
-                    color: garageMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.themeAccent
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-
-                    Row {
-                        id: garageRow
-                        anchors.centerIn: parent
-                        spacing: 4
-                        Text {
-                            text: "🏎️"
-                            font.pixelSize: 12
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: "Garage (C)"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.themeAccent
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: !subheaderItem.isCrowded
-                        }
-                    }
-
-                    MouseArea {
-                        id: garageMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.showCarSelect = !root.showCarSelect
-                    }
-                }
-
-                // Help Button
-                Rectangle {
-                    id: helpBtn
-                    height: 30
-                    width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
-                    radius: 7
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-
-                    Row {
-                        id: helpRow
-                        anchors.centerIn: parent
-                        spacing: 4
-                        Text {
-                            text: "?"
-                            font.pixelSize: 13
-                            font.bold: true
-                            color: root.themeAccent
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: "How to Play"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.themeFg
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: !subheaderItem.isCrowded
-                        }
-                    }
-
-                    MouseArea {
-                        id: helpMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.showHelp = !root.showHelp
-                    }
-                }
-            }
-
-            // Right cluster: Mute & Restart
-            Row {
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: subheaderItem.isCrowded ? 6 : 8
-
-                // Mute Button
-                Rectangle {
-                    id: muteBtn
-                    height: 30
-                    width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
-                    radius: 7
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.isMuted ? root.themeBorder : root.themeAccent
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-
-                    Row {
-                        id: muteRow
-                        anchors.centerIn: parent
-                        spacing: 4
-                        Text {
-                            text: root.isMuted ? "🔇" : "🔊"
-                            font.pixelSize: 12
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: root.isMuted ? "Muted" : "Sound"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.isMuted ? root.themeSubtext : root.themeFg
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: !subheaderItem.isCrowded
-                        }
-                    }
-
-                    MouseArea {
-                        id: muteMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleMute()
-                    }
-                }
-
-                // Restart Button
-                Rectangle {
-                    id: restartBtn
-                    height: 30
-                    width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
-                    radius: 7
-                    color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 150 } }
-
-                    Row {
-                        id: restartRow
-                        anchors.centerIn: parent
-                        spacing: 4
-                        Text {
-                            text: "🔄"
-                            font.pixelSize: 12
-                            visible: subheaderItem.isCrowded
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: "New Game (R)"
-                            font.family: root.monoFontFamily
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.themeBtnFg
-                            visible: !subheaderItem.isCrowded
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-
-                    MouseArea {
-                        id: restartMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.startNewGame()
-                    }
-                }
-            }
-        }
-
-        // =====================================================================
-        // TIER 3: PLAYFIELD BOARD CONTAINER
-        // =====================================================================
-        Item {
-                    // =====================================================================
         // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
         // =====================================================================
         Rectangle {
@@ -599,23 +331,374 @@ Window {
             }
         }
 
-        id: playArea
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 6 : 10
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 14
+        // Header Bar (flush arcade layout)
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 14
-            anchors.rightMargin: 14
+            height: root.isTiledDesktopMode ? 0 : (headerItem.height + subheaderItem.height + 30)
+            color: root.themeBg
+            visible: !root.isTiledDesktopMode
+            z: 10
+        }
+
+        // 1. HEADER (Title + Stat Cards)
+        Item {
+            id: headerItem
+            visible: !root.isTiledDesktopMode
+            anchors.top: parent.top
+            anchors.topMargin: root.isTiledDesktopMode ? 0 : 12
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: root.isTiledDesktopMode ? 0 : (Math.max(titleCol.height, scoreRow.height))
+            z: 11
+
+            Column {
+                id: titleCol
+                anchors.left: parent.left
+                anchors.right: scoreRow.left
+                anchors.rightMargin: 12
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 2
+
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: "KeiRacer"
+                    font.family: root.monoFontFamily
+                    font.pixelSize: Math.max(20, Math.min(30, headerItem.width * 0.07))
+                    font.bold: true
+                    color: root.themeAccent
+                }
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: "Slow Car Racing League • Stage " + root.currentStage
+                    font.family: root.monoFontFamily
+                    font.pixelSize: Math.max(10, Math.min(12, headerItem.width * 0.024))
+                    color: root.themeSubtext
+                }
+            }
+
+            // Stat Cards on the right
+            Row {
+                id: scoreRow
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
+
+                // SCORE Card
+                Rectangle {
+                    width: Math.max(64, Math.min(80, headerItem.width * 0.16))
+                    height: 46
+                    radius: 8
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                    border.width: 1
+
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "SCORE"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.currentScore.toString()
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 15
+                            font.bold: true
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
+                        }
+                    }
+                }
+
+                // BEST Card
+                Rectangle {
+                    width: Math.max(64, Math.min(80, headerItem.width * 0.16))
+                    height: 46
+                    radius: 8
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                    border.width: 1
+
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "BEST"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: Math.max(root.highScore, root.currentScore).toString()
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 15
+                            font.bold: true
+                            color: (root.highScore > 0 || root.currentScore > 0) ? (root.isDarkMode ? root.themeAccent : "#15803d") : (root.isDarkMode ? root.themeSubtext : "#94a3b8")
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. SUBHEADER (Controls & Actions)
+        Item {
+            id: subheaderItem
+            visible: !root.isTiledDesktopMode
+            anchors.top: headerItem.bottom
+            anchors.topMargin: 8
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: root.isTiledDesktopMode ? 0 : 32
+            z: 11
+
+            readonly property bool isCrowded: subheaderItem.width < 520
+
+            // Left cluster: Garage, Help, ViewMode
+            Row {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: subheaderItem.isCrowded ? 6 : 8
+
+                // Garage Button
+                Rectangle {
+                    id: garageBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (garageRow.implicitWidth + 18)
+                    radius: 8
+                    color: garageMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: garageRow
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Text {
+                            text: "🏎️"
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "Garage (C)"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeAccent
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: garageMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showCarSelect = !root.showCarSelect
+                    }
+                }
+
+                // Help Button
+                Rectangle {
+                    id: helpBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
+                    radius: 8
+                    color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: helpRow
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Text {
+                            text: "?"
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: root.themeAccent
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "How to Play"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: helpMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.showHelp = !root.showHelp
+                    }
+                }
+
+                // View Mode Toggle
+                Rectangle {
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (viewRow.implicitWidth + 18)
+                    radius: 8
+                    color: viewMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: viewRow
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Text {
+                            text: root.fullPlayfield ? "🔲" : "⛶"
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: root.fullPlayfield ? "Standard" : "Full (⇧F)"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: viewMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.fullPlayfield = !root.fullPlayfield;
+                            soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
+                        }
+                    }
+                }
+            }
+
+            // Right cluster: Mute & Restart
+            Row {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: subheaderItem.isCrowded ? 6 : 8
+
+                // Mute Button
+                Rectangle {
+                    id: muteBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
+                    radius: 8
+                    color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: muteRow
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Text {
+                            text: root.isMuted ? "🔇" : "🔊"
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: root.isMuted ? "Muted" : "Sound"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.isMuted ? root.themeSubtext : root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: muteMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
+                }
+
+                // Restart Button
+                Rectangle {
+                    id: restartBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
+                    radius: 8
+                    color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+
+                    Row {
+                        id: restartRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "🔄"
+                            font.pixelSize: 12
+                            visible: subheaderItem.isCrowded
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "New Game (R)"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeBtnFg
+                            visible: !subheaderItem.isCrowded
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    MouseArea {
+                        id: restartMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.startNewGame()
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // TIER 3: PLAYFIELD BOARD CONTAINER (Edge-to-edge flush arcade layout)
+        // =====================================================================
+        Item {
+            id: playArea
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 0
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
 
             Rectangle {
                 id: boardContainer
                 anchors.fill: parent
                 color: root.themeBoardBg
-                border.color: root.themeBorder
-                border.width: 1
-                radius: 12
+                border.width: 0
+                radius: 0
                 clip: true
 
                 Canvas {
@@ -693,7 +776,7 @@ Window {
                     onPaint: {
                         var ctx = getContext("2d");
                         Engine.render(ctx, width, height, {
-                            bg: root.themeBg,
+                            bg: root.themeBoardBg,
                             boardBg: root.themeBoardBg,
                             cardBg: root.themeCardBg,
                             accent: root.themeAccent,
@@ -1071,6 +1154,12 @@ Window {
 
             if (event.key === Qt.Key_M) {
                 root.toggleMute();
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
                 event.accepted = true;
                 return;
             }

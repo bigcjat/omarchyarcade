@@ -82,7 +82,6 @@ games/chess/
 ├── ai_engine.py         # Pure Python PeSTO PST + Negamax + Alpha-Beta chess engine
 ├── chess.js             # Bundled move validation and FIDE rule engine (.pragma library)
 ├── SplashScreen.qml     # Canonical arcade startup animation
-├── Themes.js            # Palette definitions for all 22 Omarchy desktop themes
 ├── assets/              # Clean dual-contour vector SVGs for all 6 piece types
 │   ├── pawn_cyan.svg / pawn_coral.svg
 │   ├── knight_cyan.svg / knight_coral.svg

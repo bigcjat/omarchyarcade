@@ -13,9 +13,11 @@ Window {
     // =========================================================================
     // OMARCHY THEME TOKENS (Auto-synchronized from colors.toml)
     // =========================================================================
+    property bool isDarkMode: true
     property color themeBg: "#181825"
     property color themeBoardBg: "#11111b"
     property color themeCardBg: "#1e1e2e"
+    property color themeCardHover: isDarkMode ? Qt.lighter(themeCardBg, 1.2) : "#f1f5f9"
     property color themeBorder: "#313244"
     property color themeFg: "#cdd6f4"
     property color themeSubtext: "#a6adc8"
@@ -28,7 +30,11 @@ Window {
     readonly property color colDangerRed: "#ef4444"
 
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
@@ -80,19 +86,23 @@ Window {
         themeBg = bg;
         themeFg = fg;
         themeAccent = accent;
-        themeBorder = c8;
 
         var lum = colorLuminance(bg);
-        if (lum > 0.5) {
-            themeBoardBg = Qt.darker(bg, 1.08);
-            themeCardBg = Qt.darker(bg, 1.04);
-            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
+        isDarkMode = lum <= 0.5;
+        if (!isDarkMode) {
+            themeBoardBg = data.boardBg || "#f1f5f9";
+            themeCardBg = data.cardBg || "#ffffff";
+            themeCardHover = "#f1f5f9";
+            themeSubtext = data.subtext || "#64748b";
+            themeBorder = data.border || "#cbd5e1";
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         } else {
             themeBoardBg = Qt.darker(bg, 1.30);
             themeCardBg = c0;
+            themeCardHover = Qt.lighter(c0, 1.25);
             themeSubtext = "#a6adc8";
+            themeBorder = c8;
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         }
@@ -438,11 +448,23 @@ Window {
             }
         }
 
+        // Background header bar spanning top behind items
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: root.isTiledDesktopMode ? (floatingTiledHUD.y + floatingTiledHUD.height + 6) : (subheaderItem.y + subheaderItem.height + 12)
+            color: root.themeBg
+            z: 10
+        }
+
         // =====================================================================
         // ROW 1: HEADER (Visible in Standard Window Mode)
         // =====================================================================
         Item {
             id: headerItem
+            z: 20
             visible: !root.isTiledDesktopMode
             anchors.top: parent.top
             anchors.topMargin: visible ? 16 : 0
@@ -467,7 +489,6 @@ Window {
                     font.pixelSize: Math.max(18, Math.min(26, headerItem.width * 0.065))
                     font.bold: true
                     color: root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
                 Text {
                     width: parent.width
@@ -475,7 +496,6 @@ Window {
                     text: "Classic arcade puzzle for Omarchy"
                     font.pixelSize: Math.max(10, Math.min(12, headerItem.width * 0.026))
                     color: root.themeSubtext
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
 
@@ -491,8 +511,8 @@ Window {
                     width: Math.max(54, Math.min(68, headerItem.width * 0.14))
                     height: 44
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -503,14 +523,14 @@ Window {
                             text: "LEVEL"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.currentLevel.toString()
                             font.pixelSize: 15
                             font.bold: true
-                            color: root.themeAccent
+                            color: root.isDarkMode ? root.themeAccent : "#2563eb"
                         }
                     }
                 }
@@ -520,8 +540,8 @@ Window {
                     width: Math.max(54, Math.min(68, headerItem.width * 0.14))
                     height: 44
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -532,14 +552,14 @@ Window {
                             text: "MOVES"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.moves.toString()
                             font.pixelSize: 15
                             font.bold: true
-                            color: root.themeFg
+                            color: root.moves <= root.parMoves ? (root.isDarkMode ? root.themeFg : "#15803d") : "#ef4444"
                         }
                     }
                 }
@@ -549,8 +569,8 @@ Window {
                     width: Math.max(54, Math.min(68, headerItem.width * 0.14))
                     height: 44
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Column {
@@ -561,14 +581,14 @@ Window {
                             text: "PAR"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.parMoves.toString()
                             font.pixelSize: 15
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#475569"
                         }
                     }
                 }
@@ -580,6 +600,7 @@ Window {
         // =====================================================================
         Item {
             id: subheaderItem
+            z: 20
             visible: !root.isTiledDesktopMode
             anchors.top: headerItem.bottom
             anchors.topMargin: visible ? 10 : 0
@@ -601,7 +622,7 @@ Window {
                     height: 30
                     width: 30
                     radius: 6
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
                     border.width: 1
 
@@ -627,7 +648,7 @@ Window {
                     height: 30
                     width: 30
                     radius: 6
-                    color: undoMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: undoMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.undoStack.length > 0 ? root.themeAccent : root.themeBorder
                     border.width: 1
 
@@ -655,7 +676,7 @@ Window {
                 height: 30
                 width: diffRow.implicitWidth + 8
                 radius: 6
-                color: root.themeBoardBg
+                color: root.themeCardBg
                 border.color: root.themeBorder
                 border.width: 1
 
@@ -731,7 +752,7 @@ Window {
                     height: 30
                     width: 30
                     radius: 6
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.isMuted ? root.themeBorder : root.themeAccent
                     border.width: 1
 
@@ -822,7 +843,7 @@ Window {
                 // Diff Pill
                 Rectangle {
                     width: 44; height: 18; radius: 4
-                    color: root.themeBoardBg
+                    color: root.themeCardHover
                     Text {
                         anchors.centerIn: parent
                         text: root.currentDifficulty.toUpperCase()
@@ -893,14 +914,16 @@ Window {
         // =====================================================================
         Item {
             id: playArea
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 6 : 10
+            anchors.top: headerBar.bottom
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: root.isTiledDesktopMode ? 8 : 12
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: root.isTiledDesktopMode ? 8 : 12
-            anchors.rightMargin: root.isTiledDesktopMode ? 8 : 12
+            z: 1
+
+            Rectangle {
+                anchors.fill: parent
+                color: root.isDarkMode ? root.themeBoardBg : root.themeBg
+            }
 
             // Concrete Parking Compound
             Rectangle {
@@ -914,8 +937,8 @@ Window {
 
                 width: (root.boardCols + 0.6) * cellSize
                 height: (root.boardRows + 0.6) * cellSize
-                color: root.themeBoardBg
-                border.color: root.themeBorder
+                color: root.isDarkMode ? root.themeBoardBg : "#e2e8f0"
+                border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                 border.width: 2
                 radius: 12
                 clip: false
@@ -926,7 +949,7 @@ Window {
                     anchors.centerIn: parent
                     width: root.boardCols * boardContainer.cellSize
                     height: root.boardRows * boardContainer.cellSize
-                    color: "#131620"
+                    color: root.isDarkMode ? "#131620" : "#ffffff"
                     radius: 6
 
                     // Painted Bays Canvas
@@ -948,7 +971,7 @@ Window {
                             var ts = boardContainer.cellSize;
 
                             // Dashed guide lines
-                            ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+                            ctx.strokeStyle = root.isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.10)";
                             ctx.lineWidth = 1;
                             ctx.setLineDash([4, 4]);
 
@@ -971,7 +994,7 @@ Window {
                                     var by = r * ts;
                                     var arm = Math.max(8, ts * 0.16);
 
-                                    ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+                                    ctx.strokeStyle = root.isDarkMode ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.25)";
                                     ctx.lineWidth = 1.5;
 
                                     ctx.beginPath();
@@ -984,7 +1007,7 @@ Window {
 
                                     // Stenciled Stall Number
                                     var stall = (r * root.boardCols + c + 1);
-                                    ctx.fillStyle = "rgba(255, 255, 255, 0.07)";
+                                    ctx.fillStyle = root.isDarkMode ? "rgba(255, 255, 255, 0.07)" : "rgba(0, 0, 0, 0.18)";
                                     ctx.font = "bold 9px sans-serif";
                                     ctx.fillText(stall < 10 ? "0" + stall : "" + stall, bx + 6, by + 14);
                                 }
@@ -998,9 +1021,9 @@ Window {
                         text: "止まれ"
                         font.pixelSize: Math.max(16, boardContainer.cellSize * 0.35)
                         font.bold: true
-                        color: "#ffffff"
-                        opacity: 0.07
-                        z: 6
+                        color: root.isDarkMode ? "#ffffff" : "#0f172a"
+                        opacity: root.isDarkMode ? 0.06 : 0.10
+                        z: 1
                     }
 
                     // Exit Beacons on Borders

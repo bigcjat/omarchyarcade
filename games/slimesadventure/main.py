@@ -164,24 +164,32 @@ class SoundManager(QObject):
 # =============================================================================
 # THEME UTILITIES
 # =============================================================================
-def load_all_omarchy_themes():
-    """Parses Themes.js for all predefined Omarchy color schemes."""
-    themes_js = Path(__file__).resolve().parent / "Themes.js"
-    if not themes_js.is_file():
-        return {}
-    with open(themes_js, "r", encoding="utf-8") as f:
-        content = f.read()
-    themes = {}
-    blocks = re.findall(r"\{([^{}]+)\}", content)
-    for b in blocks:
-        t = {}
-        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", b):
-            t[k] = v
-        if "id" in t and "name" in t:
-            themes[t["id"]] = t
-    return themes
-
-ALL_THEMES = load_all_omarchy_themes()
+DEFAULT_PRESETS = {
+    "dark": {
+        "id": "catppuccin-mocha",
+        "name": "Catppuccin Mocha",
+        "bg": "#181825",
+        "boardBg": "#05070B",
+        "cardBg": "#1e1e2e",
+        "surface": "#1e1e2e",
+        "border": "#313244",
+        "fg": "#cdd6f4",
+        "subtext": "#a6adc8",
+        "accent": "#00E5FF",
+    },
+    "light": {
+        "id": "catppuccin-latte",
+        "name": "Catppuccin Latte",
+        "bg": "#eff1f5",
+        "boardBg": "#05070B",
+        "cardBg": "#ffffff",
+        "surface": "#ffffff",
+        "border": "#cbd5e1",
+        "fg": "#0f172a",
+        "subtext": "#64748b",
+        "accent": "#0099FF",
+    },
+}
 
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
@@ -258,6 +266,7 @@ def main():
         sys.exit(1)
 
     root_obj = engine.rootObjects()[0]
+    root_obj.screenshotSaved.connect(lambda p: app.quit())
 
     # CLI Theme Argument Parsing
     theme_arg = None
@@ -269,10 +278,10 @@ def main():
     # 1. Explicit Theme CLI Override
     if theme_arg:
         clean_arg = theme_arg.lower().replace("_", "-")
-        if clean_arg in ALL_THEMES:
-            t = ALL_THEMES[clean_arg]
+        if clean_arg in DEFAULT_PRESETS:
+            t = DEFAULT_PRESETS[clean_arg]
             root_obj.applyTheme(t, t["name"])
-            print(f"Applied theme: {t['name']}")
+            print(f"Applied preset theme: {t['name']}")
         else:
             custom_path = Path(theme_arg).expanduser().resolve()
             if custom_path.is_file():
@@ -280,8 +289,12 @@ def main():
                 if data:
                     root_obj.applyTheme(data, custom_path.parent.name.capitalize())
                     print(f"Applied theme from file: {custom_path}")
+            elif any(x in clean_arg for x in ["light", "day", "white", "latte"]):
+                t = DEFAULT_PRESETS["light"]
+                root_obj.applyTheme(t, t["name"])
             else:
-                print(f"Warning: Theme '{theme_arg}' not found. Run with --list-themes.", file=sys.stderr)
+                t = DEFAULT_PRESETS["dark"]
+                root_obj.applyTheme(t, t["name"])
 
     # 2. Omarchy Desktop System Theme Detection & Hot-Reloading
     else:
@@ -293,7 +306,6 @@ def main():
                 root_obj.applyTheme(data, theme_name)
                 print(f"Detected Omarchy theme: {theme_name} ({system_colors})")
 
-            # Watch for real-time desktop theme switches
             watcher = QFileSystemWatcher(app)
             watcher.addPath(str(system_colors))
             if system_colors.parent.exists():
@@ -315,18 +327,16 @@ def main():
             def apply_system_scheme():
                 scheme = app.styleHints().colorScheme()
                 if scheme == Qt.ColorScheme.Light:
-                    target_theme = ALL_THEMES.get("catppuccin-latte") or ALL_THEMES.get("github-light")
+                    target_theme = DEFAULT_PRESETS["light"]
                     name = "System Light"
                 else:
-                    target_theme = ALL_THEMES.get("catppuccin") or ALL_THEMES.get("tokyonight")
+                    target_theme = DEFAULT_PRESETS["dark"]
                     name = "System Dark"
 
-                if target_theme:
-                    root_obj.applyTheme(target_theme, name)
-                    print(f"Detected OS appearance: {name} ({target_theme.get('name')})")
+                root_obj.applyTheme(target_theme, name)
+                print(f"Detected OS appearance: {name} ({target_theme.get('name')})")
 
             apply_system_scheme()
-            # React live when user flips OS Dark / Light appearance in macOS or Linux
             app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
 
     if "--no-splash" in sys.argv:
@@ -348,7 +358,7 @@ def main():
             out_file = sys.argv[out_idx] if out_idx < len(sys.argv) and not sys.argv[out_idx].startswith("--") else "screenshot.png"
             out_path = Path(out_file).resolve()
             root_obj.captureScreenshot(str(out_path), False)
-            QTimer.singleShot(400, app.quit)
+            QTimer.singleShot(500, app.quit)
         QTimer.singleShot(delay, capture)
 
     if "--screenshot-help" in sys.argv:
@@ -357,14 +367,14 @@ def main():
             root_obj.setProperty("showHelp", True)
             out_path = Path(__file__).resolve().parent / "screenshot_help.png"
             root_obj.captureScreenshot(str(out_path), False)
-            QTimer.singleShot(400, app.quit)
+            QTimer.singleShot(500, app.quit)
         QTimer.singleShot(350, capture_help)
 
     if "--screenshot-splash" in sys.argv:
         def capture_splash():
             out_path = Path(__file__).resolve().parent / "screenshot_splash.png"
             root_obj.captureScreenshot(str(out_path), False)
-            QTimer.singleShot(400, app.quit)
+            QTimer.singleShot(500, app.quit)
         QTimer.singleShot(600, capture_splash)
 
     print("Arcade game template running. Press Esc or ? for help, R to restart.")

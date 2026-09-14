@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import "Themes.js" as Themes
 import "GameEngine.js" as Engine
 
 ApplicationWindow {
@@ -26,10 +25,12 @@ ApplicationWindow {
     property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
 
     function colorLuminance(col) {
-        var r = col.r !== undefined ? col.r : 1.0;
-        var g = col.g !== undefined ? col.g : 1.0;
-        var b = col.b !== undefined ? col.b : 1.0;
-        return 0.299 * r + 0.587 * g + 0.114 * b;
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
+        return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
     function getContrastingColor(bgCol) {
@@ -57,15 +58,30 @@ ApplicationWindow {
 
     signal screenshotSaved(string filePath)
 
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
+    property color themeCardHover: isDarkMode ? Qt.lighter(themeCardBg, 1.15) : "#f1f5f9"
+
     function applyTheme(data, name) {
         if (!data || typeof data !== "object") return;
-        if (data.bg) root.themeBg = data.bg;
-        if (data.board_bg || data.grid_bg) root.themeBoardBg = data.board_bg || data.grid_bg;
-        if (data.card_bg) root.themeCardBg = data.card_bg;
-        if (data.border) root.themeBorder = data.border;
-        if (data.fg) root.themeFg = data.fg;
-        if (data.subtext) root.themeSubtext = data.subtext;
-        if (data.accent) root.themeAccent = data.accent;
+        var bgVal = data.bg || data.background || root.themeBg;
+        root.themeBg = bgVal;
+        var dark = colorLuminance(Qt.color(bgVal)) < 0.5;
+
+        if (!dark) {
+            root.themeBoardBg = "#05070B";
+            root.themeCardBg = data.cardBg || data.card_bg || data.card || data.surface || "#ffffff";
+            root.themeBorder = data.border || "#cbd5e1";
+            root.themeFg = data.fg || data.foreground || "#0f172a";
+            root.themeSubtext = data.subtext || "#64748b";
+            root.themeAccent = data.accent || "#0099FF";
+        } else {
+            root.themeBoardBg = data.boardBg || data.board_bg || data.grid_bg || "#05070B";
+            root.themeCardBg = data.cardBg || data.card_bg || data.card || data.surface || "#1e1e2e";
+            root.themeBorder = data.border || "#313244";
+            root.themeFg = data.fg || data.foreground || "#cdd6f4";
+            root.themeSubtext = data.subtext || "#a6adc8";
+            root.themeAccent = data.accent || "#00E5FF";
+        }
     }
 
     function playSound(soundName) {
@@ -167,7 +183,6 @@ ApplicationWindow {
         anchors.fill: parent
         color: root.themeBg
         focus: true
-        Behavior on color { ColorAnimation { duration: 150 } }
 
         Keys.onPressed: function(event) {
             if (splashScreen.visible && splashScreen.opacity > 0) {
@@ -250,360 +265,365 @@ ApplicationWindow {
         }
 
         // =====================================================================
-        // TIER 1: 2048 STANDARD HEADER
-        // =====================================================================
-        Item {
-            id: headerItem
-            visible: !root.isTiledDesktopMode
-            anchors.top: parent.top
-            anchors.topMargin: visible ? 16 : 0
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
-            height: visible ? 64 : 0
-
-            // Left: Title & Subtitle
-            Column {
-                anchors.left: parent.left
-                anchors.right: scoreRow.left
-                anchors.rightMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 2
-
-                Text {
-                    width: parent.width
-                    elide: Text.ElideRight
-                    text: "Slime's Adventure"
-                    font.pixelSize: Math.max(20, Math.min(30, headerItem.width * 0.07))
-                    font.bold: true
-                    color: root.activeCharData ? root.activeCharData.color : root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 250 } }
-                }
-                Text {
-                    width: parent.width
-                    elide: Text.ElideRight
-                    text: "Japanese Crane-Game Cavern Runner"
-                    font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.03))
-                    color: root.themeSubtext
-                }
-            }
-
-            // Right: Distance & Best Distance Stat Cards
-            Row {
-                id: scoreRow
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
-
-                // Distance Card
-                Rectangle {
-                    width: Math.max(68, Math.min(95, headerItem.width * 0.17))
-                    height: 52
-                    radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 2
-                        Text {
-                            text: "DISTANCE"
-                            font.pixelSize: 9
-                            font.bold: true
-                            color: root.themeSubtext
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                        Text {
-                            text: root.gameDistance.toString() + "m"
-                            font.pixelSize: 14
-                            font.bold: true
-                            font.family: root.monoFontFamily
-                            color: root.themeFg
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                }
-
-                // Best Distance Card
-                Rectangle {
-                    width: Math.max(68, Math.min(95, headerItem.width * 0.17))
-                    height: 52
-                    radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 2
-                        Text {
-                            text: "BEST"
-                            font.pixelSize: 9
-                            font.bold: true
-                            color: root.themeSubtext
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                        Text {
-                            text: root.gameBestDistance.toString() + "m"
-                            font.pixelSize: 14
-                            font.bold: true
-                            font.family: root.monoFontFamily
-                            color: root.activeCharData ? root.activeCharData.color : root.themeAccent
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                }
-            }
-        }
-
-        // =====================================================================
-        // TIER 2: ACTION SUBHEADER & CHARACTER SELECT BAR
-        // =====================================================================
-        Item {
-            id: subheaderItem
-            visible: !root.isTiledDesktopMode
-            anchors.top: headerItem.bottom
-            anchors.topMargin: visible ? 12 : 0
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
-            height: visible ? 34 : 0
-
-            property bool isCrowded: width < 480
-
-            // Left: How to Play + Character Picker Toggle
-            Row {
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
-
-                // Help Button
-                Rectangle {
-                    id: helpBtn
-                    height: 32
-                    width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
-                    radius: 8
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-
-                    Row {
-                        id: helpRow
-                        anchors.centerIn: parent
-                        spacing: 5
-                        Text {
-                            text: "?"
-                            font.pixelSize: 13
-                            font.bold: true
-                            color: root.themeAccent
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: "How to Play"
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.themeFg
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: !subheaderItem.isCrowded
-                        }
-                    }
-
-                    MouseArea {
-                        id: helpMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleHelp()
-                    }
-                }
-
-                // Slime Character Picker Toggle
-                Rectangle {
-                    height: 32
-                    width: subheaderItem.isCrowded ? 32 : 110
-                    radius: 8
-                    color: charPickerMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.showCharPicker ? root.activeCharData.color : (charPickerMouse.containsMouse ? root.themeAccent : root.themeBorder)
-                    border.width: 1.5
-
-                    Row {
-                        anchors.centerIn: parent
-                        spacing: 5
-                        Text { text: "🍮"; font.pixelSize: 12 }
-                        Text {
-                            text: root.activeCharData.name
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: root.activeCharData.color
-                            visible: !subheaderItem.isCrowded
-                        }
-                    }
-
-                    MouseArea {
-                        id: charPickerMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.showCharPicker = !root.showCharPicker
-                    }
-                }
-
-                // Full Screen Playfield Toggle
-                Rectangle {
-                    height: 32
-                    width: 32
-                    radius: 8
-                    color: fullMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: fullMouse.containsMouse ? root.themeAccent : root.themeBorder
-                    border.width: 1
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: root.fullPlayfield ? "🔲" : "⛶"
-                        font.pixelSize: 11
-                    }
-
-                    MouseArea {
-                        id: fullMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.fullPlayfield = !root.fullPlayfield;
-                            soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
-                        }
-                    }
-                }
-            }
-
-            // Right: Audio Mute + Restart
-            Row {
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
-
-                // Audio Mute
-                Rectangle {
-                    width: 32
-                    height: 32
-                    radius: 8
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.isMuted ? root.themeBorder : root.themeAccent
-                    border.width: 1
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: root.isMuted ? "🔇" : "🔊"
-                        font.pixelSize: 12
-                    }
-
-                    MouseArea {
-                        id: muteMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleMute()
-                    }
-                }
-
-                // Restart Game
-                Rectangle {
-                    height: 32
-                    width: subheaderItem.isCrowded ? 32 : 110
-                    radius: 8
-                    color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-
-                    Row {
-                        anchors.centerIn: parent
-                        spacing: 5
-                        Text { text: "🔄"; font.pixelSize: 11 }
-                        Text { text: "RESTART (R)"; font.bold: true; font.pixelSize: 11; color: root.themeBtnFg; visible: !subheaderItem.isCrowded }
-                    }
-
-                    MouseArea {
-                        id: restartMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.restartGame()
-                    }
-                }
-            }
-        }
-
-        // =====================================================================
-        // SLIME CHARACTER SELECTION TRAY (6 Plushie Variants)
+        // HEADER BAR CONTAINER (Tier 1 & Tier 2)
         // =====================================================================
         Rectangle {
-            id: charSelectTray
-            visible: root.showCharPicker && !root.isTiledDesktopMode
-            anchors.top: subheaderItem.bottom
-            anchors.topMargin: visible ? 8 : 0
+            id: headerBar
+            anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
-            height: visible ? 56 : 0
-            radius: 10
-            color: root.themeCardBg
-            border.color: root.themeBorder
-            border.width: 1
-            z: 80
+            height: root.isTiledDesktopMode ? 0 : (headerCol.height + 26)
+            visible: !root.isTiledDesktopMode
+            color: root.themeBg
+            z: 20
 
-            Row {
-                anchors.centerIn: parent
+            Column {
+                id: headerCol
+                anchors.top: parent.top
+                anchors.topMargin: 12
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: 16
+                anchors.rightMargin: 16
                 spacing: 10
 
-                Repeater {
-                    model: [
-                        { id: "gooey", name: "Gooey (1)", color: "#0099FF", key: "1" },
-                        { id: "cherry", name: "Cherry (2)", color: "#FF3366", key: "2" },
-                        { id: "lime", name: "Lime (3)", color: "#10E070", key: "3" },
-                        { id: "metal", name: "Metal (4)", color: "#C0C8D8", key: "4" },
-                        { id: "gold", name: "Gold (5)", color: "#FFB800", key: "5" },
-                        { id: "shadow", name: "Shadow (6)", color: "#A855F7", key: "6" }
-                    ]
+                // =============================================================
+                // TIER 1: 2048 STANDARD HEADER
+                // =============================================================
+                Item {
+                    id: headerItem
+                    width: parent.width
+                    height: 52
 
-                    Rectangle {
-                        width: Math.min(84, (charSelectTray.width - 70) / 6)
-                        height: 38
-                        radius: 6
-                        color: Engine.selectedCharacter === modelData.id ? Qt.darker(modelData.color, 2.2) : root.themeBoardBg
-                        border.color: Engine.selectedCharacter === modelData.id ? modelData.color : root.themeBorder
-                        border.width: Engine.selectedCharacter === modelData.id ? 2 : 1
+                    // Left: Title & Subtitle
+                    Column {
+                        anchors.left: parent.left
+                        anchors.right: scoreRow.left
+                        anchors.rightMargin: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
 
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 4
+                        Text {
+                            width: parent.width
+                            elide: Text.ElideRight
+                            text: "Slime's Adventure"
+                            font.pixelSize: Math.max(20, Math.min(30, headerItem.width * 0.07))
+                            font.bold: true
+                            color: root.activeCharData ? root.activeCharData.color : root.themeAccent
+                        }
+                        Text {
+                            width: parent.width
+                            elide: Text.ElideRight
+                            text: "Japanese Crane-Game Cavern Runner"
+                            font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.03))
+                            color: root.themeSubtext
+                        }
+                    }
 
-                            // Little teardrop color circle
-                            Rectangle {
-                                width: 10
-                                height: 10
-                                radius: 5
-                                color: modelData.color
-                                border.color: "#FFFFFF"
-                                border.width: 1
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
+                    // Right: Distance & Best Distance Stat Cards
+                    Row {
+                        id: scoreRow
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
 
-                            Text {
-                                text: modelData.name
-                                font.pixelSize: 10
-                                font.bold: true
-                                color: Engine.selectedCharacter === modelData.id ? modelData.color : root.themeFg
-                                anchors.verticalCenter: parent.verticalCenter
+                        // Distance Card
+                        Rectangle {
+                            width: Math.max(68, Math.min(95, headerItem.width * 0.17))
+                            height: 50
+                            radius: 8
+                            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                            border.width: 1
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                Text {
+                                    text: "DISTANCE"
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                                Text {
+                                    text: root.gameDistance.toString() + "m"
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    font.family: root.monoFontFamily
+                                    color: root.isDarkMode ? root.themeFg : "#0f172a"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
                             }
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.selectSlime(modelData.id)
+                        // Best Distance Card
+                        Rectangle {
+                            width: Math.max(68, Math.min(95, headerItem.width * 0.17))
+                            height: 50
+                            radius: 8
+                            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                            border.width: 1
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                Text {
+                                    text: "BEST"
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                                Text {
+                                    text: root.gameBestDistance.toString() + "m"
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    font.family: root.monoFontFamily
+                                    color: root.isDarkMode ? (root.activeCharData ? root.activeCharData.color : root.themeAccent) : "#15803d"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // =============================================================
+                // TIER 2: ACTION SUBHEADER & CHARACTER SELECT BAR
+                // =============================================================
+                Item {
+                    id: subheaderItem
+                    width: parent.width
+                    height: 32
+
+                    property bool isCrowded: width < 480
+
+                    // Left: How to Play + Character Picker Toggle + Full Screen Toggle
+                    Row {
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
+
+                        // Help Button
+                        Rectangle {
+                            id: helpBtn
+                            height: 32
+                            width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
+                            radius: 8
+                            color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                            border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
+                            border.width: 1
+
+                            Row {
+                                id: helpRow
+                                anchors.centerIn: parent
+                                spacing: 5
+                                Text {
+                                    text: "?"
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                    color: root.themeAccent
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    text: "How to Play"
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    color: root.themeFg
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    visible: !subheaderItem.isCrowded
+                                }
+                            }
+
+                            MouseArea {
+                                id: helpMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.toggleHelp()
+                            }
+                        }
+
+                        // Slime Character Picker Toggle
+                        Rectangle {
+                            height: 32
+                            width: subheaderItem.isCrowded ? 32 : 110
+                            radius: 8
+                            color: charPickerMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                            border.color: root.showCharPicker ? root.activeCharData.color : (charPickerMouse.containsMouse ? root.themeAccent : root.themeBorder)
+                            border.width: 1.5
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 5
+                                Text { text: "🍮"; font.pixelSize: 12 }
+                                Text {
+                                    text: root.activeCharData.name
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    color: root.activeCharData.color
+                                    visible: !subheaderItem.isCrowded
+                                }
+                            }
+
+                            MouseArea {
+                                id: charPickerMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.showCharPicker = !root.showCharPicker
+                            }
+                        }
+
+                        // Full Screen Playfield Toggle
+                        Rectangle {
+                            height: 32
+                            width: 32
+                            radius: 8
+                            color: fullMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                            border.color: fullMouse.containsMouse ? root.themeAccent : root.themeBorder
+                            border.width: 1
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: root.fullPlayfield ? "🔲" : "⛶"
+                                font.pixelSize: 11
+                                color: root.themeFg
+                            }
+
+                            MouseArea {
+                                id: fullMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.fullPlayfield = !root.fullPlayfield;
+                                    soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
+                                }
+                            }
+                        }
+                    }
+
+                    // Right: Audio Mute + Restart
+                    Row {
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
+
+                        // Audio Mute
+                        Rectangle {
+                            width: 32
+                            height: 32
+                            radius: 8
+                            color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                            border.color: root.isMuted ? root.themeBorder : root.themeAccent
+                            border.width: 1
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: root.isMuted ? "🔇" : "🔊"
+                                font.pixelSize: 12
+                            }
+
+                            MouseArea {
+                                id: muteMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.toggleMute()
+                            }
+                        }
+
+                        // Restart Game
+                        Rectangle {
+                            height: 32
+                            width: subheaderItem.isCrowded ? 32 : 110
+                            radius: 8
+                            color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 5
+                                Text { text: "🔄"; font.pixelSize: 11 }
+                                Text { text: "RESTART (R)"; font.bold: true; font.pixelSize: 11; color: root.themeBtnFg; visible: !subheaderItem.isCrowded }
+                            }
+
+                            MouseArea {
+                                id: restartMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.restartGame()
+                            }
+                        }
+                    }
+                }
+
+                // Slime Character Selection Tray
+                Rectangle {
+                    id: charSelectTray
+                    visible: root.showCharPicker && !root.isTiledDesktopMode
+                    width: parent.width
+                    height: visible ? 52 : 0
+                    radius: 8
+                    color: root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 8
+
+                        Repeater {
+                            model: [
+                                { id: "gooey", name: "Gooey (1)", color: "#0099FF", key: "1" },
+                                { id: "cherry", name: "Cherry (2)", color: "#FF3366", key: "2" },
+                                { id: "lime", name: "Lime (3)", color: "#10E070", key: "3" },
+                                { id: "metal", name: "Metal (4)", color: "#C0C8D8", key: "4" },
+                                { id: "gold", name: "Gold (5)", color: "#FFB800", key: "5" },
+                                { id: "shadow", name: "Shadow (6)", color: "#A855F7", key: "6" }
+                            ]
+
+                            Rectangle {
+                                width: Math.min(84, (charSelectTray.width - 64) / 6)
+                                height: 36
+                                radius: 6
+                                color: Engine.selectedCharacter === modelData.id ? Qt.darker(modelData.color, 2.2) : (charBtnMouse.containsMouse ? root.themeCardHover : root.themeCardBg)
+                                border.color: Engine.selectedCharacter === modelData.id ? modelData.color : root.themeBorder
+                                border.width: Engine.selectedCharacter === modelData.id ? 2 : 1
+
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 4
+
+                                    Rectangle {
+                                        width: 10
+                                        height: 10
+                                        radius: 5
+                                        color: modelData.color
+                                        border.color: "#FFFFFF"
+                                        border.width: 1
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Text {
+                                        text: modelData.name
+                                        font.pixelSize: 10
+                                        font.bold: true
+                                        color: Engine.selectedCharacter === modelData.id ? modelData.color : root.themeFg
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: charBtnMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.selectSlime(modelData.id)
+                                }
+                            }
                         }
                     }
                 }
@@ -615,22 +635,15 @@ ApplicationWindow {
         // =====================================================================
         Item {
             id: playArea
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : (charSelectTray.visible ? charSelectTray.bottom : (subheaderItem.visible ? subheaderItem.bottom : parent.top))
-            anchors.topMargin: root.isTiledDesktopMode ? 8 : 12
+            anchors.top: root.isTiledDesktopMode ? parent.top : headerBar.bottom
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: root.isTiledDesktopMode ? 0 : 16
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: root.isTiledDesktopMode ? 0 : 16
-            anchors.rightMargin: root.isTiledDesktopMode ? 0 : 16
 
             Rectangle {
                 id: boardBorder
                 anchors.fill: parent
-                radius: root.isTiledDesktopMode ? 0 : 12
                 color: root.themeBoardBg
-                border.color: root.themeBorder
-                border.width: root.isTiledDesktopMode ? 0 : 1
                 clip: true
 
                 Canvas {
@@ -680,8 +693,8 @@ ApplicationWindow {
                     anchors.rightMargin: 12
                     height: 38
                     radius: 8
-                    color: "#e6181825"
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? "#e6181825" : "#e6ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
                     z: 90
 
@@ -695,7 +708,7 @@ ApplicationWindow {
                             text: "🍮 " + (root.activeCharData ? root.activeCharData.name : "SLIME")
                             font.pixelSize: 11
                             font.bold: true
-                            color: root.activeCharData ? root.activeCharData.color : root.themeAccent
+                            color: root.isDarkMode ? (root.activeCharData ? root.activeCharData.color : root.themeAccent) : "#0f172a"
                         }
 
                         Text {
@@ -703,13 +716,14 @@ ApplicationWindow {
                             font.pixelSize: 11
                             font.bold: true
                             font.family: root.monoFontFamily
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                         }
 
                         Text {
                             text: "(BEST: " + root.gameBestDistance + "m)"
                             font.pixelSize: 10
-                            color: root.themeSubtext
+                            font.bold: true
+                            color: root.isDarkMode ? root.themeSubtext : "#15803d"
                         }
                     }
 
@@ -989,8 +1003,8 @@ ApplicationWindow {
             width: toastText.implicitWidth + 24
             height: 32
             radius: 8
-            color: "#e611111b"
-            border.color: root.themeBorder
+            color: root.isDarkMode ? "#e611111b" : "#e6ffffff"
+            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
             border.width: 1
             z: 1200
 
@@ -1002,7 +1016,7 @@ ApplicationWindow {
                 text: soundToast.message
                 font.pixelSize: 11
                 font.bold: true
-                color: root.themeFg
+                color: root.isDarkMode ? root.themeFg : "#0f172a"
             }
 
             Timer {

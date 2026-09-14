@@ -118,32 +118,31 @@ class SoundManager(QObject):
 # =============================================================================
 # THEME UTILITIES
 # =============================================================================
-ALL_THEMES = {
-    "catppuccin": {
-        "name": "Catppuccin Mocha", "bg": "#1e1e2e", "board_bg": "#181825",
-        "card_bg": "#313244", "border": "#45475a", "fg": "#cdd6f4",
-        "subtext": "#a6adc8", "accent": "#cba6f7",
+DEFAULT_PRESETS = {
+    "dark": {
+        "name": "Omarchy Dark",
+        "background": "#1e1e2e",
+        "foreground": "#cdd6f4",
+        "accent": "#89b4fa",
+        "color0": "#181825",
+        "color8": "#313244",
+        "cardBg": "#181825",
+        "boardBg": "#11111b",
+        "border": "#313244",
+        "subtext": "#a6adc8",
     },
-    "tokyonight": {
-        "name": "Tokyo Night", "bg": "#1a1b26", "board_bg": "#16161e",
-        "card_bg": "#24283b", "border": "#414868", "fg": "#c0caf5",
-        "subtext": "#7aa2f7", "accent": "#bb9af7",
+    "light": {
+        "name": "Omarchy Light",
+        "background": "#eff1f5",
+        "foreground": "#0f172a",
+        "accent": "#0284c7",
+        "color0": "#e6e9ef",
+        "color8": "#bcc0cc",
+        "cardBg": "#ffffff",
+        "boardBg": "#f1f5f9",
+        "border": "#cbd5e1",
+        "subtext": "#64748b",
     },
-    "gruvbox": {
-        "name": "Gruvbox Dark", "bg": "#282828", "board_bg": "#1d2021",
-        "card_bg": "#3c3836", "border": "#504945", "fg": "#ebdbb2",
-        "subtext": "#d5c4a1", "accent": "#fe8019",
-    },
-    "nord": {
-        "name": "Nord", "bg": "#2e3440", "board_bg": "#242933",
-        "card_bg": "#3b4252", "border": "#4c566a", "fg": "#eceff4",
-        "subtext": "#e5e9f0", "accent": "#88c0d0",
-    },
-    "dracula": {
-        "name": "Dracula", "bg": "#282a36", "board_bg": "#1e1f29",
-        "card_bg": "#44475a", "border": "#6272a4", "fg": "#f8f8f2",
-        "subtext": "#bd93f9", "accent": "#ff79c6",
-    }
 }
 
 def find_omarchy_colors_file():
@@ -177,9 +176,16 @@ def load_toml_colors(file_path):
         return None
 
 def main():
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+    os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
+
     if "--help" in sys.argv or "-h" in sys.argv:
-        print("Bīdama (ビー玉) • Japanese Tatami Marbles (Omarchy Arcade OA-028)")
+        print("B\u012bdama (\u30d3\u30fc\u7389) \u2022 Japanese Tatami Marbles (Omarchy Arcade OA-028)")
         print("Controls: Up/Down to select row, Left/Right to slide, Space to push wave.")
+        sys.exit(0)
+
+    if "--list-themes" in sys.argv:
+        print("Arcade Game Template \u2022 Preset Themes:\n  --theme light\n  --theme dark\n  --theme <path_to_colors.toml>")
         sys.exit(0)
 
     app = QGuiApplication(sys.argv)
@@ -223,11 +229,20 @@ def main():
             theme_arg = sys.argv[idx + 1]
 
     if theme_arg:
-        clean_arg = theme_arg.lower().replace("_", "-")
-        if clean_arg in ALL_THEMES:
-            t = ALL_THEMES[clean_arg]
+        clean_arg = theme_arg.lower().strip()
+        if clean_arg in DEFAULT_PRESETS:
+            t = DEFAULT_PRESETS[clean_arg]
             root_obj.applyTheme(t, t["name"])
-            print(f"Applied theme: {t['name']}")
+            print(f"Applied preset theme: {t['name']}")
+        else:
+            custom_path = Path(theme_arg).expanduser().resolve()
+            if custom_path.is_file():
+                data = load_toml_colors(custom_path)
+                if data:
+                    root_obj.applyTheme(data, custom_path.parent.name.capitalize())
+                    print(f"Applied theme from file: {custom_path}")
+            else:
+                print(f"Warning: Theme '{theme_arg}' not found.", file=sys.stderr)
     else:
         system_colors = find_omarchy_colors_file()
         if system_colors:
@@ -253,9 +268,8 @@ def main():
         else:
             def apply_system_scheme():
                 scheme = app.styleHints().colorScheme()
-                target_theme = ALL_THEMES.get("catppuccin") if scheme == Qt.ColorScheme.Dark else ALL_THEMES.get("catppuccin")
-                if target_theme:
-                    root_obj.applyTheme(target_theme, "Default")
+                target_theme = DEFAULT_PRESETS["light"] if scheme == Qt.ColorScheme.Light else DEFAULT_PRESETS["dark"]
+                root_obj.applyTheme(target_theme, target_theme["name"])
             apply_system_scheme()
             app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
 

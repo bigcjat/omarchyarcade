@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
-import "Themes.js" as OmarchyThemes
 import "GameEngine.js" as Engine
 
 Window {
@@ -23,12 +22,14 @@ Window {
     property color themeAccent: "#89b4fa"
     property color themeBoardBg: "#1e1e2e"
     property color themeCellGrid: "#313244"
-    property color themeCardBg: "#1e1e2e"
+    property color themeCardBg: "#313244"
+    property color themeCardHover: "#45475a"
     property color themeSubtext: "#a6adc8"
     property color themeBorder: "#45475a"
     property color themeBtnBg: themeAccent
     property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
     property color themeModalBg: "#1e1e2e"
+    readonly property bool isDarkMode: colorLuminance(themeBg) < 0.5
 
     // Game state
     property bool splashEnabled: true
@@ -51,9 +52,12 @@ Window {
         Engine.init("beginner");
     }
 
-    function colorLuminance(hex) {
-        if (!hex || typeof hex !== "string") return 0.2;
-        var c = Qt.color(hex);
+    function colorLuminance(col) {
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
@@ -63,42 +67,56 @@ Window {
         isCustomTheme = true;
         currentThemeName = name || "";
 
-        var bg = data.background || themeBg;
+        var bg = data.bg || data.background || "#181825";
+        var fg = data.fg || data.foreground || "#cdd6f4";
+        var accent = data.accent || data.color4 || "#89b4fa";
         themeBg = bg;
-        themeFg = data.foreground || themeFg;
-        themeAccent = data.accent || data.color4 || "#89b4fa";
-        themeBorder = data.color8 || data.color0 || "#45475a";
+        themeFg = fg;
+        themeAccent = accent;
+        themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
 
         var lum = colorLuminance(bg);
         if (lum > 0.5) {
-            themeBoardBg = Qt.darker(bg, 1.08);
-            themeCellGrid = Qt.darker(bg, 1.15);
-            themeCardBg = Qt.darker(bg, 1.05);
-            themeSubtext = Qt.darker(themeFg, 1.4);
-            themeModalBg = bg;
+            themeBoardBg = data.boardBg || "#dce0e8";
+            themeCardBg = data.card_bg || data.cardBg || "#ffffff";
+            themeCardHover = data.card_hover || "#f1f5f9";
+            themeSubtext = data.subtext || "#5c5f77";
+            themeBorder = data.border || "#ccd0da";
+            themeCellGrid = "#cbd5e1";
+            themeModalBg = "#ffffff";
         } else {
-            themeBoardBg = Qt.lighter(bg, 1.18);
-            themeCellGrid = Qt.lighter(bg, 1.28);
-            themeCardBg = Qt.lighter(bg, 1.25);
-            themeSubtext = data.color7 || Qt.darker(themeFg, 1.3);
-            themeModalBg = Qt.lighter(bg, 1.12);
+            themeBoardBg = data.boardBg || "#1e1e2e";
+            themeCardBg = data.card_bg || data.cardBg || "#313244";
+            themeCardHover = data.card_hover || "#45475a";
+            themeSubtext = data.subtext || "#a6adc8";
+            themeBorder = data.border || "#45475a";
+            themeCellGrid = "#313244";
+            themeModalBg = "#1e1e2e";
         }
         boardCanvas.requestPaint();
     }
 
     function cycleTheme() {
-        var themes = OmarchyThemes.themes;
-        if (!themes || themes.length === 0) return;
-        var currentId = themePalette.id || "";
-        var nextIdx = 0;
-        for (var i = 0; i < themes.length; i++) {
-            if (themes[i].id === currentId) {
-                nextIdx = (i + 1) % themes.length;
-                break;
-            }
-        }
-        applyTheme(themes[nextIdx], themes[nextIdx].name);
-        soundToast.show("🎨 " + themes[nextIdx].name);
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            accent: "#1e66f5",
+            card_bg: "#ffffff",
+            card_hover: "#e6e9ef",
+            subtext: "#6c6f85",
+            border: "#ccd0da"
+        } : {
+            background: "#181825",
+            foreground: "#cdd6f4",
+            accent: "#89b4fa",
+            card_bg: "#313244",
+            card_hover: "#45475a",
+            subtext: "#a6adc8",
+            border: "#45475a"
+        };
+        applyTheme(tData, nextIsLight ? "Light" : "Dark");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     function toggleMute() {
@@ -124,6 +142,12 @@ Window {
         smileyState = "normal";
         Engine.init(diff || Engine.currentDifficulty);
         updateBestTime();
+        boardCanvas.requestPaint();
+    }
+
+    function testPlay() {
+        var res = Engine.reveal(4, 4);
+        handleEngineEvent(res);
         boardCanvas.requestPaint();
     }
 
@@ -198,14 +222,14 @@ Window {
     }
 
     // Capture screenshot support
-    function captureScreenshot(filePath, shouldQuit) {
+    signal screenshotSaved(string path)
+
+    function captureScreenshot(filePath) {
         splashScreen.visible = false;
         root.contentItem.grabToImage(function(result) {
             result.saveToFile(filePath);
             console.log("Screenshot saved successfully to " + filePath);
-            if (shouldQuit) {
-                Qt.quit();
-            }
+            root.screenshotSaved(filePath);
         });
     }
 
@@ -308,6 +332,20 @@ Window {
             }
         }
 
+        // =====================================================================
+        // HEADER BAR BACKGROUND (Adapts to system OS / colors.toml theme)
+        // =====================================================================
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: root.isTiledDesktopMode ? 0 : (headerItem.height + subheaderItem.height + 36)
+            color: root.themeBg
+            visible: !root.isTiledDesktopMode
+            z: 0
+        }
+
         // 2048 DESIGN STANDARD: ROW 1 (Header Item)
         Item {
             id: headerItem
@@ -335,7 +373,6 @@ Window {
                     font.pixelSize: Math.max(22, Math.min(36, headerItem.width * 0.07))
                     font.bold: true
                     color: root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
                 Text {
                     width: parent.width
@@ -343,7 +380,6 @@ Window {
                     text: (bestTime === 999 ? "No Record" : "Best: " + bestTime + "s") + " • " + (Engine.currentDifficulty === "beginner" ? "Beginner (9×9)" : (Engine.currentDifficulty === "intermediate" ? "Medium (16×16)" : "Expert (30×16)"))
                     font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
                     color: root.themeSubtext
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
 
@@ -362,7 +398,6 @@ Window {
                     color: root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -393,7 +428,6 @@ Window {
                     color: root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -431,147 +465,99 @@ Window {
             height: root.isTiledDesktopMode ? 0 : 34
             readonly property bool isCrowded: subheaderItem.width < 460
 
-            // Help button
-            Rectangle {
-                id: helpBtn
+            Row {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                height: 32
-                width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
-                radius: 8
-                color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
-                border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
+                spacing: 6
 
-                Row {
-                    id: helpRow
-                    anchors.centerIn: parent
-                    spacing: 6
-                    Rectangle {
-                        width: 16
-                        height: 16
-                        radius: 8
-                        color: root.themeAccent
-                        anchors.verticalCenter: parent.verticalCenter
+                // Help button
+                Rectangle {
+                    id: helpBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
+                    radius: 8
+                    color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: helpRow
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Rectangle {
+                            width: 16
+                            height: 16
+                            radius: 8
+                            color: root.themeAccent
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: "?"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: root.themeBtnFg
+                            }
+                        }
                         Text {
-                            anchors.centerIn: parent
-                            text: "?"
+                            text: "How to Play"
                             font.pixelSize: 11
                             font.bold: true
-                            color: root.themeBtnFg
+                            color: root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
                         }
                     }
+
+                    MouseArea {
+                        id: helpMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: showHelp = !showHelp
+                    }
+                }
+
+                // Difficulty toggle pill
+                Rectangle {
+                    id: diffBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 42 : Math.max(56, Math.min(78, parent.width * 0.16))
+                    radius: 8
+                    color: diffMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: diffMouse.containsMouse ? root.themeAccent : root.themeBorder
+                    border.width: 1
+
                     Text {
-                        text: "How to Play"
+                        anchors.centerIn: parent
+                        text: Engine.currentDifficulty === "beginner" ? "9×9" : (Engine.currentDifficulty === "intermediate" ? "16²" : "30²")
                         font.pixelSize: 11
                         font.bold: true
+                        font.family: root.monoFontFamily
                         color: root.themeFg
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: !subheaderItem.isCrowded
+                    }
+
+                    MouseArea {
+                        id: diffMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            var diffs = ["beginner", "intermediate", "expert"];
+                            var next = (diffs.indexOf(Engine.currentDifficulty) + 1) % diffs.length;
+                            setDifficulty(diffs[next]);
+                        }
                     }
                 }
 
-                MouseArea {
-                    id: helpMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: showHelp = !showHelp
-                }
-            }
-
-            // Difficulty toggle pill
-            Rectangle {
-                id: diffBtn
-                anchors.left: helpBtn.right
-                anchors.leftMargin: subheaderItem.isCrowded ? 6 : 8
-                anchors.verticalCenter: parent.verticalCenter
-                height: 32
-                width: subheaderItem.isCrowded ? 42 : Math.max(56, Math.min(78, parent.width * 0.16))
-                radius: 8
-                color: diffMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                border.color: root.themeBorder
-                border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: Engine.currentDifficulty === "beginner" ? "9×9" : (Engine.currentDifficulty === "intermediate" ? "16²" : "30²")
-                    font.pixelSize: 11
-                    font.bold: true
-                    font.family: root.monoFontFamily
-                    color: root.themeFg
-                }
-
-                MouseArea {
-                    id: diffMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        var diffs = ["beginner", "intermediate", "expert"];
-                        var next = (diffs.indexOf(Engine.currentDifficulty) + 1) % diffs.length;
-                        setDifficulty(diffs[next]);
-                    }
-                }
-            }
-
-            // Mute button
-            Rectangle {
-                id: muteBtn
-                anchors.right: restartBtn.left
-                anchors.rightMargin: subheaderItem.isCrowded ? 6 : 8
-                anchors.verticalCenter: parent.verticalCenter
-                height: 32
-                width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
-                radius: 8
-                color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                border.color: root.isMuted ? root.themeBorder : root.themeAccent
-                border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
-                Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                Row {
-                    id: muteRow
-                    anchors.centerIn: parent
-                    spacing: 4
-                    Text {
-                        text: root.isMuted ? "🔇" : "🔊"
-                        font.pixelSize: 12
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: root.isMuted ? "Muted" : "Sound"
-                        font.pixelSize: 11
-                        font.bold: true
-                        color: root.isMuted ? root.themeSubtext : root.themeFg
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: !subheaderItem.isCrowded
-                    }
-                }
-
-                MouseArea {
-                    id: muteMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: toggleMute()
-                }
-            }
-
-            // Primary Action Button (Smiley / Restart)
-                            // View Mode Pill (Windowed vs Full Field)
+                // View Mode Pill (Windowed vs Full Field)
                 Rectangle {
                     id: viewModeBtn
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (viewModeRow.implicitWidth + 18)
                     radius: 8
-                    color: root.fullPlayfield ? root.themeCardBg : (viewModeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
+                    color: root.fullPlayfield ? root.themeCardHover : (viewModeMouse.containsMouse ? root.themeCardHover : root.themeCardBg)
                     border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     Row {
                         id: viewModeRow
@@ -603,49 +589,90 @@ Window {
                         }
                     }
                 }
+            }
 
-                Rectangle {
-                id: restartBtn
+            Row {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                height: 32
-                width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
-                radius: 8
-                color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-                Behavior on color { ColorAnimation { duration: 150 } }
+                spacing: 6
 
-                Row {
-                    id: restartRow
-                    anchors.centerIn: parent
-                    spacing: 5
-                    Text {
-                        text: smileyState === "dead" ? "😵" : (smileyState === "won" ? "😎" : "😊")
-                        font.pixelSize: 13
-                        anchors.verticalCenter: parent.verticalCenter
+                // Mute button
+                Rectangle {
+                    id: muteBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
+                    radius: 8
+                    color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: root.isMuted ? root.themeBorder : root.themeAccent
+                    border.width: 1
+
+                    Row {
+                        id: muteRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: root.isMuted ? "🔇" : "🔊"
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: root.isMuted ? "Muted" : "Sound"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.isMuted ? root.themeSubtext : root.themeFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
                     }
-                    Text {
-                        text: "Reset (R)"
-                        font.pixelSize: 11
-                        font.bold: true
-                        color: root.themeBtnFg
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: !subheaderItem.isCrowded
+
+                    MouseArea {
+                        id: muteMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: toggleMute()
                     }
                 }
 
-                MouseArea {
-                    id: restartMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: resetGame()
+                // Restart button
+                Rectangle {
+                    id: restartBtn
+                    height: 32
+                    width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
+                    radius: 8
+                    color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+
+                    Row {
+                        id: restartRow
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Text {
+                            text: smileyState === "dead" ? "😵" : (smileyState === "won" ? "😎" : "😊")
+                            font.pixelSize: 13
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "Reset (R)"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: root.themeBtnFg
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: restartMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: resetGame()
+                    }
                 }
             }
         }
 
-        // Playing Board Area
-        Item {
-                    // =====================================================================
+        // =====================================================================
         // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
         // =====================================================================
         Rectangle {
@@ -744,9 +771,11 @@ Window {
             }
         }
 
-        id: boardArea
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 6 : 12
+        // Playing Board Area
+        Item {
+            id: boardArea
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 8
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 16
             anchors.left: parent.left
@@ -754,8 +783,19 @@ Window {
             anchors.leftMargin: 16
             anchors.rightMargin: 16
 
-            property real availableWidth: width
-            property real availableHeight: height
+            Rectangle {
+                id: boardContainer
+                width: Math.min(parent.width, boardCanvas.width + 20)
+                height: Math.min(parent.height, boardCanvas.height + 20)
+                anchors.centerIn: parent
+                color: root.isDarkMode ? "#11111b" : "#dce1ea"
+                radius: 12
+                border.color: root.isDarkMode ? root.themeBorder : "#b8c2d1"
+                border.width: 1
+            }
+
+            property real availableWidth: width - 16
+            property real availableHeight: height - 16
             property real maxCellW: availableWidth / Engine.cols
             property real maxCellH: availableHeight / Engine.rows
             property real cellSize: Math.floor(Math.min(maxCellW, maxCellH, 88))
@@ -778,7 +818,18 @@ Window {
                     var rad = Math.max(2, cs * 0.15);
 
                     var pal = root.themePalette;
-                    var numColors = [
+                    var numColorsLight = [
+                        "",
+                        "#1e66f5", // 1: Blue
+                        "#16a34a", // 2: Green
+                        "#dc2626", // 3: Red
+                        "#4338ca", // 4: Dark Indigo
+                        "#b91c1c", // 5: Deep Maroon
+                        "#0d9488", // 6: Teal
+                        "#7c3aed", // 7: Purple
+                        "#334155"  // 8: Dark Slate
+                    ];
+                    var numColors = root.isDarkMode ? [
                         "",
                         pal.color4 || "#89b4fa",
                         pal.color2 || "#a6e3a1",
@@ -788,7 +839,7 @@ Window {
                         pal.color6 || "#94e2d5",
                         root.themeSubtext,
                         root.themeFg
-                    ];
+                    ] : numColorsLight;
 
                     for (var r = 0; r < Engine.rows; r++) {
                         for (var c = 0; c < Engine.cols; c++) {
@@ -799,18 +850,44 @@ Window {
                             var cy = r * cs + pad;
 
                             if (!cell.revealed) {
-                                // Elevated tile
-                                ctx.fillStyle = root.themeCardBg;
+                                // Elevated tactile unrevealed tile
+                                var isHovered = (Engine.cursor.r === r && Engine.cursor.c === c);
+                                var tileFill = root.isDarkMode
+                                    ? (isHovered ? root.themeCardHover : root.themeCardBg)
+                                    : (isHovered ? "#dce0e8" : "#cbd5e1");
+                                var tileBorder = root.isDarkMode ? root.themeBorder : "#94a3b8";
+
+                                ctx.fillStyle = tileFill;
                                 drawRoundRect(ctx, cx, cy, cellInner, cellInner, rad);
                                 ctx.fill();
 
-                                ctx.strokeStyle = root.themeBorder;
+                                ctx.strokeStyle = tileBorder;
                                 ctx.lineWidth = 1;
                                 ctx.stroke();
 
+                                // Tactile bevel on unrevealed tiles in light mode
+                                if (!root.isDarkMode) {
+                                    ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
+                                    ctx.lineWidth = 1.2;
+                                    ctx.beginPath();
+                                    ctx.moveTo(cx + rad, cy + 1.2);
+                                    ctx.lineTo(cx + cellInner - rad, cy + 1.2);
+                                    ctx.moveTo(cx + 1.2, cy + rad);
+                                    ctx.lineTo(cx + 1.2, cy + cellInner - rad);
+                                    ctx.stroke();
+
+                                    ctx.strokeStyle = "rgba(0, 0, 0, 0.12)";
+                                    ctx.beginPath();
+                                    ctx.moveTo(cx + rad, cy + cellInner - 1.2);
+                                    ctx.lineTo(cx + cellInner - rad, cy + cellInner - 1.2);
+                                    ctx.moveTo(cx + cellInner - 1.2, cy + rad);
+                                    ctx.lineTo(cx + cellInner - 1.2, cy + cellInner - rad);
+                                    ctx.stroke();
+                                }
+
                                 if (cell.flagged) {
                                     // Flag icon
-                                    ctx.fillStyle = pal.color1 || "#f38ba8";
+                                    ctx.fillStyle = root.isDarkMode ? (pal.color1 || "#f38ba8") : "#dc2626";
                                     ctx.beginPath();
                                     ctx.moveTo(cx + cellInner * 0.35, cy + cellInner * 0.25);
                                     ctx.lineTo(cx + cellInner * 0.75, cy + cellInner * 0.42);
@@ -819,7 +896,7 @@ Window {
                                     ctx.fill();
 
                                     // Flag pole
-                                    ctx.strokeStyle = root.themeSubtext;
+                                    ctx.strokeStyle = root.isDarkMode ? root.themeSubtext : "#475569";
                                     ctx.lineWidth = Math.max(2, cs * 0.08);
                                     ctx.beginPath();
                                     ctx.moveTo(cx + cellInner * 0.35, cy + cellInner * 0.2);
@@ -833,16 +910,16 @@ Window {
                                     ctx.stroke();
                                 }
                             } else {
-                                // Revealed cell
+                                // Revealed cell: flat sunken clean surface
                                 if (cell.exploded) {
                                     ctx.fillStyle = pal.color1 || "#f38ba8";
                                 } else {
-                                    ctx.fillStyle = root.themeBoardBg;
+                                    ctx.fillStyle = root.isDarkMode ? root.themeBoardBg : "#ffffff";
                                 }
                                 drawRoundRect(ctx, cx, cy, cellInner, cellInner, rad);
                                 ctx.fill();
 
-                                ctx.strokeStyle = root.themeBg;
+                                ctx.strokeStyle = root.isDarkMode ? root.themeBg : "#e2e8f0";
                                 ctx.lineWidth = 1;
                                 ctx.stroke();
 

@@ -17,23 +17,29 @@ Window {
     property color themeBg: "#181825"
     property color themeBoardBg: "#11111b"
     property color themeCardBg: "#1e1e2e"
+    property color themeCardHover: "#313244"
     property color themeBorder: "#313244"
     property color themeFg: "#cdd6f4"
     property color themeSubtext: "#a6adc8"
     property color themeAccent: "#89b4fa"
     property color themeBtnBg: themeAccent
     property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
     property var themePalette: ({})
     property bool isCustomTheme: false
     property string currentThemeName: ""
 
     // Virus & Pill color palette mapped to active theme
-    property color feverColor: themePalette.color1 || themePalette.color9 || "#f38ba8"  // Red
-    property color chillColor: themePalette.color4 || themePalette.color12 || "#89b4fa" // Blue/Cyan
-    property color weirdColor: themePalette.color3 || themePalette.color11 || "#f9e2af" // Yellow
+    property color feverColor: isDarkMode ? (themePalette.color1 || "#f38ba8") : (themePalette.color1 || "#e11d48")
+    property color chillColor: isDarkMode ? (themePalette.color4 || "#89b4fa") : (themePalette.color4 || "#0284c7")
+    property color weirdColor: isDarkMode ? (themePalette.color3 || "#f9e2af") : (themePalette.color3 || "#d97706")
 
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
@@ -76,6 +82,7 @@ Window {
                               "  - Full / Compact: Shift+F\n" +
                               "  - Restart: R\n" +
                               "  - Sound: M\n" +
+                              "  - Theme: T\n" +
                               "  - Help: ? or Esc"
 
     // Animation states
@@ -124,27 +131,54 @@ Window {
 
         var lum = colorLuminance(bg);
         if (lum > 0.5) {
-            themeBoardBg = Qt.darker(bg, 1.06);
-            themeCardBg = Qt.darker(bg, 1.03);
-            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
-            themeBorder = c8 || Qt.darker(bg, 1.15);
+            themeBoardBg = data.boardBg || "#e8ecf2";
+            themeCardBg = data.cardBg || "#ffffff";
+            themeCardHover = "#f1f5f9";
+            themeSubtext = data.subtext || "#64748b";
+            themeBorder = data.border || "#ccd0da";
             themeBtnBg = accent;
-            themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+            themeBtnFg = "#ffffff";
+            feverColor = data.color1 || "#e11d48";
+            chillColor = data.color4 || "#0284c7";
+            weirdColor = data.color3 || "#d97706";
         } else {
-            themeBoardBg = Qt.darker(bg, 1.25);
-            themeCardBg = c0;
-            themeSubtext = "#a6adc8";
-            themeBorder = c8;
+            themeBoardBg = data.boardBg || "#11111b";
+            themeCardBg = data.cardBg || c0;
+            themeCardHover = "#313244";
+            themeSubtext = data.subtext || "#a6adc8";
+            themeBorder = data.border || c8;
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
+            feverColor = data.color1 || data.color9 || "#f38ba8";
+            chillColor = data.color4 || data.color12 || "#89b4fa";
+            weirdColor = data.color3 || data.color11 || "#f9e2af";
         }
-
-        feverColor = data.color1 || data.color9 || "#f38ba8";
-        chillColor = data.color4 || data.color12 || "#89b4fa";
-        weirdColor = data.color3 || data.color11 || "#f9e2af";
 
         bottleCanvas.requestPaint();
         previewCanvas.requestPaint();
+    }
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            accent: "#1e66f5",
+            cardBg: "#ffffff",
+            boardBg: "#e8ecf2",
+            border: "#ccd0da",
+            subtext: "#5c5f77"
+        } : {
+            background: "#181825",
+            foreground: "#cdd6f4",
+            accent: "#89b4fa",
+            cardBg: "#1e1e2e",
+            boardBg: "#11111b",
+            border: "#313244",
+            subtext: "#a6adc8"
+        };
+        applyTheme(tData, nextIsLight ? "Omarchy Light" : "Omarchy Dark");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     function playSound(name) {
@@ -494,6 +528,12 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
                 root.fullPlayfield = !root.fullPlayfield;
                 soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
@@ -550,6 +590,18 @@ Window {
             }
         }
 
+        // Background Header Bar (flush arcade layout)
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: root.isTiledDesktopMode ? 0 : (headerItem.height + subheaderItem.height + 34)
+            color: root.themeBg
+            visible: !root.isTiledDesktopMode
+            z: 0
+        }
+
         // =====================================================================
         // 2048 DESIGN STANDARD: ROW 1 (Header Item)
         // =====================================================================
@@ -557,12 +609,13 @@ Window {
             id: headerItem
             visible: !root.isTiledDesktopMode
             anchors.top: parent.top
-            anchors.topMargin: visible ? 16 : 0
+            anchors.topMargin: visible ? 14 : 0
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.leftMargin: 16
             anchors.rightMargin: 16
             height: visible ? Math.max(titleCol.height, scoreRow.height) : 0
+            z: 1
 
             Column {
                 id: titleCol
@@ -579,7 +632,6 @@ Window {
                     font.pixelSize: Math.max(20, Math.min(28, headerItem.width * 0.070))
                     font.bold: true
                     color: root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
                 Text {
                     width: parent.width
@@ -587,7 +639,6 @@ Window {
                     text: "Classic arcade medicine puzzle for Omarchy"
                     font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
                     color: root.themeSubtext
-                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
 
@@ -606,7 +657,6 @@ Window {
                     color: root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -636,7 +686,6 @@ Window {
                     color: root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -666,7 +715,6 @@ Window {
                     color: root.themeCardBg
                     border.color: root.themeBorder
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -696,7 +744,6 @@ Window {
                     color: root.themeCardBg
                     border.color: root.virusesRemaining > 0 ? root.feverColor : root.themeBorder
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -733,6 +780,7 @@ Window {
             anchors.leftMargin: 16
             anchors.rightMargin: 16
             height: visible ? 34 : 0
+            z: 1
 
             readonly property bool isCrowded: subheaderItem.width < 460
 
@@ -747,10 +795,9 @@ Window {
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
                     radius: 8
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
 
                     Row {
                         id: helpRow
@@ -795,11 +842,9 @@ Window {
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
                     radius: 8
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
+                    color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.isMuted ? root.themeBorder : root.themeAccent
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     Row {
                         id: muteRow
@@ -835,11 +880,9 @@ Window {
                     height: 32
                     width: subheaderItem.isCrowded ? 32 : (viewModeRow.implicitWidth + 18)
                     radius: 8
-                    color: root.fullPlayfield ? root.themeCardBg : (viewModeMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
+                    color: viewModeMouse.containsMouse ? root.themeCardHover : root.themeCardBg
                     border.color: root.fullPlayfield ? root.themeAccent : (viewModeMouse.containsMouse ? root.themeAccent : root.themeBorder)
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     Row {
                         id: viewModeRow
@@ -879,7 +922,6 @@ Window {
                     width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
                     radius: 8
                     color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 150 } }
 
                     Row {
                         id: restartRow
@@ -1014,14 +1056,14 @@ Window {
         // =====================================================================
         Item {
             id: playArea
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 8 : 12
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 8 : 0
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: root.isTiledDesktopMode ? 10 : 16
+            anchors.bottomMargin: 0
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: root.isTiledDesktopMode ? 10 : 16
-            anchors.rightMargin: root.isTiledDesktopMode ? 10 : 16
+            anchors.leftMargin: 0
+            anchors.rightMargin: 0
 
             Rectangle {
                 id: boardContainer
@@ -1029,7 +1071,7 @@ Window {
                 color: root.themeBoardBg
                 border.color: root.themeBorder
                 border.width: 1
-                radius: 12
+                radius: 0
                 clip: true
 
                 // Main Playfield Canvas (The Medicine Bottle)
@@ -1068,18 +1110,30 @@ Window {
 
                         // 1. Draw Bottle Glass Silhouette
                         ctx.save();
-                        ctx.fillStyle = Qt.rgba(root.themeCardBg.r, root.themeCardBg.g, root.themeCardBg.b, 0.55);
+                        if (root.isDarkMode) {
+                            ctx.fillStyle = Qt.rgba(root.themeCardBg.r, root.themeCardBg.g, root.themeCardBg.b, 0.55);
+                        } else {
+                            ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+                        }
                         drawBottlePath(ctx, bottleX, bottleY, bottleW, bottleH, neckX, neckY, neckW, neckH, cs);
                         ctx.fill();
 
                         // Glass Rim Outline
-                        ctx.strokeStyle = Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.45);
+                        if (root.isDarkMode) {
+                            ctx.strokeStyle = Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.45);
+                        } else {
+                            ctx.strokeStyle = "rgba(14, 165, 233, 0.65)";
+                        }
                         ctx.lineWidth = 2.5;
                         drawBottlePath(ctx, bottleX, bottleY, bottleW, bottleH, neckX, neckY, neckW, neckH, cs);
                         ctx.stroke();
 
                         // Bottle Lip Cap
-                        ctx.strokeStyle = Qt.rgba(root.themeFg.r, root.themeFg.g, root.themeFg.b, 0.6);
+                        if (root.isDarkMode) {
+                            ctx.strokeStyle = Qt.rgba(root.themeFg.r, root.themeFg.g, root.themeFg.b, 0.6);
+                        } else {
+                            ctx.strokeStyle = "#64748b";
+                        }
                         ctx.lineWidth = 3.5;
                         ctx.beginPath();
                         ctx.moveTo(neckX - cs * 0.3, neckY);
@@ -1087,7 +1141,11 @@ Window {
                         ctx.stroke();
 
                         // Subtle inner grid lines
-                        ctx.strokeStyle = Qt.rgba(root.themeBorder.r, root.themeBorder.g, root.themeBorder.b, 0.25);
+                        if (root.isDarkMode) {
+                            ctx.strokeStyle = Qt.rgba(root.themeBorder.r, root.themeBorder.g, root.themeBorder.b, 0.25);
+                        } else {
+                            ctx.strokeStyle = "rgba(100, 116, 139, 0.16)";
+                        }
                         ctx.lineWidth = 1;
                         for (var c = 1; c < 8; c++) {
                             ctx.beginPath();
@@ -1103,7 +1161,7 @@ Window {
                         }
 
                         // Specular Glass Highlight Line
-                        ctx.strokeStyle = Qt.rgba(1.0, 1.0, 1.0, 0.08);
+                        ctx.strokeStyle = root.isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.95)";
                         ctx.lineWidth = 4;
                         ctx.beginPath();
                         ctx.moveTo(bottleX + cs * 0.4, bottleY + cs * 0.8);
@@ -1840,12 +1898,11 @@ Window {
                 Rectangle {
                     id: sidePanel
                     anchors.top: parent.top
-                    anchors.bottom: parent.bottom
                     anchors.right: parent.right
                     anchors.topMargin: 12
-                    anchors.bottomMargin: 12
                     anchors.rightMargin: 12
                     width: 110
+                    height: Math.min(sideCol.implicitHeight + 20, parent.height - 24)
                     visible: !root.isTiledDesktopMode
                     color: root.themeCardBg
                     border.color: root.themeBorder
@@ -1853,7 +1910,10 @@ Window {
                     radius: 10
 
                     Column {
-                        anchors.fill: parent
+                        id: sideCol
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
                         anchors.margins: 8
                         spacing: 10
 
@@ -1874,8 +1934,8 @@ Window {
                                 width: parent.width
                                 height: 38
                                 radius: 6
-                                color: root.themeBoardBg
-                                border.color: root.themeBorder
+                                color: root.isDarkMode ? root.themeBoardBg : "#f1f5f9"
+                                border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                                 border.width: 1
 
                                 Canvas {
@@ -2060,8 +2120,8 @@ Window {
                                         width: 28
                                         height: 20
                                         radius: 4
-                                        color: root.speed === modelData ? root.themeAccent : root.themeBoardBg
-                                        border.color: root.speed === modelData ? root.themeAccent : root.themeBorder
+                                        color: root.speed === modelData ? root.themeAccent : (root.isDarkMode ? root.themeBoardBg : "#f1f5f9")
+                                        border.color: root.speed === modelData ? root.themeAccent : (root.isDarkMode ? root.themeBorder : "#cbd5e1")
                                         border.width: 1
 
                                         Text {
@@ -2069,7 +2129,7 @@ Window {
                                             text: modelData
                                             font.bold: true
                                             font.pixelSize: 8
-                                            color: root.speed === modelData ? root.themeBtnFg : root.themeSubtext
+                                            color: root.speed === modelData ? root.themeBtnFg : (root.isDarkMode ? root.themeSubtext : "#475569")
                                         }
 
                                         MouseArea {
@@ -2200,7 +2260,7 @@ Window {
 
                 Text {
                     text: "Stage " + root.level + " Failed • Score: " + root.score
-                    color: root.themeFg
+                    color: "#f8fafc"
                     font.pixelSize: 14
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -2258,7 +2318,7 @@ Window {
 
                 Text {
                     text: "Press R for New Game (Stage 1) • Space / Enter to Retry"
-                    color: root.themeSubtext
+                    color: "#94a3b8"
                     font.pixelSize: 11
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -2293,7 +2353,7 @@ Window {
 
                 Text {
                     text: "All Viruses Eradicated! • Score: " + root.score
-                    color: root.themeFg
+                    color: "#f8fafc"
                     font.pixelSize: 14
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -2322,7 +2382,7 @@ Window {
 
                 Text {
                     text: "Or press Space / Enter"
-                    color: root.themeSubtext
+                    color: "#94a3b8"
                     font.pixelSize: 11
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -2359,7 +2419,7 @@ Window {
                 Text {
                     text: "Press P or Esc to Resume"
                     font.pixelSize: 12
-                    color: root.themeSubtext
+                    color: "#94a3b8"
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
             }

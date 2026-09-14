@@ -3,6 +3,16 @@ import QtQuick.Controls
 
 Item {
     id: card
+    // Theme properties bound from main launcher or arcadeBackend
+    property bool isDarkMode: (typeof arcadeBackend !== "undefined" && arcadeBackend.isDarkMode !== undefined) ? arcadeBackend.isDarkMode : true
+    property color themeBackground: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeBackground) ? arcadeBackend.themeColors.themeBackground : (isDarkMode ? "#111116" : "#eff1f5")
+    property color themeSurface: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeSurface) ? arcadeBackend.themeColors.themeSurface : (isDarkMode ? "#181822" : "#ffffff")
+    property color themeSurfaceLight: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeSurfaceLight) ? arcadeBackend.themeColors.themeSurfaceLight : (isDarkMode ? "#222230" : "#f1f5f9")
+    property color themeBorder: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeBorder) ? arcadeBackend.themeColors.themeBorder : (isDarkMode ? "#2a2a38" : "#cbd5e1")
+    property color themeText: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeText) ? arcadeBackend.themeColors.themeText : (isDarkMode ? "#ffffff" : "#0f172a")
+    property color themeTextMuted: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeTextMuted) ? arcadeBackend.themeColors.themeTextMuted : (isDarkMode ? "#94a3b8" : "#64748b")
+    property color themeAccent: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeAccent) ? arcadeBackend.themeColors.themeAccent : (isDarkMode ? "#00f0ff" : "#1e66f5")
+    property color themeAccentAlt: (typeof arcadeBackend !== "undefined" && arcadeBackend.themeColors && arcadeBackend.themeColors.themeAccentAlt) ? arcadeBackend.themeColors.themeAccentAlt : (isDarkMode ? "#e6458e" : "#d20f39")
     width: 220
     height: 286
 
@@ -38,7 +48,7 @@ Item {
         anchors.margins: 4
         radius: 8
         color: gameData ? gameData.floppy_color : "#232328"
-        border.color: "#111115"
+        border.color: !isDarkMode ? "#94a3b8" : "#111115"
         border.width: 2
         clip: true
 
@@ -48,7 +58,7 @@ Item {
             anchors.right: parent.right
             width: 16
             height: 16
-            color: "#121215"
+            color: !isDarkMode ? themeBackground : "#121215"
             rotation: 45
             x: 8
             y: -8
@@ -87,7 +97,7 @@ Item {
             width: 10
             height: 10
             radius: 1
-            color: "#0a0a0e"
+            color: !isDarkMode ? themeBackground : "#0a0a0e"
         }
         Rectangle {
             anchors.bottom: parent.bottom
@@ -96,7 +106,7 @@ Item {
             width: 10
             height: 10
             radius: 1
-            color: "#0a0a0e"
+            color: !isDarkMode ? themeBackground : "#0a0a0e"
         }
 
         // --- 2. Metal Sliding Shutter (Top Center) ---

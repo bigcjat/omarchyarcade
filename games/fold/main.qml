@@ -11,21 +11,29 @@ Window {
     minimumHeight: 300
     title: "Fold"
 
+    signal screenshotSaved(string path)
+
     // =========================================================================
     // OMARCHY THEME TOKENS
     // =========================================================================
     property color themeBg: "#181825"
     property color themeBoardBg: "#11111b"
     property color themeCardBg: "#1e1e2e"
+    property color themeCardHover: "#313244"
     property color themeBorder: "#313244"
     property color themeFg: "#cdd6f4"
     property color themeSubtext: "#a6adc8"
     property color themeAccent: "#F28482" // Sakura Rose
     property color themeBtnBg: themeAccent
     property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
 
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
 
@@ -251,9 +259,18 @@ Window {
     function applyTheme(themeData, themeName) {
         if (!themeData) return;
         if (themeData["background"]) themeBg = themeData["background"];
-        if (themeData["board_bg"]) themeBoardBg = themeData["board_bg"];
-        else if (themeData["background"]) themeBoardBg = Qt.darker(themeData["background"], 1.15);
-        if (themeData["surface"] || themeData["card_bg"]) themeCardBg = themeData["surface"] || themeData["card_bg"];
+        var isDark = colorLuminance(themeBg) < 0.5;
+        if (themeData["board_bg"]) {
+            themeBoardBg = themeData["board_bg"];
+        } else {
+            themeBoardBg = isDark ? Qt.darker(themeBg, 1.15) : "#f1f5f9";
+        }
+        if (themeData["surface"] || themeData["card_bg"]) {
+            themeCardBg = themeData["surface"] || themeData["card_bg"];
+        } else {
+            themeCardBg = isDark ? "#1e1e2e" : "#ffffff";
+        }
+        themeCardHover = isDark ? "#313244" : "#f1f5f9";
         if (themeData["border"]) themeBorder = themeData["border"];
         if (themeData["foreground"]) themeFg = themeData["foreground"];
         if (themeData["subtext"]) themeSubtext = themeData["subtext"];
@@ -265,6 +282,7 @@ Window {
         targetItem.grabToImage(function(result) {
             result.saveToFile(filePath);
             console.log("Screenshot saved to " + filePath);
+            root.screenshotSaved(filePath);
             if (shouldQuit) Qt.quit();
         });
     }
@@ -350,133 +368,137 @@ Window {
         // =====================================================================
         // 1. STANDARD TOP HEADER (Visible when !isTiledDesktopMode)
         // =====================================================================
-        Item {
-            id: headerItem
-            visible: !root.isTiledDesktopMode
+        Rectangle {
+            id: headerBar
+            z: 20
             anchors.top: parent.top
-            anchors.topMargin: visible ? (root.isCompactHud ? 6 : 10) : 0
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: root.isCompactHud ? 8 : 14
-            anchors.rightMargin: root.isCompactHud ? 8 : 14
-            height: visible ? (root.isCompactHud ? 46 : 60) : 0
+            height: root.isTiledDesktopMode ? 0 : (headerItem.height + subheaderItem.height + (root.isCompactHud ? 16 : 24))
+            visible: !root.isTiledDesktopMode
+            color: root.themeBg
 
-            Column {
-                id: titleCol
+            Item {
+                id: headerItem
+                anchors.top: parent.top
+                anchors.topMargin: root.isCompactHud ? 6 : 10
                 anchors.left: parent.left
-                anchors.right: scoreRow.left
-                anchors.rightMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 2
-
-                Text {
-                    width: parent.width
-                    elide: Text.ElideRight
-                    text: root.title
-                    font.pixelSize: Math.max(20, Math.min(32, headerItem.width * 0.075))
-                    font.bold: true
-                    color: root.themeAccent
-                    Behavior on color { ColorAnimation { duration: 250 } }
-                }
-                Text {
-                    width: parent.width
-                    elide: Text.ElideRight
-                    text: "Tactile Paper Folding & Crease Logic Puzzle"
-                    font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
-                    color: root.themeSubtext
-                    Behavior on color { ColorAnimation { duration: 250 } }
-                }
-            }
-
-            // Stat Cards (Stage & Moves)
-            Row {
-                id: scoreRow
                 anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
+                anchors.leftMargin: root.isCompactHud ? 8 : 14
+                anchors.rightMargin: root.isCompactHud ? 8 : 14
+                height: root.isCompactHud ? 46 : 60
 
-                Rectangle {
-                    width: root.isCompactHud ? 60 : 70
-                    height: root.isCompactHud ? 42 : 48
-                    radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
-                    border.width: 1
+                Column {
+                    id: titleCol
+                    anchors.left: parent.left
+                    anchors.right: scoreRow.left
+                    anchors.rightMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 2
 
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 1
-                        Text {
-                            text: "STAGE"
-                            font.pixelSize: 8
-                            font.bold: true
-                            color: root.themeSubtext
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                        Text {
-                            text: "" + root.currentStage
-                            font.pixelSize: root.isCompactHud ? 15 : 17
-                            font.bold: true
-                            color: root.themeFg
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
+                    Text {
+                        width: parent.width
+                        elide: Text.ElideRight
+                        text: root.title
+                        font.pixelSize: Math.max(20, Math.min(32, headerItem.width * 0.075))
+                        font.bold: true
+                        color: root.themeAccent
+                    }
+                    Text {
+                        width: parent.width
+                        elide: Text.ElideRight
+                        text: "Tactile Paper Folding & Crease Logic Puzzle"
+                        font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
+                        color: root.themeSubtext
                     }
                 }
 
-                Rectangle {
-                    width: root.isCompactHud ? 70 : 80
-                    height: root.isCompactHud ? 42 : 48
-                    radius: 8
-                    color: root.themeCardBg
-                    border.color: root.currentMoves > root.currentPar ? "#EF4444" : root.themeBorder
-                    border.width: root.currentMoves > root.currentPar ? 2 : 1
+                // Stat Cards (Stage & Moves)
+                Row {
+                    id: scoreRow
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 6
 
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 1
-                        Text {
-                            text: "MOVES"
-                            font.pixelSize: 8
-                            font.bold: true
-                            color: root.themeSubtext
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                        Row {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            spacing: 2
+                    Rectangle {
+                        width: root.isCompactHud ? 60 : 70
+                        height: root.isCompactHud ? 42 : 48
+                        radius: 8
+                        color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                        border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                        border.width: 1
+
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: 1
                             Text {
-                                text: "" + root.currentMoves
+                                text: "STAGE"
+                                font.pixelSize: 8
+                                font.bold: true
+                                color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+                            Text {
+                                text: "" + root.currentStage
                                 font.pixelSize: root.isCompactHud ? 15 : 17
                                 font.bold: true
-                                color: root.currentMoves <= root.currentPar ? root.themeAccent : "#EF4444"
+                                color: root.isDarkMode ? root.themeFg : "#0f172a"
+                                anchors.horizontalCenter: parent.horizontalCenter
                             }
+                        }
+                    }
+
+                    Rectangle {
+                        width: root.isCompactHud ? 70 : 80
+                        height: root.isCompactHud ? 42 : 48
+                        radius: 8
+                        color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                        border.color: root.currentMoves > root.currentPar ? "#EF4444" : (root.isDarkMode ? root.themeBorder : "#cbd5e1")
+                        border.width: root.currentMoves > root.currentPar ? 2 : 1
+
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: 1
                             Text {
-                                text: " / " + root.currentPar
-                                font.pixelSize: root.isCompactHud ? 11 : 12
+                                text: "MOVES"
+                                font.pixelSize: 8
                                 font.bold: true
-                                color: root.themeSubtext
-                                anchors.baseline: parent.children[0].baseline
+                                color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 2
+                                Text {
+                                    text: "" + root.currentMoves
+                                    font.pixelSize: root.isCompactHud ? 15 : 17
+                                    font.bold: true
+                                    color: root.currentMoves <= root.currentPar ? (root.isDarkMode ? root.themeAccent : "#15803d") : "#EF4444"
+                                }
+                                Text {
+                                    text: " / " + root.currentPar
+                                    font.pixelSize: root.isCompactHud ? 11 : 12
+                                    font.bold: true
+                                    color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                                    anchors.baseline: parent.children[0].baseline
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        // =====================================================================
-        // 2. SUBHEADER CONTROLS TOOLBAR (Visible when !isTiledDesktopMode)
-        // =====================================================================
-        Item {
-            id: subheaderItem
-            visible: !root.isTiledDesktopMode
-            anchors.top: headerItem.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.topMargin: root.isCompactHud ? 4 : 6
-            anchors.leftMargin: root.isCompactHud ? 8 : 14
-            anchors.rightMargin: root.isCompactHud ? 8 : 14
-            height: visible ? (root.isCompactHud ? 30 : 34) : 0
-            property bool isCrowded: width < 420
+            // 2. SUBHEADER CONTROLS TOOLBAR
+            Item {
+                id: subheaderItem
+                anchors.top: headerItem.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.topMargin: root.isCompactHud ? 4 : 6
+                anchors.leftMargin: root.isCompactHud ? 8 : 14
+                anchors.rightMargin: root.isCompactHud ? 8 : 14
+                height: root.isCompactHud ? 30 : 34
+                property bool isCrowded: width < 420
 
                 Row {
                     anchors.left: parent.left
@@ -488,7 +510,7 @@ Window {
                         height: 32
                         width: subheaderItem.isCrowded ? 32 : 68
                         radius: 6
-                        color: root.themeCardBg
+                        color: helpMa.containsMouse ? root.themeCardHover : root.themeCardBg
                         border.color: root.themeBorder
                         border.width: 1
 
@@ -505,7 +527,9 @@ Window {
                             }
                         }
                         MouseArea {
+                            id: helpMa
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.showHelp = !root.showHelp
                         }
@@ -516,7 +540,7 @@ Window {
                         height: 32
                         width: subheaderItem.isCrowded ? 32 : 74
                         radius: 6
-                        color: root.themeCardBg
+                        color: stagesMa.containsMouse ? root.themeCardHover : root.themeCardBg
                         border.color: root.themeBorder
                         border.width: 1
 
@@ -533,7 +557,9 @@ Window {
                             }
                         }
                         MouseArea {
+                            id: stagesMa
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.showLevelSelect = !root.showLevelSelect
                         }
@@ -544,7 +570,7 @@ Window {
                         height: 32
                         width: subheaderItem.isCrowded ? 32 : 68
                         radius: 6
-                        color: root.themeCardBg
+                        color: undoMa.containsMouse ? root.themeCardHover : root.themeCardBg
                         border.color: Engine.undoStack.length > 0 ? root.themeAccent : root.themeBorder
                         border.width: 1
                         opacity: Engine.undoStack.length > 0 ? 1.0 : 0.45
@@ -562,7 +588,9 @@ Window {
                             }
                         }
                         MouseArea {
+                            id: undoMa
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.undoMove()
                         }
@@ -579,7 +607,7 @@ Window {
                         height: 32
                         width: subheaderItem.isCrowded ? 32 : 94
                         radius: 6
-                        color: root.themeCardBg
+                        color: densityMa.containsMouse ? root.themeCardHover : root.themeCardBg
                         border.color: root.themeBorder
                         border.width: 1
 
@@ -596,18 +624,20 @@ Window {
                             }
                         }
                         MouseArea {
+                            id: densityMa
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.cyclePaperDensity()
                         }
                     }
 
-                    // Audio Mute Toggle (Icon Button)
+                    // Audio Mute Toggle
                     Rectangle {
                         height: 32
                         width: 32
                         radius: 6
-                        color: root.themeCardBg
+                        color: muteMa.containsMouse ? root.themeCardHover : root.themeCardBg
                         border.color: root.isMuted ? root.themeBorder : root.themeAccent
                         border.width: 1
 
@@ -617,7 +647,9 @@ Window {
                             font.pixelSize: 12
                         }
                         MouseArea {
+                            id: muteMa
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.toggleMute()
                         }
@@ -628,7 +660,7 @@ Window {
                         height: 32
                         width: subheaderItem.isCrowded ? 32 : 72
                         radius: 6
-                        color: root.themeCardBg
+                        color: resetMa.containsMouse ? root.themeCardHover : root.themeCardBg
                         border.color: root.themeBorder
                         border.width: 1
 
@@ -645,13 +677,16 @@ Window {
                             }
                         }
                         MouseArea {
+                            id: resetMa
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.restartLevel()
                         }
                     }
                 }
             }
+        }
 
         // =====================================================================
         // TILING DESKTOP FLOATING HUD (Row 1 Compact when isTiledDesktopMode)
@@ -760,15 +795,15 @@ Window {
         // =====================================================================
         Rectangle {
             id: boardContainer
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : subheaderItem.bottom
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
             anchors.bottom: paletteBar.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.topMargin: root.isTiledDesktopMode ? 8 : 10
+            anchors.topMargin: root.isTiledDesktopMode ? 8 : 0
             anchors.bottomMargin: 8
             anchors.leftMargin: root.isTiledDesktopMode ? 10 : (root.isCompactHud ? 8 : 12)
             anchors.rightMargin: root.isTiledDesktopMode ? 10 : (root.isCompactHud ? 8 : 12)
-            radius: 12
+            radius: 8
             color: root.themeBoardBg
             border.color: root.themeBorder
             border.width: 1
@@ -1316,7 +1351,7 @@ Window {
                             width: 110
                             height: 38
                             radius: 8
-                            color: root.themeBoardBg
+                            color: replayMa.containsMouse ? root.themeCardHover : (root.isDarkMode ? "#1e1e2e" : "#f1f5f9")
                             border.color: root.themeBorder
                             border.width: 1
                             Text {
@@ -1327,7 +1362,9 @@ Window {
                                 color: root.themeFg
                             }
                             MouseArea {
+                                id: replayMa
                                 anchors.fill: parent
+                                hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: root.restartLevel()
                             }
@@ -1426,7 +1463,7 @@ Window {
                                 width: 68
                                 height: 58
                                 radius: 8
-                                color: isCurrent ? Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.25) : (isUnlocked ? root.themeBoardBg : "#111116")
+                                color: isCurrent ? Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.25) : (isUnlocked ? (root.isDarkMode ? "#181825" : "#f1f5f9") : (root.isDarkMode ? "#111116" : "#e2e8f0"))
                                 border.color: isCurrent ? root.themeAccent : root.themeBorder
                                 border.width: isCurrent ? 2 : 1
                                 opacity: isUnlocked ? 1.0 : 0.4
@@ -1471,7 +1508,7 @@ Window {
                             width: 80
                             height: 32
                             radius: 6
-                            color: root.themeBoardBg
+                            color: root.isDarkMode ? "#181825" : "#f1f5f9"
                             border.color: root.themeBorder
                             border.width: 1
                             opacity: root.stagePage > 0 ? 1.0 : 0.4
@@ -1500,7 +1537,7 @@ Window {
                             width: 80
                             height: 32
                             radius: 6
-                            color: root.themeBoardBg
+                            color: root.isDarkMode ? "#181825" : "#f1f5f9"
                             border.color: root.themeBorder
                             border.width: 1
                             opacity: root.stagePage < Math.floor((root.unlockedLevel - 1) / 20) ? 1.0 : 0.4
@@ -1677,15 +1714,15 @@ Window {
             width: toastText.implicitWidth + 24
             height: 32
             radius: 16
-            color: root.themeCardBg
-            border.color: root.themeBorder
+            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
             border.width: 1
             opacity: 0.0
 
             Text {
                 id: toastText
                 anchors.centerIn: parent
-                color: root.themeFg
+                color: root.isDarkMode ? root.themeFg : "#0f172a"
                 font.pixelSize: 11
                 font.bold: true
             }

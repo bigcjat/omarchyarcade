@@ -26,9 +26,15 @@ Window {
     property color themeBtnFg: colorLuminance(themeAccent) > 0.5 ? "#11111b" : "#ffffff"
 
     function colorLuminance(col) {
-        var c = Qt.color(col);
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
         return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
     }
+
+    readonly property bool isDarkMode: colorLuminance(themeBg) < 0.5
 
     color: themeBg
 
@@ -174,13 +180,17 @@ Window {
 
         var lum = colorLuminance(bg);
         if (lum > 0.5) {
-            themeCardBg = Qt.darker(bg, 1.05);
-            themeSubtext = Qt.rgba(Qt.color(fg).r, Qt.color(fg).g, Qt.color(fg).b, 0.65);
+            themeBoardBg = data.boardBg || "#166534";
+            themeCardBg = data.cardBg || "#ffffff";
+            themeSubtext = data.subtext || "#64748b";
+            themeBorder = data.border || "#cbd5e1";
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         } else {
-            themeCardBg = c0;
-            themeSubtext = "#a6adc8";
+            themeBoardBg = data.boardBg || Qt.darker(bg, 1.25);
+            themeCardBg = data.cardBg || c0;
+            themeSubtext = data.subtext || "#a6adc8";
+            themeBorder = data.border || c8;
             themeBtnBg = accent;
             themeBtnFg = colorLuminance(accent) > 0.5 ? "#11111b" : "#ffffff";
         }
@@ -830,9 +840,24 @@ Window {
     Rectangle {
         id: mainContainer
         anchors.fill: parent
-        color: root.themeBg
+        color: "#0c0f17"
         focus: true
-        Behavior on color { ColorAnimation { duration: 150 } }
+
+        // =====================================================================
+        // TOP OS-THEMED HEADER BAR (Adapts strictly to user desktop OS theme)
+        // =====================================================================
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: root.isTiledDesktopMode ? 0 : (subheaderItem.y + subheaderItem.height + 10)
+            visible: !root.isTiledDesktopMode
+            color: root.themeBg
+            border.color: root.themeBorder
+            border.width: 1
+            z: 0
+        }
 
         Keys.onPressed: function(event) {
             if (event.isAutoRepeat && (event.key === Qt.Key_X || event.key === Qt.Key_D || event.key === Qt.Key_P || event.key === Qt.Key_Space || event.key === Qt.Key_Return)) {
@@ -978,6 +1003,7 @@ Window {
             anchors.leftMargin: 16
             anchors.rightMargin: 16
             height: root.isTiledDesktopMode ? 0 : (Math.max(titleCol.height, statsRow.height))
+            z: 1
 
             Column {
                 id: titleCol
@@ -1018,10 +1044,9 @@ Window {
                     width: Math.max(72, Math.min(94, headerItem.width * 0.16))
                     height: 48
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -1031,14 +1056,14 @@ Window {
                             text: "BANKROLL"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.formatMoney(root.bankroll)
                             font.pixelSize: 15
                             font.bold: true
-                            color: root.themeGold
+                            color: root.isDarkMode ? root.themeGold : "#15803d"
                         }
                     }
                 }
@@ -1048,10 +1073,9 @@ Window {
                     width: Math.max(64, Math.min(84, headerItem.width * 0.14))
                     height: 48
                     radius: 8
-                    color: root.themeCardBg
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 250 } }
 
                     Column {
                         anchors.centerIn: parent
@@ -1061,14 +1085,14 @@ Window {
                             text: "BET"
                             font.pixelSize: 8
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.formatMoney(root.currentBet)
                             font.pixelSize: 15
                             font.bold: true
-                            color: root.themeAccent
+                            color: root.isDarkMode ? root.themeAccent : "#1d4ed8"
                         }
                     }
                 }
@@ -1088,6 +1112,7 @@ Window {
             anchors.leftMargin: 16
             anchors.rightMargin: 16
             height: root.isTiledDesktopMode ? 0 : 32
+            z: 1
 
             readonly property bool isCrowded: subheaderItem.width < 540
 
@@ -1102,8 +1127,8 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : (helpRow.implicitWidth + 16)
                     radius: 6
-                    color: helpMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: helpMouse.containsMouse ? root.themeAccent : root.themeBorder
+                    color: helpMouse.containsMouse ? (root.isDarkMode ? root.themeCardBg : "#f1f5f9") : (root.isDarkMode ? root.themeCardBg : "#ffffff")
+                    border.color: helpMouse.containsMouse ? root.themeAccent : (root.isDarkMode ? root.themeBorder : "#cbd5e1")
                     border.width: 1
                     Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -1122,7 +1147,7 @@ Window {
                             text: "Rules"
                             font.pixelSize: 11
                             font.bold: true
-                            color: root.themeFg
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !subheaderItem.isCrowded
                         }
@@ -1143,8 +1168,8 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : (settingsRow.implicitWidth + 16)
                     radius: 6
-                    color: root.showSettings ? Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.2) : (settingsMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
-                    border.color: root.showSettings ? root.themeAccent : (settingsMouse.containsMouse ? root.themeAccent : root.themeBorder)
+                    color: root.showSettings ? (root.isDarkMode ? Qt.rgba(root.themeAccent.r, root.themeAccent.g, root.themeAccent.b, 0.2) : "#e0e7ff") : (settingsMouse.containsMouse ? (root.isDarkMode ? root.themeCardBg : "#f1f5f9") : (root.isDarkMode ? root.themeCardBg : "#ffffff"))
+                    border.color: root.showSettings ? root.themeAccent : (settingsMouse.containsMouse ? root.themeAccent : (root.isDarkMode ? root.themeBorder : "#cbd5e1"))
                     border.width: 1
                     Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -1161,7 +1186,7 @@ Window {
                             text: "Table"
                             font.pixelSize: 11
                             font.bold: true
-                            color: root.showSettings ? root.themeAccent : root.themeFg
+                            color: root.showSettings ? root.themeAccent : (root.isDarkMode ? root.themeFg : "#0f172a")
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !subheaderItem.isCrowded
                         }
@@ -1182,8 +1207,8 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : (oddsRow.implicitWidth + 16)
                     radius: 6
-                    color: root.showOddsAdvisor ? Qt.rgba(0.96, 0.62, 0.04, 0.18) : (oddsMouse.containsMouse ? root.themeCardBg : root.themeBoardBg)
-                    border.color: root.showOddsAdvisor ? root.themeGold : root.themeBorder
+                    color: root.showOddsAdvisor ? (root.isDarkMode ? Qt.rgba(0.96, 0.62, 0.04, 0.18) : "#fef3c7") : (oddsMouse.containsMouse ? (root.isDarkMode ? root.themeCardBg : "#f1f5f9") : (root.isDarkMode ? root.themeCardBg : "#ffffff"))
+                    border.color: root.showOddsAdvisor ? (root.isDarkMode ? root.themeGold : "#d97706") : (root.isDarkMode ? root.themeBorder : "#cbd5e1")
                     border.width: 1
                     Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -1200,7 +1225,7 @@ Window {
                             text: "Odds (O): " + (root.showOddsAdvisor ? "ON" : "OFF")
                             font.pixelSize: 11
                             font.bold: true
-                            color: root.showOddsAdvisor ? root.themeGold : root.themeSubtext
+                            color: root.showOddsAdvisor ? (root.isDarkMode ? root.themeGold : "#b45309") : (root.isDarkMode ? root.themeSubtext : "#64748b")
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !subheaderItem.isCrowded
                         }
@@ -1221,8 +1246,8 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : (shoeRow.implicitWidth + 14)
                     radius: 6
-                    color: Qt.rgba(0, 0, 0, 0.35)
-                    border.color: root.themeBorder
+                    color: root.isDarkMode ? Qt.rgba(0, 0, 0, 0.35) : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
                     border.width: 1
 
                     Row {
@@ -1239,7 +1264,7 @@ Window {
                             font.family: root.monoFontFamily
                             font.pixelSize: 10
                             font.bold: true
-                            color: root.themeSubtext
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !subheaderItem.isCrowded
                         }
@@ -1247,7 +1272,7 @@ Window {
                             width: 28
                             height: 5
                             radius: 2.5
-                            color: Qt.rgba(1, 1, 1, 0.15)
+                            color: root.isDarkMode ? Qt.rgba(1, 1, 1, 0.15) : "#e2e8f0"
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !subheaderItem.isCrowded
 
@@ -1274,8 +1299,8 @@ Window {
                     height: 30
                     width: subheaderItem.isCrowded ? 30 : (muteRow.implicitWidth + 16)
                     radius: 6
-                    color: muteMouse.containsMouse ? root.themeCardBg : root.themeBoardBg
-                    border.color: root.isMuted ? root.themeBorder : root.themeAccent
+                    color: muteMouse.containsMouse ? (root.isDarkMode ? root.themeCardBg : "#f1f5f9") : (root.isDarkMode ? root.themeCardBg : "#ffffff")
+                    border.color: root.isMuted ? (root.isDarkMode ? root.themeBorder : "#cbd5e1") : root.themeAccent
                     border.width: 1
                     Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -1292,7 +1317,7 @@ Window {
                             text: root.isMuted ? "Muted" : "Sound"
                             font.pixelSize: 11
                             font.bold: true
-                            color: root.isMuted ? root.themeSubtext : root.themeFg
+                            color: root.isMuted ? (root.isDarkMode ? root.themeSubtext : "#64748b") : (root.isDarkMode ? root.themeFg : "#0f172a")
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !subheaderItem.isCrowded
                         }
@@ -1350,10 +1375,6 @@ Window {
         }
 
         // =====================================================================
-        // TIER 3: PLAYFIELD BOARD CONTAINER (Casino Felt Table)
-        // =====================================================================
-        Item {
-                    // =====================================================================
         // TILING DESKTOP FLOATING HUD (Compact header active when tiled or full)
         // =====================================================================
         Rectangle {
@@ -1368,8 +1389,8 @@ Window {
             height: 38
             radius: 8
             z: 90
-            color: root.themeCardBg
-            border.color: root.themeBorder
+            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
             border.width: 1
 
             Row {
@@ -1389,12 +1410,12 @@ Window {
                     text: "• " + ("BANK: " + root.formatMoney(root.bankroll))
                     font.pixelSize: 11
                     font.bold: true
-                    color: root.themeFg
+                    color: root.isDarkMode ? root.themeFg : "#0f172a"
                 }
                 Text {
                     text: "(" + ("BET: " + root.formatMoney(root.currentBet)) + ")"
                     font.pixelSize: 10
-                    color: root.themeSubtext
+                    color: root.isDarkMode ? root.themeSubtext : "#64748b"
                 }
             }
 
@@ -1407,7 +1428,7 @@ Window {
                 // Full Window Toggle
                 Rectangle {
                     width: 26; height: 26; radius: 5
-                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    color: "transparent"; border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"; border.width: 1
                     Text { text: "🔲"; font.pixelSize: 10; anchors.centerIn: parent }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -1421,7 +1442,7 @@ Window {
                 // Help
                 Rectangle {
                     width: 26; height: 26; radius: 5
-                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    color: "transparent"; border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"; border.width: 1
                     Text { text: "?"; font.pixelSize: 11; font.bold: true; color: root.themeAccent; anchors.centerIn: parent }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -1432,7 +1453,7 @@ Window {
                 // Mute
                 Rectangle {
                     width: 26; height: 26; radius: 5
-                    color: "transparent"; border.color: root.themeBorder; border.width: 1
+                    color: "transparent"; border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"; border.width: 1
                     Text { text: root.isMuted ? "🔇" : "🔊"; font.pixelSize: 11; anchors.centerIn: parent }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -1442,9 +1463,10 @@ Window {
             }
         }
 
-        id: playArea
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerItem.bottom
-            anchors.topMargin: root.isTiledDesktopMode ? 6 : 10
+        Item {
+            id: playArea
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 6 : 8
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 14
             anchors.left: parent.left
@@ -2612,8 +2634,8 @@ Window {
             width: toastText.implicitWidth + 24
             height: 28
             radius: 14
-            color: root.themeCardBg
-            border.color: root.themeBorder
+            color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+            border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
             border.width: 1
             opacity: 0
             z: 800
@@ -2623,7 +2645,7 @@ Window {
                 anchors.centerIn: parent
                 font.pixelSize: 11
                 font.bold: true
-                color: root.themeFg
+                color: root.isDarkMode ? root.themeFg : "#0f172a"
             }
 
             function show(msg) {

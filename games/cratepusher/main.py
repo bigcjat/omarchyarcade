@@ -121,17 +121,45 @@ class SoundManager(QObject):
                 except Exception:
                     pass
 
+DEFAULT_PRESETS = {
+    "dark": {
+        "name": "Omarchy Dark",
+        "bg": "#181825",
+        "fg": "#cdd6f4",
+        "accent": "#89b4fa",
+        "boardBg": "#11111b",
+        "card_bg": "#313244",
+        "card_hover": "#45475a",
+        "border": "#45475a",
+        "subtext": "#a6adc8"
+    },
+    "light": {
+        "name": "Omarchy Light",
+        "bg": "#eff1f5",
+        "fg": "#4c4f69",
+        "accent": "#1e66f5",
+        "boardBg": "#11111b",
+        "card_bg": "#ffffff",
+        "card_hover": "#f1f5f9",
+        "border": "#ccd0da",
+        "subtext": "#5c5f77"
+    }
+}
+
 def parse_toml_theme(path: Path):
     try:
         with open(path, "rb") as f:
             data = tomllib.load(f)
         colors = data.get("colors") if isinstance(data.get("colors"), dict) else data
+        bg = colors.get("base", "#181825")
+        fg = colors.get("text", "#cdd6f4")
         return {
-            "bg": colors.get("base", "#181825"),
-            "fg": colors.get("text", "#cdd6f4"),
+            "bg": bg,
+            "fg": fg,
             "accent": colors.get("sapphire", colors.get("blue", "#89b4fa")),
-            "boardBg": colors.get("mantle", "#1e1e2e"),
-            "cardBg": colors.get("surface0", "#313244"),
+            "boardBg": "#11111b",
+            "card_bg": colors.get("surface0", "#313244"),
+            "card_hover": colors.get("surface1", "#45475a"),
             "border": colors.get("surface1", "#45475a"),
             "subtext": colors.get("subtext0", "#a6adc8")
         }
@@ -155,8 +183,18 @@ def find_omarchy_colors_file():
             return c
     return None
 
-
 def main():
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+    os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
+
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print("CratePusher • Authentic Warehouse Sokoban Puzzle")
+        sys.exit(0)
+
+    if "--list-themes" in sys.argv:
+        print("Arcade Game Template • Preset Themes:\n  --theme light\n  --theme dark\n  --theme <path_to_colors.toml>")
+        sys.exit(0)
+
     app = QGuiApplication(sys.argv)
     app.setApplicationName("CratePusher")
     app.setOrganizationName("OmarchyArcade")
@@ -171,7 +209,6 @@ def main():
         if cp.exists():
             app.setWindowIcon(QIcon(str(cp)))
             break
-
 
     base_dir = Path(__file__).resolve().parent
     engine = QQmlApplicationEngine()
@@ -191,34 +228,74 @@ def main():
 
     root = engine.rootObjects()[0]
 
-    theme_path = find_omarchy_colors_file()
-    theme_name_path = Path.home() / ".config/omarchy/current/theme.name"
+    # CLI Theme Argument Parsing
+    theme_arg = None
+    if "--theme" in sys.argv:
+        idx = sys.argv.index("--theme")
+        if idx + 1 < len(sys.argv):
+            theme_arg = sys.argv[idx + 1]
 
-    def update_theme():
+    if theme_arg:
+        clean_arg = theme_arg.lower().strip()
+        if clean_arg in DEFAULT_PRESETS:
+            preset = DEFAULT_PRESETS[clean_arg]
+            root.applyTheme(preset, preset["name"])
+            print(f"Applied preset theme: {preset['name']}")
+        else:
+            custom_path = Path(theme_arg).expanduser().resolve()
+            if custom_path.is_file():
+                data = parse_toml_theme(custom_path)
+                if data:
+                    root.applyTheme(data, custom_path.parent.name.capitalize())
+                    print(f"Applied theme from file: {custom_path}")
+            else:
+                preset = DEFAULT_PRESETS["dark"]
+                root.applyTheme(preset, preset["name"])
+    else:
+        theme_path = find_omarchy_colors_file()
         if theme_path and theme_path.exists():
-            theme_data = parse_toml_theme(theme_path)
-            t_name = "Custom"
-            if theme_name_path.exists():
-                try:
-                    t_name = theme_name_path.read_text().strip()
-                except Exception:
-                    pass
-            root.applyTheme(theme_data, t_name)
+            data = parse_toml_theme(theme_path)
+            theme_name = theme_path.parent.name.capitalize()
+            root.applyTheme(data, theme_name)
+            print(f"Detected Omarchy theme: {theme_name} ({theme_path})")
 
-    if theme_path and theme_path.exists():
-        update_theme()
+            watcher = QFileSystemWatcher(app)
+            watcher.addPath(str(theme_path))
+            if theme_path.parent.exists():
+                watcher.addPath(str(theme_path.parent))
 
-    watcher = QFileSystemWatcher()
-    if theme_path and theme_path.parent.exists():
-        watcher.addPath(str(theme_path.parent))
-    if theme_path and theme_path.exists():
-        watcher.addPath(str(theme_path))
+            def on_theme_updated(p):
+                tp = find_omarchy_colors_file()
+                if tp and tp.is_file():
+                    up = parse_toml_theme(tp)
+                    if up:
+                        root.applyTheme(up, tp.parent.name.capitalize())
 
-    def on_theme_changed():
-        QTimer.singleShot(150, update_theme)
+            watcher.fileChanged.connect(on_theme_updated)
+            watcher.directoryChanged.connect(on_theme_updated)
+        else:
+            def apply_system_scheme():
+                hints = app.styleHints()
+                scheme = hints.colorScheme() if hasattr(hints, "colorScheme") else Qt.ColorScheme.Dark
+                preset = DEFAULT_PRESETS["light"] if scheme == Qt.ColorScheme.Light else DEFAULT_PRESETS["dark"]
+                root.applyTheme(preset, preset["name"])
 
-    watcher.fileChanged.connect(on_theme_changed)
-    watcher.directoryChanged.connect(on_theme_changed)
+            apply_system_scheme()
+            if hasattr(app.styleHints(), "colorSchemeChanged"):
+                app.styleHints().colorSchemeChanged.connect(lambda _: apply_system_scheme())
+
+    if "--no-splash" in sys.argv:
+        root.setProperty("splashEnabled", False)
+
+    if "--screenshot" in sys.argv:
+        root.setProperty("splashEnabled", False)
+        def capture():
+            out_idx = sys.argv.index("--screenshot") + 1
+            out_file = sys.argv[out_idx] if out_idx < len(sys.argv) and not sys.argv[out_idx].startswith("--") else "screenshot.png"
+            out_path = Path(out_file).resolve()
+            root.captureScreenshot(str(out_path))
+            QTimer.singleShot(400, app.quit)
+        QTimer.singleShot(350, capture)
 
     sys.exit(app.exec())
 

@@ -14,11 +14,13 @@ Window {
     property color themeBg: "#181825"
     property color themeBoardBg: "#11111b"
     property color themeCardBg: "#1e1e2e"
+    property color themeCardHover: isDarkMode ? "#313244" : "#f1f5f9"
     property color themeBorder: "#313244"
     property color themeFg: "#cdd6f4"
     property color themeSubtext: "#a6adc8"
     property color themeAccent: "#cba6f7" // elegant gem amethyst accent
     property color themeBtnFg: "#11111b"
+    property bool isDarkMode: colorLuminance(themeBg) < 0.5
 
     property string currentThemeName: "Catppuccin"
     property bool splashEnabled: true
@@ -42,25 +44,63 @@ Window {
 
     color: themeBg
 
-    Behavior on themeBg { ColorAnimation { duration: 250 } }
-    Behavior on themeBoardBg { ColorAnimation { duration: 250 } }
-    Behavior on themeCardBg { ColorAnimation { duration: 250 } }
-    Behavior on themeFg { ColorAnimation { duration: 250 } }
-    Behavior on themeSubtext { ColorAnimation { duration: 250 } }
-    Behavior on themeAccent { ColorAnimation { duration: 250 } }
-    Behavior on themeBorder { ColorAnimation { duration: 250 } }
+    function colorLuminance(col) {
+        if (!col) return 0.2;
+        var c = (typeof col === "string") ? Qt.color(col) : col;
+        if (!c || c.r === undefined) {
+            try { c = Qt.color(col); } catch (e) { return 0.2; }
+        }
+        return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+    }
 
     function applyTheme(data, name) {
         if (!data || typeof data !== "object") return;
-        if (data.bg) themeBg = data.bg;
-        if (data.fg) themeFg = data.fg;
-        if (data.boardBg) themeBoardBg = data.boardBg;
-        if (data.cardBg) themeCardBg = data.cardBg;
-        if (data.border) themeBorder = data.border;
-        if (data.subtext) themeSubtext = data.subtext;
-        if (data.accent) themeAccent = data.accent;
+        var bg = data.background || data.bg || themeBg;
+        var lum = colorLuminance(bg);
+        if (lum > 0.5) {
+            themeBg = bg;
+            themeFg = data.foreground || data.fg || "#4c4f69";
+            themeCardBg = data.cardBg || "#ffffff";
+            themeBoardBg = "#11111b"; // playfield board remains dark arcade!
+            themeBorder = data.border || "#ccd0da";
+            themeSubtext = data.subtext || "#64748b";
+            themeAccent = data.accent || "#8839ef";
+            themeBtnFg = "#ffffff";
+        } else {
+            themeBg = bg;
+            themeFg = data.foreground || data.fg || "#cdd6f4";
+            themeCardBg = data.cardBg || "#1e1e2e";
+            themeBoardBg = data.boardBg || "#11111b";
+            themeBorder = data.border || "#313244";
+            themeSubtext = data.subtext || "#a6adc8";
+            themeAccent = data.accent || "#cba6f7";
+            themeBtnFg = "#11111b";
+        }
         if (name) currentThemeName = name;
         boardCanvas.requestPaint();
+    }
+
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            accent: "#8839ef",
+            cardBg: "#ffffff",
+            boardBg: "#11111b",
+            border: "#ccd0da",
+            subtext: "#64748b"
+        } : {
+            background: "#181825",
+            foreground: "#cdd6f4",
+            accent: "#cba6f7",
+            cardBg: "#1e1e2e",
+            boardBg: "#11111b",
+            border: "#313244",
+            subtext: "#a6adc8"
+        };
+        applyTheme(tData, nextIsLight ? "Omarchy Light" : "Omarchy Dark");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
     }
 
     function playSound(name) {
@@ -238,333 +278,405 @@ Window {
             }
         }
 
-        Column {
-            id: mainLayout
-            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : parent.top
-            anchors.topMargin: root.isTiledDesktopMode ? 8 : 14
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 14
+        // Header Bar (flush arcade layout)
+        Rectangle {
+            id: headerBar
+            anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 14
-            anchors.rightMargin: 14
-            spacing: 10
+            height: root.isTiledDesktopMode ? 0 : (headerItem.height + subheaderItem.height + 30)
+            color: root.themeBg
+            visible: !root.isTiledDesktopMode
+            z: 10
+        }
 
-            // 1. HEADER (Title + Score Cards)
-            Item {
-                id: headerItem
-                visible: !root.isTiledDesktopMode
-                width: parent.width
-                height: root.isTiledDesktopMode ? 0 : 52
+        // 1. HEADER (Title + Score Cards)
+        Item {
+            id: headerItem
+            visible: !root.isTiledDesktopMode
+            anchors.top: parent.top
+            anchors.topMargin: root.isTiledDesktopMode ? 0 : 12
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: root.isTiledDesktopMode ? 0 : 50
+            z: 11
+
+            Column {
+                id: titleCol
+                anchors.left: parent.left
+                anchors.right: scoreRow.left
+                anchors.rightMargin: 12
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 2
 
                 Text {
                     id: gameTitle
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width
+                    elide: Text.ElideRight
                     text: "GemSwap"
                     font.family: root.monoFontFamily
-                    font.pixelSize: 32
+                    font.pixelSize: Math.max(22, Math.min(32, headerItem.width * 0.07))
                     font.bold: true
                     color: root.themeAccent
                 }
+                Text {
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: "Match 3 or more gems • Level " + root.level
+                    font.family: root.monoFontFamily
+                    font.pixelSize: Math.max(10, Math.min(13, headerItem.width * 0.026))
+                    color: root.themeSubtext
+                }
+            }
 
-                Row {
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 8
+            Row {
+                id: scoreRow
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
 
-                    // SCORE BADGE
-                    Rectangle {
-                        width: 82
-                        height: 48
-                        radius: 8
-                        color: root.themeCardBg
-                        border.color: root.themeBorder
-                        border.width: 1
+                // SCORE BADGE
+                Rectangle {
+                    width: Math.max(68, Math.min(84, headerItem.width * 0.16))
+                    height: 48
+                    radius: 8
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                    border.width: 1
 
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 2
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "SCORE"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 10
-                                font.bold: true
-                                color: root.themeSubtext
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: root.score.toString()
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 15
-                                font.bold: true
-                                color: root.themeFg
-                            }
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "SCORE"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 9
+                            font.bold: true
+                            font.letterSpacing: 0.5
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.score.toString()
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 18
+                            font.bold: true
+                            color: root.isDarkMode ? root.themeFg : "#0f172a"
+                        }
+                    }
+                }
+
+                // BEST SCORE BADGE
+                Rectangle {
+                    width: Math.max(68, Math.min(84, headerItem.width * 0.16))
+                    height: 48
+                    radius: 8
+                    color: root.isDarkMode ? root.themeCardBg : "#ffffff"
+                    border.color: root.isDarkMode ? root.themeBorder : "#cbd5e1"
+                    border.width: 1
+
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "BEST"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 9
+                            font.bold: true
+                            font.letterSpacing: 0.5
+                            color: root.isDarkMode ? root.themeSubtext : "#64748b"
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.highScore.toString()
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 18
+                            font.bold: true
+                            color: root.highScore > 0 ? (root.isDarkMode ? root.themeAccent : "#15803d") : (root.isDarkMode ? root.themeSubtext : "#94a3b8")
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. SUBHEADER (Controls & Info)
+        Item {
+            id: subheaderItem
+            visible: !root.isTiledDesktopMode
+            anchors.top: headerItem.bottom
+            anchors.topMargin: 6
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            height: root.isTiledDesktopMode ? 0 : 34
+            z: 11
+
+            readonly property bool isCrowded: subheaderItem.width < 530
+
+            Row {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 6
+
+                // Level Badge
+                Rectangle {
+                    width: levelBadgeRow.implicitWidth + 14
+                    height: 32
+                    radius: 6
+                    color: root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+                    Row {
+                        id: levelBadgeRow
+                        anchors.centerIn: parent
+                        spacing: 3
+                        Text {
+                            text: "LVL"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 10
+                            font.bold: true
+                            color: root.themeSubtext
+                        }
+                        Text {
+                            text: root.level.toString()
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: root.themeAccent
+                        }
+                    }
+                }
+
+                // Combo Multiplier Badge
+                Rectangle {
+                    visible: root.combo > 1
+                    width: comboLabel.implicitWidth + 14
+                    height: 32
+                    radius: 6
+                    color: root.themeAccent
+                    Text {
+                        id: comboLabel
+                        anchors.centerIn: parent
+                        text: subheaderItem.isCrowded ? (root.combo + "x") : (root.combo + "x COMBO!")
+                        font.family: root.monoFontFamily
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.themeBtnFg
+                    }
+                }
+
+                // Help Button
+                Rectangle {
+                    width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
+                    height: 32
+                    radius: 8
+                    color: helpMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: helpRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "?"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: root.themeFg
+                        }
+                        Text {
+                            text: "How to Play"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 12
+                            color: root.themeFg
+                            visible: !subheaderItem.isCrowded
                         }
                     }
 
-                    // BEST SCORE BADGE
-                    Rectangle {
-                        width: 82
-                        height: 48
-                        radius: 8
-                        color: root.themeCardBg
-                        border.color: root.themeBorder
-                        border.width: 1
+                    MouseArea {
+                        id: helpMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.showHelp = !root.showHelp;
+                            root.playSound("click");
+                        }
+                    }
+                }
 
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 2
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "BEST"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 10
-                                font.bold: true
-                                color: root.themeSubtext
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: root.highScore.toString()
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 15
-                                font.bold: true
-                                color: root.themeFg
-                            }
+                // View Mode Toggle
+                Rectangle {
+                    width: subheaderItem.isCrowded ? 32 : (viewRow.implicitWidth + 18)
+                    height: 32
+                    radius: 8
+                    color: viewMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: viewRow
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Text {
+                            text: root.fullPlayfield ? "🔲" : "⛶"
+                            font.pixelSize: 12
+                        }
+                        Text {
+                            text: root.fullPlayfield ? "Standard" : "Full (⇧F)"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 12
+                            color: root.themeFg
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: viewMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.fullPlayfield = !root.fullPlayfield;
+                            soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
                         }
                     }
                 }
             }
 
-            // 2. SUBHEADER (Controls & Info)
-            Item {
-                id: subheaderItem
-                width: parent.width
-                height: 34
+            Row {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: subheaderItem.isCrowded ? 6 : 8
 
-                readonly property bool isCrowded: subheaderItem.width < 530
-                readonly property bool isVeryCrowded: subheaderItem.width < 360
+                // Hint Button
+                Rectangle {
+                    width: subheaderItem.isCrowded ? 32 : (hintRow.implicitWidth + 18)
+                    height: 32
+                    radius: 8
+                    color: hintMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
 
-                Row {
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 6
-
-                    // Level Badge
-                    Rectangle {
-                        width: levelBadgeRow.implicitWidth + 14
-                        height: 28
-                        radius: 6
-                        color: root.themeCardBg
-                        border.color: root.themeBorder
-                        border.width: 1
-                        Row {
-                            id: levelBadgeRow
-                            anchors.centerIn: parent
-                            spacing: 3
-                            Text {
-                                text: subheaderItem.isVeryCrowded ? "L" : "LVL"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 10
-                                font.bold: true
-                                color: root.themeSubtext
-                            }
-                            Text {
-                                text: root.level.toString()
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 13
-                                font.bold: true
-                                color: root.themeAccent
-                            }
+                    Row {
+                        id: hintRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "💡"
+                            font.pixelSize: 13
+                        }
+                        Text {
+                            text: "Hint (H)"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 12
+                            color: root.themeFg
+                            visible: !subheaderItem.isCrowded
                         }
                     }
 
-                    // Combo Multiplier Badge
-                    Rectangle {
-                        visible: root.combo > 1
-                        width: comboLabel.implicitWidth + 14
-                        height: 28
-                        radius: 6
-                        color: root.themeAccent
+                    MouseArea {
+                        id: hintMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.triggerHint()
+                    }
+                }
+
+                // Mute Button
+                Rectangle {
+                    width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
+                    height: 32
+                    radius: 8
+                    color: muteMouse.containsMouse ? root.themeCardHover : root.themeCardBg
+                    border.color: root.themeBorder
+                    border.width: 1
+
+                    Row {
+                        id: muteRow
+                        anchors.centerIn: parent
+                        spacing: 5
                         Text {
-                            id: comboLabel
-                            anchors.centerIn: parent
-                            text: subheaderItem.isCrowded ? (root.combo + "x") : (root.combo + "x COMBO!")
+                            text: root.isMuted ? "🔇" : "🔊"
+                            font.pixelSize: 13
+                        }
+                        Text {
+                            text: root.isMuted ? "Muted" : "Audio"
                             font.family: root.monoFontFamily
-                            font.pixelSize: 11
+                            font.pixelSize: 12
+                            color: root.themeFg
+                            visible: !subheaderItem.isCrowded
+                        }
+                    }
+
+                    MouseArea {
+                        id: muteMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
+                }
+
+                // Restart Button
+                Rectangle {
+                    width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
+                    height: 32
+                    radius: 8
+                    color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
+
+                    Row {
+                        id: restartRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "🔄"
+                            font.pixelSize: 13
+                            visible: subheaderItem.isCrowded
+                        }
+                        Text {
+                            text: "Restart (R)"
+                            font.family: root.monoFontFamily
+                            font.pixelSize: 12
                             font.bold: true
                             color: root.themeBtnFg
-                        }
-                    }
-                }
-
-                Row {
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: subheaderItem.isCrowded ? 6 : 8
-
-                    // Hint Button
-                    Rectangle {
-                        width: subheaderItem.isCrowded ? 32 : (hintRow.implicitWidth + 18)
-                        height: 32
-                        radius: 8
-                        color: hintMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.2) : root.themeCardBg
-                        border.color: root.themeBorder
-                        border.width: 1
-
-                        Row {
-                            id: hintRow
-                            anchors.centerIn: parent
-                            spacing: 4
-                            Text {
-                                text: "💡"
-                                font.pixelSize: 13
-                            }
-                            Text {
-                                text: "Hint (H)"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 12
-                                color: root.themeFg
-                                visible: !subheaderItem.isCrowded
-                            }
-                        }
-
-                        MouseArea {
-                            id: hintMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.triggerHint()
+                            visible: !subheaderItem.isCrowded
                         }
                     }
 
-                    // Help Button
-                    Rectangle {
-                        width: subheaderItem.isCrowded ? 32 : (helpRow.implicitWidth + 18)
-                        height: 32
-                        radius: 8
-                        color: helpMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.2) : root.themeCardBg
-                        border.color: root.themeBorder
-                        border.width: 1
-
-                        Row {
-                            id: helpRow
-                            anchors.centerIn: parent
-                            spacing: 4
-                            Text {
-                                text: "?"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 13
-                                font.bold: true
-                                color: root.themeFg
-                            }
-                            Text {
-                                text: "How to Play"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 12
-                                color: root.themeFg
-                                visible: !subheaderItem.isCrowded
-                            }
-                        }
-
-                        MouseArea {
-                            id: helpMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.showHelp = !root.showHelp;
-                                root.playSound("click");
-                            }
-                        }
-                    }
-
-                    // Mute Button
-                    Rectangle {
-                        width: subheaderItem.isCrowded ? 32 : (muteRow.implicitWidth + 18)
-                        height: 32
-                        radius: 8
-                        color: muteMouse.containsMouse ? Qt.lighter(root.themeCardBg, 1.2) : root.themeCardBg
-                        border.color: root.themeBorder
-                        border.width: 1
-
-                        Row {
-                            id: muteRow
-                            anchors.centerIn: parent
-                            spacing: 5
-                            Text {
-                                text: root.isMuted ? "🔇" : "🔊"
-                                font.pixelSize: 13
-                            }
-                            Text {
-                                text: root.isMuted ? "Muted" : "Audio"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 12
-                                color: root.themeFg
-                                visible: !subheaderItem.isCrowded
-                            }
-                        }
-
-                        MouseArea {
-                            id: muteMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.toggleMute()
-                        }
-                    }
-
-                    // Restart Button
-                    Rectangle {
-                        width: subheaderItem.isCrowded ? 32 : (restartRow.implicitWidth + 18)
-                        height: 32
-                        radius: 8
-                        color: restartMouse.containsMouse ? Qt.lighter(root.themeAccent, 1.15) : root.themeAccent
-
-                        Row {
-                            id: restartRow
-                            anchors.centerIn: parent
-                            spacing: 4
-                            Text {
-                                text: "🔄"
-                                font.pixelSize: 13
-                                visible: subheaderItem.isCrowded
-                            }
-                            Text {
-                                text: "Restart (R)"
-                                font.family: root.monoFontFamily
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: root.themeBtnFg
-                                visible: !subheaderItem.isCrowded
-                            }
-                        }
-
-                        MouseArea {
-                            id: restartMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.startNewGame();
-                                root.playSound("click");
-                            }
+                    MouseArea {
+                        id: restartMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.startNewGame();
+                            root.playSound("click");
                         }
                     }
                 }
             }
+        }
 
-            // 3. BOARD CONTAINER (8x8 Gem Grid)
-            Rectangle {
-                id: boardContainer
-                width: parent.width
-                height: parent.height - (root.isTiledDesktopMode ? 46 : (headerItem.height + subheaderItem.height + levelProgressBar.height + 30))
-                radius: 12
-                color: root.themeBoardBg
-                border.color: root.themeBorder
-                border.width: 1
-                clip: true
+        // 3. BOARD CONTAINER (8x8 Gem Grid - Flush Arcade)
+        Rectangle {
+            id: boardContainer
+            anchors.top: root.isTiledDesktopMode ? floatingTiledHUD.bottom : headerBar.bottom
+            anchors.topMargin: root.isTiledDesktopMode ? 8 : 0
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: levelProgressBar.top
+            anchors.bottomMargin: 8
+            radius: 0
+            color: root.themeBoardBg
+            clip: true
 
                 Canvas {
                     id: boardCanvas
@@ -952,43 +1064,46 @@ Window {
                 }
             }
 
-            // 4. LEVEL PROGRESS BAR
+        // 4. LEVEL PROGRESS BAR
+        Rectangle {
+            id: levelProgressBar
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.leftMargin: 14
+            anchors.rightMargin: 14
+            anchors.bottomMargin: 12
+            height: 26
+            radius: 8
+            color: root.themeCardBg
+            border.color: root.themeBorder
+            border.width: 1
+            clip: true
+            z: 10
+
+            // Animated fill
             Rectangle {
-                id: levelProgressBar
-                width: parent.width
-                height: 26
+                id: levelProgressFill
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: Math.min(parent.width, Math.max(0, parent.width * (root.levelTargetScore > 0 ? (root.levelScore / root.levelTargetScore) : 0)))
                 radius: 8
-                color: root.themeCardBg
-                border.color: root.themeBorder
-                border.width: 1
-                clip: true
-
-                // Animated fill
-                Rectangle {
-                    id: levelProgressFill
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    width: Math.min(parent.width, Math.max(0, parent.width * (root.levelTargetScore > 0 ? (root.levelScore / root.levelTargetScore) : 0)))
-                    radius: 8
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
-                        GradientStop { position: 0.0; color: Qt.darker(root.themeAccent, 1.25) }
-                        GradientStop { position: 1.0; color: root.themeAccent }
-                    }
-                    Behavior on width { NumberAnimation { duration: 200 } }
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: Qt.darker(root.themeAccent, 1.25) }
+                    GradientStop { position: 1.0; color: root.themeAccent }
                 }
+                Behavior on width { NumberAnimation { duration: 200 } }
+            }
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "LEVEL " + root.level + "  •  " + root.levelScore + " / " + root.levelTargetScore + " PTS (" + Math.min(100, Math.floor(root.levelScore * 100 / Math.max(1, root.levelTargetScore))) + "%)"
-                    font.family: root.monoFontFamily
-                    font.pixelSize: 10
-                    font.bold: true
-                    color: root.themeFg
-                    style: Text.Outline
-                    styleColor: Qt.rgba(root.themeBg.r, root.themeBg.g, root.themeBg.b, 0.75)
-                }
+            Text {
+                anchors.centerIn: parent
+                text: "LEVEL " + root.level + "  •  " + root.levelScore + " / " + root.levelTargetScore + " PTS (" + Math.min(100, Math.floor(root.levelScore * 100 / Math.max(1, root.levelTargetScore))) + "%)"
+                font.family: root.monoFontFamily
+                font.pixelSize: 10
+                font.bold: true
+                color: root.themeFg
             }
         }
     }
@@ -1035,6 +1150,12 @@ Window {
         focus: true
         Keys.onPressed: function(event) {
             if (root.splashEnabled) return;
+
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
+                event.accepted = true;
+                return;
+            }
 
             if (event.key === Qt.Key_R) {
                 root.startNewGame();

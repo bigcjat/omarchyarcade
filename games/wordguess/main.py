@@ -11,7 +11,7 @@ import sys
 import os
 import tomllib
 from pathlib import Path
-from PySide6.QtCore import QObject, Slot, QUrl, QFileSystemWatcher, QTimer, QSettings
+from PySide6.QtCore import QObject, Slot, QUrl, QFileSystemWatcher, QTimer, QSettings, Qt
 from PySide6.QtGui import QIcon, QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
@@ -97,16 +97,6 @@ def parse_toml_theme(path: Path):
         pass
     return None
 
-def load_all_omarchy_themes():
-    themes = {}
-    themes_dir = Path.home() / ".config" / "omarchy" / "themes"
-    if themes_dir.exists():
-        for theme_file in themes_dir.glob("*/colors.toml"):
-            t = parse_toml_theme(theme_file)
-            if t:
-                themes[theme_file.parent.name.lower()] = t
-    return themes
-
 def find_omarchy_colors_file():
     env_path = os.environ.get("OMARCHY_THEME_FILE")
     if env_path and Path(env_path).is_file():
@@ -124,6 +114,27 @@ def find_omarchy_colors_file():
             return c
     return None
 
+
+DEFAULT_PRESETS = {
+    "dark": {
+        "bg": "#181825",
+        "fg": "#cdd6f4",
+        "accent": "#a6e3a1",
+        "boardBg": "#1e1e2e",
+        "cardBg": "#313244",
+        "border": "#45475a",
+        "subtext": "#a6adc8",
+    },
+    "light": {
+        "bg": "#eff1f5",
+        "fg": "#0f172a",
+        "accent": "#40a02b",
+        "boardBg": "#ffffff",
+        "cardBg": "#ffffff",
+        "border": "#cbd5e1",
+        "subtext": "#64748b",
+    },
+}
 
 def load_system_theme():
     theme_path = find_omarchy_colors_file()
@@ -148,7 +159,6 @@ def main():
             app.setWindowIcon(QIcon(str(cp)))
             break
 
-
     base_dir = Path(__file__).resolve().parent
     sounds_dir = base_dir / "sounds"
     audio_controller = AudioController(sounds_dir)
@@ -165,7 +175,10 @@ def main():
         sys.exit(-1)
 
     root = engine.rootObjects()[0]
-    all_themes = load_all_omarchy_themes()
+    try:
+        root.screenshotSaved.connect(lambda p: app.quit())
+    except Exception:
+        pass
 
     requested_theme = None
     requested_screenshot = None
@@ -181,14 +194,29 @@ def main():
         else:
             i += 1
 
-    if requested_theme and requested_theme in all_themes:
-        root.applyTheme(all_themes[requested_theme], requested_theme)
+    if requested_theme:
+        if requested_theme in DEFAULT_PRESETS:
+            root.applyTheme(DEFAULT_PRESETS[requested_theme], requested_theme)
+        elif requested_theme in all_themes:
+            root.applyTheme(all_themes[requested_theme], requested_theme)
     else:
         sys_theme = load_system_theme()
         if sys_theme:
             root.applyTheme(sys_theme, "System")
-        elif "catppuccin" in all_themes:
-            root.applyTheme(all_themes["catppuccin"], "Catppuccin")
+        else:
+            is_dark = app.styleHints().colorScheme() != Qt.ColorScheme.Light
+            fallback = DEFAULT_PRESETS["dark"] if is_dark else DEFAULT_PRESETS["light"]
+            root.applyTheme(fallback, "Dark" if is_dark else "Light")
+
+    def on_color_scheme_changed(scheme):
+        if requested_theme:
+            return
+        if not find_omarchy_colors_file():
+            is_dark = scheme != Qt.ColorScheme.Light
+            fallback = DEFAULT_PRESETS["dark"] if is_dark else DEFAULT_PRESETS["light"]
+            root.applyTheme(fallback, "Dark" if is_dark else "Light")
+
+    app.styleHints().colorSchemeChanged.connect(on_color_scheme_changed)
 
     theme_file = find_omarchy_colors_file()
     watcher = QFileSystemWatcher()
@@ -212,7 +240,7 @@ def main():
         def do_shot():
             root.splashEnabled = False
             root.captureScreenshot(requested_screenshot, True)
-        QTimer.singleShot(1250, do_shot)
+        QTimer.singleShot(500, do_shot)
 
     sys.exit(app.exec())
 
