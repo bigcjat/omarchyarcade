@@ -31,6 +31,14 @@ try:
 except Exception:
     _toolbox = None
 
+# High-resolution 4096-entry precomputed sine lookup table for zero-overhead harmonic synthesis
+_LUT_SIZE = 4096
+_LUT_SCALE = _LUT_SIZE / 6.283185307179586
+_SIN_LUT = [math.sin(i * (6.283185307179586 / _LUT_SIZE)) for i in range(_LUT_SIZE)]
+
+def _fast_sin(phase):
+    return _SIN_LUT[int(phase * _LUT_SCALE) & (_LUT_SIZE - 1)]
+
 
 class AudioStreamBasicDescription(ctypes.Structure):
     _fields_ = [
@@ -168,18 +176,20 @@ class ProceduralPropAudio:
     def _start_linux_fallback(self):
         sr = str(int(self.sample_rate))
         candidates = []
-        if shutil.which("aplay"):
-            candidates.append(["aplay", "-q", "-r", sr, "-f", "S16_LE", "-c", "1", "-t", "raw", "-"])
-        elif shutil.which("pw-cat"):
+        # Prioritize PipeWire native tools first, then PulseAudio, then direct ALSA
+        if shutil.which("pw-cat"):
             candidates.append(["pw-cat", "-p", "--raw", f"--rate={sr}", "--format=s16", "--channels=1", "-"])
         elif shutil.which("pacat"):
             candidates.append(["pacat", "--playback", "--raw", f"--rate={sr}", "--format=s16le", "--channels=1"])
+        elif shutil.which("aplay"):
+            candidates.append(["aplay", "-q", "-r", sr, "-f", "S16_LE", "-c", "1", "-t", "raw", "-"])
 
         if not candidates:
             return
 
         def stream_worker():
             chunk_samples = 1024
+            chunk_duration = chunk_samples / self.sample_rate
             c_short_array = (ctypes.c_int16 * chunk_samples)()
             silence = b"\x00" * (chunk_samples * 2)
 
@@ -187,6 +197,7 @@ class ProceduralPropAudio:
                 try:
                     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
                     self._linux_proc = proc
+                    last_time = time.perf_counter()
                     while self.running and proc.poll() is None:
                         if self.is_muted:
                             proc.stdin.write(silence)
@@ -194,6 +205,18 @@ class ProceduralPropAudio:
                             self._generate_samples(c_short_array, chunk_samples)
                             proc.stdin.write(bytes(c_short_array))
                         proc.stdin.flush()
+
+                        # Clock-paced write loop: keeps audio buffer steadily filled
+                        # while yielding the GIL so Qt GUI rendering runs at full 60 FPS.
+                        now = time.perf_counter()
+                        elapsed = now - last_time
+                        sleep_time = chunk_duration - elapsed
+                        if sleep_time > 0.003:
+                            time.sleep(sleep_time * 0.75)
+                        else:
+                            time.sleep(0.001)
+                        last_time = time.perf_counter()
+
                     if not self.running:
                         try: proc.terminate()
                         except Exception: pass
@@ -383,60 +406,60 @@ class ProceduralPropAudio:
             if is_twin:
                 # TWIN V12 (P-38 Lightning & Mosquito):
                 # Sum of two independent engine waveforms with differential gain & intermeshing phase beating
-                eng1 = (math.sin(self.phase_engine_left) + 
-                        0.40 * math.sin(self.phase_engine_left * 2.0) + 
-                        0.18 * math.sin(self.phase_engine_left * 3.0)) * self.left_engine_gain
+                eng1 = (_fast_sin(self.phase_engine_left) + 
+                        0.40 * _fast_sin(self.phase_engine_left * 2.0) + 
+                        0.18 * _fast_sin(self.phase_engine_left * 3.0)) * self.left_engine_gain
 
-                eng2 = (math.sin(self.phase_engine_right) + 
-                        0.40 * math.sin(self.phase_engine_right * 2.0) + 
-                        0.18 * math.sin(self.phase_engine_right * 3.0)) * self.right_engine_gain
+                eng2 = (_fast_sin(self.phase_engine_right) + 
+                        0.40 * _fast_sin(self.phase_engine_right * 2.0) + 
+                        0.18 * _fast_sin(self.phase_engine_right * 3.0)) * self.right_engine_gain
 
                 # Allison/Merlin supercharger boost whine
-                blower = math.sin(self.phase_supercharger) * (0.04 + 0.05 * self.throttle_filter)
-                bass_thrum = math.sin(self.phase_subharmonic) * 0.28
+                blower = _fast_sin(self.phase_supercharger) * (0.04 + 0.05 * self.throttle_filter)
+                bass_thrum = _fast_sin(self.phase_subharmonic) * 0.28
                 raw = (eng1 + eng2) * 0.65 + blower + bass_thrum
 
             elif is_radial:
                 # RADIAL ENGINES (A6M Zero & PZL P.11c):
                 # Heavy low-frequency odd harmonics, galloping exhaust lope, deep husky thrum
-                h1 = math.sin(self.phase_engine_left)
-                h2 = math.sin(self.phase_engine_left * 2.0) * 0.32
-                h3 = math.sin(self.phase_engine_left * 3.0) * 0.25
-                h4 = math.sin(self.phase_engine_left * 4.0) * 0.12
+                h1 = _fast_sin(self.phase_engine_left)
+                h2 = _fast_sin(self.phase_engine_left * 2.0) * 0.32
+                h3 = _fast_sin(self.phase_engine_left * 3.0) * 0.25
+                h4 = _fast_sin(self.phase_engine_left * 4.0) * 0.12
                 # Galloping radial cylinder lope
-                lope = math.sin(self.phase_engine_left / 2.0) * 0.28
-                bass_pulse = math.sin(self.phase_subharmonic) * 0.36
+                lope = _fast_sin(self.phase_engine_left / 2.0) * 0.28
+                bass_pulse = _fast_sin(self.phase_subharmonic) * 0.36
                 raw = h1 + h2 + h3 + h4 + lope + bass_pulse
 
             else:
                 # SINGLE V12 ENGINES (Spitfire Merlin, Bf 109 DB 605, Yak-3, Folgore, D.520, Avia):
                 # Crisp metallic high-strung V12 bark + centrifugal supercharger whistle
-                h1 = math.sin(self.phase_engine_left)
-                h2 = math.sin(self.phase_engine_left * 2.0) * 0.44
-                h3 = math.sin(self.phase_engine_left * 3.0) * 0.20
-                h4 = math.sin(self.phase_engine_left * 4.0) * 0.08
+                h1 = _fast_sin(self.phase_engine_left)
+                h2 = _fast_sin(self.phase_engine_left * 2.0) * 0.44
+                h3 = _fast_sin(self.phase_engine_left * 3.0) * 0.20
+                h4 = _fast_sin(self.phase_engine_left * 4.0) * 0.08
                 
                 # Supercharger wail (loudest on Spitfire Merlin and Bf 109)
                 supercharger_gain = 0.08 if plane in ("spitfire", "bf109") else 0.04
-                blower = math.sin(self.phase_supercharger) * (supercharger_gain * self.throttle_filter)
+                blower = _fast_sin(self.phase_supercharger) * (supercharger_gain * self.throttle_filter)
                 
                 # Inverted V12 mechanical chatter on DB 605
-                chatter = math.sin(self.phase_engine_left * 5.0) * 0.10 if plane == "bf109" else 0.0
+                chatter = _fast_sin(self.phase_engine_left * 5.0) * 0.10 if plane == "bf109" else 0.0
                 raw = h1 + h2 + h3 + h4 + blower + chatter
 
             # Aerodynamic Prop Wash Slipstream (adds realism at high RPM and banking)
-            prop_wash = math.sin(self.phase_prop_wash) * (0.05 + 0.06 * (abs(self.bank_angle) / 30.0))
+            prop_wash = _fast_sin(self.phase_prop_wash) * (0.05 + 0.06 * (abs(self.bank_angle) / 30.0))
             raw += prop_wash
 
             # Landing Touchdown Sputter Effect (Mechanical engine drop & cylinder backpressure pops)
             if self.is_touchdown:
                 self.sputter_timer += dt
                 # Periodic cylinder misfires / sputter pops at low idle
-                sputter_wave = math.sin(self.sputter_timer * 18.0) * math.sin(self.sputter_timer * 4.5)
+                sputter_wave = _fast_sin(self.sputter_timer * 18.0) * _fast_sin(self.sputter_timer * 4.5)
                 if sputter_wave > 0.7:
                     raw *= 0.35 # cylinder cut
                 elif sputter_wave < -0.65:
-                    raw += math.sin(self.phase_subharmonic * 2.0) * 0.25 # exhaust burble
+                    raw += _fast_sin(self.phase_subharmonic * 2.0) * 0.25 # exhaust burble
 
             # Analog manifold soft-saturation (warm vacuum-tube style compression)
             sat = raw / (1.0 + 0.30 * abs(raw))

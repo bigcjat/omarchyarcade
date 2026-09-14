@@ -35,7 +35,7 @@ except ImportError:
 
 from PySide6.QtWidgets import QApplication, QWidget
 from PySide6.QtGui import QPainter, QPixmap, QImage, QColor, QFont, QPolygon, QRadialGradient, QLinearGradient, QPen, QBrush, QIcon
-from PySide6.QtCore import QTimer, Qt, QRect, QPoint, QSettings
+from PySide6.QtCore import QTimer, Qt, QRect, QPoint, QSettings, QLine
 
 # Add engine directory to python path
 current_dir = Path(__file__).resolve().parent
@@ -854,9 +854,66 @@ class SkyAceGame(QWidget):
         self.flash_cache = {}
         self.keys = set()
 
+        self.init_particle_textures()
+
         self.timer = QTimer(self)
+        self.timer.setTimerType(Qt.PreciseTimer)
         self.timer.timeout.connect(self.game_loop)
         self.timer.start(16)
+
+    def init_particle_textures(self):
+        """Pre-renders volumetric particle textures once at startup to eliminate per-frame CPU QRadialGradient rasterization."""
+        self.particle_textures = {}
+        tex_size = 128
+        center = tex_size / 2.0
+        radius = tex_size / 2.0
+
+        # 1. Vapor (Pale-blue high-altitude condensation)
+        pix_vapor = QPixmap(tex_size, tex_size)
+        pix_vapor.fill(Qt.transparent)
+        p = QPainter(pix_vapor)
+        p.setRenderHint(QPainter.Antialiasing)
+        grad = QRadialGradient(center, center, radius)
+        grad.setColorAt(0.0, QColor(220, 230, 245, 140))
+        grad.setColorAt(0.65, QColor(200, 215, 235, 70))
+        grad.setColorAt(1.0, QColor(180, 200, 225, 0))
+        p.setPen(Qt.NoPen)
+        p.setBrush(grad)
+        p.drawEllipse(0, 0, tex_size, tex_size)
+        p.end()
+        self.particle_textures["vapor"] = pix_vapor
+
+        # 2. Black Smoke (Dense combustion exhaust)
+        pix_smoke = QPixmap(tex_size, tex_size)
+        pix_smoke.fill(Qt.transparent)
+        p = QPainter(pix_smoke)
+        p.setRenderHint(QPainter.Antialiasing)
+        grad = QRadialGradient(center, center, radius)
+        grad.setColorAt(0.0, QColor(24, 26, 30, 210))
+        grad.setColorAt(0.45, QColor(40, 44, 50, 150))
+        grad.setColorAt(0.80, QColor(55, 60, 68, 60))
+        grad.setColorAt(1.0, QColor(65, 70, 78, 0))
+        p.setPen(Qt.NoPen)
+        p.setBrush(grad)
+        p.drawEllipse(0, 0, tex_size, tex_size)
+        p.end()
+        self.particle_textures["black_smoke"] = pix_smoke
+
+        # 3. Fire (Superheated flame core)
+        pix_fire = QPixmap(tex_size, tex_size)
+        pix_fire.fill(Qt.transparent)
+        p = QPainter(pix_fire)
+        p.setRenderHint(QPainter.Antialiasing)
+        grad = QRadialGradient(center, center, radius)
+        grad.setColorAt(0.0, QColor(255, 245, 190, 255))
+        grad.setColorAt(0.30, QColor(255, 145, 25, 220))
+        grad.setColorAt(0.70, QColor(225, 45, 15, 140))
+        grad.setColorAt(1.0, QColor(160, 20, 5, 0))
+        p.setPen(Qt.NoPen)
+        p.setBrush(grad)
+        p.drawEllipse(0, 0, tex_size, tex_size)
+        p.end()
+        self.particle_textures["fire"] = pix_fire
 
     def get_flash_pixmap(self, pix, color=QColor(255, 255, 255, 240)):
         """Returns an exact-silhouette white/red flash sprite without bounding box artifacts."""
@@ -6765,9 +6822,8 @@ class SkyAceGame(QWidget):
 
             # Drifting ocean swells & whitecap ripples
             painter.setPen(QColor(wl_r, wl_g, wl_b, 130))
-            for y in range(-48, self.height() + 48, 24):
-                wave_y = y + self.ocean_y
-                painter.drawLine(0, wave_y, self.width(), wave_y)
+            wave_lines = [QLine(0, y + self.ocean_y, self.width(), y + self.ocean_y) for y in range(-48, self.height() + 48, 24)]
+            painter.drawLines(wave_lines)
 
             # Cloud cover transition during landing:
             # Starts in thick cloud bank, then clouds part revealing ocean & carrier below
@@ -6797,9 +6853,8 @@ class SkyAceGame(QWidget):
 
             # Drifting ocean swells visible under any cloud rifts
             painter.setPen(QColor(wl_r, wl_g, wl_b, 75))
-            for y in range(-48, self.height() + 48, 24):
-                wave_y = y + self.ocean_y
-                painter.drawLine(0, wave_y, self.width(), wave_y)
+            wave_lines = [QLine(0, y + self.ocean_y, self.width(), y + self.ocean_y) for y in range(-48, self.height() + 48, 24)]
+            painter.drawLines(wave_lines)
 
             # 2. Dense Seamless Cloud Bed Floor (Scrolling over ocean)
             if not self.cloud_bed_pixmap.isNull():
@@ -6927,9 +6982,8 @@ class SkyAceGame(QWidget):
 
             # Drifting ocean waves
             painter.setPen(QColor(wl_r, wl_g, wl_b, 140))
-            for y in range(-48, self.height() + 48, 24):
-                wave_y = y + self.ocean_y
-                painter.drawLine(0, wave_y, self.width(), wave_y)
+            wave_lines = [QLine(0, y + self.ocean_y, self.width(), y + self.ocean_y) for y in range(-48, self.height() + 48, 24)]
+            painter.drawLines(wave_lines)
 
             # Cloud drop-shadows on ocean
             for c in self.clouds:
@@ -7418,34 +7472,14 @@ class SkyAceGame(QWidget):
         # 11. Multi-Stage Volumetric Smoke, Flame & Spark Trails
         for sm in self.smoke_particles:
             sx, sy, r, s_type = int(sm["x"]), int(sm["y"]), int(sm["rad"]), sm["type"]
-            life_ratio = sm["life"] / max(1, sm.get("max_life", 25))
-            painter.setPen(Qt.NoPen)
+            life_ratio = max(0.0, min(1.0, sm["life"] / float(max(1, sm.get("max_life", 25)))))
 
-            if s_type == "vapor":
-                grad = QRadialGradient(sx, sy, max(1, r))
-                grad.setColorAt(0.0, QColor(220, 230, 245, int(140 * life_ratio)))
-                grad.setColorAt(0.65, QColor(200, 215, 235, int(70 * life_ratio)))
-                grad.setColorAt(1.0, QColor(180, 200, 225, 0))
-                painter.setBrush(grad)
-                painter.drawEllipse(QRect(sx - r, sy - r, r * 2, r * 2))
-
-            elif s_type == "black_smoke":
-                grad = QRadialGradient(sx, sy, max(1, r))
-                grad.setColorAt(0.0, QColor(24, 26, 30, int(210 * life_ratio)))
-                grad.setColorAt(0.45, QColor(40, 44, 50, int(150 * life_ratio)))
-                grad.setColorAt(0.80, QColor(55, 60, 68, int(60 * life_ratio)))
-                grad.setColorAt(1.0, QColor(65, 70, 78, 0))
-                painter.setBrush(grad)
-                painter.drawEllipse(QRect(sx - r, sy - r, r * 2, r * 2))
-
-            elif s_type == "fire":
-                grad = QRadialGradient(sx, sy, max(1, r))
-                grad.setColorAt(0.0, QColor(255, 245, 190, int(255 * life_ratio))) # White-hot core
-                grad.setColorAt(0.30, QColor(255, 145, 25, int(220 * life_ratio))) # Intense orange
-                grad.setColorAt(0.70, QColor(225, 45, 15, int(140 * life_ratio)))  # Crimson flame
-                grad.setColorAt(1.0, QColor(160, 20, 5, 0))                         # Feathered fade
-                painter.setBrush(grad)
-                painter.drawEllipse(QRect(sx - r, sy - r, r * 2, r * 2))
+            if s_type in self.particle_textures:
+                tex = self.particle_textures[s_type]
+                painter.save()
+                painter.setOpacity(life_ratio)
+                painter.drawPixmap(sx - r, sy - r, r * 2, r * 2, tex)
+                painter.restore()
 
             elif s_type == "spark":
                 painter.setPen(QColor(255, 230, 110, int(255 * life_ratio)))
