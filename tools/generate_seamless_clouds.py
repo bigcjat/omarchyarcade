@@ -8,6 +8,7 @@ Dense billowy cumulus with subtle soft rifts revealing ocean underneath.
 import math
 import random
 from pathlib import Path
+import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 def create_seamless_cloud_canopy(width=1024, height=1024):
@@ -110,39 +111,76 @@ def create_seamless_cloud_canopy(width=1024, height=1024):
     highlight_img = highlight_img.filter(ImageFilter.GaussianBlur(radius=8))
     img = Image.alpha_composite(img, highlight_img)
 
-    # Seamless wrap in Y (vertical loop)
-    blend_h = 80
-    for y in range(blend_h):
-        alpha = 0.5 * (1.0 - math.cos(math.pi * (y + 1) / blend_h))
-        y_bot = height - blend_h + y
-        for x in range(width):
-            top_px = img.getpixel((x, y))
-            bot_px = img.getpixel((x, y_bot))
-            r = int(bot_px[0] * (1.0 - alpha) + top_px[0] * alpha)
-            g = int(bot_px[1] * (1.0 - alpha) + top_px[1] * alpha)
-            b = int(bot_px[2] * (1.0 - alpha) + top_px[2] * alpha)
-            a = int(bot_px[3] * (1.0 - alpha) + top_px[3] * alpha)
-            img.putpixel((x, y_bot), (r, g, b, a))
+def periodic_blur(img, radius):
+    w, h = img.size
+    pad = int(radius * 3)
+    arr = np.array(img)
+    if arr.ndim == 3:
+        arr_padded = np.pad(arr, ((pad, pad), (pad, pad), (0, 0)), mode="wrap")
+    else:
+        arr_padded = np.pad(arr, ((pad, pad), (pad, pad)), mode="wrap")
+    im_padded = Image.fromarray(arr_padded)
+    im_blurred = im_padded.filter(ImageFilter.GaussianBlur(radius))
+    arr_blurred = np.array(im_blurred)
+    return Image.fromarray(arr_blurred[pad:-pad, pad:-pad])
 
-    for x in range(width):
-        img.putpixel((x, height - 1), img.getpixel((x, 0)))
+def create_seamless_cloud_canopy(width=2048, height=2048):
+    print(f"[CloudGen] Generating {width}x{height} seamless top-down cloud canopy...")
+    np.random.seed(1942)
 
-    # Seamless wrap in X (horizontal loop)
-    blend_w = 80
-    for x in range(blend_w):
-        alpha = 0.5 * (1.0 - math.cos(math.pi * (x + 1) / blend_w))
-        x_right = width - blend_w + x
-        for y in range(height):
-            left_px = img.getpixel((x, y))
-            right_px = img.getpixel((x_right, y))
-            r = int(right_px[0] * (1.0 - alpha) + left_px[0] * alpha)
-            g = int(right_px[1] * (1.0 - alpha) + left_px[1] * alpha)
-            b = int(right_px[2] * (1.0 - alpha) + left_px[2] * alpha)
-            a = int(right_px[3] * (1.0 - alpha) + left_px[3] * alpha)
-            img.putpixel((x_right, y), (r, g, b, a))
+    img = Image.new("RGBA", (width, height), (228, 238, 248, 252))
+    draw = ImageDraw.Draw(img)
 
-    for y in range(height):
-        img.putpixel((width - 1, y), img.getpixel((0, y)))
+    for _ in range(260):
+        cx = np.random.uniform(0, width)
+        cy = np.random.uniform(0, height)
+        rx = np.random.uniform(160, 360)
+        ry = np.random.uniform(120, 280)
+        tone = np.random.randint(238, 255)
+        alpha = np.random.randint(160, 235)
+        for ox in (-width, 0, width):
+            for oy in (-height, 0, height):
+                draw.ellipse([cx+ox-rx, cy+oy-ry, cx+ox+rx, cy+oy+ry], fill=(tone, tone, min(255, tone+3), alpha))
+
+    for _ in range(550):
+        cx = np.random.uniform(0, width)
+        cy = np.random.uniform(0, height)
+        rx = np.random.uniform(70, 160)
+        ry = np.random.uniform(60, 140)
+        tone = np.random.randint(245, 255)
+        alpha = np.random.randint(140, 225)
+        for ox in (-width, 0, width):
+            for oy in (-height, 0, height):
+                draw.ellipse([cx+ox-rx, cy+oy-ry, cx+ox+rx, cy+oy+ry], fill=(tone, tone, min(255, tone+2), alpha))
+
+    shadow_img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    sdraw = ImageDraw.Draw(shadow_img)
+    for _ in range(160):
+        cx = np.random.uniform(0, width)
+        cy = np.random.uniform(0, height)
+        rx = np.random.uniform(100, 240)
+        ry = np.random.uniform(80, 180)
+        for ox in (-width, 0, width):
+            for oy in (-height, 0, height):
+                sdraw.ellipse([cx+ox-rx, cy+oy-ry+24, cx+ox+rx, cy+oy+ry+24], fill=(172, 192, 218, 35))
+
+    shadow_img = periodic_blur(shadow_img, 18)
+    img = Image.alpha_composite(img, shadow_img)
+
+    hl_img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    hdraw = ImageDraw.Draw(hl_img)
+    for _ in range(350):
+        cx = np.random.uniform(0, width)
+        cy = np.random.uniform(0, height)
+        rx = np.random.uniform(40, 110)
+        ry = np.random.uniform(30, 90)
+        for ox in (-width, 0, width):
+            for oy in (-height, 0, height):
+                hdraw.ellipse([cx+ox-rx, cy+oy-ry-10, cx+ox+rx, cy+oy+ry-10], fill=(255, 255, 255, 65))
+
+    hl_img = periodic_blur(hl_img, 12)
+    img = Image.alpha_composite(img, hl_img)
+    img = periodic_blur(img, 14)
 
     out_path = Path("games/skyace/sprites/cloud_bed_floor.png")
     img.save(out_path, "PNG", optimize=True)

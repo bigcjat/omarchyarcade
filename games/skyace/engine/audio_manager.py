@@ -71,7 +71,7 @@ class SoundManager:
                 self.is_mac = False
 
         if not self.is_mac:
-            self.player_cmd = shutil.which("pw-play") or shutil.which("paplay") or shutil.which("aplay")
+            self.player_cmd = shutil.which("aplay") or shutil.which("pw-play") or shutil.which("paplay")
 
         # Volume controls (0.0 to 1.0)
         self.music_volume = 0.40
@@ -131,8 +131,17 @@ class SoundManager:
             
             # Fanfare & Powerups
             "pow_pickup": "pow_pickup",
+            "powerup": "pow_pickup",
+            "pickup": "pow_pickup",
             "victory_fanfare": "victory_fanfare",
             "loop_whoosh": "loop_whoosh",
+
+            # Boss & Narrative SFX
+            "failsafe_alarm": "failsafe_alarm",
+            "flying_wing_flyby": "flying_wing_flyby",
+            "nuke_tinnitus": "nuke_tinnitus",
+            "nuke_blast": "nuke_blast",
+            "radio_chime": "radio_chime",
         }
 
         # In-process native Qt BGM player (no external daemon or subprocess leaks)
@@ -197,13 +206,13 @@ class SoundManager:
             # Subprocess throttle to prevent Linux process table storm during rapid machine gun fire
             now = time.perf_counter()
             last = self._last_play_time.get(resolved, 0.0)
-            if now - last < 0.045:
+            if now - last < 0.08:
                 return
             self._last_play_time[resolved] = now
 
             # Clean up reaped processes and enforce max concurrent active sfx processes
             self._active_sfx_procs = [p for p in self._active_sfx_procs if p.poll() is None]
-            if len(self._active_sfx_procs) >= 3:
+            if len(self._active_sfx_procs) >= 2:
                 return
 
             wav_file = self.sounds_dir / f"{resolved}.wav"
