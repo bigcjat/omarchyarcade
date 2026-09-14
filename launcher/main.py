@@ -207,6 +207,9 @@ class ArcadeBackend(QObject):
         """Checks if an installed game has an update available compared to catalog.json."""
         if not game_id or not catalog_version:
             return False
+        # When running in source repo dev mode, source games are the development truth
+        if (BASE_DIR / ".git").is_dir() and (BASE_DIR / "games" / game_id).is_dir():
+            return False
         game_dir = GAMES_DIR / game_id
         if not (game_dir / "main.py").exists() and not (game_dir / "main.qml").exists():
             user_dir = DATA_DIR / "games" / game_id
@@ -715,6 +718,8 @@ class ArcadeBackend(QObject):
     @Slot(result=str)
     def getLauncherVersion(self) -> str:
         """Returns the current launcher version."""
+        if (BASE_DIR / ".git").is_dir():
+            return CURRENT_LAUNCHER_VERSION
         for v_path in [
             LAUNCHER_DIR / ".launcher_version",
             DATA_DIR / "launcher" / ".launcher_version",
@@ -760,6 +765,8 @@ class ArcadeBackend(QObject):
                 return remote != current and bool(remote)
 
         launcher_has_update = is_newer(remote_lv, current_lv)
+        if (BASE_DIR / ".git").is_dir():
+            launcher_has_update = False
         launcher_changelog = cat_data.get("launcher_changelog", [
             "Performance and stability enhancements",
             "Updated game catalog entries"
