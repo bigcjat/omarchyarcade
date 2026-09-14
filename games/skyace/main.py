@@ -34,13 +34,8 @@ except ImportError:
     np = None
 
 from PySide6.QtWidgets import QApplication, QWidget
-try:
-    from PySide6.QtOpenGLWidgets import QOpenGLWidget
-    HAS_OPENGL_WIDGET = True
-except ImportError:
-    HAS_OPENGL_WIDGET = False
-from PySide6.QtGui import QPainter, QPixmap, QImage, QColor, QFont, QPolygon, QRadialGradient, QLinearGradient, QPen, QBrush, QIcon, QTransform
-from PySide6.QtCore import QTimer, Qt, QRect, QPoint, QSettings, QLine
+from PySide6.QtGui import QPainter, QPixmap, QImage, QColor, QFont, QPolygon, QRadialGradient, QLinearGradient, QPen, QBrush, QIcon
+from PySide6.QtCore import QTimer, Qt, QRect, QPoint, QSettings
 
 # Add engine directory to python path
 current_dir = Path(__file__).resolve().parent
@@ -189,20 +184,9 @@ class SkyAceGame(QWidget):
         icon_path = current_dir / "assets" / "disk_icon.png"
         if icon_path.exists():
             self.setWindowIcon(QIcon(str(icon_path)))
-        # Enforce dedicated vertical arcade cabinet proportions (3:4 vertical shmup format)
-        # Allows tiling in Omarchy/Hyprland without floating lockout while preserving 3:4 aspect
         self.resize(580, 750)
-        self.setMinimumSize(435, 562)
-        self.setWindowFlag(Qt.WindowMaximizeButtonHint, False)
         self.setFocusPolicy(Qt.StrongFocus)
         self.setMouseTracking(True)
-
-        # Performance caches and viewport geometry
-        self._wave_tile_cache = {}
-        self._cloud_scale_cache = {}
-        self._viewport_scale = 1.0
-        self._viewport_x_off = 0
-        self._viewport_y_off = 0
 
         self.settings = QSettings("Arcade", "SkyAce")
         self.sound = SoundManager(current_dir / "sounds")
@@ -870,69 +854,9 @@ class SkyAceGame(QWidget):
         self.flash_cache = {}
         self.keys = set()
 
-        self.init_particle_textures()
-
         self.timer = QTimer(self)
-        if sys.platform != "darwin":
-            self.timer.setTimerType(Qt.CoarseTimer)
-        else:
-            self.timer.setTimerType(Qt.PreciseTimer)
         self.timer.timeout.connect(self.game_loop)
         self.timer.start(16)
-
-    def init_particle_textures(self):
-        """Pre-renders volumetric particle textures once at startup to eliminate per-frame CPU QRadialGradient rasterization."""
-        self.particle_textures = {}
-        tex_size = 128
-        center = tex_size / 2.0
-        radius = tex_size / 2.0
-
-        # 1. Vapor (Pale-blue high-altitude condensation)
-        pix_vapor = QPixmap(tex_size, tex_size)
-        pix_vapor.fill(Qt.transparent)
-        p = QPainter(pix_vapor)
-        p.setRenderHint(QPainter.Antialiasing)
-        grad = QRadialGradient(center, center, radius)
-        grad.setColorAt(0.0, QColor(220, 230, 245, 140))
-        grad.setColorAt(0.65, QColor(200, 215, 235, 70))
-        grad.setColorAt(1.0, QColor(180, 200, 225, 0))
-        p.setPen(Qt.NoPen)
-        p.setBrush(grad)
-        p.drawEllipse(0, 0, tex_size, tex_size)
-        p.end()
-        self.particle_textures["vapor"] = pix_vapor
-
-        # 2. Black Smoke (Dense combustion exhaust)
-        pix_smoke = QPixmap(tex_size, tex_size)
-        pix_smoke.fill(Qt.transparent)
-        p = QPainter(pix_smoke)
-        p.setRenderHint(QPainter.Antialiasing)
-        grad = QRadialGradient(center, center, radius)
-        grad.setColorAt(0.0, QColor(24, 26, 30, 210))
-        grad.setColorAt(0.45, QColor(40, 44, 50, 150))
-        grad.setColorAt(0.80, QColor(55, 60, 68, 60))
-        grad.setColorAt(1.0, QColor(65, 70, 78, 0))
-        p.setPen(Qt.NoPen)
-        p.setBrush(grad)
-        p.drawEllipse(0, 0, tex_size, tex_size)
-        p.end()
-        self.particle_textures["black_smoke"] = pix_smoke
-
-        # 3. Fire (Superheated flame core)
-        pix_fire = QPixmap(tex_size, tex_size)
-        pix_fire.fill(Qt.transparent)
-        p = QPainter(pix_fire)
-        p.setRenderHint(QPainter.Antialiasing)
-        grad = QRadialGradient(center, center, radius)
-        grad.setColorAt(0.0, QColor(255, 245, 190, 255))
-        grad.setColorAt(0.30, QColor(255, 145, 25, 220))
-        grad.setColorAt(0.70, QColor(225, 45, 15, 140))
-        grad.setColorAt(1.0, QColor(160, 20, 5, 0))
-        p.setPen(Qt.NoPen)
-        p.setBrush(grad)
-        p.drawEllipse(0, 0, tex_size, tex_size)
-        p.end()
-        self.particle_textures["fire"] = pix_fire
 
     def get_flash_pixmap(self, pix, color=QColor(255, 255, 255, 240)):
         """Returns an exact-silhouette white/red flash sprite without bounding box artifacts."""
@@ -945,55 +869,6 @@ class SkyAceGame(QWidget):
         flash_pix.setMask(mask)
         self.flash_cache[cache_key] = flash_pix
         return flash_pix
-
-    def get_virtual_mouse_pos(self, event_pos):
-        """Translates raw window mouse coordinates into the 580x750 virtual arcade canvas."""
-        scale = getattr(self, "_viewport_scale", 1.0)
-        if scale <= 0.001:
-            scale = 1.0
-        x_off = getattr(self, "_viewport_x_off", 0)
-        y_off = getattr(self, "_viewport_y_off", 0)
-        vx = int((event_pos.x() - x_off) / scale)
-        vy = int((event_pos.y() - y_off) / scale)
-        return max(0, min(580, vx)), max(0, min(750, vy))
-
-    def draw_ocean_waves(self, painter, color):
-        """Draws drifting ocean wave whitecaps using pre-rendered cached wave tiles without per-frame Python allocations."""
-        key = (color.red(), color.green(), color.blue(), color.alpha())
-        tile = self._wave_tile_cache.get(key)
-        if tile is None:
-            tile = QPixmap(580, 48)
-            tile.fill(Qt.transparent)
-            p = QPainter(tile)
-            p.setPen(color)
-            p.drawLine(0, 0, 580, 0)
-            p.drawLine(0, 24, 580, 24)
-            p.end()
-            self._wave_tile_cache[key] = tile
-        painter.drawTiledPixmap(0, self.ocean_y - 48, 580, 750 + 96, tile)
-
-    def get_scaled_cloud(self, type_idx, scale):
-        """Returns a cached pre-scaled cloud pixmap to avoid per-frame CPU bilinear interpolation."""
-        if not self.cloud_pixmaps:
-            return None
-        pix = self.cloud_pixmaps[type_idx % len(self.cloud_pixmaps)]
-        sc_rounded = round(float(scale), 2)
-        if abs(sc_rounded - 1.0) < 0.04:
-            return pix
-        sc_key = (type_idx % len(self.cloud_pixmaps), sc_rounded)
-        scaled = self._cloud_scale_cache.get(sc_key)
-        if scaled is None:
-            w = max(16, int(pix.width() * sc_rounded))
-            h = max(16, int(pix.height() * sc_rounded))
-            scaled = pix.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            self._cloud_scale_cache[sc_key] = scaled
-        return scaled
-
-    def add_smoke_particle(self, p):
-        """Adds a smoke/fire particle with a strict maximum cap to prevent memory churn."""
-        if len(self.smoke_particles) >= 32:
-            self.smoke_particles.pop(0)
-        self.smoke_particles.append(p)
 
     def load_atlas(self, sheet_name):
         """Loads a spritesheet PNG and its accompanying JSON atlas into a dict of QPixmaps."""
@@ -3664,7 +3539,8 @@ class SkyAceGame(QWidget):
         return False
 
     def mouseMoveEvent(self, event):
-        mx, my = self.get_virtual_mouse_pos(event.position())
+        pos = event.position()
+        mx, my = pos.x(), pos.y()
         self.mouse_cursor_pos = (int(mx), int(my))
         if self.state in ("playing", "takeoff", "landing", "boss_intro", "victory", "game_over"):
             prev_h = getattr(self, "matchup_badge_hovered", False)
@@ -3682,7 +3558,7 @@ class SkyAceGame(QWidget):
             return
 
         if self.state == "hangar":
-            col_w = (580 - 44) // 2
+            col_w = (self.width() - 44) // 2
             row_h = 106
             if self.hangar_step == 1:
                 card_keys = ["p38", "zero", "spitfire", "bf109", "yak3", "mosquito", "folgore", "d520", "pzl11", "avia"]
@@ -3716,7 +3592,8 @@ class SkyAceGame(QWidget):
         super().mouseMoveEvent(event)
 
     def mousePressEvent(self, event):
-        mx, my = self.get_virtual_mouse_pos(event.position())
+        pos = event.position()
+        mx, my = int(pos.x()), int(pos.y())
 
         # If Help modal is open
         if getattr(self, "show_help_modal", False):
@@ -3773,7 +3650,7 @@ class SkyAceGame(QWidget):
             return
 
         if self.state == "hangar":
-            col_w = (580 - 44) // 2
+            col_w = (self.width() - 44) // 2
             row_h = 106
             if self.hangar_step == 1:
                 card_keys = ["p38", "zero", "spitfire", "bf109", "yak3", "mosquito", "folgore", "d520", "pzl11", "avia"]
@@ -3811,7 +3688,7 @@ class SkyAceGame(QWidget):
             return
         elif self.state == "game_over":
             panel_x = 24
-            panel_w = 580 - 48
+            panel_w = self.width() - 48
             btn_retry = QRect(panel_x + 30, 96 + 635 - 100, panel_w - 60, 40)
             btn_hangar = QRect(panel_x + 30, 96 + 635 - 100 + 48, panel_w - 60, 36)
             if btn_hangar.contains(int(mx), int(my)):
@@ -3823,7 +3700,7 @@ class SkyAceGame(QWidget):
                 self.start_mission(self.current_plane, self.enemy_theater, round_num=self.current_round)
             return
         elif self.state == "victory":
-            panel = QRect(28, 95, 580 - 56, 620)
+            panel = QRect(28, 95, self.width() - 56, 620)
             btn_next_tour = QRect(panel.left() + 20, panel.bottom() - 92, panel.width() - 40, 38)
             btn_secret_mission = QRect(panel.left() + 20, panel.bottom() - 46, panel.width() - 40, 38)
             if btn_secret_mission.contains(int(mx), int(my)):
@@ -4264,14 +4141,16 @@ class SkyAceGame(QWidget):
             return
 
         if self.state == "nuke_cutscene":
-            for s in self.smoke_particles:
+            for s in list(self.smoke_particles):
                 s["x"] += s["vx"]
                 s["y"] += s["vy"]
                 s["life"] -= 1
-            self.smoke_particles = [s for s in self.smoke_particles if s["life"] > 0]
-            for exp in self.explosions:
+                if s["life"] <= 0:
+                    self.smoke_particles.remove(s)
+            for exp in list(self.explosions):
                 exp["life"] -= 1
-            self.explosions = [exp for exp in self.explosions if exp["life"] > 0]
+                if exp["life"] <= 0:
+                    self.explosions.remove(exp)
             self.update_nuke_cutscene()
             self.update()
             return
@@ -4465,7 +4344,7 @@ class SkyAceGame(QWidget):
                 self.y += 3.6
                 self.x += math.sin(self.death_ticks * 0.22) * 3.8
                 for _ in range(3):
-                    self.add_smoke_particle({
+                    self.smoke_particles.append({
                         "x": self.x + random.randint(-18, 18), "y": self.y + random.randint(-10, 20),
                         "vx": random.uniform(-1.5, 1.5), "vy": random.uniform(1.0, 4.0),
                         "rad": 8, "max_rad": 24, "life": 18, "type": "fire"
@@ -4542,12 +4421,12 @@ class SkyAceGame(QWidget):
             if self.hp < self.max_hp and not self.is_looping and random.random() < 0.70:
                 engine_ox = -16 if random.random() < 0.5 else 16
                 if self.hp == 3 and random.random() < 0.45:
-                    self.add_smoke_particle({"x": self.x + engine_ox, "y": self.y + 24, "vx": random.uniform(-0.5, 0.5), "vy": random.uniform(2.5, 4.5), "rad": 6, "max_rad": 16, "life": 22, "type": "vapor"})
+                    self.smoke_particles.append({"x": self.x + engine_ox, "y": self.y + 24, "vx": random.uniform(-0.5, 0.5), "vy": random.uniform(2.5, 4.5), "rad": 6, "max_rad": 16, "life": 22, "type": "vapor"})
                 elif self.hp == 2:
-                    self.add_smoke_particle({"x": self.x + engine_ox, "y": self.y + 22, "vx": random.uniform(-0.8, 0.8), "vy": random.uniform(3.0, 5.5), "rad": 8, "max_rad": 26, "life": 28, "type": "black_smoke"})
+                    self.smoke_particles.append({"x": self.x + engine_ox, "y": self.y + 22, "vx": random.uniform(-0.8, 0.8), "vy": random.uniform(3.0, 5.5), "rad": 8, "max_rad": 26, "life": 28, "type": "black_smoke"})
                 elif self.hp == 1:
                     for _ in range(2):
-                        self.add_smoke_particle({"x": self.x + engine_ox, "y": self.y + 16, "vx": random.uniform(-1.0, 1.0), "vy": random.uniform(3.5, 6.0), "rad": 7, "max_rad": 20, "life": 16, "type": "fire"})
+                        self.smoke_particles.append({"x": self.x + engine_ox, "y": self.y + 16, "vx": random.uniform(-1.0, 1.0), "vy": random.uniform(3.5, 6.0), "rad": 7, "max_rad": 20, "life": 16, "type": "fire"})
 
             # Auto-fire
             if self.is_fire_held and not self.is_looping and self.death_ticks == 0:
@@ -6522,46 +6401,6 @@ class SkyAceGame(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.SmoothPixmapTransform)
 
-        # Enforce dedicated 580x750 (3:4 vertical arcade shmup viewport)
-        # When tiled or displayed on wide/compact screens, preserves exact arcade proportions with bezel margins
-        vw, vh = 580, 750
-        w, h = self.width(), self.height()
-        target_aspect = vw / vh
-        current_aspect = w / h if h > 0 else target_aspect
-
-        if current_aspect > target_aspect:
-            scale = h / vh
-            render_w = int(vw * scale)
-            x_off = (w - render_w) // 2
-            y_off = 0
-        else:
-            scale = w / vw
-            render_h = int(vh * scale)
-            x_off = 0
-            y_off = (h - render_h) // 2
-
-        self._viewport_scale = scale
-        self._viewport_x_off = x_off
-        self._viewport_y_off = y_off
-
-        # Fill background with sleek dark tactical bezel when letterboxed/pillarboxed
-        if x_off > 0 or y_off > 0:
-            painter.fillRect(self.rect(), QColor(8, 12, 18))
-
-        painter.save()
-        if x_off > 0 or y_off > 0:
-            painter.translate(x_off, y_off)
-        if abs(scale - 1.0) > 0.001:
-            painter.scale(scale, scale)
-        painter.setClipRect(0, 0, vw, vh)
-
-        try:
-            self._render_scene(painter)
-        finally:
-            painter.restore()
-
-    def _render_scene(self, painter):
-
         # ---------------------------------------------------------------------
         # SCREEN: THEATER TRANSITION (STREET FIGHTER WORLD TOUR)
         # ---------------------------------------------------------------------
@@ -6925,7 +6764,10 @@ class SkyAceGame(QWidget):
             painter.fillRect(self.rect(), QColor(w_r, w_g, w_b))
 
             # Drifting ocean swells & whitecap ripples
-            self.draw_ocean_waves(painter, QColor(wl_r, wl_g, wl_b, 130))
+            painter.setPen(QColor(wl_r, wl_g, wl_b, 130))
+            for y in range(-48, self.height() + 48, 24):
+                wave_y = y + self.ocean_y
+                painter.drawLine(0, wave_y, self.width(), wave_y)
 
             # Cloud cover transition during landing:
             # Starts in thick cloud bank, then clouds part revealing ocean & carrier below
@@ -6954,7 +6796,10 @@ class SkyAceGame(QWidget):
             painter.fillRect(self.rect(), QColor(w_r, w_g, w_b))
 
             # Drifting ocean swells visible under any cloud rifts
-            self.draw_ocean_waves(painter, QColor(wl_r, wl_g, wl_b, 75))
+            painter.setPen(QColor(wl_r, wl_g, wl_b, 75))
+            for y in range(-48, self.height() + 48, 24):
+                wave_y = y + self.ocean_y
+                painter.drawLine(0, wave_y, self.width(), wave_y)
 
             # 2. Dense Seamless Cloud Bed Floor (Scrolling over ocean)
             if not self.cloud_bed_pixmap.isNull():
@@ -6968,12 +6813,12 @@ class SkyAceGame(QWidget):
 
             # 3. Floating Upper Cumulus Puffs (Billowing at parallax speeds with soft drop-shadows)
             for c in self.clouds:
-                sc = c.get("scale", 1.0)
-                pix = self.get_scaled_cloud(c["type"], sc)
-                if not pix or pix.isNull():
+                if not self.cloud_pixmaps:
                     continue
-                w = pix.width()
-                h = pix.height()
+                pix = self.cloud_pixmaps[c["type"] % len(self.cloud_pixmaps)]
+                sc = c.get("scale", 1.0)
+                w = int(pix.width() * sc)
+                h = int(pix.height() * sc)
 
                 # Soft shadow onto cloud deck
                 painter.save()
@@ -6981,7 +6826,7 @@ class SkyAceGame(QWidget):
                 painter.translate(c["x"] + 20, c["y"] + 24)
                 if c.get("rotation", 0): painter.rotate(c["rotation"])
                 if c.get("flip_h", False): painter.scale(-1, 1)
-                painter.drawPixmap(-w // 2, -h // 2, pix)
+                painter.drawPixmap(-w // 2, -h // 2, w, h, pix)
                 painter.restore()
 
                 # Crisp sunlit cloud puff
@@ -6990,7 +6835,7 @@ class SkyAceGame(QWidget):
                 painter.translate(c["x"], c["y"])
                 if c.get("rotation", 0): painter.rotate(c["rotation"])
                 if c.get("flip_h", False): painter.scale(-1, 1)
-                painter.drawPixmap(-w // 2, -h // 2, pix)
+                painter.drawPixmap(-w // 2, -h // 2, w, h, pix)
                 painter.restore()
 
         elif self.current_round == 3 or self.is_secret_mission:
@@ -7081,16 +6926,16 @@ class SkyAceGame(QWidget):
             painter.fillRect(self.rect(), QColor(w_r, w_g, w_b))
 
             # Drifting ocean waves
-            self.draw_ocean_waves(painter, QColor(wl_r, wl_g, wl_b, 140))
+            painter.setPen(QColor(wl_r, wl_g, wl_b, 140))
+            for y in range(-48, self.height() + 48, 24):
+                wave_y = y + self.ocean_y
+                painter.drawLine(0, wave_y, self.width(), wave_y)
 
             # Cloud drop-shadows on ocean
             for c in self.clouds:
-                sc = c.get("scale", 1.0)
-                pix = self.get_scaled_cloud(c["type"], sc)
-                if not pix or pix.isNull():
+                if not self.cloud_pixmaps:
                     continue
-                w = pix.width()
-                h = pix.height()
+                pix = self.cloud_pixmaps[c["type"] % len(self.cloud_pixmaps)]
                 painter.save()
                 painter.setOpacity(0.18)
                 painter.translate(c["x"] + 24, c["y"] + 32)
@@ -7098,7 +6943,10 @@ class SkyAceGame(QWidget):
                     painter.rotate(c["rotation"])
                 if c.get("flip_h", False):
                     painter.scale(-1, 1)
-                painter.drawPixmap(-w // 2, -h // 2, pix)
+                sc = c.get("scale", 1.0)
+                w = int(pix.width() * sc)
+                h = int(pix.height() * sc)
+                painter.drawPixmap(-w // 2, -h // 2, w, h, pix)
                 painter.restore()
             painter.setOpacity(1.0)
 
@@ -7570,14 +7418,34 @@ class SkyAceGame(QWidget):
         # 11. Multi-Stage Volumetric Smoke, Flame & Spark Trails
         for sm in self.smoke_particles:
             sx, sy, r, s_type = int(sm["x"]), int(sm["y"]), int(sm["rad"]), sm["type"]
-            life_ratio = max(0.0, min(1.0, sm["life"] / float(max(1, sm.get("max_life", 25)))))
+            life_ratio = sm["life"] / max(1, sm.get("max_life", 25))
+            painter.setPen(Qt.NoPen)
 
-            if s_type in self.particle_textures:
-                tex = self.particle_textures[s_type]
-                painter.save()
-                painter.setOpacity(life_ratio)
-                painter.drawPixmap(sx - r, sy - r, r * 2, r * 2, tex)
-                painter.restore()
+            if s_type == "vapor":
+                grad = QRadialGradient(sx, sy, max(1, r))
+                grad.setColorAt(0.0, QColor(220, 230, 245, int(140 * life_ratio)))
+                grad.setColorAt(0.65, QColor(200, 215, 235, int(70 * life_ratio)))
+                grad.setColorAt(1.0, QColor(180, 200, 225, 0))
+                painter.setBrush(grad)
+                painter.drawEllipse(QRect(sx - r, sy - r, r * 2, r * 2))
+
+            elif s_type == "black_smoke":
+                grad = QRadialGradient(sx, sy, max(1, r))
+                grad.setColorAt(0.0, QColor(24, 26, 30, int(210 * life_ratio)))
+                grad.setColorAt(0.45, QColor(40, 44, 50, int(150 * life_ratio)))
+                grad.setColorAt(0.80, QColor(55, 60, 68, int(60 * life_ratio)))
+                grad.setColorAt(1.0, QColor(65, 70, 78, 0))
+                painter.setBrush(grad)
+                painter.drawEllipse(QRect(sx - r, sy - r, r * 2, r * 2))
+
+            elif s_type == "fire":
+                grad = QRadialGradient(sx, sy, max(1, r))
+                grad.setColorAt(0.0, QColor(255, 245, 190, int(255 * life_ratio))) # White-hot core
+                grad.setColorAt(0.30, QColor(255, 145, 25, int(220 * life_ratio))) # Intense orange
+                grad.setColorAt(0.70, QColor(225, 45, 15, int(140 * life_ratio)))  # Crimson flame
+                grad.setColorAt(1.0, QColor(160, 20, 5, 0))                         # Feathered fade
+                painter.setBrush(grad)
+                painter.drawEllipse(QRect(sx - r, sy - r, r * 2, r * 2))
 
             elif s_type == "spark":
                 painter.setPen(QColor(255, 230, 110, int(255 * life_ratio)))
@@ -7854,8 +7722,6 @@ if __name__ == "__main__":
         sys.exit(0)
 
     app = QApplication(sys.argv)
-    app.setApplicationName("SkyAce")
-    app.setDesktopFileName("skyace")
     icon_path = current_dir / "assets" / "disk_icon.png"
     if icon_path.exists():
         app.setWindowIcon(QIcon(str(icon_path)))

@@ -22,13 +22,6 @@ import threading
 import time
 import random
 
-try:
-    import numpy as np
-    HAS_NUMPY = True
-except ImportError:
-    np = None
-    HAS_NUMPY = False
-
 # AudioToolbox ctypes bindings for macOS low-latency streaming
 try:
     if sys.platform == "darwin" and os.environ.get("QT_QPA_PLATFORM") != "offscreen":
@@ -37,14 +30,6 @@ try:
         _toolbox = None
 except Exception:
     _toolbox = None
-
-# High-resolution 4096-entry precomputed sine lookup table for zero-overhead harmonic synthesis
-_LUT_SIZE = 4096
-_LUT_SCALE = _LUT_SIZE / 6.283185307179586
-_SIN_LUT = [math.sin(i * (6.283185307179586 / _LUT_SIZE)) for i in range(_LUT_SIZE)]
-
-def _fast_sin(phase):
-    return _SIN_LUT[int(phase * _LUT_SCALE) & (_LUT_SIZE - 1)]
 
 
 class AudioStreamBasicDescription(ctypes.Structure):
@@ -172,7 +157,7 @@ class ProceduralPropAudio:
             self._fill_buffer(buf)
 
     def start(self):
-        if self.running or os.environ.get("QT_QPA_PLATFORM") == "offscreen" or os.environ.get("SKYACE_NO_PROP_AUDIO") == "1":
+        if self.running or os.environ.get("QT_QPA_PLATFORM") == "offscreen":
             return
         self.running = True
         if _toolbox and self.aq_ptr:
@@ -183,14 +168,11 @@ class ProceduralPropAudio:
     def _start_linux_fallback(self):
         sr = str(int(self.sample_rate))
         candidates = []
-        # Prioritize aplay (ALSA standard across Arch Linux/Omarchy with zero overhead bridge)
         if shutil.which("aplay"):
             candidates.append(["aplay", "-q", "-r", sr, "-f", "S16_LE", "-c", "1", "-t", "raw", "-"])
-        if shutil.which("pw-cat"):
-            candidates.append(["pw-cat", "-p", "--raw", f"--rate={sr}", "--format=s16le", "--channels=1", "-"])
-        if shutil.which("pw-play"):
-            candidates.append(["pw-play", "--raw", f"--rate={sr}", "--format=s16le", "--channels=1", "-"])
-        if shutil.which("pacat"):
+        elif shutil.which("pw-cat"):
+            candidates.append(["pw-cat", "-p", "--raw", f"--rate={sr}", "--format=s16", "--channels=1", "-"])
+        elif shutil.which("pacat"):
             candidates.append(["pacat", "--playback", "--raw", f"--rate={sr}", "--format=s16le", "--channels=1"])
 
         if not candidates:
@@ -198,67 +180,23 @@ class ProceduralPropAudio:
 
         def stream_worker():
             chunk_samples = 1024
-            chunk_duration = chunk_samples / self.sample_rate
             c_short_array = (ctypes.c_int16 * chunk_samples)()
             silence = b"\x00" * (chunk_samples * 2)
 
             for cmd in candidates:
                 try:
-                    proc = subprocess.Popen(
-                        cmd,
-                        stdin=subprocess.PIPE,
-                        stderr=subprocess.DEVNULL
-                    )
+                    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
                     self._linux_proc = proc
-
-                    # Set Linux kernel pipe buffer capacity (65536 bytes = ~1.48s cushion against PipeWire XRUNs)
-                    try:
-                        import fcntl
-                        f_setpipe_sz = getattr(fcntl, "F_SETPIPE_SZ", 1031)
-                        fcntl.fcntl(proc.stdin.fileno(), f_setpipe_sz, 65536)
-                    except Exception:
-                        pass
-
-                    # Pre-buffer 4 chunks (~185ms) so audio card has a safety cushion
-                    for _ in range(4):
-                        proc.stdin.write(silence)
-                    proc.stdin.flush()
-                    time.sleep(0.03)
-
-                    if proc.poll() is not None:
-                        continue
-
-                    stream_start = time.monotonic()
-                    samples_written = chunk_samples * 4
-
                     while self.running and proc.poll() is None:
                         if self.is_muted:
-                            time.sleep(0.04)
-                            continue
-
-                        self._generate_samples(c_short_array, chunk_samples)
-                        proc.stdin.write(bytes(c_short_array))
-                        proc.stdin.flush()
-                        samples_written += chunk_samples
-
-                        # Drift regulator: compare audio synthesized time with wall clock time
-                        # Yields GIL to Qt GUI thread while keeping audio pipeline smoothly supplied
-                        audio_time = samples_written / self.sample_rate
-                        elapsed = time.monotonic() - stream_start
-                        lead = audio_time - elapsed
-                        if lead > 0.08:
-                            time.sleep(lead - 0.04)
-                        elif lead > 0.02:
-                            time.sleep(0.005)
+                            proc.stdin.write(silence)
                         else:
-                            time.sleep(0.001)
-
+                            self._generate_samples(c_short_array, chunk_samples)
+                            proc.stdin.write(bytes(c_short_array))
+                        proc.stdin.flush()
                     if not self.running:
-                        try:
-                            proc.stdin.close()
-                            proc.terminate()
-                        except Exception:
-                            pass
+                        try: proc.terminate()
+                        except Exception: pass
                         return
                 except Exception:
                     continue
@@ -357,143 +295,6 @@ class ProceduralPropAudio:
         _toolbox.AudioQueueEnqueueBuffer(self.aq_ptr, buf_ptr, 0, None)
 
     def _generate_samples(self, c_short_array, num_samples):
-        if HAS_NUMPY:
-            self._generate_samples_numpy(c_short_array, num_samples)
-        else:
-            self._generate_samples_scalar(c_short_array, num_samples)
-
-    def _generate_samples_numpy(self, c_short_array, num_samples):
-        dt = self.dt
-        two_pi = 6.283185307179586
-        plane = self.plane_id
-        is_twin = plane in ("p38", "mosquito")
-        is_radial = plane in ("zero", "pzl11")
-
-        if is_twin:
-            firing_factor = 6.0
-        elif plane == "pzl11":
-            firing_factor = 4.5
-        elif plane == "zero":
-            firing_factor = 7.0
-        else:
-            firing_factor = 6.0
-
-        target_throttle = max(0.0, (self.target_rpm - 1400.0) / 1600.0)
-
-        if is_twin:
-            if self.bank_angle < -6.0:
-                dip = min(0.70, (abs(self.bank_angle) - 6.0) / 22.0)
-                target_left_gain = 1.0 - dip
-                target_right_gain = 1.0
-            elif self.bank_angle > 6.0:
-                dip = min(0.70, (self.bank_angle - 6.0) / 22.0)
-                target_left_gain = 1.0
-                target_right_gain = 1.0 - dip
-            else:
-                target_left_gain = 1.0
-                target_right_gain = 1.0
-        else:
-            target_left_gain = 1.0
-            target_right_gain = 1.0
-
-        # Vectorized parameter transitions over the buffer duration
-        decay_rpm = 1.0 - (1.0 - 0.0035) ** num_samples
-        end_rpm = self.current_rpm + (self.target_rpm - self.current_rpm) * decay_rpm
-        rpm_arr = np.linspace(self.current_rpm, end_rpm, num_samples, dtype=np.float32)
-        self.current_rpm = float(end_rpm)
-
-        decay_thr = 1.0 - (1.0 - 0.004) ** num_samples
-        end_thr = self.throttle_filter + (target_throttle - self.throttle_filter) * decay_thr
-        thr_arr = np.linspace(self.throttle_filter, end_thr, num_samples, dtype=np.float32)
-        self.throttle_filter = float(end_thr)
-
-        decay_gain = 1.0 - (1.0 - 0.006) ** num_samples
-        end_left_gain = self.left_engine_gain + (target_left_gain - self.left_engine_gain) * decay_gain
-        left_gain_arr = np.linspace(self.left_engine_gain, end_left_gain, num_samples, dtype=np.float32)
-        self.left_engine_gain = float(end_left_gain)
-
-        end_right_gain = self.right_engine_gain + (target_right_gain - self.right_engine_gain) * decay_gain
-        right_gain_arr = np.linspace(self.right_engine_gain, end_right_gain, num_samples, dtype=np.float32)
-        self.right_engine_gain = float(end_right_gain)
-
-        # Pulse frequency & phase accumulators
-        pulse_freq = (rpm_arr / 60.0) * firing_factor
-        phase_inc_left = two_pi * pulse_freq * dt
-        phases_left = (self.phase_engine_left + np.cumsum(phase_inc_left)) % two_pi
-        self.phase_engine_left = float(phases_left[-1])
-
-        detune = 1.006 if is_twin else 1.0
-        phase_inc_right = two_pi * (pulse_freq * detune) * dt
-        phases_right = (self.phase_engine_right + np.cumsum(phase_inc_right)) % two_pi
-        self.phase_engine_right = float(phases_right[-1])
-
-        phase_inc_sub = two_pi * (pulse_freq * 0.5) * dt
-        phases_sub = (self.phase_subharmonic + np.cumsum(phase_inc_sub)) % two_pi
-        self.phase_subharmonic = float(phases_sub[-1])
-
-        blower_freq = 900.0 + (rpm_arr / 3200.0) * 1400.0
-        phase_inc_super = two_pi * blower_freq * dt
-        phases_super = (self.phase_supercharger + np.cumsum(phase_inc_super)) % two_pi
-        self.phase_supercharger = float(phases_super[-1])
-
-        prop_rev_freq = rpm_arr / 60.0
-        phase_inc_prop = two_pi * (prop_rev_freq * 3.0) * dt
-        phases_prop = (self.phase_prop_wash + np.cumsum(phase_inc_prop)) % two_pi
-        self.phase_prop_wash = float(phases_prop[-1])
-
-        # Acoustic modeling by engine layout
-        if is_twin:
-            eng1 = (np.sin(phases_left) + 0.40 * np.sin(phases_left * 2.0) + 0.18 * np.sin(phases_left * 3.0)) * left_gain_arr
-            eng2 = (np.sin(phases_right) + 0.40 * np.sin(phases_right * 2.0) + 0.18 * np.sin(phases_right * 3.0)) * right_gain_arr
-            blower = np.sin(phases_super) * (0.04 + 0.05 * thr_arr)
-            bass_thrum = np.sin(phases_sub) * 0.28
-            raw = (eng1 + eng2) * 0.65 + blower + bass_thrum
-        elif is_radial:
-            h1 = np.sin(phases_left)
-            h2 = np.sin(phases_left * 2.0) * 0.32
-            h3 = np.sin(phases_left * 3.0) * 0.25
-            h4 = np.sin(phases_left * 4.0) * 0.12
-            lope = np.sin(phases_left * 0.5) * 0.28
-            bass_pulse = np.sin(phases_sub) * 0.36
-            raw = h1 + h2 + h3 + h4 + lope + bass_pulse
-        else:
-            h1 = np.sin(phases_left)
-            h2 = np.sin(phases_left * 2.0) * 0.44
-            h3 = np.sin(phases_left * 3.0) * 0.20
-            h4 = np.sin(phases_left * 4.0) * 0.08
-            supercharger_gain = 0.08 if plane in ("spitfire", "bf109") else 0.04
-            blower = np.sin(phases_super) * (supercharger_gain * thr_arr)
-            chatter = np.sin(phases_left * 5.0) * 0.10 if plane == "bf109" else 0.0
-            raw = h1 + h2 + h3 + h4 + blower + chatter
-
-        prop_wash = np.sin(phases_prop) * (0.05 + 0.06 * (abs(self.bank_angle) / 30.0))
-        raw += prop_wash
-
-        if self.is_touchdown:
-            sputter_times = self.sputter_timer + np.arange(1, num_samples + 1, dtype=np.float32) * dt
-            self.sputter_timer = float(sputter_times[-1])
-            sputter_wave = np.sin(sputter_times * 18.0) * np.sin(sputter_times * 4.5)
-            cut_mask = sputter_wave > 0.7
-            raw[cut_mask] *= 0.35
-            burble_mask = sputter_wave < -0.65
-            raw[burble_mask] += np.sin(phases_sub[burble_mask] * 2.0) * 0.25
-
-        sat = raw / (1.0 + 0.30 * np.abs(raw))
-        cutoff = float(0.12 + 0.35 * self.throttle_filter)
-
-        acoustic = np.empty(num_samples, dtype=np.float32)
-        lpf = self.lpf_state
-        for i, val in enumerate(sat):
-            lpf += cutoff * (val - lpf)
-            acoustic[i] = lpf
-        self.lpf_state = float(lpf)
-
-        base_gain = (self.master_volume * self.engine_volume_scale) * (0.70 + 0.30 * (self.current_rpm / 3200.0))
-        sample_val = acoustic * base_gain * 32000.0
-        out_int16 = np.clip(sample_val, -32767, 32767).astype(np.int16)
-        ctypes.memmove(ctypes.addressof(c_short_array), out_int16.ctypes.data, num_samples * 2)
-
-    def _generate_samples_scalar(self, c_short_array, num_samples):
         dt = self.dt
         two_pi = 6.283185307179586
         plane = self.plane_id
@@ -582,60 +383,60 @@ class ProceduralPropAudio:
             if is_twin:
                 # TWIN V12 (P-38 Lightning & Mosquito):
                 # Sum of two independent engine waveforms with differential gain & intermeshing phase beating
-                eng1 = (_fast_sin(self.phase_engine_left) + 
-                        0.40 * _fast_sin(self.phase_engine_left * 2.0) + 
-                        0.18 * _fast_sin(self.phase_engine_left * 3.0)) * self.left_engine_gain
+                eng1 = (math.sin(self.phase_engine_left) + 
+                        0.40 * math.sin(self.phase_engine_left * 2.0) + 
+                        0.18 * math.sin(self.phase_engine_left * 3.0)) * self.left_engine_gain
 
-                eng2 = (_fast_sin(self.phase_engine_right) + 
-                        0.40 * _fast_sin(self.phase_engine_right * 2.0) + 
-                        0.18 * _fast_sin(self.phase_engine_right * 3.0)) * self.right_engine_gain
+                eng2 = (math.sin(self.phase_engine_right) + 
+                        0.40 * math.sin(self.phase_engine_right * 2.0) + 
+                        0.18 * math.sin(self.phase_engine_right * 3.0)) * self.right_engine_gain
 
                 # Allison/Merlin supercharger boost whine
-                blower = _fast_sin(self.phase_supercharger) * (0.04 + 0.05 * self.throttle_filter)
-                bass_thrum = _fast_sin(self.phase_subharmonic) * 0.28
+                blower = math.sin(self.phase_supercharger) * (0.04 + 0.05 * self.throttle_filter)
+                bass_thrum = math.sin(self.phase_subharmonic) * 0.28
                 raw = (eng1 + eng2) * 0.65 + blower + bass_thrum
 
             elif is_radial:
                 # RADIAL ENGINES (A6M Zero & PZL P.11c):
                 # Heavy low-frequency odd harmonics, galloping exhaust lope, deep husky thrum
-                h1 = _fast_sin(self.phase_engine_left)
-                h2 = _fast_sin(self.phase_engine_left * 2.0) * 0.32
-                h3 = _fast_sin(self.phase_engine_left * 3.0) * 0.25
-                h4 = _fast_sin(self.phase_engine_left * 4.0) * 0.12
+                h1 = math.sin(self.phase_engine_left)
+                h2 = math.sin(self.phase_engine_left * 2.0) * 0.32
+                h3 = math.sin(self.phase_engine_left * 3.0) * 0.25
+                h4 = math.sin(self.phase_engine_left * 4.0) * 0.12
                 # Galloping radial cylinder lope
-                lope = _fast_sin(self.phase_engine_left / 2.0) * 0.28
-                bass_pulse = _fast_sin(self.phase_subharmonic) * 0.36
+                lope = math.sin(self.phase_engine_left / 2.0) * 0.28
+                bass_pulse = math.sin(self.phase_subharmonic) * 0.36
                 raw = h1 + h2 + h3 + h4 + lope + bass_pulse
 
             else:
                 # SINGLE V12 ENGINES (Spitfire Merlin, Bf 109 DB 605, Yak-3, Folgore, D.520, Avia):
                 # Crisp metallic high-strung V12 bark + centrifugal supercharger whistle
-                h1 = _fast_sin(self.phase_engine_left)
-                h2 = _fast_sin(self.phase_engine_left * 2.0) * 0.44
-                h3 = _fast_sin(self.phase_engine_left * 3.0) * 0.20
-                h4 = _fast_sin(self.phase_engine_left * 4.0) * 0.08
+                h1 = math.sin(self.phase_engine_left)
+                h2 = math.sin(self.phase_engine_left * 2.0) * 0.44
+                h3 = math.sin(self.phase_engine_left * 3.0) * 0.20
+                h4 = math.sin(self.phase_engine_left * 4.0) * 0.08
                 
                 # Supercharger wail (loudest on Spitfire Merlin and Bf 109)
                 supercharger_gain = 0.08 if plane in ("spitfire", "bf109") else 0.04
-                blower = _fast_sin(self.phase_supercharger) * (supercharger_gain * self.throttle_filter)
+                blower = math.sin(self.phase_supercharger) * (supercharger_gain * self.throttle_filter)
                 
                 # Inverted V12 mechanical chatter on DB 605
-                chatter = _fast_sin(self.phase_engine_left * 5.0) * 0.10 if plane == "bf109" else 0.0
+                chatter = math.sin(self.phase_engine_left * 5.0) * 0.10 if plane == "bf109" else 0.0
                 raw = h1 + h2 + h3 + h4 + blower + chatter
 
             # Aerodynamic Prop Wash Slipstream (adds realism at high RPM and banking)
-            prop_wash = _fast_sin(self.phase_prop_wash) * (0.05 + 0.06 * (abs(self.bank_angle) / 30.0))
+            prop_wash = math.sin(self.phase_prop_wash) * (0.05 + 0.06 * (abs(self.bank_angle) / 30.0))
             raw += prop_wash
 
             # Landing Touchdown Sputter Effect (Mechanical engine drop & cylinder backpressure pops)
             if self.is_touchdown:
                 self.sputter_timer += dt
                 # Periodic cylinder misfires / sputter pops at low idle
-                sputter_wave = _fast_sin(self.sputter_timer * 18.0) * _fast_sin(self.sputter_timer * 4.5)
+                sputter_wave = math.sin(self.sputter_timer * 18.0) * math.sin(self.sputter_timer * 4.5)
                 if sputter_wave > 0.7:
                     raw *= 0.35 # cylinder cut
                 elif sputter_wave < -0.65:
-                    raw += _fast_sin(self.phase_subharmonic * 2.0) * 0.25 # exhaust burble
+                    raw += math.sin(self.phase_subharmonic * 2.0) * 0.25 # exhaust burble
 
             # Analog manifold soft-saturation (warm vacuum-tube style compression)
             sat = raw / (1.0 + 0.30 * abs(raw))

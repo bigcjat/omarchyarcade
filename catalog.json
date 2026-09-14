@@ -1,5 +1,5 @@
 {
-  "version": 9,
+  "version": 8,
   "app_name": "Omarchy Arcade",
   "launcher_version": "1.3.0",
   "launcher_changelog": [
@@ -9,7 +9,7 @@
     "Standardized dual floppy disk window icons across all 41 games and template",
     "Universal game shortcut parity (Escape modal dismiss, T theme cycle, R restart, Tabletop navigation)"
   ],
-  "updated_at": "2026-09-14T07:26:00Z",
+  "updated_at": "2026-09-14T02:25:47Z",
   "games": [
     {
       "id": "2048",
@@ -1515,12 +1515,12 @@
       "category": "Action Arcade",
       "floppy_color": "#232328",
       "grid_color": "#0284C7",
-      "version": "1.1.4",
+      "version": "1.1.2",
       "changelog": [
-        "Omarchy Linux Optimization: Vectorized NumPy procedural prop audio engine eliminates GIL starvation and reduces audio CPU to <0.1ms",
-        "Linux PipeWire Stability: 64KB kernel buffer cushion and monotonic drift regulator completely eliminate audio XRUN crackling",
-        "Omarchy Vertical Tiling: Enforced dedicated 3:4 vertical arcade viewport with clean pillarboxing and dynamic button anchoring to prevent off-screen clipping",
-        "Rendering Acceleration: Cached ocean swell wave patterns, pre-scaled cloud caching, and particle pooling for silky 60 FPS"
+        "Carrier Recovery Polish: All remaining airborne enemies & warships detonate for bonus points",
+        "Cinematic cloud-parting descent upon landing approach",
+        "Sweep and disarm all active combat hazards on touchdown",
+        "Procedural radial engine audio telemetry & bank-synchronized soundscapes"
       ],
       "status": "released",
       "tagline": "194X Global Air War \u2022 10 Theaters & 3D Warbirds",

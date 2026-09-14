@@ -6,7 +6,6 @@ Low-latency hardware audio playback via CoreAudio/AudioToolbox (macOS) and PipeW
 
 import os
 import sys
-import time
 import shutil
 import ctypes
 import atexit
@@ -14,13 +13,12 @@ import subprocess
 from pathlib import Path
 
 try:
-    from PySide6.QtCore import QUrl, QObject
+    from PySide6.QtCore import QUrl
     from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput, QSoundEffect
     HAS_QT_AUDIO = True
 except ImportError:
     HAS_QT_AUDIO = False
     QUrl = None  # type: ignore
-    QObject = object  # type: ignore
     QMediaPlayer = None  # type: ignore
     QAudioOutput = None  # type: ignore
     QSoundEffect = None  # type: ignore
@@ -30,8 +28,6 @@ class SoundManager:
         self.sounds_dir = Path(sounds_dir)
         self.sounds = {}
         self.is_mac = (sys.platform == "darwin")
-        self._last_play_time = {}
-        self._active_sfx_procs = []
 
         if self.is_mac:
             try:
@@ -71,7 +67,7 @@ class SoundManager:
                 self.is_mac = False
 
         if not self.is_mac:
-            self.player_cmd = shutil.which("aplay") or shutil.which("pw-play") or shutil.which("paplay")
+            self.player_cmd = shutil.which("pw-play") or shutil.which("paplay") or shutil.which("aplay")
 
         # Volume controls (0.0 to 1.0)
         self.music_volume = 0.40
@@ -131,17 +127,8 @@ class SoundManager:
             
             # Fanfare & Powerups
             "pow_pickup": "pow_pickup",
-            "powerup": "pow_pickup",
-            "pickup": "pow_pickup",
             "victory_fanfare": "victory_fanfare",
             "loop_whoosh": "loop_whoosh",
-
-            # Boss & Narrative SFX
-            "failsafe_alarm": "failsafe_alarm",
-            "flying_wing_flyby": "flying_wing_flyby",
-            "nuke_tinnitus": "nuke_tinnitus",
-            "nuke_blast": "nuke_blast",
-            "radio_chime": "radio_chime",
         }
 
         # In-process native Qt BGM player (no external daemon or subprocess leaks)
@@ -203,25 +190,9 @@ class SoundManager:
         if self.is_mac and resolved in self.sounds:
             self.AudioServicesPlaySystemSound(self.sounds[resolved])
         elif not self.is_mac and hasattr(self, 'player_cmd') and self.player_cmd:
-            # Subprocess throttle to prevent Linux process table storm during rapid machine gun fire
-            now = time.perf_counter()
-            last = self._last_play_time.get(resolved, 0.0)
-            if now - last < 0.08:
-                return
-            self._last_play_time[resolved] = now
-
-            # Clean up reaped processes and enforce max concurrent active sfx processes
-            self._active_sfx_procs = [p for p in self._active_sfx_procs if p.poll() is None]
-            if len(self._active_sfx_procs) >= 2:
-                return
-
             wav_file = self.sounds_dir / f"{resolved}.wav"
             if wav_file.exists():
-                try:
-                    p = subprocess.Popen([self.player_cmd, str(wav_file)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    self._active_sfx_procs.append(p)
-                except Exception:
-                    pass
+                subprocess.Popen([self.player_cmd, str(wav_file)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def play_bgm(self, track_name, loop=True):
         """Plays background music loop seamlessly inside the Qt application process."""
@@ -285,11 +256,4 @@ class SoundManager:
             except Exception:
                 pass
             self.bgm_audio = None
-        for p in self._active_sfx_procs:
-            try:
-                if p.poll() is None:
-                    p.terminate()
-            except Exception:
-                pass
-        self._active_sfx_procs.clear()
         self.effects.clear()
