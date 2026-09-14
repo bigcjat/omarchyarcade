@@ -92,6 +92,9 @@ Window {
     property string lastMoveFrom: ""
     property string lastMoveTo: ""
     property string checkSquare: ""
+    property int cursorCol: 4
+    property int cursorRow: 6
+    property bool showKeyboardCursor: false
 
     // Captured pieces & Material evaluation
     property var capturedWhite: []
@@ -579,6 +582,55 @@ Window {
                 event.accepted = true;
                 return;
             }
+
+            if (event.key === Qt.Key_Escape) {
+                if (root.showHelp) {
+                    root.showHelp = false;
+                } else if (root.selectedSquare !== "") {
+                    root.selectedSquare = "";
+                    root.validMoves = [];
+                } else {
+                    root.showKeyboardCursor = false;
+                }
+                event.accepted = true;
+                return;
+            }
+
+            // Game over restart via Space / Enter
+            if (root.gameState !== "playing" && (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
+                root.restartGame();
+                event.accepted = true;
+                return;
+            }
+
+            // Keyboard navigation across the 8x8 chess board (Arrows / WASD / Vim HJKL)
+            if (event.key === Qt.Key_Left || event.key === Qt.Key_A || event.key === Qt.Key_H) {
+                root.showKeyboardCursor = true;
+                root.cursorCol = Math.max(0, root.cursorCol - 1);
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_Right || event.key === Qt.Key_D || event.key === Qt.Key_L) {
+                root.showKeyboardCursor = true;
+                root.cursorCol = Math.min(7, root.cursorCol + 1);
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_Up || event.key === Qt.Key_W || event.key === Qt.Key_K) {
+                root.showKeyboardCursor = true;
+                root.cursorRow = Math.max(0, root.cursorRow - 1);
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_Down || event.key === Qt.Key_S || event.key === Qt.Key_J) {
+                root.showKeyboardCursor = true;
+                root.cursorRow = Math.min(7, root.cursorRow + 1);
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                root.showKeyboardCursor = true;
+                var targetSq = root.getSquareName(root.cursorCol, root.cursorRow);
+                root.handleSquareClicked(targetSq);
+                event.accepted = true;
+                return;
+            }
         }
 
         // =====================================================================
@@ -1061,6 +1113,17 @@ Window {
                                 border.color: root.themeAccent
                                 border.width: 2
                                 visible: tileItem.isSelected
+                            }
+
+                            // Keyboard navigation cursor ring
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: 2
+                                color: "transparent"
+                                border.color: root.themeAccent
+                                border.width: 3
+                                radius: 4
+                                visible: root.showKeyboardCursor && tileItem.col === root.cursorCol && tileItem.row === root.cursorRow
                             }
 
                             // Pulsing In-Check Indicator

@@ -207,6 +207,12 @@ def main():
 
     root_obj = engine.rootObjects()[0]
 
+    icon_path = Path(__file__).resolve().parent / "assets" / "disk_icon.png"
+
+    if icon_path.exists() and hasattr(root_obj, "setIcon"):
+
+        root_obj.setIcon(QIcon(str(icon_path)))
+
     # Theme selection logic
     theme_arg = None
     if "--theme" in sys.argv:
@@ -261,6 +267,13 @@ def main():
 
     if "--no-splash" in sys.argv:
         root_obj.setProperty("splashEnabled", False)
+
+    if "--unmute" in sys.argv or "--sound" in sys.argv:
+        for _obj in engine.rootObjects():
+            _obj.setProperty("isMuted", False)
+    elif "--mute" in sys.argv:
+        for _obj in engine.rootObjects():
+            _obj.setProperty("isMuted", True)
 
     # Test / automation CLI helpers
     if "--screenshot" in sys.argv:

@@ -313,6 +313,22 @@ Window {
                 event.accepted = true;
                 return;
             }
+            if (event.key === Qt.Key_Escape) {
+                if (showHelp) {
+                    showHelp = false;
+                    event.accepted = true;
+                    return;
+                } else {
+                    if (Engine.gameState === "playing") {
+                        Engine.gameState = "paused";
+                        soundToast.show("⏸ Paused");
+                    } else if (Engine.gameState === "paused") {
+                        Engine.gameState = "playing";
+                    }
+                    event.accepted = true;
+                    return;
+                }
+            }
             if (event.key === Qt.Key_P) {
                 if (Engine.gameState === "playing") {
                     Engine.gameState = "paused";

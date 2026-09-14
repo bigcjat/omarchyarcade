@@ -7722,6 +7722,9 @@ if __name__ == "__main__":
         sys.exit(0)
 
     app = QApplication(sys.argv)
+    icon_path = current_dir / "assets" / "disk_icon.png"
+    if icon_path.exists():
+        app.setWindowIcon(QIcon(str(icon_path)))
     window = SkyAceGame()
 
     requested_theme = None
@@ -7741,9 +7744,11 @@ if __name__ == "__main__":
         elif args[i] == "--secret-play":
             window.start_secret_mission("ho229")
             i += 1
-        elif args[i] == "--secret":
-            window.state = "secret_briefing"
-            window.sound.play_bgm("bgm_boss")
+        elif args[i] in ("--unmute", "--sound"):
+            window.is_muted = False
+            i += 1
+        elif args[i] == "--mute":
+            window.is_muted = True
             i += 1
         else:
             i += 1

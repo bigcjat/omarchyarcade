@@ -27,6 +27,7 @@ Window {
     property bool _spaceConstrained: root.height < 520 || root.width < 440
     on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property bool showHelp: false
+    property bool isPaused: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
     property bool isDarkMode: colorLuminance(themeBg) < 0.5
@@ -223,6 +224,26 @@ Window {
 
             if (event.key === Qt.Key_Slash || event.key === Qt.Key_Question) {
                 showHelp = !showHelp;
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_Escape) {
+                if (showHelp) {
+                    showHelp = false;
+                    event.accepted = true;
+                    return;
+                } else if (root.gameState === "playing") {
+                    root.isPaused = !root.isPaused;
+                    soundToast.show(root.isPaused ? "⏸ Paused" : "▶ Resumed");
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            if (event.key === Qt.Key_P && root.gameState === "playing") {
+                root.isPaused = !root.isPaused;
+                soundToast.show(root.isPaused ? "⏸ Paused" : "▶ Resumed");
                 event.accepted = true;
                 return;
             }
@@ -808,7 +829,7 @@ Window {
                     property bool beatToggle: false
                     interval: 1000
                     repeat: true
-                    running: !root.splashEnabled && !root.showHelp && root.gameState === "playing"
+                    running: !root.splashEnabled && !root.showHelp && !root.isPaused && root.gameState === "playing"
                     onTriggered: {
                         beatToggle = !beatToggle;
                         root.playSound(beatToggle ? "beat1" : "beat2");
@@ -820,7 +841,7 @@ Window {
                     id: loopTimer
                     interval: 16
                     repeat: true
-                    running: !root.splashEnabled && !root.showHelp
+                    running: !root.splashEnabled && !root.showHelp && !root.isPaused
                     onTriggered: {
                         Engine.update({
                             onScoreChanged: function(s) {

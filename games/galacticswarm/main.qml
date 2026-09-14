@@ -30,6 +30,7 @@ Window {
     property bool _spaceConstrained: root.height < 520 || root.width < 440
     on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property bool showHelp: false
+    property bool isPaused: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
     function colorLuminance(col) {
@@ -211,6 +212,26 @@ Window {
 
             if (event.key === Qt.Key_Slash || event.key === Qt.Key_Question) {
                 showHelp = !showHelp;
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_Escape) {
+                if (showHelp) {
+                    showHelp = false;
+                    event.accepted = true;
+                    return;
+                } else if (Engine.gameState === "playing") {
+                    root.isPaused = !root.isPaused;
+                    soundToast.show(root.isPaused ? "⏸ Paused" : "▶ Resumed");
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            if (event.key === Qt.Key_P && Engine.gameState === "playing") {
+                root.isPaused = !root.isPaused;
+                soundToast.show(root.isPaused ? "⏸ Paused" : "▶ Resumed");
                 event.accepted = true;
                 return;
             }
@@ -1030,7 +1051,7 @@ Window {
         // 60 FPS Game Loop
         Timer {
             interval: 16
-            running: true
+            running: !root.isPaused && !root.showHelp && !root.splashEnabled
             repeat: true
             onTriggered: {
                 Engine.update(0.016);

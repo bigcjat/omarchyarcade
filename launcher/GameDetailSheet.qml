@@ -73,7 +73,7 @@ Rectangle {
         }
         opacity = 1;
         modalScroll.ScrollBar.vertical.position = 0;
-        contentBox.forceActiveFocus();
+        detailSheet.forceActiveFocus();
     }
 
     function close() {
@@ -888,13 +888,34 @@ Rectangle {
     }
 
     // Keyboard Shortcuts
+    focus: true
     Keys.onPressed: function(event) {
-        if (event.key === Qt.Key_Escape || event.key === Qt.Key_Q || event.key === Qt.Key_Backspace) {
+        if (event.key === Qt.Key_Escape || event.key === Qt.Key_Q) {
             detailSheet.close();
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space || event.key === Qt.Key_P) {
             if (!detailSheet.isUnreleased && gameData) {
                 detailSheet.playRequested(gameData.id);
+                event.accepted = true;
+            }
+        } else if (event.key === Qt.Key_U && detailSheet.hasUpdate && !detailSheet.isDownloading) {
+            if (typeof arcadeBackend !== "undefined" && gameData) {
+                detailSheet.isDownloading = true;
+                arcadeBackend.updateGame(gameData.id);
+                event.accepted = true;
+            }
+        } else if (event.key === Qt.Key_Backspace || event.key === Qt.Key_Delete) {
+            if (detailSheet.isInstalled && !detailSheet.isDownloading && gameData) {
+                if (detailSheet.confirmingUninstall) {
+                    detailSheet.confirmingUninstall = false;
+                    detailSheet.confirmTimer.stop();
+                    if (typeof arcadeBackend !== "undefined") {
+                        arcadeBackend.uninstallGame(gameData.id);
+                    }
+                } else {
+                    detailSheet.confirmingUninstall = true;
+                    detailSheet.confirmTimer.restart();
+                }
                 event.accepted = true;
             }
         }

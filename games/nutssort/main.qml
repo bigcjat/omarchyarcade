@@ -160,6 +160,29 @@ Window {
         if (data.subtext) themeSubtext = data.subtext;
     }
 
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            accent: "#d20f39",
+            cardBg: "#ffffff",
+            boardBg: "#dce0e8",
+            border: "#ccd0da",
+            subtext: "#6c6f85"
+        } : {
+            background: "#181825",
+            foreground: "#cdd6f4",
+            accent: "#F59E0B",
+            cardBg: "#1e1e2e",
+            boardBg: "#11111b",
+            border: "#313244",
+            subtext: "#a6adc8"
+        };
+        applyTheme(tData, nextIsLight ? "Light Mode" : "Dark Mode");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
+    }
+
     function playSound(name) {
         if (!isMuted && typeof soundManager !== "undefined" && soundManager) {
             soundManager.playSound(name);
@@ -498,6 +521,12 @@ Window {
 
             if (event.key === Qt.Key_D && (event.modifiers & Qt.ShiftModifier)) {
                 root.cycleDifficulty();
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
                 event.accepted = true;
                 return;
             }

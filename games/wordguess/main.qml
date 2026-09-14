@@ -223,6 +223,14 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_Escape) {
+                if (showHelp) {
+                    showHelp = false;
+                    event.accepted = true;
+                    return;
+                }
+            }
+
             if (root.gameState === "playing") {
                 if (event.key === Qt.Key_Backspace) {
                     root.handleBackspace();

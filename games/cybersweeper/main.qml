@@ -284,6 +284,13 @@ Window {
                 event.accepted = true;
                 return;
             }
+            if (event.key === Qt.Key_Escape) {
+                if (showHelp) {
+                    showHelp = false;
+                    event.accepted = true;
+                    return;
+                }
+            }
             if (event.key === Qt.Key_1) {
                 setDifficulty("beginner");
                 event.accepted = true;
@@ -317,7 +324,7 @@ Window {
                 Engine.moveCursor(1, 0);
                 boardCanvas.requestPaint();
                 event.accepted = true;
-            } else if (event.key === Qt.Key_Space || event.key === Qt.Key_Return) {
+            } else if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                 var res = Engine.reveal(Engine.cursor.r, Engine.cursor.c);
                 handleEngineEvent(res);
                 event.accepted = true;

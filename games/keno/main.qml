@@ -859,7 +859,47 @@ Window {
                 return;
             }
 
-            if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            // 80-Spot Grid Navigation via Arrows / WASD / Vim HJKL
+            if (event.key === Qt.Key_Left || event.key === Qt.Key_A || event.key === Qt.Key_H) {
+                gridContainer.hoveredTile = Math.max(1, (gridContainer.hoveredTile <= 0 ? 1 : gridContainer.hoveredTile) - 1);
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_Right || event.key === Qt.Key_D || event.key === Qt.Key_L) {
+                gridContainer.hoveredTile = Math.min(80, (gridContainer.hoveredTile <= 0 ? 1 : gridContainer.hoveredTile) + 1);
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_Up || event.key === Qt.Key_W || event.key === Qt.Key_K) {
+                gridContainer.hoveredTile = Math.max(1, (gridContainer.hoveredTile <= 0 ? 1 : gridContainer.hoveredTile) - 10);
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_Down || event.key === Qt.Key_S || event.key === Qt.Key_J) {
+                gridContainer.hoveredTile = Math.min(80, (gridContainer.hoveredTile <= 0 ? 1 : gridContainer.hoveredTile) + 10);
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                if (gridContainer.hoveredTile >= 1 && gridContainer.hoveredTile <= 80 && !root.isDrawing) {
+                    var num = gridContainer.hoveredTile;
+                    var isSel = root.selectedSpotsList.indexOf(num) >= 0;
+                    if (isSel) {
+                        root.setSpotState(num, false);
+                    } else {
+                        if (root.spotsCount < 10) {
+                            root.setSpotState(num, true);
+                        } else {
+                            soundToast.show("⚠️ Max 10 Spots Allowed");
+                            root.playSound("keno_deselect");
+                        }
+                    }
+                } else {
+                    root.startDraw();
+                }
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_Space) {
                 root.startDraw();
                 event.accepted = true;
                 return;

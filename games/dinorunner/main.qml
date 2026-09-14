@@ -308,6 +308,14 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_Escape) {
+                if (showHelp) {
+                    showHelp = false;
+                    event.accepted = true;
+                    return;
+                }
+            }
+
             if (event.key === Qt.Key_P) {
                 spawnPterodactyl();
                 event.accepted = true;

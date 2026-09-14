@@ -220,6 +220,27 @@ Window {
         gameCanvas.requestPaint();
     }
 
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            accent: "#0099FF",
+            cardBg: "#ffffff",
+            border: "#ccd0da",
+            subtext: "#6c6f85"
+        } : {
+            background: "#080c14",
+            foreground: "#cdd6f4",
+            accent: "#00E5FF",
+            cardBg: "#1e1e2e",
+            border: "#313244",
+            subtext: "#a6adc8"
+        };
+        applyTheme(tData, nextIsLight ? "Light Mode" : "Dark Mode");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
+    }
+
     function playSound(name) {
         if (!isMuted && typeof soundManager !== "undefined" && soundManager) {
             soundManager.playSound(name);
@@ -441,6 +462,12 @@ Window {
             if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
                 root.fullPlayfield = !root.fullPlayfield;
                 soundToast.show(root.fullPlayfield ? "⛶ Full Window Playfield" : "🔲 Auto-Tiling View");
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
                 event.accepted = true;
                 return;
             }

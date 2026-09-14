@@ -428,6 +428,29 @@ ApplicationWindow {
         }
     }
 
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            accent: "#0284c7",
+            cardBg: "#ffffff",
+            boardBg: "#dce0e8",
+            border: "#ccd0da",
+            subtext: "#6c6f85"
+        } : {
+            background: "#121215",
+            foreground: "#f8fafc",
+            accent: "#0284c7",
+            cardBg: "#1c1c22",
+            boardBg: "#25252e",
+            border: "#2e2e3a",
+            subtext: "#94a3b8"
+        };
+        applyTheme(tData, nextIsLight ? "Light Mode" : "Dark Mode");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
+    }
+
     function captureScreenshot(filePath, shouldQuit) {
         mainContainer.grabToImage(function(result) {
             result.saveToFile(filePath);
@@ -539,6 +562,12 @@ ApplicationWindow {
                 event.accepted = true;
                 return;
             }
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_M) {
                 root.toggleMute();
                 event.accepted = true;

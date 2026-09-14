@@ -29,9 +29,8 @@ Window {
     property bool _spaceConstrained: root.height < 520 || root.width < 440
     on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property bool showHelp: false
+    property bool isPaused: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
-    property bool isDarkMode: colorLuminance(themeBg) < 0.5
-    property color themeCardHover: isDarkMode ? Qt.lighter(themeCardBg, 1.15) : "#f1f5f9"
 
     function colorLuminance(col) {
         if (!col) return 0.2;
@@ -233,8 +232,32 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_Escape) {
+                if (showHelp) {
+                    showHelp = false;
+                    event.accepted = true;
+                    return;
+                } else if (root.gameState === "playing") {
+                    root.isPaused = !root.isPaused;
+                    soundToast.show(root.isPaused ? "⏸ Paused" : "▶ Resumed");
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            if (event.key === Qt.Key_P && root.gameState === "playing") {
+                root.isPaused = !root.isPaused;
+                soundToast.show(root.isPaused ? "⏸ Paused" : "▶ Resumed");
+                event.accepted = true;
+                return;
+            }
+
             // Directional hopping
             if (event.key === Qt.Key_Up || event.key === Qt.Key_W || event.key === Qt.Key_K || event.key === Qt.Key_Space) {
+                if (root.isPaused) {
+                    root.isPaused = false;
+                    soundToast.show("▶ Resumed");
+                }
                 root.doHop(0, 1);
                 event.accepted = true;
             } else if (event.key === Qt.Key_Down || event.key === Qt.Key_S || event.key === Qt.Key_J) {
@@ -973,7 +996,7 @@ Window {
                     id: loopTimer
                     interval: 16
                     repeat: true
-                    running: !root.splashEnabled && !root.showHelp
+                    running: !root.splashEnabled && !root.showHelp && !root.isPaused
                     onTriggered: {
                         Engine.update({
                             onScoreChanged: function(s) {

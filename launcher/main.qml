@@ -535,6 +535,10 @@ ApplicationWindow {
         updateModal.visible = true;
     }
 
+    function openSettings() {
+        settingsSheet.open();
+    }
+
     property string cliDetailId: ""
     onCliDetailIdChanged: if (cliDetailId !== "") openGameDetail(cliDetailId)
 
@@ -543,6 +547,9 @@ ApplicationWindow {
 
     property bool cliShowUpdates: false
     onCliShowUpdatesChanged: if (cliShowUpdates) updateModal.visible = true
+
+    property bool cliShowSettings: false
+    onCliShowSettingsChanged: if (cliShowSettings) settingsSheet.open()
 
     property alias featuredScrollY: featuredPageView.scrollY
 
@@ -860,6 +867,46 @@ ApplicationWindow {
                     }
 
                     onClicked: root.openUpdateCenter()
+                }
+
+                // Settings Button (Audio, Theming, Updates)
+                Button {
+                    id: settingsBtn
+                    Layout.preferredHeight: 36
+                    Layout.preferredWidth: root.isCompact ? 36 : settingsRow.implicitWidth + 22
+
+                    background: Rectangle {
+                        radius: 8
+                        color: settingsBtn.down ? root.themeSurfaceLight : (settingsBtn.hovered ? (root.isDarkMode ? "#262638" : "#f1f5f9") : "transparent")
+                        border.color: root.themeCardBorder
+                        border.width: 1
+                    }
+
+                    contentItem: Row {
+                        id: settingsRow
+                        anchors.centerIn: parent
+                        spacing: 7
+                        Item {
+                            width: 16
+                            height: 16
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                anchors.centerIn: parent
+                                text: "⚙️"
+                                font.pixelSize: 13
+                            }
+                        }
+                        Text {
+                            text: "Settings"
+                            font.pixelSize: 12
+                            font.bold: true
+                            color: themeText
+                            visible: !root.isCompact
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    onClicked: root.openSettings()
                 }
             }
         }
@@ -1305,7 +1352,49 @@ ApplicationWindow {
                         border.width: 1
                         Text { anchors.centerIn: parent; text: "V"; font.family: "monospace"; font.pixelSize: 10; font.bold: true; color: themeAccent }
                     }
-                    Text { text: "View Mode"; font.pixelSize: 11; font.bold: true; color: root.themeTextMuted }
+                    Text { text: "Views"; font.pixelSize: 11; font.bold: true; color: root.themeTextMuted }
+                }
+
+                Text { text: "•"; font.pixelSize: 11; color: root.isDarkMode ? "#2d2d3d" : "#cbd5e1" }
+
+                RowLayout {
+                    spacing: 5
+                    Rectangle {
+                        width: 18; height: 18; radius: 4
+                        color: root.isDarkMode ? "#1c1c28" : "#f1f5f9"
+                        border.color: root.isDarkMode ? "#333348" : "#cbd5e1"
+                        border.width: 1
+                        Text { anchors.centerIn: parent; text: "U"; font.family: "monospace"; font.pixelSize: 10; font.bold: true; color: themeAccent }
+                    }
+                    Text { text: "Updates"; font.pixelSize: 11; font.bold: true; color: root.themeTextMuted }
+                }
+
+                Text { text: "•"; font.pixelSize: 11; color: root.isDarkMode ? "#2d2d3d" : "#cbd5e1" }
+
+                RowLayout {
+                    spacing: 5
+                    Rectangle {
+                        width: 18; height: 18; radius: 4
+                        color: root.isDarkMode ? "#1c1c28" : "#f1f5f9"
+                        border.color: root.isDarkMode ? "#333348" : "#cbd5e1"
+                        border.width: 1
+                        Text { anchors.centerIn: parent; text: "S"; font.family: "monospace"; font.pixelSize: 10; font.bold: true; color: themeAccent }
+                    }
+                    Text { text: "Settings"; font.pixelSize: 11; font.bold: true; color: root.themeTextMuted }
+                }
+
+                Text { text: "•"; font.pixelSize: 11; color: root.isDarkMode ? "#2d2d3d" : "#cbd5e1" }
+
+                RowLayout {
+                    spacing: 5
+                    Rectangle {
+                        width: 18; height: 18; radius: 4
+                        color: root.isDarkMode ? "#1c1c28" : "#f1f5f9"
+                        border.color: root.isDarkMode ? "#333348" : "#cbd5e1"
+                        border.width: 1
+                        Text { anchors.centerIn: parent; text: "?"; font.family: "monospace"; font.pixelSize: 10; font.bold: true; color: themeAccent }
+                    }
+                    Text { text: "About"; font.pixelSize: 11; font.bold: true; color: root.themeTextMuted }
                 }
 
                 Item { Layout.fillWidth: true }
@@ -1342,6 +1431,23 @@ ApplicationWindow {
         onPlayRequested: function(gameId) {
             root.launchGame(gameId);
         }
+    }
+
+    // =========================================================================
+    // SETTINGS MODAL SHEET
+    // =========================================================================
+    SettingsSheet {
+        id: settingsSheet
+        objectName: "settingsSheet"
+        isDarkMode: root.isDarkMode
+        themeBackground: root.themeBackground
+        themeSurface: root.themeSurface
+        themeSurfaceLight: root.themeSurfaceLight
+        themeBorder: root.themeBorder
+        themeText: root.themeText
+        themeTextMuted: root.themeTextMuted
+        themeAccent: root.themeAccent
+        themeAccentAlt: root.themeAccentAlt
     }
 
     // =========================================================================
@@ -2032,6 +2138,9 @@ ApplicationWindow {
             if (splashScreen.visible) {
                 splashScreen.dismiss();
             }
+            if (settingsSheet.visible && settingsSheet.opacity > 0) {
+                return;
+            }
             if (aboutModal.visible) {
                 if (event.key === Qt.Key_Escape) {
                     aboutModal.visible = false;
@@ -2041,10 +2150,18 @@ ApplicationWindow {
                 return;
             }
             if (updateModal.visible) {
+                if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_U) && root.availableUpdatesCount > 0 && !root.isUpdatingAll) {
+                    if (typeof arcadeBackend !== "undefined") {
+                        arcadeBackend.updateAllGames();
+                    }
+                    event.accepted = true;
+                    return;
+                }
                 if (event.key === Qt.Key_Escape && !root.isUpdatingAll) {
                     updateModal.visible = false;
                     root.restoreKeyboardFocus();
                     event.accepted = true;
+                    return;
                 }
                 return;
             }
@@ -2228,6 +2345,14 @@ ApplicationWindow {
                     detailSheet.open(root.filteredGames[root.focusedIndex]);
                     event.accepted = true;
                 }
+            } else if (event.key === Qt.Key_S || event.key === Qt.Key_Comma) {
+                settingsSheet.open();
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_U) {
+                root.openUpdateCenter();
+                event.accepted = true;
+                return;
             } else if (event.key === Qt.Key_Slash) {
                 searchInput.forceActiveFocus();
                 Qt.callLater(function() {
@@ -2247,7 +2372,7 @@ ApplicationWindow {
     // Keyboard Navigation Shortcuts
     Shortcut {
         sequence: "/"
-        enabled: !searchInput.activeFocus && !detailSheet.visible && !aboutModal.visible
+        enabled: !searchInput.activeFocus && !detailSheet.visible && !aboutModal.visible && !updateModal.visible && !settingsSheet.visible
         onActivated: {
             searchInput.forceActiveFocus();
             Qt.callLater(function() {
@@ -2260,17 +2385,30 @@ ApplicationWindow {
     }
     Shortcut {
         sequence: "Ctrl+F"
-        enabled: !detailSheet.visible && !aboutModal.visible
+        enabled: !detailSheet.visible && !aboutModal.visible && !updateModal.visible && !settingsSheet.visible
         onActivated: {
             searchInput.forceActiveFocus();
             searchInput.selectAll();
         }
     }
     Shortcut {
+        sequence: "Ctrl+,"
+        enabled: !detailSheet.visible && !aboutModal.visible && !updateModal.visible
+        onActivated: {
+            settingsSheet.open();
+        }
+    }
+    Shortcut {
         sequence: "Escape"
         onActivated: {
-            if (aboutModal.visible) {
+            if (settingsSheet.visible && settingsSheet.opacity > 0) {
+                settingsSheet.close();
+                root.restoreKeyboardFocus();
+            } else if (aboutModal.visible) {
                 aboutModal.visible = false;
+                root.restoreKeyboardFocus();
+            } else if (updateModal.visible && !root.isUpdatingAll) {
+                updateModal.visible = false;
                 root.restoreKeyboardFocus();
             } else if (detailSheet.visible) {
                 detailSheet.close();

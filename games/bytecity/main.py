@@ -160,6 +160,12 @@ def main():
         sys.exit(1)
 
     root_window = qml_engine.rootObjects()[0]
+
+    icon_path = Path(__file__).resolve().parent / "assets" / "disk_icon.png"
+
+    if icon_path.exists() and hasattr(root_window, "setIcon"):
+
+        root_window.setIcon(QIcon(str(icon_path)))
     vp = root_window.findChild(CityViewport)
     if vp:
         vp.set_city_engine(engine_obj)
@@ -219,6 +225,13 @@ def main():
     # Disable splash if requested
     if "--no-splash" in sys.argv:
         root_window.setProperty("splashEnabled", False)
+
+    if "--unmute" in sys.argv or "--sound" in sys.argv:
+        for _obj in engine.rootObjects():
+            _obj.setProperty("isMuted", False)
+    elif "--mute" in sys.argv:
+        for _obj in engine.rootObjects():
+            _obj.setProperty("isMuted", True)
 
     # Screenshot automation
     if "--screenshot" in sys.argv:

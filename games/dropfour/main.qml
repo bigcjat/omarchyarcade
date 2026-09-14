@@ -323,6 +323,12 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_T) {
+                cycleTheme();
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_R) {
                 resetGame();
                 soundToast.show("Restarted");
@@ -333,6 +339,13 @@ Window {
                 showHelp = !showHelp;
                 event.accepted = true;
                 return;
+            }
+            if (event.key === Qt.Key_Escape) {
+                if (showHelp) {
+                    showHelp = false;
+                    event.accepted = true;
+                    return;
+                }
             }
 
             // Move column indicator

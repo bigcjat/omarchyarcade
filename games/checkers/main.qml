@@ -92,6 +92,9 @@ Window {
     property var lastMoveFrom: null     // [r, c] or null
     property var lastMoveTo: null       // [r, c] or null
     property var historyStack: []       // For undo support
+    property int cursorCol: 2
+    property int cursorRow: 5
+    property bool showKeyboardCursor: false
 
     // Piece Counts & Material
     property int whiteTotal: 12
@@ -514,6 +517,54 @@ Window {
 
             if (event.key === Qt.Key_Question || event.key === Qt.Key_Slash) {
                 root.showHelp = !root.showHelp;
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_Escape) {
+                if (root.showHelp) {
+                    root.showHelp = false;
+                } else if (root.selectedSquare !== null) {
+                    root.selectedSquare = null;
+                    root.validMoves = [];
+                } else {
+                    root.showKeyboardCursor = false;
+                }
+                event.accepted = true;
+                return;
+            }
+
+            // Game over restart via Space / Enter / Return
+            if ((root.gameState === "gameover" || root.gameState === "won") && (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_R)) {
+                root.restartGame();
+                event.accepted = true;
+                return;
+            }
+
+            // Keyboard navigation across the 8x8 checkers board (Arrows / WASD / Vim HJKL)
+            if (event.key === Qt.Key_Left || event.key === Qt.Key_A || event.key === Qt.Key_H) {
+                root.showKeyboardCursor = true;
+                root.cursorCol = Math.max(0, root.cursorCol - 1);
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_Right || event.key === Qt.Key_D || event.key === Qt.Key_L) {
+                root.showKeyboardCursor = true;
+                root.cursorCol = Math.min(7, root.cursorCol + 1);
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_Up || event.key === Qt.Key_W || event.key === Qt.Key_K) {
+                root.showKeyboardCursor = true;
+                root.cursorRow = Math.max(0, root.cursorRow - 1);
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_Down || event.key === Qt.Key_S || event.key === Qt.Key_J) {
+                root.showKeyboardCursor = true;
+                root.cursorRow = Math.min(7, root.cursorRow + 1);
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                root.showKeyboardCursor = true;
+                root.handleSquareClicked(root.cursorRow, root.cursorCol);
                 event.accepted = true;
                 return;
             }
@@ -1009,6 +1060,17 @@ Window {
                                 border.color: root.themeAccent
                                 border.width: 2
                                 visible: tileItem.isSelected
+                            }
+
+                            // Keyboard navigation cursor ring
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: 2
+                                color: "transparent"
+                                border.color: root.themeAccent
+                                border.width: 3
+                                radius: 4
+                                visible: root.showKeyboardCursor && tileItem.c === root.cursorCol && tileItem.r === root.cursorRow
                             }
 
                             // Board Coordinate Labels

@@ -84,6 +84,27 @@ ApplicationWindow {
         }
     }
 
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            accent: "#0099FF",
+            cardBg: "#ffffff",
+            border: "#ccd0da",
+            subtext: "#6c6f85"
+        } : {
+            background: "#080c14",
+            foreground: "#cdd6f4",
+            accent: "#00E5FF",
+            cardBg: "#1e1e2e",
+            border: "#313244",
+            subtext: "#a6adc8"
+        };
+        applyTheme(tData, nextIsLight ? "Light Mode" : "Dark Mode");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
+    }
+
     function playSound(soundName) {
         if (root.isMuted) return;
         if (typeof soundManager !== "undefined" && soundManager) {
@@ -208,6 +229,12 @@ ApplicationWindow {
             if (event.key === Qt.Key_4) { root.selectSlime("metal"); event.accepted = true; return; }
             if (event.key === Qt.Key_5) { root.selectSlime("gold"); event.accepted = true; return; }
             if (event.key === Qt.Key_6) { root.selectSlime("shadow"); event.accepted = true; return; }
+
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
+                event.accepted = true;
+                return;
+            }
 
             if (event.key === Qt.Key_R) {
                 root.restartGame();

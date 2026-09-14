@@ -164,6 +164,11 @@ def main():
     app = QGuiApplication(sys.argv)
     app.setApplicationName("GalacticSwarm")
     app.setOrganizationName("OmarchyArcade")
+    # Set application icon to game floppy disk
+    script_dir = Path(__file__).resolve().parent
+    icon_path = script_dir / "assets" / "disk_icon.png"
+    if icon_path.exists():
+        app.setWindowIcon(QIcon(str(icon_path)))
 
     base_dir = Path(__file__).resolve().parent
     engine = QQmlApplicationEngine()
@@ -183,6 +188,12 @@ def main():
         sys.exit(-1)
 
     root = engine.rootObjects()[0]
+
+    icon_path = Path(__file__).resolve().parent / "assets" / "disk_icon.png"
+
+    if icon_path.exists() and hasattr(root, "setIcon"):
+
+        root.setIcon(QIcon(str(icon_path)))
 
     # Theme Resolution
     theme_arg = None
@@ -241,6 +252,13 @@ def main():
 
     if "--no-splash" in sys.argv:
         root.setProperty("splashEnabled", False)
+
+    if "--unmute" in sys.argv or "--sound" in sys.argv:
+        for _obj in engine.rootObjects():
+            _obj.setProperty("isMuted", False)
+    elif "--mute" in sys.argv:
+        for _obj in engine.rootObjects():
+            _obj.setProperty("isMuted", True)
 
     # Screenshot automation
     if "--screenshot" in sys.argv:

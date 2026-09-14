@@ -277,6 +277,29 @@ Window {
         if (themeData["accent"]) themeAccent = themeData["accent"];
     }
 
+    function cycleTheme() {
+        var nextIsLight = (root.isDarkMode);
+        var tData = nextIsLight ? {
+            background: "#eff1f5",
+            foreground: "#4c4f69",
+            accent: "#d20f39",
+            card_bg: "#ffffff",
+            board_bg: "#dce0e8",
+            border: "#ccd0da",
+            subtext: "#6c6f85"
+        } : {
+            background: "#181825",
+            foreground: "#cdd6f4",
+            accent: "#F28482",
+            card_bg: "#1e1e2e",
+            board_bg: "#11111b",
+            border: "#313244",
+            subtext: "#a6adc8"
+        };
+        applyTheme(tData, nextIsLight ? "Light Mode" : "Dark Mode");
+        soundToast.show("🎨 " + (nextIsLight ? "Light Mode" : "Dark Mode"));
+    }
+
     function captureScreenshot(filePath, shouldQuit) {
         var targetItem = (splashScreen && splashScreen.visible && splashScreen.opacity > 0) ? splashScreen : mainContainer;
         targetItem.grabToImage(function(result) {
@@ -311,6 +334,12 @@ Window {
                 return;
             }
 
+            if (root.isWon && (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
+                root.nextLevel();
+                event.accepted = true;
+                return;
+            }
+
             // Quick color selection via number keys 1..9
             if (event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
                 var cIdx = event.key - Qt.Key_1;
@@ -319,6 +348,29 @@ Window {
                     event.accepted = true;
                     return;
                 }
+            }
+
+            // Directional keys cycle palette colors
+            if (event.key === Qt.Key_Left || event.key === Qt.Key_A || event.key === Qt.Key_H) {
+                if (Engine.palette && Engine.palette.length > 0) {
+                    var prevIdx = (root.selectedColorIdx - 1 + Engine.palette.length) % Engine.palette.length;
+                    Engine.selectPaletteColor(prevIdx, callbacks);
+                    event.accepted = true;
+                    return;
+                }
+            } else if (event.key === Qt.Key_Right || event.key === Qt.Key_D || event.key === Qt.Key_L) {
+                if (Engine.palette && Engine.palette.length > 0) {
+                    var nextIdx = (root.selectedColorIdx + 1) % Engine.palette.length;
+                    Engine.selectPaletteColor(nextIdx, callbacks);
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            if (event.key === Qt.Key_T) {
+                root.cycleTheme();
+                event.accepted = true;
+                return;
             }
 
             if (event.key === Qt.Key_U || (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_Z)) {

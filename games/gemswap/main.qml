@@ -1181,6 +1181,19 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_Escape) {
+                if (root.showHelp) {
+                    root.showHelp = false;
+                    event.accepted = true;
+                    return;
+                }
+                if (Engine.selectedTile) {
+                    Engine.selectedTile = null;
+                    event.accepted = true;
+                    return;
+                }
+            }
+
             if (event.key === Qt.Key_H) {
                 root.triggerHint();
                 event.accepted = true;

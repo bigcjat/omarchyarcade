@@ -52,7 +52,7 @@ else:
     CATALOG_PATH = DATA_DIR / "catalog.json"
     ASSETS_DIR = DATA_DIR / "assets"
 
-CURRENT_LAUNCHER_VERSION = "1.2.0"
+CURRENT_LAUNCHER_VERSION = "1.3.0"
 
 GAMES_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -81,6 +81,7 @@ class ArcadeBackend(QObject):
     wallpaperChanged = Signal(str)
     feltColorChanged = Signal(str)
     feltStyleChanged = Signal(str)
+    settingsChanged = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -493,6 +494,97 @@ class ArcadeBackend(QObject):
 
         return fname
 
+    def _read_setting(self, key: str, default):
+        settings_file = self._get_settings_path()
+        if settings_file.exists():
+            try:
+                data = json.loads(settings_file.read_text(encoding="utf-8"))
+                return data.get(key, default)
+            except Exception:
+                pass
+        return default
+
+    def _write_setting(self, key: str, value):
+        settings_file = self._get_settings_path()
+        data = {}
+        if settings_file.exists():
+            try:
+                data = json.loads(settings_file.read_text(encoding="utf-8"))
+            except Exception:
+                data = {}
+        data[key] = value
+        try:
+            settings_file.parent.mkdir(parents=True, exist_ok=True)
+            settings_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        except Exception as e:
+            print(f"[Arcade] Error saving setting {key}: {e}")
+        self.settingsChanged.emit()
+
+    @Slot(result=bool)
+    def getLaunchMuted(self) -> bool:
+        return bool(self._read_setting("launch_muted", True))
+
+    @Slot(bool)
+    def setLaunchMuted(self, val: bool):
+        self._write_setting("launch_muted", bool(val))
+
+    @Slot(result=bool)
+    def getCheckUpdatesOnLaunch(self) -> bool:
+        return bool(self._read_setting("check_updates_on_launch", True))
+
+    @Slot(bool)
+    def setCheckUpdatesOnLaunch(self, val: bool):
+        self._write_setting("check_updates_on_launch", bool(val))
+
+    @Slot(result=bool)
+    def getAutoUpdateLauncher(self) -> bool:
+        return bool(self._read_setting("auto_update_launcher", False))
+
+    @Slot(bool)
+    def setAutoUpdateLauncher(self, val: bool):
+        self._write_setting("auto_update_launcher", bool(val))
+
+    @Slot(result=bool)
+    def getAutoUpdateGames(self) -> bool:
+        return bool(self._read_setting("auto_update_games", False))
+
+    @Slot(bool)
+    def setAutoUpdateGames(self, val: bool):
+        self._write_setting("auto_update_games", bool(val))
+
+    @Slot(result=str)
+    def getThemeMode(self) -> str:
+        return str(self._read_setting("theme_mode", "auto"))
+
+    @Slot(str)
+    def setThemeMode(self, mode: str):
+        if mode in ("auto", "dark", "light"):
+            self._write_setting("theme_mode", mode)
+            self.applyThemeMode(mode)
+
+    @Slot(result=str)
+    def getGameThemeMode(self) -> str:
+        return str(self._read_setting("game_theme_mode", "match"))
+
+    @Slot(str)
+    def setGameThemeMode(self, mode: str):
+        if mode in ("match", "dark", "light"):
+            self._write_setting("game_theme_mode", mode)
+
+    @Slot(str)
+    def applyThemeMode(self, mode: str):
+        """Applies theme mode (auto, dark, light) immediately to launcher."""
+        if mode == "dark":
+            cols = dict(DEFAULT_PRESETS["dark"])
+        elif mode == "light":
+            cols = dict(DEFAULT_PRESETS["light"])
+        else:
+            cols = get_theme_colors()
+        self.update_theme(cols)
+        if self._main_window:
+            for k, v in cols.items():
+                self._main_window.setProperty(k, v)
+
     @Slot(str)
     def installGame(self, game_id: str):
         """Downloads and installs only the requested game from GitHub in the background."""
@@ -660,6 +752,21 @@ class ArcadeBackend(QObject):
             print(f"[Arcade] Error: No entrypoint in {game_dir}")
             self.gameLaunchFailed.emit(game_id, "Executable entrypoint not found.")
             return
+
+        # Audio launch setting
+        if not self.getLaunchMuted():
+            cmd.append("--unmute")
+
+        # Game theme launch setting
+        gt = self.getGameThemeMode()
+        if gt == "dark":
+            cmd.extend(["--theme", "dark"])
+        elif gt == "light":
+            cmd.extend(["--theme", "light"])
+        elif gt == "match":
+            lm = self.getThemeMode()
+            if lm in ("dark", "light"):
+                cmd.extend(["--theme", lm])
 
         try:
             theme_path = find_omarchy_colors_file()
@@ -1195,7 +1302,11 @@ Usage:
             theme_arg = sys.argv[idx + 1]
 
     # Initial properties
-    colors = get_theme_colors(theme_arg)
+    saved_theme_mode = backend.getThemeMode()
+    if not theme_arg and saved_theme_mode in ("dark", "light"):
+        colors = dict(DEFAULT_PRESETS[saved_theme_mode])
+    else:
+        colors = get_theme_colors(theme_arg)
     backend.update_theme(colors)
     initial_props = {
         "themeBackground": colors["themeBackground"],
@@ -1241,6 +1352,8 @@ Usage:
                 watcher.addPath(str(colors_file.parent))
 
             def on_theme_updated(path):
+                if backend.getThemeMode() != "auto":
+                    return
                 if colors_file.is_file() and str(colors_file) not in watcher.files():
                     watcher.addPath(str(colors_file))
                 updated_colors = get_theme_colors()
@@ -1252,6 +1365,8 @@ Usage:
         else:
             # 3. macOS / standard desktop live dark/light appearance changes
             def on_os_scheme_changed():
+                if backend.getThemeMode() != "auto":
+                    return
                 updated_colors = get_theme_colors()
                 apply_updated_colors(updated_colors)
                 print(f"[Arcade] OS appearance synchronized")
@@ -1275,6 +1390,9 @@ Usage:
 
     if "--show-updates" in sys.argv:
         QTimer.singleShot(250, lambda: window.setProperty("cliShowUpdates", True))
+
+    if "--show-settings" in sys.argv:
+        QTimer.singleShot(250, lambda: window.setProperty("cliShowSettings", True))
 
     if "--show-detail" in sys.argv:
         d_idx = sys.argv.index("--show-detail") + 1

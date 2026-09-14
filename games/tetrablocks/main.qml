@@ -420,7 +420,13 @@ Window {
                 event.accepted = true;
                 return;
             }
- else if (event.key === Qt.Key_R) {
+            if (root.isOver) {
+                if (event.key === Qt.Key_A || event.key === Qt.Key_R || event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    root.startNewGame();
+                    event.accepted = true;
+                    return;
+                }
+            } else if (event.key === Qt.Key_R) {
                 root.startNewGame();
                 event.accepted = true;
                 return;

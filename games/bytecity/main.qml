@@ -294,6 +294,12 @@ Window {
             }
 
 
+            if (event.key === Qt.Key_R) {
+                root.showInaugurationModal = !root.showInaugurationModal;
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_Question || event.key === Qt.Key_Slash) {
                 root.showHelp = !root.showHelp;
                 event.accepted = true;

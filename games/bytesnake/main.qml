@@ -201,6 +201,16 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_Escape) {
+                if (root.showHelp) {
+                    root.showHelp = false;
+                } else if (!root.isOver) {
+                    root.isPaused = !root.isPaused;
+                }
+                event.accepted = true;
+                return;
+            }
+
             if (event.key === Qt.Key_M) {
                 root.toggleMute();
                 event.accepted = true;
@@ -241,7 +251,7 @@ Window {
                 return;
             }
 
-            if (event.key === Qt.Key_Space) {
+            if (event.key === Qt.Key_Space || ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && root.isOver)) {
                 if (root.isOver) {
                     startNewGame();
                 } else {

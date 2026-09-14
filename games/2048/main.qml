@@ -360,6 +360,19 @@ ApplicationWindow {
                 return;
             }
 
+            if (root.isOver || (root.isWon && !root.keepPlayingAfterWin)) {
+                if (event.key === Qt.Key_R || event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    root.restartGame();
+                    event.accepted = true;
+                    return;
+                }
+                if (root.isWon && (event.key === Qt.Key_K || event.key === Qt.Key_C)) {
+                    root.keepPlayingAfterWin = true;
+                    event.accepted = true;
+                    return;
+                }
+            }
+
             if (event.key === Qt.Key_Left || event.key === Qt.Key_A || event.key === Qt.Key_H) {
                 root.doMove(0);
                 event.accepted = true;

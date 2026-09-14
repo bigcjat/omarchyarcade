@@ -28,6 +28,7 @@ Window {
     property bool _spaceConstrained: root.height < 520 || root.width < 440
     on_SpaceConstrainedChanged: isTiledDesktopMode = _spaceConstrained
     property bool showHelp: false
+    property bool isPaused: false
     property string monoFontFamily: (Qt.platform.os === "osx") ? "Menlo" : "JetBrainsMono Nerd Font"
 
     property int score: 0
@@ -821,7 +822,7 @@ Window {
         id: loopTimer
         interval: 16
         repeat: true
-        running: !root.splashEnabled && !root.showHelp
+        running: !root.splashEnabled && !root.showHelp && !root.isPaused
         onTriggered: {
             Engine.update({
                 onScoreChanged: function(s) {
@@ -856,6 +857,33 @@ Window {
         focus: true
         Keys.onPressed: function(event) {
             if (root.splashEnabled) return;
+
+            if (event.key === Qt.Key_Escape) {
+                if (root.showHelp) {
+                    root.showHelp = false;
+                    event.accepted = true;
+                    return;
+                } else if (root.gameState === "playing") {
+                    root.isPaused = !root.isPaused;
+                    soundToast.show(root.isPaused ? "⏸ Paused" : "▶ Resumed");
+                    event.accepted = true;
+                    return;
+                }
+            }
+
+            if (event.key === Qt.Key_P && root.gameState === "playing") {
+                root.isPaused = !root.isPaused;
+                soundToast.show(root.isPaused ? "⏸ Paused" : "▶ Resumed");
+                event.accepted = true;
+                return;
+            }
+
+            if ((root.gameState === "gameover" || root.gameState === "ready") &&
+                (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
+                root.startNewGame();
+                event.accepted = true;
+                return;
+            }
 
             if (event.key === Qt.Key_R) {
                 root.startNewGame();

@@ -716,15 +716,25 @@ Window {
         Keys.onPressed: function(event) {
             if (event.key === Qt.Key_Escape) {
                 if (root.showHelp) root.showHelp = false;
-                else Qt.quit();
+                else if (root.selectedCard !== null) root.selectedCard = null;
+                event.accepted = true;
+                return;
             } else if (event.key === Qt.Key_Question || event.key === Qt.Key_Slash) {
                 root.showHelp = !root.showHelp;
+                event.accepted = true;
+                return;
             } else if (event.key === Qt.Key_R) {
                 root.startNewGame();
+                event.accepted = true;
+                return;
             } else if (event.key === Qt.Key_U) {
                 root.undoMove();
+                event.accepted = true;
+                return;
             } else if (event.key === Qt.Key_M) {
                 root.toggleMute();
+                event.accepted = true;
+                return;
             }
 
             if (event.key === Qt.Key_F && (event.modifiers & Qt.ShiftModifier)) {
@@ -732,15 +742,46 @@ Window {
                 soundToast.show(root.fullPlayfield ? "⛶ Full Window View" : "🔲 Standard Window");
                 event.accepted = true;
                 return;
-            }
- else if (event.key === Qt.Key_T) {
+            } else if (event.key === Qt.Key_T) {
                 root.toggleDrawCount();
+                event.accepted = true;
+                return;
             } else if (event.key === Qt.Key_D) {
                 root.cycleDeckStyle();
+                event.accepted = true;
+                return;
             } else if (event.key === Qt.Key_H) {
                 root.triggerHint();
-            } else if (event.key === Qt.Key_Space) {
+                event.accepted = true;
+                return;
+            }
+
+            if (root.gameStatus === "won" && (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
+                root.startNewGame();
+                event.accepted = true;
+                return;
+            }
+
+            // Quick Tableau column selection & drop via number keys 1..7
+            if (event.key >= Qt.Key_1 && event.key <= Qt.Key_7) {
+                var colIdx = event.key - Qt.Key_1;
+                var col = root.gameStateData.tableau[colIdx];
+                root.handleTableauClicked(colIdx, col.length > 0 ? col.length - 1 : 0);
+                event.accepted = true;
+                return;
+            }
+
+            // Waste selection via W
+            if (event.key === Qt.Key_W) {
+                root.handleWasteClicked();
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                 root.handleStockClicked();
+                event.accepted = true;
+                return;
             }
         }
     }

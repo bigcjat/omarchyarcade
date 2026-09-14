@@ -474,7 +474,15 @@ Window {
                 }
             }
 
-            if (event.key === Qt.Key_Space) {
+            if (event.key === Qt.Key_Escape) {
+                if (root.showHelp) root.showHelp = false;
+                else if (root.showThemePicker) root.showThemePicker = false;
+                else if (root.selectedSource !== null) root.selectedSource = null;
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                 if (root.phase === "roll") {
                     root.handleRollDice();
                     event.accepted = true;

@@ -1027,6 +1027,14 @@ Window {
                 return;
             }
 
+            if (event.key === Qt.Key_Escape) {
+                if (root.showHelp) {
+                    root.showHelp = false;
+                    event.accepted = true;
+                    return;
+                }
+            }
+
             // Aiming
             if (event.key === Qt.Key_Left || event.key === Qt.Key_A || event.key === Qt.Key_H) {
                 Engine.rotateCannon(-0.06);
@@ -1034,7 +1042,7 @@ Window {
             } else if (event.key === Qt.Key_Right || event.key === Qt.Key_D || event.key === Qt.Key_L) {
                 Engine.rotateCannon(0.06);
                 event.accepted = true;
-            } else if (event.key === Qt.Key_Space || event.key === Qt.Key_Up || event.key === Qt.Key_W || event.key === Qt.Key_K || event.key === Qt.Key_Return) {
+            } else if (event.key === Qt.Key_Space || event.key === Qt.Key_Up || event.key === Qt.Key_W || event.key === Qt.Key_K || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                 root.shoot();
                 event.accepted = true;
             }

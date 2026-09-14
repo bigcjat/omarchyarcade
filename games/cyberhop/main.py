@@ -190,6 +190,12 @@ def main():
 
     root = engine.rootObjects()[0]
 
+    icon_path = Path(__file__).resolve().parent / "assets" / "disk_icon.png"
+
+    if icon_path.exists() and hasattr(root, "setIcon"):
+
+        root.setIcon(QIcon(str(icon_path)))
+
     requested_theme = None
     requested_screenshot = None
     args = sys.argv[1:]
@@ -251,6 +257,14 @@ def main():
         def capture():
             root.captureScreenshot(str(out_path))
         QTimer.singleShot(150, capture)
+
+    
+    if "--unmute" in sys.argv or "--sound" in sys.argv:
+        for _obj in engine.rootObjects():
+            _obj.setProperty("isMuted", False)
+    elif "--mute" in sys.argv:
+        for _obj in engine.rootObjects():
+            _obj.setProperty("isMuted", True)
 
     sys.exit(app.exec())
 
